@@ -1,0 +1,7 @@
+�h�C�u��܂�B�O 'Microsoft.PowerShell.Core\FileSystem' �̃h�C�u�݂�܂�B
+�ꏊ �s:1 �:1
++ python C:\Users\info\.gemini\antigravity\scratch\fix_admin_view.py
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Microsoft.PowerShell.Core\FileSystem:String) [], DriveNotFoundException
+    + FullyQualifiedErrorId : DriveNotFound
+ 

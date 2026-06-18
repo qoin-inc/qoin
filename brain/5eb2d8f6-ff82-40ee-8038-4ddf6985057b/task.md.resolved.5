@@ -1,0 +1,6 @@
+- [x] SQLスクリプト `update_fee_records.sql` を作成（後ほどユーザーに実行を依頼する、または自動適用されるか確認）
+- [x] `AdminView.tsx` の会費タブUIを2つのブロック（システム利用料、会費管理）に分離
+- [x] システム利用料ブロックに `monthly_household_price`（世帯単価）の表示を追加
+- [x] 会費管理ブロックのテーブルに「請求額」列を追加し、編集機能を実装
+- [x] 編集保存時（`handleSaveFee`）に `expected_amount` と `paid_amount` を `fee_records` へ保存するロジックを追加
+- [ ] 本番へのデプロイ（Netlify）

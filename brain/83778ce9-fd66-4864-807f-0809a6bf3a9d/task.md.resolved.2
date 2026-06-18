@@ -1,0 +1,12 @@
+# 家族会員の要件実装タスク
+
+- [ ] Supabaseの `resident_rosters` テーブルに `family_name_1`, `family_name_2` を追加（ユーザーによるSQL実行待ち）
+- [ ] `SignupResident.tsx` の改修
+  - [ ] 家族として登録する場合、「家族の名前」を入力するUIを追加
+  - [ ] 登録処理 (`linkAccount`) に `family_name_1` または `family_name_2` を保存する処理を追加
+- [ ] `AdminView.tsx` の改修
+  - [ ] 会員名簿一覧で、世帯主レコード内の `family_user_auth_id_1` / `2` が存在する場合、家族として別行（または同一セル内の別要素）として表示
+  - [ ] 家族個別の「削除（連携解除）」ボタンの実装
+    - [ ] `family_user_auth_id` と `family_name` のみをNULLに更新する処理
+  - [ ] 代表者（世帯主）の削除で家族も消える挙動の確認（既存仕様通り）
+- [ ] 動作確認・デプロイ

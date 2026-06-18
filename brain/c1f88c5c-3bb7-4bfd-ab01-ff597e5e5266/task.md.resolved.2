@@ -1,0 +1,11 @@
+# 大人・子供の人数入力機能実装タスク
+
+- [x] データベース改修（SQLの作成）
+  - `event_applications` テーブルに `adult_count` と `child_count` カラムを追加するクエリを作成し、`update_applications.sql`に出力する。
+- [ ] 住民画面（ResidentView.tsx）の実装
+  - イベント申込時にすぐ完了させず、「大人・子供の人数」を選択するフォーム（モーダルまたは展開UI）を表示する。
+  - 人数データをSupabaseに送信する処理への変更。
+- [ ] 役員ダッシュボード（AdminView.tsx）の実装
+  - `fetchCirculars` で `adult_count`, `child_count` を取得するように修正。
+  - 「申込者一覧」モーダル内で、申込者ごとの「大人X名 / 子供Y名」の内訳を表示する。
+  - 上部に「合計：大人〇名 / 子供〇名」の集計を追加する。

@@ -1,0 +1,7 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "交流ポータルの画面構成変更（3つの機能分割）、単独カレンダー、全面地図、およびリッチメニューのボタン位置変更に関する実装プラン",
+  "updatedAt":  "2026-05-15T09:58:21.739804200Z",
+  "version":  "4",
+  "requestFeedback":  true
+}

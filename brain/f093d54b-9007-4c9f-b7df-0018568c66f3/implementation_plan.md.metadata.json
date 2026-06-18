@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "ResidentViewのUIをLINE風からモダンなアプリ風（カード型フィードと固定ボトムナビゲーション）に刷新する計画",
+  "updatedAt":  "2026-04-28T08:03:57.233430Z",
+  "requestFeedback":  true
+}

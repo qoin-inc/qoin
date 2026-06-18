@@ -1,0 +1,13 @@
+# イベント申し込み・既読管理の個別化タスク
+
+# イベント申し込み・既読管理の個別化タスク
+
+- [x] DBマイグレーションファイルの作成 (`database/Day15_fix_event_applications.sql`)
+- [x] データベースへのSQL適用 (ユーザーによる手動実行待ち)
+- [x] `src/app/resident/page.tsx` の修正 (`ResidentView` へ `userId` を渡す)
+- [x] `src/components/ResidentView.tsx` の修正
+  - [x] Propsに `userId` を追加
+  - [x] データ取得（SELECT）時に `resident_name` ではなく `user_auth_id` でフィルタリング
+  - [x] データ保存（INSERT）時に `user_auth_id` をセットする
+- [x] `src/components/AdminView.tsx` の影響確認・修正（必要であれば）
+- [x] ビルド確認 (`npm run build`)

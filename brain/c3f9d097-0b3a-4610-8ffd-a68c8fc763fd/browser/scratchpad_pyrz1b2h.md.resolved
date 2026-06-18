@@ -1,0 +1,24 @@
+# Task: Record Video Demonstration of Resident View
+
+## Checklist
+- [ ] Navigate to http://localhost:3000/resident/?test_bypass=1 (Encountered login page, retrying)
+- [ ] Verify Resident View loads and shows circulars
+- [ ] Click on the first circular
+- [ ] Scroll down to show content
+- [ ] Click "戻る" (Back) button
+- [ ] Wait 2 seconds
+- [ ] Task complete
+
+## Notes
+- Using `test_bypass=1` to skip LINE login.
+- Recording is automatic.
+- Initial attempt showed login page. Clicked login button but got 400 Bad Request from LINE.
+- Tried navigating with and without trailing slash.
+- Tried `test_bypass=true`.
+- Waiting for 10 seconds did not result in a redirect.
+- Debug info on page shows `LoggedIn: No`.
+- Tried `/resident/circulars` (404).
+- Tried `test-bypass=1` and `bypass=1`.
+- Waiting did not work.
+- Registration page requires specific details.
+- Will try to click "LINEでログインする" one more time with the bypass param and then report if it fails.

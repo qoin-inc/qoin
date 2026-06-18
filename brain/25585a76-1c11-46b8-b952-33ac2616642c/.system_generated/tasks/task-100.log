@@ -1,0 +1,7 @@
+�ꏊ �s:1 �:36
++ ... rogram Files\nodejs\node.exe" node_modules/typescript/bin/tsc --noEmi ...
++                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+�܂�̓X�e�[�g�g�̃g�[�N� 'node_modules/typescript/bin/tsc' �g�p�ł�܂�B
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : UnexpectedToken
+ 

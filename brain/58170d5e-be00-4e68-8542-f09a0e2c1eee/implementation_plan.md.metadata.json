@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "会員からの退会申請をLINEで役員に通知する機能の実装計画です。LIFFの機能を用いて公式アカウント宛にメッセージを送信する方法を提案し、運用の確認を行っています。",
+  "updatedAt":  "2026-04-30T23:13:17.613803900Z",
+  "requestFeedback":  true
+}

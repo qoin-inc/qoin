@@ -1,0 +1,7 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-23T12:14:50+09:00
+Prompt: Check deploy completion
+
+[2026-05-23T12:14:20+09:00] Still waiting. Remaining time: 30s
+[2026-05-23T12:14:30+09:00] Still waiting. Remaining time: 20s
+[2026-05-23T12:14:30+09:00] Timer cancelled: agent received a message during wait.

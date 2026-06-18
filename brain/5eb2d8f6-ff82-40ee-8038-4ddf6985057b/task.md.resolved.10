@@ -1,0 +1,8 @@
+# 回覧板の論理削除（ソフトデリート）の実装
+
+- [x] Supabaseにて `circulars` テーブルへ `deleted_at` カラムの追加（SQL手動実行）
+- [x] `AdminView.tsx` の削除処理を物理削除から論理削除（`deleted_at` への日時記録）へ変更
+- [x] `AdminView.tsx` のデータ取得ロジックにて、`deleted_at` が NULL のものだけを抽出するように修正
+- [x] プッシュ通知件数の集計ロジックでは削除済みデータをそのままカウントさせる設定を維持
+- [x] `ResidentView.tsx` (住民画面) でも削除済みのものが一覧および詳細に表示されないよう対応
+- [x] Netlifyへの本番デプロイ

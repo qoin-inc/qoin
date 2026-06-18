@@ -1,0 +1,15 @@
+<current_dom_explanation>
+This is a temporary snapshot of the current page's DOM structure. The DOM will change if you navigate to or interact with another page. Use a tool like browser_get_dom to capture and preserve the DOM in your trajectory if needed for later reference.
+</current_dom_explanation>
+<current_dom>
+[0] (168,651)<div  />
+	[1] (168,542)<i  />
+	[2] (168,812)<div >メイン画面 />
+[3] (506,651)<div  />
+	[4] (506,542)<i  />
+	[5] (506,812)<div >回覧板・連絡 />
+[6] (844,651)<div  />
+	[7] (844,542)<i  />
+	[8] (844,812)<div >マイel-town />
+
+</current_dom>

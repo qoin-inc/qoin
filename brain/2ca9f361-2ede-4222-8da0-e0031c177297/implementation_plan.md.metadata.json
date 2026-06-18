@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "会費管理タブから会員への請求を一括作成する機能（fee_records → fee_billings連携）と、決済完了後の領収書表示・PDF保存機能の実装計画。AdminView.tsx、ResidentView.tsx、stripe-webhook.tsの3ファイルを修正。",
+  "updatedAt":  "2026-05-24T00:21:28.449936900Z",
+  "requestFeedback":  true
+}

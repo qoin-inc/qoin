@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_WALKTHROUGH",
+  "summary": "AdminView.tsx の「会費管理」テーブル構造の完全復旧、Stripe案内文のグリッドレイアウト化、およびNetlifyへの本番デプロイが完了したことをまとめたドキュメント。",
+  "updatedAt": "2026-05-21T04:47:44.291687700Z"
+}

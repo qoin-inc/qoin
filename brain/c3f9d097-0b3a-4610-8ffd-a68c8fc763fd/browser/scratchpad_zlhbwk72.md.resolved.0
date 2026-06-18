@@ -1,0 +1,11 @@
+# Task: Record Resident View Demonstration
+
+## Plan
+1. [ ] Navigate to `http://localhost:3000/resident/?test_bypass=1`
+2. [ ] Identify and click the first circular's detail button
+3. [ ] View details and scroll down
+4. [ ] Return to the list
+5. [ ] Wait for completion
+
+## Observations
+- 

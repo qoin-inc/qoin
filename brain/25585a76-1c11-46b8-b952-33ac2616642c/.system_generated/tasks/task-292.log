@@ -1,0 +1,7 @@
+Get-ChildItem : �A�N�Z�X�ۂ�܂�B
+�ꏊ �s:1 �:1
++ Get-ChildItem -Path "C:\Program Files", "C:\Users\info\AppData" -Filt ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [Get-ChildItem], UnauthorizedAccessException
+    + FullyQualifiedErrorId : System.UnauthorizedAccessException,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 

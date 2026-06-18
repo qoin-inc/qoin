@@ -1,0 +1,324 @@
+
+
+LineNumber : 39
+Line       :   const [settingsTab, setSettingsTab] = useState<'info'|'integration'|'danger'|'roster'|'admins'|'fee'|'sy
+             stem_fee'|'stripe'>('info');
+
+LineNumber : 52
+Line       :   const [feeRecords, setFeeRecords] = useState<any[]>([]);
+
+LineNumber : 53
+Line       :   const [editingFeeRosterId, setEditingFeeRosterId] = useState<string | null>(null);
+
+LineNumber : 54
+Line       :   const [editFeeData, setEditFeeData] = useState<{ expected_amount: string, paid_amount: string }>({ expec
+             ted_amount: '', paid_amount: '' });
+
+LineNumber : 55
+Line       :   const [feeIsSubmitting, setFeeIsSubmitting] = useState(false);
+
+LineNumber : 119
+Line       :   const [totalPaidFee, setTotalPaidFee] = useState(0);
+
+LineNumber : 120
+Line       :   const [totalUnpaidFee, setTotalUnpaidFee] = useState(0);
+
+LineNumber : 197
+Line       :     // 4. �[�󋵂̌v�Z�i�N�x�x�[�X�j
+
+LineNumber : 198
+Line       :     const { data: allFeeRecords } = await supabase.from('fee_records').select('*');
+
+LineNumber : 203
+Line       :     if (allRosters && allFeeRecords) {
+
+LineNumber : 205
+Line       :             const f = allFeeRecords.find(x => x.roster_id === r.id && x.year === fiscalYear);
+
+LineNumber : 212
+Line       :     setTotalPaidFee(paid);
+
+LineNumber : 213
+Line       :     setTotalUnpaidFee(Math.max(0, expected - paid));
+
+LineNumber : 764
+Line       :     if (isSettingsOpen && settingsTab === 'fee') {
+
+LineNumber : 766
+Line       :       fetchFeeRecords();
+
+LineNumber : 770
+Line       :   const fetchFeeRecords = async () => {
+
+LineNumber : 772
+Line       :       .from('fee_records')
+
+LineNumber : 775
+Line       :       setFeeRecords(data);
+
+LineNumber : 779
+Line       :   const [selectedFeeRosters, setSelectedFeeRosters] = useState<string[]>([]);
+
+LineNumber : 781
+Line       :   const [isBulkFeeSubmitting, setIsBulkFeeSubmitting] = useState(false);
+
+LineNumber : 784
+Line       :   const handleBulkSaveFee = async () => {
+
+LineNumber : 785
+Line       :     if (selectedFeeRosters.length === 0) return;
+
+LineNumber : 786
+Line       :     setIsBulkFeeSubmitting(true);
+
+LineNumber : 789
+Line       :     for (const rosterId of selectedFeeRosters) {
+
+LineNumber : 790
+Line       :       const existing = feeRecords.find(f => f.roster_id === rosterId && f.year === selectedFiscalYear);
+
+LineNumber : 792
+Line       :         await supabase.from('fee_records').update({ expected_amount: expectedVal }).eq('id', existing.id);
+
+LineNumber : 794
+Line       :         await supabase.from('fee_records').insert({
+
+LineNumber : 803
+Line       :     setSelectedFeeRosters([]);
+
+LineNumber : 805
+Line       :     await fetchFeeRecords();
+
+LineNumber : 807
+Line       :     setIsBulkFeeSubmitting(false);
+
+LineNumber : 808
+Line       :     alert(`${selectedFeeRosters.length}�̐�z�ꊇ�ݒ肵�܂�B`);
+
+LineNumber : 811
+Line       :   // �[�҂ɐ�쐬�ifee_billings �Ƀ�R�[�h�ꊇ�쐬�j
+
+LineNumber : 820
+Line       :       const record = feeRecords.find(f => f.roster_id === r.id && f.year === selectedFiscalYear);
+
+LineNumber : 838
+Line       :         .from('fee_billings')
+
+LineNumber : 850
+Line       :       // fee_billings �ɐ�R�[�h�쐬
+
+LineNumber : 851
+Line       :       const { error } = await supabase.from('fee_billings').insert({
+
+LineNumber : 863
+Line       :     if (skippedNoAmount > 0) msg += `\n? ��ݒ�: ${skippedNoAmount}�i�ɐ�z�ݒ肵�Ă�j`
+             ;
+
+LineNumber : 872
+Line       :     const record = feeRecords.find(f => f.roster_id === rosterId && f.year === selectedFiscalYear);
+
+LineNumber : 874
+Line       :     // fee_records � paid_amount �X�V
+
+LineNumber : 876
+Line       :       await supabase.from('fee_records').update({ paid_amount: amount }).eq('id', record.id);
+
+LineNumber : 878
+Line       :       await supabase.from('fee_records').insert({
+
+LineNumber : 886
+Line       :     // fee_billings � paid �ɍX�V
+
+LineNumber : 888
+Line       :       .from('fee_billings')
+
+LineNumber : 894
+Line       :     await fetchFeeRecords();
+
+LineNumber : 899
+Line       :   const handleSaveFee = async (rosterId: string) => {
+
+LineNumber : 900
+Line       :     setFeeIsSubmitting(true);
+
+LineNumber : 901
+Line       :     const existing = feeRecords.find(f => f.roster_id === rosterId && f.year === selectedFiscalYear);
+
+LineNumber : 902
+Line       :     const expectedVal = editFeeData.expected_amount === '' ? null : parseInt(editFeeData.expected_amount);
+
+LineNumber : 903
+Line       :     const paidVal = parseInt(editFeeData.paid_amount) || 0;
+
+LineNumber : 906
+Line       :       const { error } = await supabase.from('fee_records').update({
+
+LineNumber : 912
+Line       :       const { error } = await supabase.from('fee_records').insert({
+
+LineNumber : 921
+Line       :     setEditingFeeRosterId(null);
+
+LineNumber : 922
+Line       :     await fetchFeeRecords();
+
+LineNumber : 924
+Line       :     setFeeIsSubmitting(false);
+
+LineNumber : 936
+Line       :       setSystemSettings({ push_unit_price: 5, free_push_limit: 200, annual_fee_amount: 3000 });
+
+LineNumber : 944
+Line       :   const [systemFeeHistory, setSystemFeeHistory] = useState<any[]>([]);
+
+LineNumber : 945
+Line       :   const [isSystemFeeHistoryLoading, setIsSystemFeeHistoryLoading] = useState(false);
+
+LineNumber : 947
+Line       :   const fetchSystemFeeHistory = async () => {
+
+LineNumber : 948
+Line       :     setIsSystemFeeHistoryLoading(true);
+
+LineNumber : 1000
+Line       :     setSystemFeeHistory(historyData);
+
+LineNumber : 1001
+Line       :     setIsSystemFeeHistoryLoading(false);
+
+LineNumber : 1005
+Line       :     if (isSettingsOpen && settingsTab === 'system_fee') {
+
+LineNumber : 1006
+Line       :       fetchSystemFeeHistory();
+
+LineNumber : 1371
+Line       :                 <span>�N�x�̉�[�</span>
+
+LineNumber : 1376
+Line       :                    <span className="text-2xl font-black text-green-600">\{totalPaidFee.toLocaleString()}</
+             span>
+
+LineNumber : 1381
+Line       :                    <span className="text-2xl font-black text-red-500">\{totalUnpaidFee.toLocaleString()}</
+             span>
+
+LineNumber : 1948
+Line       :                 onClick={() => setSettingsTab('system_fee')}
+
+LineNumber : 1949
+Line       :                 className={`py-3 px-4 font-bold text-sm border-b-2 transition whitespace-nowrap ${settings
+             Tab === 'system_fee' ? 'border-qoin-main text-qoin-main' : 'border-transparent text-gray-500 hover:text-gr
+             ay-700'}`}
+
+LineNumber : 1952
+Line       :                 onClick={() => setSettingsTab('fee')}
+
+LineNumber : 1953
+Line       :                 className={`py-3 px-4 font-bold text-sm border-b-2 transition whitespace-nowrap ${settings
+             Tab === 'fee' ? 'border-qoin-main text-qoin-main' : 'border-transparent text-gray-500 hover:text-gray-700'
+             }`}
+
+LineNumber : 1954
+Line       :               >�Ǘ�</button>
+
+LineNumber : 2376
+Line       :               {settingsTab === 'system_fee' && (
+
+LineNumber : 2409
+Line       :                     {isSystemFeeHistoryLoading ? (
+
+LineNumber : 2424
+Line       :                             {systemFeeHistory.length === 0 && (
+
+LineNumber : 2431
+Line       :                             {systemFeeHistory.map((h, i) => (
+
+LineNumber : 2461
+Line       :               {/* �^�u7: �Ǘ� */}
+
+LineNumber : 2462
+Line       :               {settingsTab === 'fee' && (
+
+LineNumber : 2467
+Line       :                         <i className="fas fa-users mr-2 text-orange-600"></i>� �Ǘ�i�Z�̏W
+             �j
+
+LineNumber : 2483
+Line       :                       {selectedFiscalYear}�N�x�i{selectedFiscalYear}�N4�?{selectedFiscalYear + 1}�N3�j
+             �̉�Ǘ�܂�B�쐬�O�ɁA�S�̐�z�ݒ肵�Ă�B
+
+LineNumber : 2502
+Line       :                                 onClick={handleBulkSaveFee}
+
+LineNumber : 2503
+Line       :                                 disabled={isBulkFeeSubmitting || selectedFeeRosters.length === 0}
+
+LineNumber : 2506
+Line       :                                 {isBulkFeeSubmitting ? '�...' : '�ꊇ�ݒ�'}
+
+LineNumber : 2510
+Line       :                               �I�: {selectedFeeRosters.length}�l
+
+LineNumber : 2521
+Line       :                                       checked={rosters.length > 0 && selectedFeeRosters.length === rosters
+             .length}
+
+LineNumber : 2524
+Line       :                                           setSelectedFeeRosters(rosters.map(r => r.id));
+
+LineNumber : 2526
+Line       :                                           setSelectedFeeRosters([]);
+
+LineNumber : 2540
+Line       :                                   const record = feeRecords.find(f => f.roster_id === r.id && f.year === s
+             electedFiscalYear);
+
+LineNumber : 2541
+Line       :                                   const isEditing = editingFeeRosterId === r.id;
+
+LineNumber : 2553
+Line       :                                           checked={selectedFeeRosters.includes(r.id)}
+
+LineNumber : 2556
+Line       :                                               setSelectedFeeRosters([...selectedFeeRosters, r.id]);
+
+LineNumber : 2558
+Line       :                                               setSelectedFeeRosters(selectedFeeRosters.filter(id => id !==
+              r.id));
+
+LineNumber : 2572
+Line       :                                               value={editFeeData.expected_amount}
+
+LineNumber : 2573
+Line       :                                               onChange={e => setEditFeeData({...editFeeData, expected_amou
+             nt: e.target.value})}
+
+LineNumber : 2581
+Line       :                                               value={editFeeData.paid_amount}
+
+LineNumber : 2582
+Line       :                                               onChange={e => setEditFeeData({...editFeeData, paid_amount: 
+             e.target.value})}
+
+LineNumber : 2593
+Line       :                                                 onClick={() => handleSaveFee(r.id)}
+
+LineNumber : 2594
+Line       :                                                 disabled={feeIsSubmitting}
+
+LineNumber : 2600
+Line       :                                                 onClick={() => setEditingFeeRosterId(null)}
+
+LineNumber : 2627
+Line       :                                                   setEditingFeeRosterId(r.id);
+
+LineNumber : 2628
+Line       :                                                   setEditFeeData({
+
+LineNumber : 2711
+Line       :                           el-town�͉�l�̔N�W�邽�߂ɐ�E�ō�̈�S�Ȍ�σV�X�e�uStripe�v
+             �W�L�b�V�X�ς�܂�B�ڂ�͉�L�̑�}�j�A�m�F�B
+
+
+

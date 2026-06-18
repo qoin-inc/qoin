@@ -1,0 +1,5 @@
+- `[x]` AdminView.tsx の破損コード（会費管理テーブル周辺）の完全復旧
+- `[x]` AdminView.tsx 内の Stripe 案内文を魅力的な新デザインに更新（「個別訪問」への用語統一）
+- `[x]` ローカルビルドによる動作確認 (`npm run build`)
+- `[x]` Netlify への本番デプロイ (`netlify deploy --prod --build`)
+- `[x]` 実装完了の検証および walkthrough.md の作成

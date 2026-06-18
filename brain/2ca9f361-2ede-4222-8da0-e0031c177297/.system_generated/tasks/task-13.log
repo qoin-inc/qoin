@@ -1,0 +1,9 @@
+Test-Path : �A�N�Z�X�ۂ�܂�B
+�ꏊ �s:1 �:5
++ if (Test-Path "C:\Users\info\.gemini\antigravity\brain\2ca9f361-2ede- ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (C:\Users\info\....ranscript.jsonl:String) [Test-Path], UnauthorizedAc 
+   cessException
+    + FullyQualifiedErrorId : ItemExistsUnauthorizedAccessError,Microsoft.PowerShell.Commands.TestPathCommand
+ 
+transcript.jsonl not found

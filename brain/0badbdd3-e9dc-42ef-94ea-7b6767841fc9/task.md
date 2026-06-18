@@ -1,0 +1,10 @@
+- `[x]` データベースの改修 (SQLスクリプト作成と実行)
+  - `[x]` `system_settings` テーブルに `push_cost_price`, `monthly_household_price` 追加
+  - `[x]` `platform_payments` テーブル作成
+- `[x]` システム管理画面の開発 (`/system/`)
+  - `[x]` `src/app/system/page.tsx` 作成
+  - `[x]` `src/components/SystemAdminView.tsx` 作成
+  - `[x]` 表示・計算ロジックの実装
+- `[x]` 町内会用ダッシュボードの改修 (`AdminView.tsx`)
+  - `[x]` ダッシュボードの表示項目を「システム利用料予想請求額」に変更
+- `[x]` 本番環境へのデプロイと動作確認

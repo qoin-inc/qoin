@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "システム管理画面に町内会の完全削除（物理削除）機能を追加する実装計画。\n関連する子テーブル（お知らせ、名簿、役員、設定、決済）のデータも確実に削除してから、町内会本体のデータを削除するロジックをSystemAdminViewに追加します。",
+  "updatedAt":  "2026-05-12T09:49:48.812524700Z",
+  "requestFeedback":  true
+}

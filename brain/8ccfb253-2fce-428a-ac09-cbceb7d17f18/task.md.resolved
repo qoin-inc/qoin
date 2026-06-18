@@ -1,0 +1,8 @@
+- [x] `src/app/admin/page.tsx` の新規作成（管理者機能のロジック移植）
+- [x] `src/app/page.tsx` の修正
+  - [x] ログイン・サインアップロジックの削除
+  - [x] 初期メニューのボタンを `/admin` へのリンクに変更
+  - [x] 表示文言の修正
+- [x] `src/components/SignupTown.tsx` の文言修正
+- [x] `src/components/AdminView.tsx` の文言修正
+- [x] 動作確認

@@ -1,0 +1,8 @@
+# LINE LIFF 統合タスクリスト
+
+- [/] `.env.local` への LIFF ID の追加
+- [ ] `@line/liff` パッケージのインストール
+- [ ] Next.js アプリの画面構成の確認 (`page.tsx`, `ResidentView.tsx` 等)
+- [ ] LINE起動検出と初期化用の `LiffProvider` (または共通レイアウト) の実装
+- [ ] 住民向け画面へのアクセス制限機能（LINEアプリ外からのアクセスブロック）の実装
+- [ ] ログ機能や検証の準備

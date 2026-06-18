@@ -1,0 +1,35 @@
+functionsDirectory = "C:\\Users\\info\\.gemini\\antigravity\\netlify\\functions"
+functionsDirectoryOrigin = "config"
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[[plugins]]
+origin = "config"
+package = "@netlify/plugin-nextjs"
+
+[plugins.inputs]
+
+[build]
+publish = "C:\\Users\\info\\.gemini\\antigravity\\.next"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "npm run build"
+functions = "C:\\Users\\info\\.gemini\\antigravity\\netlify\\functions"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

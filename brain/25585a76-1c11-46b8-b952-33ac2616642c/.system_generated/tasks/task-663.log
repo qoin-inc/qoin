@@ -1,0 +1,23 @@
+
+> qoin@0.1.0 build
+> next build
+
+▲ Next.js 16.2.2 (Turbopack)
+- Environments: .env.local, .env.production
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.9s
+  Running TypeScript ...
+Failed to type check.
+
+./src/components/AdminView.tsx:2502:53
+Type error: 'e' is of type 'unknown'.
+
+  2500 | ...                        }
+  2501 | ...                      } catch (e) {
+> 2502 | ...                        alert('通信エラー: ' + e.message);
+       |                                         ^
+  2503 | ...                      }
+  2504 | ...                    }}
+  2505 | ...                    className="bg-indigo-600 text-white font-black px-10 py-4 rounded...
+Next.js build worker exited with code: 1 and signal: null

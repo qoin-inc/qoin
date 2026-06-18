@@ -1,0 +1,6 @@
+# 操作マニュアルページ作成タスク
+
+- [ ] リッチメニュー画像（`media__1778049111307.jpg`等）を `public/richmenu.jpg` にコピー
+- [ ] `src/app/manual/page.tsx` の新規作成（デザイン・アニメーション含む）
+- [ ] `src/app/page.tsx` の「操作方法」リンクを `/manual` に更新
+- [ ] デプロイ（本番反映）

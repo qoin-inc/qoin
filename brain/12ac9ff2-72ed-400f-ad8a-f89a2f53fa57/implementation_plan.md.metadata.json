@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "システム管理画面のログアウト機能追加、および代理アクセス時のRLS（行レベルセキュリティ）権限不足による操作不可問題を解決するための実装計画",
+  "updatedAt":  "2026-05-13T23:13:42.095220600Z",
+  "requestFeedback":  true
+}

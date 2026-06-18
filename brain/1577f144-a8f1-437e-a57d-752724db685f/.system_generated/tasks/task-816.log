@@ -1,0 +1,7 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-23T09:24:20+09:00
+Prompt: Check deploy completion
+
+[2026-05-23T09:24:00+09:00] Still waiting. Remaining time: 20s
+[2026-05-23T09:24:10+09:00] Still waiting. Remaining time: 10s
+[2026-05-23T09:24:20+09:00] Timer fired.

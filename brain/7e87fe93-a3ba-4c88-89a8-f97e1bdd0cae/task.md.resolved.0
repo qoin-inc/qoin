@@ -1,0 +1,12 @@
+# 電子回覧板システム 開発タスク
+
+- [ ] Viteプロジェクトの初期化（`C:\Users\info\.gemini\antigravity\scratch\el-town-app`）
+- [ ] Tailwind CSSのインストールと初期設定
+- [ ] 住民向け画面コンポーネントの作成（ライトブルー基調）
+    - [ ] `ResidentCircularList.jsx`
+    - [ ] `ResidentCircularDetail.jsx`
+- [ ] 役員向け画面コンポーネントの作成
+    - [ ] `AdminDashboard.jsx`
+    - [ ] `AdminCircularEditor.jsx`
+- [ ] メイン画面設定（`App.jsx`でルーティングモックを作成）
+- [ ] 開発サーバー起動（プレビュー）

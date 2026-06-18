@@ -1,0 +1,8 @@
+# 住民照合・登録機能 実装タスク
+
+- [ ] `database/Day9_resident_rosters.sql` の作成（マイグレーションスクリプト）
+- [ ] `src/components/AdminView.tsx` への名簿管理（登録・一覧）機能の追加
+- [ ] `src/components/SignupResident.tsx` の新規作成（住民の新規登録と照合フローの実装）
+- [ ] `src/app/page.tsx` に `SignupResident` への遷移を追加
+- [ ] `src/components/ResidentView.tsx` を本番認証データと連携（テスト住民Aのハードコードを削除）
+- [ ] 動作確認（Adminからの名簿登録 -> 住民からの照合とsignUp -> 住民アプリでの回覧板表示）

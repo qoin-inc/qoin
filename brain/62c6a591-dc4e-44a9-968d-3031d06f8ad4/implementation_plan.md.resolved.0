@@ -1,0 +1,40 @@
+# [イベント申し込みの独立化]
+
+世帯主と家族会員がそれぞれ別々に（独立して）イベントに申し込めるようにするための修正プランです。
+現在「会員の名前（resident_name）」をキーとして保存・取得している申し込みデータや既読データを、アカウント固有のID（user_auth_id）をキーとするようにデータベース構造とプログラムを改修します。
+
+## Proposed Changes
+
+### Database (Supabase)
+
+#### [NEW] database/Day15_fix_event_applications.sql
+イベント申し込みテーブルと既読管理テーブルに、固有のユーザーIDを保存するためのカラムを追加するSQLを作成します。
+```sql
+ALTER TABLE public.read_receipts ADD COLUMN IF NOT EXISTS user_auth_id UUID;
+ALTER TABLE public.event_applications ADD COLUMN IF NOT EXISTS user_auth_id UUID;
+```
+
+### Frontend / Components
+
+#### [MODIFY] src/app/resident/page.tsx
+- `ResidentView` コンポーネントを呼び出す際に、現在ログインしているユーザーの固有ID (`session.user.id`) をPropsとして渡すように変更します。
+
+#### [MODIFY] src/components/ResidentView.tsx
+- Propsとして `userId` を受け取るように追加します。
+- `read_receipts` および `event_applications` テーブルからデータを取得する際の条件を、`resident_name` ではなく `user_auth_id` で絞り込むように変更します。
+- イベント申し込み時や既読をつける際の保存処理（`insert`）に、`user_auth_id` も一緒に保存するように変更します。
+
+#### [MODIFY] src/components/AdminView.tsx
+- 管理者画面で「誰が申し込んだか」や「誰が既読か」を表示する部分は、引き続き `resident_name` を表示しますが、取得ロジックに影響がないか確認し、必要に応じて修正します。
+
+## Verification Plan
+
+### Automated Tests
+- ローカル環境で作成したSQL（Day15_fix_event_applications.sql）を実行し、エラーなくカラムが追加されるか確認します。
+- `npm run build` を実行してTypeScriptの型エラー等が発生しないか確認します。
+
+### Manual Verification
+- テスト会員のアカウントでログインし、テスト用のイベントに「大人1人」で申し込む。
+- 一旦ログアウトし、同じ名簿データに「家族会員」として別のLINEアカウントでログインする。
+- 家族会員の画面で、先ほど申し込んだイベントが「未申し込み（申し込み可能）」な状態で表示されることを確認する。
+- 家族会員として別途イベントに申し込んだ際に、正常に人数がカウント・保存されることを確認する。

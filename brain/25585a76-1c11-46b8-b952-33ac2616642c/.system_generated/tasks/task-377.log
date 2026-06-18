@@ -1,0 +1,5 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-21T12:14:55+09:00
+Prompt: Waiting for powershell task execution to complete
+
+[2026-05-21T12:14:55+09:00] Timer fired.

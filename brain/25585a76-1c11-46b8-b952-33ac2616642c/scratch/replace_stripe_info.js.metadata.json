@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_OTHER",
+  "summary": "Fix the TypeScript build error by explicitly casting catch(e) to catch(e: any) in AdminView.tsx.",
+  "updatedAt": "2026-05-21T05:08:24.106012700Z"
+}

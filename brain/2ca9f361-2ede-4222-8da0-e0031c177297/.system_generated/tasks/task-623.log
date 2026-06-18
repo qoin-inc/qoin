@@ -1,0 +1,36 @@
+
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day17_stripe_integration.sql
+LineNumber : 7
+Line       : -- 2. fee_billings �e�[�u�̐V�K�쐬
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day17_stripe_integration.sql
+LineNumber : 8
+Line       : CREATE TABLE IF NOT EXISTS public.fee_billings (
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day17_stripe_integration.sql
+LineNumber : 20
+Line       : ALTER TABLE public.fee_billings ENABLE ROW LEVEL SECURITY;
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day17_stripe_integration.sql
+LineNumber : 23
+Line       : CREATE POLICY "Admins can manage fee billings in their town" ON public.fee_billings
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day17_stripe_integration.sql
+LineNumber : 32
+Line       : CREATE POLICY "Residents can view own fee billings" ON public.fee_billings
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\netlify\functions\stripe-webhook.ts
+LineNumber : 95
+Line       :           .from('fee_billings')
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\netlify\functions\stripe-webhook.ts
+LineNumber : 104
+Line       :           console.error('Error updating fee_billings:', error);
+
+Path       : C:\Users\info\.gemini\antigravity\scratch\qoin\src\components\ResidentView.tsx
+LineNumber : 140
+Line       :         .from('fee_billings')
+
+
+

@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "Proposed plan to implement LINE Push Notifications via Netlify Functions. Includes requirements for the user to issue a LINE Channel Access Token and configure it in Netlify, along with creating the broadcast function to send Flex Messages with images.",
+  "updatedAt":  "2026-05-06T00:50:53.229688500Z",
+  "requestFeedback":  true
+}

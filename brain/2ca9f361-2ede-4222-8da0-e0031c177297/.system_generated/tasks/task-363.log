@@ -1,0 +1,120 @@
+​
+Netlify Build                                                 
+────────────────────────────────────────────────────────────────
+​
+> Version
+  @netlify/build 35.13.6
+​
+> Flags
+  accountId: 69e98fe76bb1ff9ca4670e62
+  deployId: 6a118658944c6f7498e3ee37
+​
+> Current directory
+  C:\Users\info\.gemini\antigravity\scratch\qoin
+​
+> Config file
+  C:\Users\info\.gemini\antigravity\scratch\qoin\netlify.toml
+​
+> Context
+  production
+​
+> Using Next.js Runtime - v5.15.9
+​
+> Outdated plugins
+   - @netlify/plugin-nextjs@5.15.9: latest version is 5.15.11
+     To upgrade this plugin, please update its version in "package.json"
+​
+build.command from netlify.toml                               
+────────────────────────────────────────────────────────────────
+​
+$ npm run build
+
+> qoin@0.1.0 build
+> next build
+
+▲ Next.js 16.2.2 (Turbopack)
+- Environments: .env.local, .env.production
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.0s
+  Running TypeScript ...
+  Finished TypeScript in 5.8s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/17) ...
+  Generating static pages using 15 workers (4/17) 
+  Generating static pages using 15 workers (8/17) 
+  Generating static pages using 15 workers (12/17) 
+✓ Generating static pages using 15 workers (17/17) in 542ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ○ /admin/stripe/refresh
+├ ○ /admin/stripe/return
+├ ƒ /api/admin/stripe/create-account-link
+├ ƒ /api/webhooks/stripe
+├ ○ /manual
+├ ○ /manual/admin
+├ ○ /manual/member
+├ ○ /manual/stripe
+├ ○ /portal
+├ ○ /resident
+├ ○ /richmenu
+└ ○ /system
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+​
+(build.command completed in 13.9s)
+​
+Functions bundling                                            
+────────────────────────────────────────────────────────────────
+​
+Packaging Functions from netlify\functions directory:
+ - create-checkout-session.ts
+ - create-stripe-account.ts
+ - line-broadcast.ts
+ - stripe-webhook.ts
+​
+​
+(Functions bundling completed in 1.7s)
+
+Deploying to Netlify
+────────────────────────────────────────────────────────────────
+
+Deploy path:        C:\Users\info\.gemini\antigravity\scratch\qoin\out
+Functions path:     C:\Users\info\.gemini\antigravity\scratch\qoin\netlify\functions
+Configuration path: C:\Users\info\.gemini\antigravity\scratch\qoin\netlify.toml
+
+⠋ Uploading blobs to deploy store...
+
+√ Finished uploading blobs to deploy store
+⠋ Hashing files...
+⠋ Looking for a functions cache...
+√ Deploying functions from cache (use --skip-functions-cache to override)
+√ Finished hashing 168 files and 4 functions
+⠋ CDN diffing files...
+√ CDN requesting 60 files and 1 functions
+⠋ Uploading 115 files
+√ Finished uploading 115 assets
+⠋ Waiting for deploy to go live...
+√ Deploy is live!
+​
+Netlify Build Complete                                        
+────────────────────────────────────────────────────────────────
+​
+(Netlify Build completed in 41.6s)
+
+🚀 Deploy complete
+────────────────────────────────────────────────────────────────
+
+Production URL: <https://el-town.jp>
+Unique deploy URL: <https://6a118658944c6f7498e3ee37--harmonious-madeleine-74f239.netlify.app>
+
+Build logs: <https://app.netlify.com/projects/harmonious-madeleine-74f239/deploys/6a118658944c6f7498e3ee37>
+Function logs: <https://app.netlify.com/projects/harmonious-madeleine-74f239/logs/functions>
+Edge function logs: <https://app.netlify.com/projects/harmonious-madeleine-74f239/logs/edge-functions>

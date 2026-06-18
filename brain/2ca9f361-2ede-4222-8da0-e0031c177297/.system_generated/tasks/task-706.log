@@ -1,0 +1,5 @@
+      |                       ^
+  195 |         allRosters.forEach(r => {
+  196 |             const f = allFeeRecords.find(x => x.roster_id === r.id && x.year === currentY...
+  197 |             if (f && f.expected_amount !== null && f.expected_amount !== undefined) {
+Next.js build worker exited with code: 1 and signal: null

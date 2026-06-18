@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "会費管理の会計期開始月をカスタマイズ可能にするための実装計画。現在ハードコーディングされている4月始まりを、基本情報設定から自治会ごとに設定可能にし、会費の年度計算・表示・Stripe Webhookすべてに反映する。",
+  "updatedAt":  "2026-05-24T10:41:56.094085800Z",
+  "requestFeedback":  true
+}

@@ -1,0 +1,5 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_TASK",
+  "summary":  "Stripe Connect Express導入のためのタスクリストです。バックエンドAPIの実装、フロントエンドのリダイレクト用ページの作成、および役員画面へのボタン追加等を含みます。",
+  "updatedAt":  "2026-05-19T23:07:26.947576800Z"
+}

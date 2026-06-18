@@ -1,0 +1,31 @@
+# Stripe連携 Step1 完了のご報告
+
+アクションプランに沿って、Stripe連携に向けた初期実装（Step1およびStep2の一部）を完了しました！
+
+## 実装した内容
+
+### 1. データベースの拡張 (`Day17_stripe_integration.sql`)
+- `neighborhoods` テーブルに、今後のStripeアカウント情報を保持するための `stripe_account_id` カラムを追加しました。
+- 会費請求を管理する `fee_billings` テーブルを新規作成し、適切なセキュリティルール (RLS) を設定しました。
+  - 役員（`neighborhood_admins` で `active` なユーザー）は自町内会の請求データをすべて操作可能。
+  - 住民（`resident_rosters`）は自身の請求データのみ閲覧可能。
+
+### 2. 役員向け管理システム (`AdminView`) のアップデート
+- 「町内会・自治会設定」モーダル内に、新しく **「オンライン集金」タブ** を追加しました。
+- タブ内に、今後のStripe連携の開始に向けた説明資料を組み込みました。
+  - システムの目的とメリット
+  - 安心のセキュリティ体制
+  - 必要な手数料
+  - 利用開始までの3ステップ
+  - 現金対応について
+
+## 次のアクション
+
+作成したデータベース拡張用スクリプトをSupabaseに適用していただく必要があります。
+
+1. 以下のファイルをエディタ等で開いて内容をコピーしてください。
+   [Day17_stripe_integration.sql](file:///c:/Users/info/.gemini/antigravity/scratch/qoin/database/Day17_stripe_integration.sql)
+2. Supabase のダッシュボードから `SQL Editor` を開き、内容を貼り付けて `RUN` を実行してください。
+
+これが完了しましたら、実際のアプリ上で `AdminView`（役員向け管理画面）を開き、「オンライン集金」タブと説明資料が正しく表示されることをご確認ください！
+（問題なければ、次回以降のステップとして実際のStripe Connect登録ボタンの実装などを進めていきます）

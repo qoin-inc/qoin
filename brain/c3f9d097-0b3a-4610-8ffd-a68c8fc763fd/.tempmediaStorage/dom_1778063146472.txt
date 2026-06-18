@@ -1,0 +1,8 @@
+400 Bad Request
+Bad Request.
+©
+LY Corporation
+LINEヤフー株式会社のリンク
+[0] (731,938)<a href='https://line.me/'>LINEについて />
+[1] (846,938)<a href='https://terms.line.me/line_rules/?lang=ja'>プライバシーポリシー />
+[2] (948,938)<a href='https://terms.line.me/line_terms/?lang=ja'>利用規約 />

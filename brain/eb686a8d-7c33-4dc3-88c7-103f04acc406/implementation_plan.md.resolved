@@ -1,0 +1,71 @@
+# Stripe Connect Express 導入実装計画
+
+町内会・自治会の会費集金アプリに Stripe Connect Express を組み込むための実装計画（Plan）です。
+本プラットフォームが決済や設定を管理し、各町内会（ベンダー）にはシンプルな「Hosted Onboarding」を使って本人確認と口座登録を行ってもらう構成とします。
+
+## User Review Required
+
+> [!IMPORTANT]
+> - **WebViewでの画面遷移方針**: StripeのHosted Onboarding画面はセキュリティ上、iframe内での表示が禁止されているため、アプリ内WebView（またはLIFFブラウザ等）で画面全体をStripeのURLに遷移（リダイレクト）させる形をとります。完了・中断時にアプリ内の特定画面に戻るよう `return_url` と `refresh_url` を設定します。これで問題ないかご確認ください。
+> - **Stripe アカウント情報の保存先**: `neighborhoods` テーブルの `stripe_account_id` カラムを利用して各町内会とStripeのアカウントを紐付けます（Day17のSQLで追加済みの前提で進めます）。
+
+## Open Questions
+
+> [!WARNING]
+> 実装前に以下の点についてユーザーの確認が必要です。
+> 1. **WebView環境の特定**: このアプリは現在 LINE LIFF 等の特定のプラットフォーム上で動作していますか？それとも標準的なPWA/モバイルブラウザですか？（URLを開く際、`liff.openWindow()` を使うか `window.location.href` を使うかの判断のため）
+> 2. **ローカルテスト環境**: Stripe Webhook をローカルでテストするためには Stripe CLI などを利用する必要がありますが、今回はまずはエンドポイントの「受け皿（コード）」のみの実装でよろしいでしょうか？
+
+## Proposed Changes
+
+### バックエンドAPI実装
+
+#### [NEW] `src/app/api/admin/stripe/create-account-link/route.ts`
+StripeのExpressアカウントを作成し、オンボーディング用のURLを発行するAPIエンドポイント。
+- **処理フロー**:
+  1. ログイン中の役員（Admin）が属する町内会IDを取得。
+  2. `neighborhoods` テーブルから対象町内会の `stripe_account_id` を確認。
+  3. 未作成の場合は `stripe.accounts.create({ type: 'express', ... })` で新規作成し、DBに保存。
+     - **【改善】プリフィル（事前入力）の活用**: 登録時の入力負担を軽減するため、データベース上にある「町内会名」や「役員のメールアドレス」をアカウント作成時の初期データとしてStripe側に連携します（`business_profile: { name }`, `email` 等）。これにより、町内会側の入力は「名前」「本人確認書類」「口座番号」程度に最小化されます。
+  4. `stripe.accountLinks.create(...)` を呼び出し、認証用URL（Hosted Onboarding URL）を発行。
+  5. その際、`return_url`（完了時）と `refresh_url`（中断時や期限切れ時）を指定してフロントエンドにURLを返す。
+
+#### [NEW] `src/app/api/webhooks/stripe/route.ts`
+Stripe側で本人確認や口座登録が完了した際に通知を受け取るWebhookの最低限の受け皿。
+- **処理フロー**:
+  1. Stripeのシグネチャ（`Stripe-Signature`）を検証。
+  2. `account.updated` イベントを受け取る。
+  3. 対象アカウントの `details_submitted` などを確認し、必要に応じてデータベース上の町内会の「Stripe登録完了ステータス」を更新する。
+
+---
+
+### フロントエンドUI/UX実装
+
+#### [MODIFY] 役員向け設定画面（例: `src/app/admin/settings/page.tsx` または該当コンポーネント）
+町内会の決済アカウントを登録するためのUI。
+- 「会費集金アカウントを登録する（Stripe）」というボタンを配置。
+- ボタン押下時に `/api/admin/stripe/create-account-link` を叩く。
+- APIから返却されたURLに対して、WebView内で画面遷移（リダイレクト）を実行する。
+
+#### [NEW] `src/app/admin/stripe/return/page.tsx`
+Stripeオンボーディング完了時のリダイレクト先画面（`return_url`）。
+- 「登録手続きが完了しました（※Stripe側での審査が進行中です）」といったメッセージを表示。
+- 役員ダッシュボードへの「戻る」ボタンを配置。
+
+#### [NEW] `src/app/admin/stripe/refresh/page.tsx`
+Stripeオンボーディング中断時・リンク期限切れ時のリダイレクト先画面（`refresh_url`）。
+- 「登録手続きが中断されました。再度最初からやり直してください」といったメッセージを表示。
+- 再度APIを叩いて新しいURLを発行するためのボタン、または設定画面へ戻る導線を配置。
+
+## Verification Plan
+
+### Automated Tests
+- TypeScriptの型チェック (`npm run build`) および ESLint (`npm run lint`)。
+
+### Manual Verification
+1. **API動作確認**: 役員アカウントでログインし、設定画面のボタンを押下。APIが正常にStripe ExpressアカウントのIDを発行し、DB（`neighborhoods.stripe_account_id`）に保存されるか確認する。
+2. **WebViewリダイレクト**: 発行されたURLに遷移し、Stripeのテスト環境（Hosted Onboarding）が表示されるか確認する。
+3. **完了・中断のリダイレクト**:
+   - Stripeの画面で情報を入力し完了後、`/admin/stripe/return` に正しく戻れるか確認する。
+   - Stripeの画面の左上「戻る」ボタン等で中断した際、`/admin/stripe/refresh` に正しく戻れるか確認する。
+4. **Webhook受信（任意）**: Stripe CLI で `account.updated` イベントを送信し、最低限のステータスログが出力されるか確認する。

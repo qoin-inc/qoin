@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>LINE Rich Menu</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 1200px;
+      height: 405px; /* ハーフサイズ */
+      background: #f0f2f5;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      display: flex;
+      box-sizing: border-box;
+    }
+    .menu-container {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2px;
+      background: #ddd;
+    }
+    .menu-item {
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .menu-item:hover {
+      background: #f9f9f9;
+    }
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    .label {
+      font-size: 32px;
+      font-weight: 900;
+      color: #333;
+      letter-spacing: 2px;
+    }
+    /* カラフルなアイコン */
+    .icon-home { color: #0ea5e9; } /* Sky */
+    .icon-circular { color: #f97316; } /* Orange */
+    
+    /* マイel-town用の特別なスタイル */
+    .my-eltown {
+      background: linear-gradient(135deg, #fff3eb 0%, #fdf2f8 100%);
+    }
+    .icon-portal {
+      background: linear-gradient(135deg, #fb923c 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .label-portal {
+      background: linear-gradient(135deg, #fb923c 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="menu-container">
+    <div class="menu-item">
+      <i class="fas fa-home icon icon-home"></i>
+      <div class="label">メイン画面</div>
+    </div>
+    <div class="menu-item">
+      <i class="fas fa-clipboard-list icon icon-circular"></i>
+      <div class="label">回覧板・連絡</div>
+    </div>
+    <div class="menu-item my-eltown">
+      <i class="fas fa-map-marked-alt icon icon-portal"></i>
+      <div class="label label-portal">マイel-town</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "電子回覧板システムのプロトタイプ開発計画。住民向け・役員向けの2つの画面を備えたReactアプリを作成し、回覧板の作成から閲覧までの流れをモックデータで確認できるようにする。",
+  "updatedAt": "2026-04-01T23:23:23.173912400Z",
+  "requestFeedback": true
+}

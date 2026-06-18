@@ -1,0 +1,14 @@
+Get-ChildItem : �A�N�Z�X�ۂ�܂�B
+�ꏊ �s:1 �:1
++ Get-ChildItem -Path src -Recurse -Filter *.ts* | Select-String -Patte ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (C:\:String) [Get-ChildItem], UnauthorizedAccessException
+    + FullyQualifiedErrorId : ItemExistsUnauthorizedAccessError,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 
+Get-ChildItem : �p�X 'C:\' �݂�Ȃ�ߌ�o�ł�܂�B
+�ꏊ �s:1 �:1
++ Get-ChildItem -Path src -Recurse -Filter *.ts* | Select-String -Patte ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\:String) [Get-ChildItem], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 

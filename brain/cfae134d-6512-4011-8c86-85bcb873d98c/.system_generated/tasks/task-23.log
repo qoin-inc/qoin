@@ -1,0 +1,9 @@
+Select-String : �p�X 'C:\Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx' �݂�Ȃ�ߌ�o
+�ł�܂�B
+�ꏊ �s:1 �:1
++ Select-String -Path "C:\Users\info\.gemini\antigravity\scratch\qoin\s ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\info\....s\AdminView.tsx:String) [Select-String], ItemNotFound 
+   Exception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SelectStringCommand
+ 

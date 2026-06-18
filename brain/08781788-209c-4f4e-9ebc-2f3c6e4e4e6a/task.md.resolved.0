@@ -1,0 +1,7 @@
+# LINE Push Notification Implementation
+
+- [ ] Create `netlify/functions/line-broadcast.ts` for the serverless endpoint.
+- [ ] Implement LINE Messaging API broadcast logic inside the function (Flex Message for images, Text for no images).
+- [ ] Update `src/components/AdminView.tsx` `handleCreateCircular` to call the Netlify function instead of showing a simulation alert.
+- [ ] Update `src/components/AdminView.tsx` `handleUpdateCircular` to call the Netlify function when `is_pushed` is true.
+- [ ] Verify build and deploy.

@@ -1,0 +1,7 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "Implementation plan for making town name + postal code a unique key during registration.",
+  "updatedAt": "2026-04-21T03:23:47.372483100Z",
+  "version": "1",
+  "requestFeedback": true
+}

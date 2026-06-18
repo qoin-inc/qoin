@@ -1,0 +1,8 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-23T19:49:42+09:00
+Prompt: クレジット追加が反映されたはず。デプロイを再試行する
+
+[2026-05-23T19:48:12+09:00] Still waiting. Remaining time: 1m30s
+[2026-05-23T19:48:42+09:00] Still waiting. Remaining time: 1m0s
+[2026-05-23T19:49:12+09:00] Still waiting. Remaining time: 30s
+[2026-05-23T19:49:42+09:00] Timer fired.

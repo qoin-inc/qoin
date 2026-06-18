@@ -1,0 +1,7 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "Stripe連携のStep3（会員メニューからのオンライン支払い機能）の実装プランです。ResidentViewの改修と決済処理用のバックエンドAPIの作成を含みます。",
+  "updatedAt":  "2026-05-18T11:09:07.060522100Z",
+  "version":  "2",
+  "requestFeedback":  true
+}

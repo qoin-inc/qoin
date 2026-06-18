@@ -1,0 +1,7 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "システム管理画面の実装詳細と、表示・計算ロジックについての計画書。",
+  "updatedAt":  "2026-05-11T06:59:55.508209500Z",
+  "version":  "3",
+  "requestFeedback":  true
+}

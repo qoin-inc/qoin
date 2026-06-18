@@ -1,0 +1,89 @@
+<current_dom_explanation>
+This is a temporary snapshot of the current page's DOM structure. The DOM will change if you navigate to or interact with another page. Use a tool like browser_get_dom to capture and preserve the DOM in your trajectory if needed for later reference.
+</current_dom_explanation>
+<current_dom>
+[0] (500,526)<div class='flex-1 overflow-y-auto hide-scrollbar' scrollable='true' />
+	朝日町
+	町内会
+	回覧板
+	[1] (378,49)<button class='flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-gray-100 text-gray-500'>すべて />
+	[2] (459,49)<button class='flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-gray-100 text-gray-500'>連絡 />
+	[3] (541,49)<button class='flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-gray-100 text-gray-500'>回覧板 />
+	[4] (622,49)<button class='flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-orange-500 text-white shadow-sm'>イベント />
+	[5] (544,111)<button class='px-3 py-1 text-[10px] font-bold rounded-md transition bg-white text-orange-600 shadow-sm'>カレンダー />
+	[6] (619,111)<button class='px-3 py-1 text-[10px] font-bold rounded-md transition text-gray-400'>リスト />
+	[7] (374,247)<button class='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition' />
+	2026
+	年
+	4
+	月
+	[8] (626,247)<button class='w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition' />
+	日
+	月
+	火
+	水
+	木
+	金
+	土
+	[9] (500,412)<div >1 />
+		1
+	[10] (545,412)<div >2 />
+		2
+	[11] (590,412)<div >3 />
+		3
+	[12] (634,412)<div >4 />
+		4
+	[13] (366,537)<div >5 />
+		5
+	[14] (411,537)<div >6 />
+		6
+	[15] (456,537)<div >7 />
+		7
+	[16] (500,537)<div >8 />
+		8
+	[17] (545,537)<div >9 />
+		9
+	[18] (590,537)<div >10 />
+		10
+	[19] (634,537)<div >11 />
+		11
+	[20] (366,662)<div >12 />
+		12
+	[21] (411,662)<div >13 />
+		13
+	[22] (456,662)<div >14 />
+		14
+	[23] (500,662)<div >15 />
+		15
+	[24] (545,662)<div >16 />
+		16
+	[25] (590,662)<div >17 />
+		17
+	[26] (634,662)<div >18 />
+		18
+	[27] (366,788)<div >19 />
+		19
+	[28] (411,788)<div >20 />
+		20
+	[29] (456,788)<div >21 />
+		21
+	[30] (500,788)<div >22 />
+		22
+	[31] (545,788)<div >23 />
+		23
+	[32] (590,788)<div >24 />
+		24
+	[33] (634,788)<div >25 />
+		25
+	[34] (366,913)<div >26 />
+		26
+	[35] (411,913)<div >27 />
+		27
+	[36] (456,913)<div >28 />
+		28
+	[37] (500,913)<div >29 />
+		29
+	[38] (545,913)<div >30 />
+		30
+
+</current_dom>

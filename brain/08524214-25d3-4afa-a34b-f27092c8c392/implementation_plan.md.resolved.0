@@ -1,0 +1,46 @@
+# LINEログイン（LIFF）組込とマルチテナント認証の実装計画
+
+これまでの「メールアドレスとパスワード」による仮のログイン機能を廃止し、本番運用に向けて「LINE LIFF（アプリ内ログイン）」へとシステムをアップグレードするための実装計画です。
+
+## User Review Required
+
+> [!WARNING]  
+> チャネルシークレットはシステムを改ざんできる非常に強力なパスワードです。セキュリティ上、私（AI）とのチャットには貼り付けず、この計画が承認されたのち、**直接ご自身のSupabase管理画面から入力していただく**手順をとります。
+
+## Proposed Changes
+
+本計画では、「A町内会」「B町内会」といったテナントを識別しつつ、LINEからのログインを処理できるようにシステムを改修します。
+
+### 1. パッケージのインストールと環境整備
+*   LINE公式の開発ライブラリである `@line/liff` （LIFF SDK）をNext.jsプロジェクトへインストールします。
+*   いただいた `2009817872-zldmH8LW` を環境変数（`.env.local`）に組み込みます。
+
+#### [MODIFY] [package.json](file:///C:/Users/info/.gemini/antigravity/scratch/qoin/package.json)
+- dependencies に `@line/liff` を追加します。
+#### [MODIFY] [.env.local](file:///C:/Users/info/.gemini/antigravity/scratch/qoin/.env.local)
+- `NEXT_PUBLIC_LIFF_ID` を追加します。
+
+### 2. LIFFプロバイダー / ログインフックの作成
+LIFFの初期化処理（`liff.init()`）は非同期で実行されるため、アプリ全体でLINEのログイン状態を監視・共有するための共通の仕組み（Provider）を作成します。
+
+#### [NEW] [LiffProvider.tsx](file:///C:/Users/info/.gemini/antigravity/scratch/qoin/src/components/LiffProvider.tsx)
+- アプリ起動時にLINE内で開かれたか（LIFFブラウザか）を検出し、自動ログインを行うコンポーネント。
+
+### 3. Supabaseとの認証連携（Edge Function等の準備）
+LIFFで取得した「LINEのユーザーID」を使って直接Supabaseのデータベースにアクセスするためには、安全な「トークンの照合処理」が必要です。
+（※本フェーズではまずフロントエンドのLIFF初期化を完成させ、DB連携部分の設計に移ります）
+
+## Open Questions
+
+> [!IMPORTANT]  
+> LIFFアプリ（LINEの画面内）からアクセスされた場合と、**PCや普通のSafariブラウザからアクセスされた場合**の挙動について確認です。
+> ※基本的に住民用画面は「LINEアプリから開くこと」を前提（それ以外はエラーまたはQRコードを表示）とする方針でよろしいでしょうか？（役員用のPC管理画面 `/admin` のみ、引き続きメールアドレス・パスワードでの運用を残します）
+
+## Verification Plan
+
+### Automated Tests
+*   ローカル開発環境（`next dev`）を起動。
+*   コンソールにLIFFの初期化成功ログが出力されることを確認。
+
+### Manual Verification
+*   次回のテスト時、仮のHTTPSトンネル（ngrok）を通じて、お客様のスマートフォンのLINEアプリの実機から「el-town」を開き、エラー画面にならずに通信できるかを確認します。

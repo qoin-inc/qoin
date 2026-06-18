@@ -1,0 +1,7 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "カレンダー機能の削除、位置情報への一本化、および地図連携による一覧表示の実装プラン",
+  "updatedAt":  "2026-05-16T00:44:00.674142100Z",
+  "version":  "4",
+  "requestFeedback":  true
+}

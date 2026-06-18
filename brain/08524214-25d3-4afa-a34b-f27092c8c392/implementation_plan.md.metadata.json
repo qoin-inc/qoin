@@ -1,0 +1,7 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "SupabaseとLINEの標準OAuth機能を活用した、バックエンド認証連携の設計書です。",
+  "updatedAt": "2026-04-17T04:56:48.470728700Z",
+  "version": "1",
+  "requestFeedback": true
+}

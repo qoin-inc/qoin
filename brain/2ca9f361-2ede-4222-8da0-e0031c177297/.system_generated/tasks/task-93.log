@@ -1,0 +1,7 @@
+Remove-Item : �A�N�Z�X�ۂ�܂�B
+�ꏊ �s:1 �:1
++ Remove-Item "C:\Users\info\.gemini\antigravity\scratch\qoin\public\st ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [Remove-Item], UnauthorizedAccessException
+    + FullyQualifiedErrorId : System.UnauthorizedAccessException,Microsoft.PowerShell.Commands.RemoveItemCommand
+ 

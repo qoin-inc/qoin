@@ -1,0 +1,5 @@
+# 総合ポータル画面の実装タスク
+
+- [/] `src/app/resident` ディレクトリ作成および `page.tsx` の配置（現在の `page.tsx` を移行）
+- [ ] `src/app/page.tsx` を新しいポータル画面として再構築
+- [ ] アプリでの動作確認（`/`, `/resident`, `/admin` のルーティング）

@@ -1,0 +1,16 @@
+# 広域交流サイト（ポータル）実装タスク
+
+- [ ] パッケージのインストール (`leaflet`, `react-leaflet`)
+- [ ] DBマイグレーションファイルの作成 (`Day16_public_portal.sql`)
+- [ ] `src/components/AdminView.tsx` の修正
+  - 郵便番号から緯度・経度を取得して保存する処理を追加
+- [ ] `src/components/MapComponent.tsx` の作成
+  - Leafletによる日本地図描画とピン立て
+- [ ] `src/app/portal/page.tsx` の作成
+  - 地図とタイムラインの表示
+  - 「食べel-town」「観れel-town」の投稿フォーム（モーダル）
+  - 「観れel-town」投稿時の、自町内会 `circulars` への連動処理
+- [ ] `src/components/ResidentView.tsx` の修正
+  - リッチメニューに「交流サイト」ボタンを追加
+- [x] ビルド確認
+- [ ] DBマイグレーションの適用（ユーザー作業）

@@ -1,0 +1,7 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "Plan to create a new bottom tab for 'Features' and use inner tabs to separate 'Fee', 'Web Meeting', and 'Assembly'.",
+  "updatedAt":  "2026-04-28T04:12:35.178897500Z",
+  "version":  "2",
+  "requestFeedback":  true
+}

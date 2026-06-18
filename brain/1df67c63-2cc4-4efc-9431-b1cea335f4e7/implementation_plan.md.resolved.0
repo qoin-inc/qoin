@@ -1,0 +1,52 @@
+# 町内会費集金システム (Stripe連携) 導入の初期実装計画
+
+Stripe連携に向けた「Step1のデータベース拡張」と「Step2の一部（役員向け管理画面への説明資料の組み込み）」の実装計画です。
+
+## User Review Required
+
+> [!IMPORTANT]
+> `fee_billings` テーブルの構造案と、今回実装する範囲についてご確認をお願いします。
+
+## Open Questions
+
+> [!WARNING]
+> 1. `fee_billings` テーブルのカラム構成は以下の想定で進めてよろしいでしょうか？
+>    - `id` (UUID)
+>    - `neighborhood_id` (BIGINT)
+>    - `roster_id` (UUID)
+>    - `amount` (INTEGER)
+>    - `status` (TEXT: 'pending', 'paid')
+>    - `stripe_payment_intent_id` (TEXT)
+> 2. `docs/stripe_action_plan.md` の指示に基づき、今回の `AdminView.tsx` の変更は **「説明資料の表示のみ」** とし、「Stripe連携ボタン」や「会費請求管理（個別の金額設定）」の実装は次回以降のステップとしてよろしいでしょうか？
+
+## Proposed Changes
+
+### Database
+
+#### [NEW] [Day17_stripe_integration.sql](file:///c:/Users/info/.gemini/antigravity/scratch/qoin/database/Day17_stripe_integration.sql)
+- `neighborhoods` テーブルに `stripe_account_id` (TEXT) カラムを追加します。
+- `fee_billings` テーブルを新規作成します。
+- `fee_billings` に対する RLS (Row Level Security) を設定します。
+  - 役員 (`neighborhood_admins`) は自町内会の請求データをすべて操作可能。
+  - 住民 (`resident_rosters`) は自身の請求データのみ閲覧可能。
+
+### Frontend
+
+#### [MODIFY] [AdminView.tsx](file:///c:/Users/info/.gemini/antigravity/scratch/qoin/src/components/AdminView.tsx)
+- 「町内会・自治会設定」モーダル内のタブ（`settingsTab`）の型に `'stripe'` を追加します。
+- タブの選択肢に「オンライン集金」を追加します。
+- タブのコンテンツとして、以下の構成案に基づく説明資料（UI）を組み込みます。
+  1. このシステムの目的とメリット
+  2. 安心のセキュリティ体制
+  3. 必要な手数料について
+  4. 利用開始までの3ステップ
+  5. 現金対応について
+
+## Verification Plan
+
+### Automated Tests
+- 新規作成する `Day17_stripe_integration.sql` のSQL構文エラー等がないか確認します。
+
+### Manual Verification
+- `AdminView` を開き、設定モーダル内に「オンライン集金」タブが追加されていることを確認します。
+- 「オンライン集金」タブに切り替え、説明資料が正しく表示されることを確認します。

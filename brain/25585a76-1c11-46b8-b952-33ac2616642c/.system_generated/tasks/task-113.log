@@ -1,0 +1,7 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-21T08:20:24+09:00
+Prompt: Check if tsc with call operator completed
+
+[2026-05-21T08:20:04+09:00] Still waiting. Remaining time: 20s
+[2026-05-21T08:20:14+09:00] Still waiting. Remaining time: 10s
+[2026-05-21T08:20:24+09:00] Timer fired.

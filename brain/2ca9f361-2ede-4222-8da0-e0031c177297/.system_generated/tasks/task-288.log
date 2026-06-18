@@ -1,0 +1,5 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-23T16:29:37+09:00
+Prompt: デプロイ結果確認
+
+[2026-05-23T16:27:40+09:00] Timer cancelled: agent received a message during wait.

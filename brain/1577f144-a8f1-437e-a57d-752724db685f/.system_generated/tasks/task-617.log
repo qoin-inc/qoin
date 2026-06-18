@@ -1,0 +1,29 @@
+
+.next\dev\server\chunks\ssr\node_modules_0-2t5zi._.js:14532:     *   headers: { Authorization: `Bearer ${process.env.SU
+PABASE_SERVICE_ROLE_KEY}` },
+.next\dev\server\chunks\ssr\node_modules_01nxr9s._.js:14980:     *   headers: { Authorization: `Bearer ${process.env.SU
+PABASE_SERVICE_ROLE_KEY}` },
+.next\dev\server\chunks\ssr\node_modules_@supabase_auth-js_dist_module_11m62rv._.js:1096:     *   headers: { Authorizat
+ion: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` },
+.next\dev\server\chunks\node_modules_@supabase_auth-js_dist_module_00jw3pg._.js:1096:     *   headers: { Authorization:
+ `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_005b96d._.js:16324:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_05t34re._.js:16969:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_06sm2n4._.js:15462:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_0cbw-2f._.js:16107:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_0c_-iue._.js:16111:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_0fosqnl._.js:16836:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_0mx1iuk._.js:16324:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+.next\dev\static\chunks\node_modules_136zi2p._.js:16836:     *   headers: { Authorization: `Bearer ${process.env.SUPABA
+SE_SERVICE_ROLE_KEY}` },
+netlify\functions\create-stripe-account.ts:7:const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || proces
+s.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+netlify\functions\stripe-webhook.ts:8:const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.N
+EXT_PUBLIC_SUPABASE_ANON_KEY;

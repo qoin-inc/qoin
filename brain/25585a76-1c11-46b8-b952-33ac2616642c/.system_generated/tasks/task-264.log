@@ -1,0 +1,18 @@
+Get-Content : �A�N�Z�X�ۂ�܂�B
+�ꏊ �s:3 �:1
++ Get-Content -Path $logPath | Where-Object { $_ -like '*replace_file_c ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : PermissionDenied: (C:\Users\info\....ranscript.jsonl:String) [Get-Content], Unauthorized 
+   AccessException
+    + FullyQualifiedErrorId : ItemExistsUnauthorizedAccessError,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+Get-Content : �p�X 'C:\Users\info\.gemini\antigravity\brain\25585a76-1c11-46b8-b952-33ac2616642c\.system_generated\logs
+\transcript.jsonl' �݂�Ȃ�ߌ�o�ł�܂�B
+�ꏊ �s:3 �:1
++ Get-Content -Path $logPath | Where-Object { $_ -like '*replace_file_c ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\info\....ranscript.jsonl:String) [Get-Content], ItemNotFoundEx 
+   ception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+Done extracting

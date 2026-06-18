@@ -1,0 +1,8 @@
+# Task List
+
+- `[x]` 1. データベースの RLS 更新 SQL スクリプト (`system_admin_rls.sql`) の作成
+- `[x]` 2. ユーザーへの SQL スクリプト実行依頼
+- `[x]` 3. `SystemAdminView.tsx` へのログアウトボタンの追加
+- `[x]` 4. `SystemAdminView.tsx` のログイン処理を改修（バックグラウンドで Supabase Auth に `admin@el-town.jp` としてログイン・登録する）
+- `[x]` 5. 動作確認と検証
+- `[x]` 6. 完了報告と Walkthrough の作成

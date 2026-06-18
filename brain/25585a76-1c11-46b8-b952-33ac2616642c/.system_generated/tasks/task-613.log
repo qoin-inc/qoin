@@ -1,0 +1,8 @@
+
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:31:  const [isSettingsOpen, setIsSettingsOpen]
+ = useState(false);
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:557:    setIsSettingsOpen(true);
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:1742:              onClick={() => setIsSetting
+sOpen(false)}
+
+

@@ -1,0 +1,20 @@
+∁E[39m Finished hashing 168 files and 4 functions
+⠁E[39m CDN diffing files...
+∁E[39m CDN requesting 60 files and 2 functions
+⠁E[39m Uploading 116 files
+∁E[39m Finished uploading 116 assets
+⠁E[39m Waiting for deploy to go live...
+∁E[39m Deploy is live!
+ ENetlify Build Complete                                        
+────────────────────────────────────────────────────────────────
+ E(Netlify Build completed in 43.3s)
+
+🚀 Deploy complete
+────────────────────────────────────────────────────────────────
+
+Production URL: <https://el-town.jp>
+Unique deploy URL: <https://6a12da6e9af99562b5ba73fd--harmonious-madeleine-74f239.netlify.app>
+
+Build logs: <https://app.netlify.com/projects/harmonious-madeleine-74f239/deploys/6a12da6e9af99562b5ba73fd>
+Function logs: <https://app.netlify.com/projects/harmonious-madeleine-74f239/logs/functions>
+Edge function logs: <https://app.netlify.com/projects/harmonious-madeleine-74f239/logs/edge-functions>

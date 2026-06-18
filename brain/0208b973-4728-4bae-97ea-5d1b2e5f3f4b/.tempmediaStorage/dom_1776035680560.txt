@@ -1,0 +1,19 @@
+<current_dom_explanation>
+This is a temporary snapshot of the current page's DOM structure. The DOM will change if you navigate to or interact with another page. Use a tool like browser_get_dom to capture and preserve the DOM in your trajectory if needed for later reference.
+</current_dom_explanation>
+<current_dom>
+el-town
+電子回覧板・町内会アプリ
+町名から検索して登録
+[0] (493,335)<input class='w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-11 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700' placeholder='例：希望ヶ丘、朝日町...' />
+または
+回覧板のQRコードをスキャン
+[1] (493,589)<button class='w-full bg-gray-800 text-white font-black py-4 rounded-xl shadow-md hover:bg-gray-900 transition flex items-center justify-center transform active:scale-95 cursor-pointer'>カメラを起動する />
+	[2] (427,589)<i  />
+[3] (493,782)<button class='bg-white border-2 border-qoin-main text-qoin-main font-bold py-3 px-6 rounded-xl hover:bg-sky-50 transition shadow-sm w-full cursor-pointer flex justify-center items-center group'>はじめての町内会役員様はこちら
+（新規利用のお申込み） />
+	[4] (343,782)<span >✨ />
+	[5] (648,782)<i  />
+すでにアカウントをお持ちの町内会役員様
+
+</current_dom>

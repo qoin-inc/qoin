@@ -1,0 +1,5 @@
+{
+  "name": "Antigravity Sandbox",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "remoteUser": "vscode"
+}

@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "3つの独立した操作マニュアル（会員向け・役員管理画面・Stripe連携）をそれぞれアニメーション付きモックアップ形式で作成する実装計画。管理画面のStripeセクションは簡素化しマニュアルリンクを追加。",
+  "updatedAt": "2026-05-23T03:44:22.813247400Z",
+  "requestFeedback": true
+}

@@ -1,0 +1,6 @@
+{
+  "artifactType": "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary": "１町内会につき10名まで管理者を登録でき、個別削除も可能な「管理者招待システム」の実装計画。Supabaseの仕様も踏まえた招待モデルを提案。",
+  "updatedAt": "2026-04-20T09:42:15.673446900Z",
+  "requestFeedback": true
+}

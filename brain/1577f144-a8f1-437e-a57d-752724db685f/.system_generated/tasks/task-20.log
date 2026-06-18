@@ -1,0 +1,631 @@
+
+FullName                                                                                          LastWriteTime       L
+                                                                                                                      e
+                                                                                                                      n
+                                                                                                                      g
+                                                                                                                      t
+                                                                                                                      h
+--------                                                                                          -------------       -
+C:\Users\info\.gemini\antigravity\scratch\el-town                                                 2026/05/15 20:46:55  
+C:\Users\info\.gemini\antigravity\scratch\qoin                                                    2026/05/21 14:27:57  
+C:\Users\info\.gemini\antigravity\scratch\extracted.json                                          2026/05/21 11:55:00 0
+C:\Users\info\.gemini\antigravity\scratch\fix.js                                                  2026/05/21 12:12:23 1
+C:\Users\info\.gemini\antigravity\scratch\fix.ps1                                                 2026/05/21 12:13:25 1
+C:\Users\info\.gemini\antigravity\scratch\fix_admin_view.py                                       2026/05/21 12:09:44 2
+C:\Users\info\.gemini\antigravity\scratch\migration.sql                                           2026/05/11 8:27:11  3
+C:\Users\info\.gemini\antigravity\scratch\replace_town.js                                         2026/05/08 8:33:44  1
+C:\Users\info\.gemini\antigravity\scratch\scratch_check.js                                        2026/04/21 8:29:19  4
+C:\Users\info\.gemini\antigravity\scratch\scratch_fetch.js                                        2026/04/21 8:08:36  1
+C:\Users\info\.gemini\antigravity\scratch\el-town\index.html                                      2026/05/08 8:33:59  1
+C:\Users\info\.gemini\antigravity\scratch\el-town\qoin-logo.png                                   2022/03/14 10:48:50 3
+C:\Users\info\.gemini\antigravity\scratch\el-town\rich_menu_horizontal_4.html                     2026/05/15 20:46:55 3
+C:\Users\info\.gemini\antigravity\scratch\el-town\rich_menu_mock.html                             2026/05/15 20:06:00 2
+C:\Users\info\.gemini\antigravity\scratch\el-town\rich_menu_mock_4.html                           2026/05/15 20:14:08 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\.netlify                                           2026/05/21 14:27:57  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next                                              2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\database                                           2026/05/18 8:06:04   
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs                                               2026/05/21 20:37:31  
+C:\Users\info\.gemini\antigravity\scratch\qoin\netlify                                            2026/05/06 9:53:20   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules                                       2026/05/18 8:13:50   
+C:\Users\info\.gemini\antigravity\scratch\qoin\out                                                2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\public                                             2026/05/14 19:13:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\scratch                                            2026/05/06 15:27:26  
+C:\Users\info\.gemini\antigravity\scratch\qoin\scripts_and_temp                                   2026/04/22 8:19:18   
+C:\Users\info\.gemini\antigravity\scratch\qoin\src                                                2026/04/07 20:13:37  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.env.local                                         2026/04/17 13:54:05 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.env.production                                    2026/04/17 13:54:05 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.gitignore                                         2026/04/07 8:34:06  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\add_admin_to_all.js                                2026/05/14 8:48:45  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\check_col.js                                       2026/05/17 7:37:27  5
+C:\Users\info\.gemini\antigravity\scratch\qoin\check_db.js                                        2026/05/17 18:08:02 6
+C:\Users\info\.gemini\antigravity\scratch\qoin\check_fee.js                                       2026/05/17 8:01:10  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\check_pol.js                                       2026/05/17 7:37:46  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\check_rls.js                                       2026/05/17 18:08:19 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\check_table.js                                     2026/05/17 7:37:13  5
+C:\Users\info\.gemini\antigravity\scratch\qoin\crop_logo.js                                       2026/05/14 19:13:13 7
+C:\Users\info\.gemini\antigravity\scratch\qoin\eslint.config.mjs                                  2026/04/07 8:34:06  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\find_fee.js                                        2026/05/17 8:02:28  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\generate_menu.mjs                                  2026/05/06 8:15:43  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\get_schema.js                                      2026/05/17 8:01:50  6
+C:\Users\info\.gemini\antigravity\scratch\qoin\netlify.toml                                       2026/04/28 8:28:52  5
+C:\Users\info\.gemini\antigravity\scratch\qoin\next-env.d.ts                                      2026/05/18 8:27:39  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\next.config.ts                                     2026/05/05 6:30:35  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\package-lock.json                                  2026/05/18 8:13:54  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\package.json                                       2026/05/18 8:13:54  8
+C:\Users\info\.gemini\antigravity\scratch\qoin\postcss.config.mjs                                 2026/04/07 8:34:06  9
+C:\Users\info\.gemini\antigravity\scratch\qoin\README.md                                          2026/04/07 8:34:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\remove_bg.js                                       2026/05/14 19:24:47 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\rich_menu_final.png                                2026/05/15 21:13:43 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\rich_menu_maker.html                               2026/05/15 21:29:11 8
+C:\Users\info\.gemini\antigravity\scratch\qoin\rich_menu_render.html                              2026/05/15 21:09:35 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\rich_menu_render_custom.html                       2026/05/15 22:55:05 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\system_admin_rls.sql                               2026/05/14 8:18:31  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\system_management_migration.sql                    2026/05/11 20:05:04 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\tailwindcss-11288.log                              2026/04/28 8:28:15  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\take_screenshot.js                                 2026/05/15 21:09:35 8
+C:\Users\info\.gemini\antigravity\scratch\qoin\take_screenshot_custom.js                          2026/05/15 21:39:42 9
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_admin_auth.js                                 2026/05/14 10:31:00 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_anon.js                                       2026/05/14 8:12:23  7
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_delete.js                                     2026/05/13 8:44:11  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_delete_detail.js                              2026/05/13 8:49:01  5
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_fee.js                                        2026/05/17 8:20:27  6
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_fee_expected.js                               2026/05/17 8:20:55  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_fee_year.js                                   2026/05/17 8:21:12  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_schema.js                                     2026/05/13 8:56:45  6
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_schema.mjs                                    2026/05/17 8:49:22  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\test_search.js                                     2026/05/13 8:45:52  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\tsconfig.json                                      2026/04/07 8:34:23  6
+C:\Users\info\.gemini\antigravity\scratch\qoin\tsconfig.tsbuildinfo                               2026/05/21 8:21:55  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\update_fee_records.sql                             2026/05/17 8:22:37  5
+C:\Users\info\.gemini\antigravity\scratch\qoin\.netlify\deploy                                    2026/04/27 20:07:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.netlify\functions                                 2026/05/19 8:11:43   
+C:\Users\info\.gemini\antigravity\scratch\qoin\.netlify\functions-internal                        2026/05/21 14:27:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.netlify\static                                    2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.netlify\v1                                        2026/05/21 14:27:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.netlify\netlify.toml                              2026/05/21 14:27:57 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\build                                        2026/05/21 14:27:34  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\cache                                        2026/04/13 8:13:49   
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\dev                                          2026/05/18 20:13:40  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\diagnostics                                  2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\server                                       2026/05/21 14:27:43  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\static                                       2026/05/21 14:27:37  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\types                                        2026/05/21 14:27:33  
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\app-path-routes-manifest.json                2026/05/21 14:27:42 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\build-manifest.json                          2026/05/21 14:27:37 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\BUILD_ID                                     2026/05/21 14:27:43 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\export-detail.json                           2026/05/21 14:27:44 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\export-marker.json                           2026/05/21 14:27:43 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\fallback-build-manifest.json                 2026/05/21 14:27:37 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\images-manifest.json                         2026/05/21 14:27:43 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\next-minimal-server.js.nft.json              2026/05/21 14:27:37 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\next-server.js.nft.json                      2026/05/21 14:27:37 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\package.json                                 2026/05/21 14:27:34 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\prerender-manifest.json                      2026/05/21 14:27:43 7
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\required-server-files.js                     2026/05/21 14:27:42 9
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\required-server-files.json                   2026/05/21 14:27:42 9
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\routes-manifest.json                         2026/05/21 14:27:43 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\trace                                        2026/05/21 14:27:44 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\trace-build                                  2026/05/21 14:27:44 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\.next\turbopack                                    2026/05/21 14:27:34 0
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day10_multiple_admins.sql                 2026/04/20 18:54:54 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day11_fix_rls.sql                         2026/04/21 8:09:52  8
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day12_invitation_url.sql                  2026/04/21 8:40:52  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day13_postal_code_unique.sql              2026/04/21 12:25:00 8
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day14_2_update_roster_schema.sql          2026/05/06 16:55:56 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day14_add_line_user_id.sql                2026/05/06 13:13:16 8
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day15_fix_event_applications.sql          2026/05/15 11:58:16 7
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day16_public_portal.sql                   2026/05/15 14:50:44 9
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day17_stripe_integration.sql              2026/05/18 8:06:04  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day3_update.sql                           2026/04/08 8:36:43  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day4_update.sql                           2026/04/09 8:15:25  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day6_update.sql                           2026/04/10 8:18:31  6
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day7_auth_update.sql                      2026/04/10 10:03:48 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day8_update_event_time.sql                2026/04/13 8:26:09  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\Day9_resident_rosters.sql                 2026/04/15 11:58:43 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\supabase_schema.sql                       2026/04/07 18:38:49 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\database\update_applications.sql                   2026/04/08 8:55:48  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\AGENTS.md                                     2026/04/28 20:02:37 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\CLAUDE.md                                     2026/04/07 8:35:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\Day10_MultipleAdminsReport.md                 2026/05/08 8:33:59  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\LINE_SETUP_MANUAL.md                          2026/05/08 8:33:59  5
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\report_20260417.md                            2026/04/17 20:50:19 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\stripe_action_plan.md                         2026/05/18 20:10:42 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\stripe_fee_collection_spec.md                 2026/05/17 19:44:46 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�e�X�g�m�F�_�V�X�e�Ǘ�.md            2026/05/13 8:32:28  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day1.md                           2026/04/07 20:23:39 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day10.md                          2026/04/15 20:50:59 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day11.md                          2026/05/08 8:33:59  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day12.md                          2026/05/08 8:33:59  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day13.md                          2026/05/08 8:33:59  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day14.md                          2026/04/23 20:08:46 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day15.md                          2026/04/24 20:01:52 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day16.md                          2026/04/27 20:13:42 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day17.md                          2026/05/08 8:33:59  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day18.md                          2026/05/08 8:33:59  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day19.md                          2026/05/08 8:33:59  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day20.md                          2026/05/06 7:16:29  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day21.md                          2026/05/06 20:53:00 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day22.md                          2026/05/07 19:47:09 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day23.md                          2026/05/08 21:36:29 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day24.md                          2026/05/11 20:18:11 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day25.md                          2026/05/12 20:29:46 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day26.md                          2026/05/13 20:43:29 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day27.md                          2026/05/14 20:01:49 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day28.md                          2026/05/18 20:11:47 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day29.md                          2026/05/19 20:40:00 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day3.md                           2026/05/08 8:33:59  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day30.md                          2026/05/20 20:46:43 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day31.md                          2026/05/21 8:22:00  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day32.md                          2026/05/21 20:37:31 6
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day4.md                           2026/05/08 8:33:59  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day5.md                           2026/05/08 8:33:59  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day6.md                           2026/05/08 8:33:59  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day7.md                           2026/05/08 8:33:59  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day7_�.md                      2026/05/08 8:33:59  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day8.md                           2026/05/08 8:33:59  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\docs\�J�|�[�g_Day9.md                           2026/05/08 8:33:59  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\netlify\functions                                  2026/05/19 8:04:51   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\.bin                                  2026/05/15 21:09:59  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@alloc                                2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@babel                                2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@emnapi                               2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@eslint                               2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@eslint-community                     2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@humanfs                              2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@humanwhocodes                        2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@img                                  2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@jimp                                 2026/05/14 19:26:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@jridgewell                           2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@liff                                 2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@line                                 2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@napi-rs                              2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@netlify                              2026/05/06 9:53:00   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@next                                 2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@nodelib                              2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@nolyfill                             2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@puppeteer                            2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@react-leaflet                        2026/05/15 14:50:27  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@rtsao                                2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@supabase                             2026/04/07 18:32:27  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@swc                                  2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@tailwindcss                          2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@tokenizer                            2026/05/14 19:26:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@tybys                                2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@types                                2026/05/15 14:50:35  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@typescript-eslint                    2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\@unrs                                 2026/04/07 8:34:36   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\abort-controller                      2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\acorn                                 2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\acorn-jsx                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ajv                                   2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ansi-regex                            2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ansi-styles                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\any-base                              2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\argparse                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\aria-query                            2026/04/07 8:34:42   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\array-buffer-byte-length              2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\array-includes                        2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\array.prototype.findlast              2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\array.prototype.findlastindex         2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\array.prototype.flat                  2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\array.prototype.flatmap               2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\array.prototype.tosorted              2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\arraybuffer.prototype.slice           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ast-types-flow                        2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\async-function                        2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\asynckit                              2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\available-typed-arrays                2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\axe-core                              2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\axios                                 2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\axobject-query                        2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\b4a                                   2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\balanced-match                        2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\bare-events                           2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\bare-fs                               2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\bare-os                               2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\bare-path                             2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\bare-stream                           2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\bare-url                              2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\base64-js                             2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\baseline-browser-mapping              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\bmp-js                                2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\brace-expansion                       2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\braces                                2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\browserslist                          2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\buffer                                2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\buffer-equal                          2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\call-bind                             2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\call-bind-apply-helpers               2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\call-bound                            2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\callsites                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\caniuse-lite                          2026/04/07 8:34:44   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\centra                                2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\chalk                                 2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\chromium-bidi                         2026/05/15 21:09:57  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\client-only                           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\cliui                                 2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\color-convert                         2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\color-name                            2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\combined-stream                       2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\concat-map                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\convert-source-map                    2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\cosmiconfig                           2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\cross-spawn                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\csstype                               2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\damerau-levenshtein                   2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\data-view-buffer                      2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\data-view-byte-length                 2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\data-view-byte-offset                 2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\debug                                 2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\deep-is                               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\define-data-property                  2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\define-properties                     2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\delayed-stream                        2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\detect-libc                           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\devtools-protocol                     2026/05/15 21:09:57  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\doctrine                              2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\dom-walk                              2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\dunder-proto                          2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\electron-to-chromium                  2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\emoji-regex                           2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\end-of-stream                         2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\enhanced-resolve                      2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\env-paths                             2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\error-ex                              2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-abstract                           2026/04/07 8:34:46   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-define-property                    2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-errors                             2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-iterator-helpers                   2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-object-atoms                       2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-set-tostringtag                    2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-shim-unscopables                   2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\es-to-primitive                       2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\escalade                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\escape-string-regexp                  2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint                                2026/04/07 8:34:43   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-config-next                    2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-import-resolver-node           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-import-resolver-typescript     2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-module-utils                   2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-plugin-import                  2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-plugin-jsx-a11y                2026/04/07 8:34:42   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-plugin-react                   2026/04/07 8:34:42   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-plugin-react-hooks             2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-scope                          2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\eslint-visitor-keys                   2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\espree                                2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\esquery                               2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\esrecurse                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\estraverse                            2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\esutils                               2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\event-target-shim                     2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\events                                2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\events-universal                      2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\exif-parser                           2026/05/14 19:26:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\fast-deep-equal                       2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\fast-fifo                             2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\fast-glob                             2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\fast-json-stable-stringify            2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\fast-levenshtein                      2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\fastq                                 2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\file-entry-cache                      2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\file-type                             2026/05/14 19:26:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\fill-range                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\find-up                               2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\flat-cache                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\flatted                               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\follow-redirects                      2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\for-each                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\form-data                             2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\function-bind                         2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\function.prototype.name               2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\functions-have-names                  2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\generator-function                    2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\gensync                               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\get-caller-file                       2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\get-intrinsic                         2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\get-proto                             2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\get-symbol-description                2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\get-tsconfig                          2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\gifwrap                               2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\glob-parent                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\global                                2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\globals                               2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\globalthis                            2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\gopd                                  2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\graceful-fs                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\has-bigints                           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\has-flag                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\has-property-descriptors              2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\has-proto                             2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\has-symbols                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\has-tostringtag                       2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\hasown                                2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\hermes-estree                         2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\hermes-parser                         2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\iceberg-js                            2026/04/07 18:32:28  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ieee754                               2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ignore                                2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\image-q                               2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\import-fresh                          2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\imurmurhash                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\internal-slot                         2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-array-buffer                       2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-arrayish                           2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-async-function                     2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-bigint                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-boolean-object                     2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-bun-module                         2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-callable                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-core-module                        2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-data-view                          2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-date-object                        2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-extglob                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-finalizationregistry               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-fullwidth-code-point               2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-function                           2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-generator-function                 2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-glob                               2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-map                                2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-negative-zero                      2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-number                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-number-object                      2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-regex                              2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-set                                2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-shared-array-buffer                2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-string                             2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-symbol                             2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-typed-array                        2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-weakmap                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-weakref                            2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\is-weakset                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\isarray                               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\isexe                                 2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\isomorphic-fetch                      2026/05/14 19:26:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\iterator.prototype                    2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\jimp                                  2026/05/14 19:26:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\jiti                                  2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\jpeg-js                               2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\js-tokens                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\js-yaml                               2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\jsesc                                 2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\json-buffer                           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\json-parse-even-better-errors         2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\json-schema-traverse                  2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\json-stable-stringify-without-jsonify 2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\json5                                 2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\jsx-ast-utils                         2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\keyv                                  2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\language-subtag-registry              2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\language-tags                         2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\leaflet                               2026/05/15 14:50:28  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\levn                                  2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\lightningcss                          2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\lightningcss-win32-x64-msvc           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\lines-and-columns                     2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\load-bmfont                           2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\locate-path                           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\lodash.merge                          2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\loose-envify                          2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\lru-cache                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\magic-string                          2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\math-intrinsics                       2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\merge2                                2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\micromatch                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\mime                                  2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\mime-db                               2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\mime-types                            2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\min-document                          2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\minimatch                             2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\minimist                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\mitt                                  2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ms                                    2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\nanoid                                2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\napi-postinstall                      2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\natural-compare                       2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\next                                  2026/04/07 8:35:04   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\node-exports-info                     2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\node-fetch                            2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\node-releases                         2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object-assign                         2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object-inspect                        2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object-keys                           2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object.assign                         2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object.entries                        2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object.fromentries                    2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object.groupby                        2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\object.values                         2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\omggif                                2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\once                                  2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\optionator                            2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\own-keys                              2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\p-limit                               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\p-locate                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\pako                                  2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\parent-module                         2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\parse-bmfont-ascii                    2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\parse-bmfont-binary                   2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\parse-bmfont-xml                      2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\parse-headers                         2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\parse-json                            2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\path-exists                           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\path-key                              2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\path-parse                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\peek-readable                         2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\phin                                  2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\picocolors                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\picomatch                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\pixelmatch                            2026/05/14 19:26:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\pngjs                                 2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\possible-typed-array-names            2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\postcss                               2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\prelude-ls                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\process                               2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\progress                              2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\prop-types                            2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\proxy-from-env                        2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\pump                                  2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\punycode                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\puppeteer                             2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\puppeteer-core                        2026/05/15 21:09:58  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\queue-microtask                       2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\react                                 2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\react-dom                             2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\react-is                              2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\react-leaflet                         2026/05/15 14:50:27  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\readable-stream                       2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\readable-web-to-node-stream           2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\reflect.getprototypeof                2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\regenerator-runtime                   2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\regexp.prototype.flags                2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\require-directory                     2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\resolve                               2026/04/07 8:34:41   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\resolve-from                          2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\resolve-pkg-maps                      2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\reusify                               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\run-parallel                          2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\safe-array-concat                     2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\safe-buffer                           2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\safe-push-apply                       2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\safe-regex-test                       2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\sax                                   2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\scheduler                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\semver                                2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\set-function-length                   2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\set-function-name                     2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\set-proto                             2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\sharp                                 2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\shebang-command                       2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\shebang-regex                         2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\side-channel                          2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\side-channel-list                     2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\side-channel-map                      2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\side-channel-weakmap                  2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\source-map-js                         2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\stable-hash                           2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\stop-iteration-iterator               2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\streamx                               2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string-width                          2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string.prototype.includes             2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string.prototype.matchall             2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string.prototype.repeat               2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string.prototype.trim                 2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string.prototype.trimend              2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string.prototype.trimstart            2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\string_decoder                        2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\strip-ansi                            2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\strip-bom                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\strip-json-comments                   2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\stripe                                2026/05/18 8:13:53   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\strtok3                               2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\styled-jsx                            2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\supports-color                        2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\supports-preserve-symlinks-flag       2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tailwindcss                           2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tapable                               2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tar-fs                                2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tar-stream                            2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\teex                                  2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\text-decoder                          2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\timm                                  2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tiny-sha256                           2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tinycolor2                            2026/05/14 19:26:46  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tinyglobby                            2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\to-regex-range                        2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\token-types                           2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tr46                                  2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ts-api-utils                          2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tsconfig-paths                        2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\tslib                                 2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\type-check                            2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\typed-array-buffer                    2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\typed-array-byte-length               2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\typed-array-byte-offset               2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\typed-array-length                    2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\typed-query-selector                  2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\typescript                            2026/04/07 8:34:42   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\typescript-eslint                     2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\unbox-primitive                       2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\undici-types                          2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\unrs-resolver                         2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\update-browserslist-db                2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\uri-js                                2026/04/07 8:34:40   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\utif2                                 2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\webdriver-bidi-protocol               2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\webidl-conversions                    2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\whatwg-fetch                          2026/04/17 13:53:42  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\whatwg-url                            2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\which                                 2026/04/07 8:34:39   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\which-boxed-primitive                 2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\which-builtin-type                    2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\which-collection                      2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\which-typed-array                     2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\word-wrap                             2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\wrap-ansi                             2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\wrappy                                2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\ws                                    2026/04/07 18:32:28  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\xhr                                   2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\xml-parse-from-string                 2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\xml2js                                2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\xmlbuilder                            2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\xtend                                 2026/05/14 19:26:45  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\y18n                                  2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\yallist                               2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\yargs                                 2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\yargs-parser                          2026/05/15 21:09:56  
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\yocto-queue                           2026/04/07 8:34:37   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\zod                                   2026/04/07 8:34:43   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\zod-validation-error                  2026/04/07 8:34:38   
+C:\Users\info\.gemini\antigravity\scratch\qoin\node_modules\.package-lock.json                    2026/05/18 8:13:54  2
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\404                                            2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\admin                                          2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\manual                                         2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\portal                                         2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\resident                                       2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\richmenu                                       2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\system                                         2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\_next                                          2026/05/21 14:27:43  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\_not-found                                     2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\�                                             2026/05/21 14:27:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\404.html                                       2026/05/21 14:27:43 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\demo.webp                                      2026/05/06 19:39:14 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\favicon.ico                                    2026/05/21 14:27:43 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\file.svg                                       2026/04/07 8:34:06  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\globe.svg                                      2026/04/07 8:34:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\index.html                                     2026/05/21 14:27:43 9
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\index.txt                                      2026/05/21 14:27:43 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\logo_horizontal_final.png                      2026/05/14 19:27:15 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\logo_icon_stacked.png                          2026/04/27 18:13:33 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\next.svg                                       2026/04/07 8:34:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\qoin-logo.png                                  2022/03/14 10:48:50 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\richmenu.jpg                                   2026/05/06 15:31:53 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\vercel.svg                                     2026/04/07 8:34:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\window.svg                                     2026/04/07 8:34:06  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\__next._full.txt                               2026/05/21 14:27:43 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\__next._head.txt                               2026/05/21 14:27:43 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\__next._index.txt                              2026/05/21 14:27:43 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\__next._tree.txt                               2026/05/21 14:27:43 4
+C:\Users\info\.gemini\antigravity\scratch\qoin\out\__next.__PAGE__.txt                            2026/05/21 14:27:43 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\�                                          2026/04/27 18:21:18  
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\demo.webp                                   2026/05/06 19:39:14 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\file.svg                                    2026/04/07 8:34:06  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\globe.svg                                   2026/04/07 8:34:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\logo_horizontal_final.png                   2026/05/14 19:27:15 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\logo_icon_stacked.png                       2026/04/27 18:13:33 2
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\next.svg                                    2026/04/07 8:34:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\qoin-logo.png                               2022/03/14 10:48:50 3
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\richmenu.jpg                                2026/05/06 15:31:53 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\vercel.svg                                  2026/04/07 8:34:06  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\public\window.svg                                  2026/04/07 8:34:06  3
+C:\Users\info\.gemini\antigravity\scratch\qoin\scratch\test_roster_query.js                       2026/05/06 15:27:26 5
+C:\Users\info\.gemini\antigravity\scratch\qoin\scripts_and_temp\apply_renames_and_features.js     2026/04/13 8:26:10  8
+C:\Users\info\.gemini\antigravity\scratch\qoin\scripts_and_temp\check_towns.js                    2026/04/22 8:19:18  4
+C:\Users\info\.gemini\antigravity\scratch\qoin\scripts_and_temp\Emails_20260410.txt               2026/04/10 19:08:18 1
+C:\Users\info\.gemini\antigravity\scratch\qoin\scripts_and_temp\test-supabase.js                  2026/04/07 20:11:37 9
+C:\Users\info\.gemini\antigravity\scratch\qoin\scripts_and_temp\test_insert.js                    2026/04/10 8:31:57  8
+C:\Users\info\.gemini\antigravity\scratch\qoin\scripts_and_temp\update_resident_view.js           2026/04/13 8:13:10  1
+C:\Users\info\.gemini\antigravity\scratch\qoin\src\app                                            2026/05/15 20:50:54  
+C:\Users\info\.gemini\antigravity\scratch\qoin\src\components                                     2026/05/15 14:51:44  
+C:\Users\info\.gemini\antigravity\scratch\qoin\src\lib                                            2026/04/07 20:13:37  
+
+

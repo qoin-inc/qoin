@@ -1,0 +1,498 @@
+
+.next\server\chunks\node_modules_next_dist_esm_build_templates_app-route_11l7ds8.js:37:${y}`}({domain:y.host,address:w,
+statement:g,uri:y.href,version:"1",chainId:v,nonce:null==(s=null==m?void 0:m.signInWithEthereum)?void 0:s.nonce,issuedA
+t:null!=(n=null==(i=null==m?void 0:m.signInWithEthereum)?void 0:i.issuedAt)?n:new Date,expirationTime:null==(a=null==m?
+void 0:m.signInWithEthereum)?void 0:a.expirationTime,notBefore:null==(o=null==m?void 0:m.signInWithEthereum)?void 0:o.n
+otBefore,requestId:null==(l=null==m?void 0:m.signInWithEthereum)?void 0:l.requestId,resources:null==(h=null==m?void 0:m
+.signInWithEthereum)?void 0:h.resources}),f=await u.request({method:"personal_sign",params:[(d=p,"0x"+Array.from(new Te
+xtEncoder().encode(d),e=>e.toString(16).padStart(2,"0")).join("")),w]})}try{let{data:t,error:r}=await rn(this.fetch,"PO
+ST",`${this.url}/token?grant_type=web3`,{headers:this.headers,body:Object.assign({chain:"ethereum",message:p,signature:
+f},(null==(c=e.options)?void 0:c.captchaToken)?{gotrue_meta_security:{captcha_token:null==(u=e.options)?void 0:u.captch
+aToken}}:null),xform:ro});if(r)throw r;if(!t||!t.session||!t.user){let e=new tx;return this._returnResult({data:{user:n
+ull,session:null},error:e})}return t.session&&(await this._saveSession(t.session),await this._notifyAllSubscribers("SIG
+NED_IN",t.session)),this._returnResult({data:Object.assign({},t),error:r})}catch(e){if(tO(e))return this._returnResult(
+{data:{user:null,session:null},error:e});throw e}}async signInWithSolana(e){var t,r,s,i,n,a,o,l,h,c,u,d;let p,f;if("mes
+sage"in e)p=e.message,f=e.signature;else{let{chain:u,wallet:d,statement:g,options:m}=e;if("object"!=typeof d||!(null==m
+?void 0:m.url))throw Error("@supabase/auth-js: Both wallet and url must be specified in non-browser environments.");let
+ y=new URL(null!=(t=null==m?void 0:m.url)?t:window.location.href);if("signIn"in d&&d.signIn){let e,t=await d.signIn(Obj
+ect.assign(Object.assign(Object.assign({issuedAt:new Date().toISOString()},null==m?void 0:m.signInWithSolana),{version:
+"1",domain:y.host,uri:y.href}),g?{statement:g}:null));if(Array.isArray(t)&&t[0]&&"object"==typeof t[0])e=t[0];else if(t
+&&"object"==typeof t&&"signedMessage"in t&&"signature"in t)e=t;else throw Error("@supabase/auth-js: Wallet method signI
+n() returned unrecognized value");if("signedMessage"in e&&"signature"in e&&("string"==typeof e.signedMessage||e.signedM
+essage instanceof Uint8Array)&&e.signature instanceof Uint8Array)p="string"==typeof e.signedMessage?e.signedMessage:new
+ TextDecoder().decode(e.signedMessage),f=e.signature;else throw Error("@supabase/auth-js: Wallet method signIn() API re
+turned object without signedMessage and signature fields")}else{if(!("signMessage"in d)||"function"!=typeof d.signMessa
+ge||!("publicKey"in d)||"object"!=typeof d||!d.publicKey||!("toBase58"in d.publicKey)||"function"!=typeof d.publicKey.t
+oBase58)throw Error("@supabase/auth-js: Wallet does not have a compatible signMessage() and publicKey.toBase58() API");
+p=[`${y.host} wants you to sign in with your Solana account:`,d.publicKey.toBase58(),...g?["",g,""]:[""],"Version: 1",`
+URI: ${y.href}`,`Issued At: ${null!=(s=null==(r=null==m?void 0:m.signInWithSolana)?void 0:r.issuedAt)?s:new Date().toIS
+OString()}`,...(null==(i=null==m?void 0:m.signInWithSolana)?void 0:i.notBefore)?[`Not Before: ${m.signInWithSolana.notB
+efore}`]:[],...(null==(n=null==m?void 0:m.signInWithSolana)?void 0:n.expirationTime)?[`Expiration Time: ${m.signInWithS
+olana.expirationTime}`]:[],...(null==(a=null==m?void 0:m.signInWithSolana)?void 0:a.chainId)?[`Chain ID: ${m.signInWith
+Solana.chainId}`]:[],...(null==(o=null==m?void 0:m.signInWithSolana)?void 0:o.nonce)?[`Nonce: ${m.signInWithSolana.nonc
+e}`]:[],...(null==(l=null==m?void 0:m.signInWithSolana)?void 0:l.requestId)?[`Request ID: ${m.signInWithSolana.requestI
+d}`]:[],...(null==(c=null==(h=null==m?void 0:m.signInWithSolana)?void 0:h.resources)?void 0:c.length)?["Resources",...m
+.signInWithSolana.resources.map(e=>`- ${e}`)]:[]].join("\n");let e=await d.signMessage(new TextEncoder().encode(p),"utf
+8");if(!e||!(e instanceof Uint8Array))throw Error("@supabase/auth-js: Wallet signMessage() API returned an recognized v
+alue");f=e}}try{let{data:t,error:r}=await rn(this.fetch,"POST",`${this.url}/token?grant_type=web3`,{headers:this.header
+s,body:Object.assign({chain:"solana",message:p,signature:tV(f)},(null==(u=e.options)?void 0:u.captchaToken)?{gotrue_met
+a_security:{captcha_token:null==(d=e.options)?void 0:d.captchaToken}}:null),xform:ro});if(r)throw r;if(!t||!t.session||
+!t.user){let e=new tx;return this._returnResult({data:{user:null,session:null},error:e})}return t.session&&(await this.
+_saveSession(t.session),await this._notifyAllSubscribers("SIGNED_IN",t.session)),this._returnResult({data:Object.assign
+({},t),error:r})}catch(e){if(tO(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async _e
+xchangeCodeForSession(e){let t=await tQ(this.storage,`${this.storageKey}-code-verifier`),[r,s]=(null!=t?t:"").split("/"
+);try{if(!r&&"pkce"===this.flowType)throw new tL;let{data:t,error:i}=await rn(this.fetch,"POST",`${this.url}/token?gran
+t_type=pkce`,{headers:this.headers,body:{auth_code:e,code_verifier:r},xform:ro});if(await tZ(this.storage,`${this.stora
+geKey}-code-verifier`),i)throw i;if(!t||!t.session||!t.user){let e=new tx;return this._returnResult({data:{user:null,se
+ssion:null,redirectType:null},error:e})}return t.session&&(await this._saveSession(t.session),await this._notifyAllSubs
+cribers("SIGNED_IN",t.session)),this._returnResult({data:Object.assign(Object.assign({},t),{redirectType:null!=s?s:null
+}),error:i})}catch(e){if(await tZ(this.storage,`${this.storageKey}-code-verifier`),tO(e))return this._returnResult({dat
+a:{user:null,session:null,redirectType:null},error:e});throw e}}async signInWithIdToken(e){try{let{options:t,provider:r
+,token:s,access_token:i,nonce:n}=e,{data:a,error:o}=await rn(this.fetch,"POST",`${this.url}/token?grant_type=id_token`,
+{headers:this.headers,body:{provider:r,id_token:s,access_token:i,nonce:n,gotrue_meta_security:{captcha_token:null==t?vo
+id 0:t.captchaToken}},xform:ro});if(o)return this._returnResult({data:{user:null,session:null},error:o});if(!a||!a.sess
+ion||!a.user){let e=new tx;return this._returnResult({data:{user:null,session:null},error:e})}return a.session&&(await 
+this._saveSession(a.session),await this._notifyAllSubscribers("SIGNED_IN",a.session)),this._returnResult({data:a,error:
+o})}catch(e){if(tO(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signInWithOtp(e
+){var t,r,s,i,n;try{if("email"in e){let{email:s,options:i}=e,n=null,a=null;"pkce"===this.flowType&&([n,a]=await t3(this
+.storage,this.storageKey));let{error:o}=await rn(this.fetch,"POST",`${this.url}/otp`,{headers:this.headers,body:{email:
+s,data:null!=(t=null==i?void 0:i.data)?t:{},create_user:null==(r=null==i?void 0:i.shouldCreateUser)||r,gotrue_meta_secu
+rity:{captcha_token:null==i?void 0:i.captchaToken},code_challenge:n,code_challenge_method:a},redirectTo:null==i?void 0:
+i.emailRedirectTo});return this._returnResult({data:{user:null,session:null},error:o})}if("phone"in e){let{phone:t,opti
+ons:r}=e,{data:a,error:o}=await rn(this.fetch,"POST",`${this.url}/otp`,{headers:this.headers,body:{phone:t,data:null!=(
+s=null==r?void 0:r.data)?s:{},create_user:null==(i=null==r?void 0:r.shouldCreateUser)||i,gotrue_meta_security:{captcha_
+token:null==r?void 0:r.captchaToken},channel:null!=(n=null==r?void 0:r.channel)?n:"sms"}});return this._returnResult({d
+ata:{user:null,session:null,messageId:null==a?void 0:a.message_id},error:o})}throw new tN("You must provide either an e
+mail or phone number.")}catch(e){if(await tZ(this.storage,`${this.storageKey}-code-verifier`),tO(e))return this._return
+Result({data:{user:null,session:null},error:e});throw e}}async verifyOtp(e){var t,r;try{let s,i;"options"in e&&(s=null=
+=(t=e.options)?void 0:t.redirectTo,i=null==(r=e.options)?void 0:r.captchaToken);let{data:n,error:a}=await rn(this.fetch
+,"POST",`${this.url}/verify`,{headers:this.headers,body:Object.assign(Object.assign({},e),{gotrue_meta_security:{captch
+a_token:i}}),redirectTo:s,xform:ro});if(a)throw a;if(!n)throw Error("An error occurred on token verification.");let o=n
+.session,l=n.user;return(null==o?void 0:o.access_token)&&(await this._saveSession(o),await this._notifyAllSubscribers("
+recovery"==e.type?"PASSWORD_RECOVERY":"SIGNED_IN",o)),this._returnResult({data:{user:l,session:o},error:null})}catch(e)
+{if(tO(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signInWithSSO(e){var t,r,s,
+i;try{let n=null,a=null;"pkce"===this.flowType&&([n,a]=await t3(this.storage,this.storageKey));let o=await rn(this.fetc
+h,"POST",`${this.url}/sso`,{body:Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({},"providerId"i
+n e?{provider_id:e.providerId}:null),"domain"in e?{domain:e.domain}:null),{redirect_to:null!=(r=null==(t=e.options)?voi
+d 0:t.redirectTo)?r:void 0}),(null==(s=null==e?void 0:e.options)?void 0:s.captchaToken)?{gotrue_meta_security:{captcha_
+token:e.options.captchaToken}}:null),{skip_http_redirect:!0,code_challenge:n,code_challenge_method:a}),headers:this.hea
+ders,xform:rc});return null==(i=o.data)||i.url,this._returnResult(o)}catch(e){if(await tZ(this.storage,`${this.storageK
+ey}-code-verifier`),tO(e))return this._returnResult({data:null,error:e});throw e}}async reauthenticate(){return await t
+his.initializePromise,await this._acquireLock(this.lockAcquireTimeout,async()=>await this._reauthenticate())}async _rea
+uthenticate(){try{return await this._useSession(async e=>{let{data:{session:t},error:r}=e;if(r)throw r;if(!t)throw new 
+t$;let{error:s}=await rn(this.fetch,"GET",`${this.url}/reauthenticate`,{headers:this.headers,jwt:t.access_token});retur
+n this._returnResult({data:{user:null,session:null},error:s})})}catch(e){if(tO(e))return this._returnResult({data:{user
+:null,session:null},error:e});throw e}}async resend(e){try{let t=`${this.url}/resend`;if("email"in e){let{email:r,type:
+s,options:i}=e,{error:n}=await rn(this.fetch,"POST",t,{headers:this.headers,body:{email:r,type:s,gotrue_meta_security:{
+captcha_token:null==i?void 0:i.captchaToken}},redirectTo:null==i?void 0:i.emailRedirectTo});return this._returnResult({
+data:{user:null,session:null},error:n})}if("phone"in e){let{phone:r,type:s,options:i}=e,{data:n,error:a}=await rn(this.
+fetch,"POST",t,{headers:this.headers,body:{phone:r,type:s,gotrue_meta_security:{captcha_token:null==i?void 0:i.captchaT
+oken}}});return this._returnResult({data:{user:null,session:null,messageId:null==n?void 0:n.message_id},error:a})}throw
+ new tN("You must provide either an email or phone number and a type")}catch(e){if(tO(e))return this._returnResult({dat
+a:{user:null,session:null},error:e});throw e}}async getSession(){return await this.initializePromise,await this._acquir
+eLock(this.lockAcquireTimeout,async()=>this._useSession(async e=>e))}async _acquireLock(e,t){this._debug("#_acquireLock
+","begin",e);try{if(this.lockAcquired){let e=this.pendingInLock.length?this.pendingInLock[this.pendingInLock.length-1]:
+Promise.resolve(),r=(async()=>(await e,await t()))();return this.pendingInLock.push((async()=>{try{await r}catch(e){}})
+()),r}return await this.lock(`lock:${this.storageKey}`,e,async()=>{this._debug("#_acquireLock","lock acquired for stora
+ge key",this.storageKey);try{this.lockAcquired=!0;let e=t();for(this.pendingInLock.push((async()=>{try{await e}catch(e)
+{}})()),await e;this.pendingInLock.length;){let e=[...this.pendingInLock];await Promise.all(e),this.pendingInLock.splic
+e(0,e.length)}return await e}finally{this._debug("#_acquireLock","lock released for storage key",this.storageKey),this.
+lockAcquired=!1}})}finally{this._debug("#_acquireLock","end")}}async _useSession(e){this._debug("#_useSession","begin")
+;try{let t=await this.__loadSession();return await e(t)}finally{this._debug("#_useSession","end")}}async __loadSession(
+){this._debug("#__loadSession()","begin"),this.lockAcquired||this._debug("#__loadSession()","used outside of an acquire
+d lock!",Error().stack);try{let t=null,r=await tQ(this.storage,this.storageKey);if(this._debug("#getSession()","session
+ from storage",r),null!==r&&(this._isValidSession(r)?t=r:(this._debug("#getSession()","session from storage is not vali
+d"),await this._removeSession())),!t)return{data:{session:null},error:null};let s=!!t.expires_at&&1e3*t.expires_at-Date
+.now()<9e4;if(this._debug("#__loadSession()",`session has${s?"":" not"} expired`,"expires_at",t.expires_at),!s){if(this
+.userStorage){let e=await tQ(this.userStorage,this.storageKey+"-user");(null==e?void 0:e.user)?t.user=e.user:t.user=re(
+)}if(this.storage.isServer&&t.user&&!t.user.__isUserNotAvailableProxy){var e;let r={value:this.suppressGetSessionWarnin
+g};t.user=(e=t.user,new Proxy(e,{get:(e,t,s)=>{if("__isInsecureUserWarningProxy"===t)return!0;if("symbol"==typeof t){le
+t r=t.toString();if("Symbol(Symbol.toPrimitive)"===r||"Symbol(Symbol.toStringTag)"===r||"Symbol(util.inspect.custom)"==
+=r||"Symbol(nodejs.util.inspect.custom)"===r)return Reflect.get(e,t,s)}return r.value||"string"!=typeof t||(console.war
+n("Using the user object as returned from supabase.auth.getSession() or from some supabase.auth.onAuthStateChange() eve
+nts could be insecure! This value comes directly from the storage medium (usually cookies on the server) and may not be
+ authentic. Use supabase.auth.getUser() instead which authenticates the data by contacting the Supabase Auth server."),
+r.value=!0),Reflect.get(e,t,s)}})),r.value&&(this.suppressGetSessionWarning=!0)}return{data:{session:t},error:null}}let
+{data:i,error:n}=await this._callRefreshToken(t.refresh_token);if(n)return this._returnResult({data:{session:null},erro
+r:n});return this._returnResult({data:{session:i},error:null})}finally{this._debug("#__loadSession()","end")}}async get
+User(e){if(e)return await this._getUser(e);await this.initializePromise;let t=await this._acquireLock(this.lockAcquireT
+imeout,async()=>await this._getUser());return t.data.user&&(this.suppressGetSessionWarning=!0),t}async _getUser(e){try{
+if(e)return await rn(this.fetch,"GET",`${this.url}/user`,{headers:this.headers,jwt:e,xform:rh});return await this._useS
+ession(async e=>{var t,r,s;let{data:i,error:n}=e;if(n)throw n;return(null==(t=i.session)?void 0:t.access_token)||this.h
+asCustomAuthorizationHeader?await rn(this.fetch,"GET",`${this.url}/user`,{headers:this.headers,jwt:null!=(s=null==(r=i.
+session)?void 0:r.access_token)?s:void 0,xform:rh}):{data:{user:null},error:new t$}})}catch(e){if(tO(e))return tI(e)&&(
+await this._removeSession(),await tZ(this.storage,`${this.storageKey}-code-verifier`)),this._returnResult({data:{user:n
+ull},error:e});throw e}}async updateUser(e,t={}){return await this.initializePromise,await this._acquireLock(this.lockA
+cquireTimeout,async()=>await this._updateUser(e,t))}async _updateUser(e,t={}){try{return await this._useSession(async r
+=>{let{data:s,error:i}=r;if(i)throw i;if(!s.session)throw new t$;let n=s.session,a=null,o=null;"pkce"===this.flowType&&
+null!=e.email&&([a,o]=await t3(this.storage,this.storageKey));let{data:l,error:h}=await rn(this.fetch,"PUT",`${this.url
+}/user`,{headers:this.headers,redirectTo:null==t?void 0:t.emailRedirectTo,body:Object.assign(Object.assign({},e),{code_
+challenge:a,code_challenge_method:o}),jwt:n.access_token,xform:rh});if(h)throw h;return n.user=l.user,await this._saveS
+ession(n),await this._notifyAllSubscribers("USER_UPDATED",n),this._returnResult({data:{user:n.user},error:null})})}catc
+h(e){if(await tZ(this.storage,`${this.storageKey}-code-verifier`),tO(e))return this._returnResult({data:{user:null},err
+or:e});throw e}}async setSession(e){return await this.initializePromise,await this._acquireLock(this.lockAcquireTimeout
+,async()=>await this._setSession(e))}async _setSession(e){try{if(!e.access_token||!e.refresh_token)throw new t$;let t=D
+ate.now()/1e3,r=t,s=!0,i=null,{payload:n}=t1(e.access_token);if(n.exp&&(s=(r=n.exp)<=t),s){let{data:t,error:r}=await th
+is._callRefreshToken(e.refresh_token);if(r)return this._returnResult({data:{user:null,session:null},error:r});if(!t)ret
+urn{data:{user:null,session:null},error:null};i=t}else{let{data:s,error:n}=await this._getUser(e.access_token);if(n)ret
+urn this._returnResult({data:{user:null,session:null},error:n});i={access_token:e.access_token,refresh_token:e.refresh_
+token,user:s.user,token_type:"bearer",expires_in:r-t,expires_at:r},await this._saveSession(i),await this._notifyAllSubs
+cribers("SIGNED_IN",i)}return this._returnResult({data:{user:i.user,session:i},error:null})}catch(e){if(tO(e))return th
+is._returnResult({data:{session:null,user:null},error:e});throw e}}async refreshSession(e){return await this.initialize
+Promise,await this._acquireLock(this.lockAcquireTimeout,async()=>await this._refreshSession(e))}async _refreshSession(e
+){try{return await this._useSession(async t=>{var r;if(!e){let{data:s,error:i}=t;if(i)throw i;e=null!=(r=s.session)?r:v
+oid 0}if(!(null==e?void 0:e.refresh_token))throw new t$;let{data:s,error:i}=await this._callRefreshToken(e.refresh_toke
+n);return i?this._returnResult({data:{user:null,session:null},error:i}):s?this._returnResult({data:{user:s.user,session
+:s},error:null}):this._returnResult({data:{user:null,session:null},error:null})})}catch(e){if(tO(e))return this._return
+Result({data:{user:null,session:null},error:e});throw e}}async _getSessionFromURL(e,t){try{throw new tU("No browser det
+ected.")}catch(e){if(tO(e))return this._returnResult({data:{session:null,redirectType:null},error:e});throw e}}_isImpli
+citGrantCallback(e){return"function"==typeof this.detectSessionInUrl?this.detectSessionInUrl(new URL(window.location.hr
+ef),e):!!(e.access_token||e.error_description)}async _isPKCECallback(e){let t=await tQ(this.storage,`${this.storageKey}
+-code-verifier`);return!!(e.code&&t)}async signOut(e={scope:"global"}){return await this.initializePromise,await this._
+acquireLock(this.lockAcquireTimeout,async()=>await this._signOut(e))}async _signOut({scope:e}={scope:"global"}){return 
+await this._useSession(async t=>{var r;let{data:s,error:i}=t;if(i&&!tI(i))return this._returnResult({error:i});let n=nu
+ll==(r=s.session)?void 0:r.access_token;if(n){let{error:t}=await this.admin.signOut(n,e);if(t&&!(tO(t)&&"AuthApiError"=
+==t.name&&(404===t.status||401===t.status||403===t.status)||tI(t)))return this._returnResult({error:t})}return"others"!
+==e&&(await this._removeSession(),await tZ(this.storage,`${this.storageKey}-code-verifier`)),this._returnResult({error:
+null})})}onAuthStateChange(e){let t=Symbol("auth-callback"),r={id:t,callback:e,unsubscribe:()=>{this._debug("#unsubscri
+be()","state change callback with id removed",t),this.stateChangeEmitters.delete(t)}};return this._debug("#onAuthStateC
+hange()","registered callback with id",t),this.stateChangeEmitters.set(t,r),(async()=>{await this.initializePromise,awa
+it this._acquireLock(this.lockAcquireTimeout,async()=>{this._emitInitialSession(t)})})(),{data:{subscription:r}}}async 
+_emitInitialSession(e){return await this._useSession(async t=>{var r,s;try{let{data:{session:s},error:i}=t;if(i)throw i
+;await (null==(r=this.stateChangeEmitters.get(e))?void 0:r.callback("INITIAL_SESSION",s)),this._debug("INITIAL_SESSION"
+,"callback id",e,"session",s)}catch(t){await (null==(s=this.stateChangeEmitters.get(e))?void 0:s.callback("INITIAL_SESS
+ION",null)),this._debug("INITIAL_SESSION","callback id",e,"error",t),tI(t)?console.warn(t):console.error(t)}})}async re
+setPasswordForEmail(e,t={}){let r=null,s=null;"pkce"===this.flowType&&([r,s]=await t3(this.storage,this.storageKey,!0))
+;try{return await rn(this.fetch,"POST",`${this.url}/recover`,{body:{email:e,code_challenge:r,code_challenge_method:s,go
+true_meta_security:{captcha_token:t.captchaToken}},headers:this.headers,redirectTo:t.redirectTo})}catch(e){if(await tZ(
+this.storage,`${this.storageKey}-code-verifier`),tO(e))return this._returnResult({data:null,error:e});throw e}}async ge
+tUserIdentities(){var e;try{let{data:t,error:r}=await this.getUser();if(r)throw r;return this._returnResult({data:{iden
+tities:null!=(e=t.user.identities)?e:[]},error:null})}catch(e){if(tO(e))return this._returnResult({data:null,error:e});
+throw e}}async linkIdentity(e){return"token"in e?this.linkIdentityIdToken(e):this.linkIdentityOAuth(e)}async linkIdenti
+tyOAuth(e){try{let{data:t,error:r}=await this._useSession(async t=>{var r,s,i,n,a;let{data:o,error:l}=t;if(l)throw l;le
+t h=await this._getUrlForProvider(`${this.url}/user/identities/authorize`,e.provider,{redirectTo:null==(r=e.options)?vo
+id 0:r.redirectTo,scopes:null==(s=e.options)?void 0:s.scopes,queryParams:null==(i=e.options)?void 0:i.queryParams,skipB
+rowserRedirect:!0});return await rn(this.fetch,"GET",h,{headers:this.headers,jwt:null!=(a=null==(n=o.session)?void 0:n.
+access_token)?a:void 0})});if(r)throw r;return this._returnResult({data:{provider:e.provider,url:null==t?void 0:t.url},
+error:null})}catch(t){if(tO(t))return this._returnResult({data:{provider:e.provider,url:null},error:t});throw t}}async 
+linkIdentityIdToken(e){return await this._useSession(async t=>{var r;try{let{error:s,data:{session:i}}=t;if(s)throw s;l
+et{options:n,provider:a,token:o,access_token:l,nonce:h}=e,{data:c,error:u}=await rn(this.fetch,"POST",`${this.url}/toke
+n?grant_type=id_token`,{headers:this.headers,jwt:null!=(r=null==i?void 0:i.access_token)?r:void 0,body:{provider:a,id_t
+oken:o,access_token:l,nonce:h,link_identity:!0,gotrue_meta_security:{captcha_token:null==n?void 0:n.captchaToken}},xfor
+m:ro});if(u)return this._returnResult({data:{user:null,session:null},error:u});if(!c||!c.session||!c.user)return this._
+returnResult({data:{user:null,session:null},error:new tx});return c.session&&(await this._saveSession(c.session),await 
+this._notifyAllSubscribers("USER_UPDATED",c.session)),this._returnResult({data:c,error:u})}catch(e){if(await tZ(this.st
+orage,`${this.storageKey}-code-verifier`),tO(e))return this._returnResult({data:{user:null,session:null},error:e});thro
+w e}})}async unlinkIdentity(e){try{return await this._useSession(async t=>{var r,s;let{data:i,error:n}=t;if(n)throw n;r
+eturn await rn(this.fetch,"DELETE",`${this.url}/user/identities/${e.identity_id}`,{headers:this.headers,jwt:null!=(s=nu
+ll==(r=i.session)?void 0:r.access_token)?s:void 0})})}catch(e){if(tO(e))return this._returnResult({data:null,error:e});
+throw e}}async _refreshAccessToken(e){let t=`#_refreshAccessToken(${e.substring(0,5)}...)`;this._debug(t,"begin");try{v
+ar r,s;let i=Date.now();return await (r=async r=>(r>0&&await t2(200*Math.pow(2,r-1)),this._debug(t,"refreshing attempt"
+,r),await rn(this.fetch,"POST",`${this.url}/token?grant_type=refresh_token`,{body:{refresh_token:e},headers:this.header
+s,xform:ro})),s=(e,t)=>{let r=200*Math.pow(2,e);return t&&tB(t)&&Date.now()+r-i<3e4},new Promise((e,t)=>{(async()=>{for
+(let i=0;i<1/0;i++)try{let t=await r(i);if(!s(i,null,t))return void e(t)}catch(e){if(!s(i,e))return void t(e)}})()}))}c
+atch(e){if(this._debug(t,"error",e),tO(e))return this._returnResult({data:{session:null,user:null},error:e});throw e}fi
+nally{this._debug(t,"end")}}_isValidSession(e){return"object"==typeof e&&null!==e&&"access_token"in e&&"refresh_token"i
+n e&&"expires_at"in e}async _handleProviderSignIn(e,t){let r=await this._getUrlForProvider(`${this.url}/authorize`,e,{r
+edirectTo:t.redirectTo,scopes:t.scopes,queryParams:t.queryParams});return this._debug("#_handleProviderSignIn()","provi
+der",e,"options",t,"url",r),{data:{provider:e,url:r},error:null}}async _recoverAndRefresh(){var e,t;let r="#_recoverAnd
+Refresh()";this._debug(r,"begin");try{let s=await tQ(this.storage,this.storageKey);if(s&&this.userStorage){let t=await 
+tQ(this.userStorage,this.storageKey+"-user");!this.storage.isServer&&Object.is(this.storage,this.userStorage)&&!t&&(t={
+user:s.user},await tX(this.userStorage,this.storageKey+"-user",t)),s.user=null!=(e=null==t?void 0:t.user)?e:re()}else i
+f(s&&!s.user&&!s.user){let e=await tQ(this.storage,this.storageKey+"-user");e&&(null==e?void 0:e.user)?(s.user=e.user,a
+wait tZ(this.storage,this.storageKey+"-user"),await tX(this.storage,this.storageKey,s)):s.user=re()}if(this._debug(r,"s
+ession from storage",s),!this._isValidSession(s)){this._debug(r,"session is not valid"),null!==s&&await this._removeSes
+sion();return}let i=(null!=(t=s.expires_at)?t:1/0)*1e3-Date.now()<9e4;if(this._debug(r,`session has${i?"":" not"} expir
+ed with margin of 90000s`),i){if(this.autoRefreshToken&&s.refresh_token){let{error:e}=await this._callRefreshToken(s.re
+fresh_token);e&&(console.error(e),tB(e)||(this._debug(r,"refresh failed with a non-retryable error, removing the sessio
+n",e),await this._removeSession()))}}else if(s.user&&!0===s.user.__isUserNotAvailableProxy)try{let{data:e,error:t}=awai
+t this._getUser(s.access_token);!t&&(null==e?void 0:e.user)?(s.user=e.user,await this._saveSession(s),await this._notif
+yAllSubscribers("SIGNED_IN",s)):this._debug(r,"could not get user data, skipping SIGNED_IN notification")}catch(e){cons
+ole.error("Error getting user data:",e),this._debug(r,"error getting user data, skipping SIGNED_IN notification",e)}els
+e await this._notifyAllSubscribers("SIGNED_IN",s)}catch(e){this._debug(r,"error",e),console.error(e);return}finally{thi
+s._debug(r,"end")}}async _callRefreshToken(e){var t,r;if(!e)throw new t$;if(this.refreshingDeferred)return this.refresh
+ingDeferred.promise;let s=`#_callRefreshToken(${e.substring(0,5)}...)`;this._debug(s,"begin");try{this.refreshingDeferr
+ed=new t0;let{data:t,error:r}=await this._refreshAccessToken(e);if(r)throw r;if(!t.session)throw new t$;await this._sav
+eSession(t.session),await this._notifyAllSubscribers("TOKEN_REFRESHED",t.session);let s={data:t.session,error:null};ret
+urn this.refreshingDeferred.resolve(s),s}catch(e){if(this._debug(s,"error",e),tO(e)){let r={data:null,error:e};return t
+B(e)||await this._removeSession(),null==(t=this.refreshingDeferred)||t.resolve(r),r}throw null==(r=this.refreshingDefer
+red)||r.reject(e),e}finally{this.refreshingDeferred=null,this._debug(s,"end")}}async _notifyAllSubscribers(e,t,r=!0){le
+t s=`#_notifyAllSubscribers(${e})`;this._debug(s,"begin",t,`broadcast = ${r}`);try{this.broadcastChannel&&r&&this.broad
+castChannel.postMessage({event:e,session:t});let s=[],i=Array.from(this.stateChangeEmitters.values()).map(async r=>{try
+{await r.callback(e,t)}catch(e){s.push(e)}});if(await Promise.all(i),s.length>0){for(let e=0;e<s.length;e+=1)console.er
+ror(s[e]);throw s[0]}}finally{this._debug(s,"end")}}async _saveSession(e){this._debug("#_saveSession()",e),this.suppres
+sGetSessionWarning=!0,await tZ(this.storage,`${this.storageKey}-code-verifier`);let t=Object.assign({},e),r=t.user&&!0=
+==t.user.__isUserNotAvailableProxy;if(this.userStorage){!r&&t.user&&await tX(this.userStorage,this.storageKey+"-user",{
+user:t.user});let e=Object.assign({},t);delete e.user;let s=rt(e);await tX(this.storage,this.storageKey,s)}else{let e=r
+t(t);await tX(this.storage,this.storageKey,e)}}async _removeSession(){this._debug("#_removeSession()"),this.suppressGet
+SessionWarning=!1,await tZ(this.storage,this.storageKey),await tZ(this.storage,this.storageKey+"-code-verifier"),await 
+tZ(this.storage,this.storageKey+"-user"),this.userStorage&&await tZ(this.userStorage,this.storageKey+"-user"),await thi
+s._notifyAllSubscribers("SIGNED_OUT",null)}_removeVisibilityChangedCallback(){this._debug("#_removeVisibilityChangedCal
+lback()"),this.visibilityChangedCallback,this.visibilityChangedCallback=null}async _startAutoRefresh(){await this._stop
+AutoRefresh(),this._debug("#_startAutoRefresh()");let e=setInterval(()=>this._autoRefreshTokenTick(),3e4);this.autoRefr
+eshTicker=e,e&&"object"==typeof e&&"function"==typeof e.unref?e.unref():"u">typeof Deno&&"function"==typeof Deno.unrefT
+imer&&Deno.unrefTimer(e);let t=setTimeout(async()=>{await this.initializePromise,await this._autoRefreshTokenTick()},0)
+;this.autoRefreshTickTimeout=t,t&&"object"==typeof t&&"function"==typeof t.unref?t.unref():"u">typeof Deno&&"function"=
+=typeof Deno.unrefTimer&&Deno.unrefTimer(t)}async _stopAutoRefresh(){this._debug("#_stopAutoRefresh()");let e=this.auto
+RefreshTicker;this.autoRefreshTicker=null,e&&clearInterval(e);let t=this.autoRefreshTickTimeout;this.autoRefreshTickTim
+eout=null,t&&clearTimeout(t)}async startAutoRefresh(){this._removeVisibilityChangedCallback(),await this._startAutoRefr
+esh()}async stopAutoRefresh(){this._removeVisibilityChangedCallback(),await this._stopAutoRefresh()}async _autoRefreshT
+okenTick(){this._debug("#_autoRefreshTokenTick()","begin");try{await this._acquireLock(0,async()=>{try{let e=Date.now()
+;try{return await this._useSession(async t=>{let{data:{session:r}}=t;if(!r||!r.refresh_token||!r.expires_at)return void
+ this._debug("#_autoRefreshTokenTick()","no session");let s=Math.floor((1e3*r.expires_at-e)/3e4);this._debug("#_autoRef
+reshTokenTick()",`access token expires in ${s} ticks, a tick lasts 30000ms, refresh threshold is 3 ticks`),s<=3&&await 
+this._callRefreshToken(r.refresh_token)})}catch(e){console.error("Auto refresh tick failed with error. This is likely a
+ transient error.",e)}}finally{this._debug("#_autoRefreshTokenTick()","end")}})}catch(e){if(e.isAcquireTimeout||e insta
+nceof rm)this._debug("auto refresh token tick lock not available");else throw e}}async _handleVisibilityChange(){return
+ this._debug("#_handleVisibilityChange()"),this.autoRefreshToken&&this.startAutoRefresh(),!1}async _onVisibilityChanged
+(e){let t=`#_onVisibilityChanged(${e})`;this._debug(t,"visibilityState",document.visibilityState),"visible"===document.
+visibilityState?(this.autoRefreshToken&&this._startAutoRefresh(),e||(await this.initializePromise,await this._acquireLo
+ck(this.lockAcquireTimeout,async()=>{"visible"!==document.visibilityState?this._debug(t,"acquired the lock to recover t
+he session, but the browser visibilityState is no longer visible, aborting"):await this._recoverAndRefresh()}))):"hidde
+n"===document.visibilityState&&this.autoRefreshToken&&this._stopAutoRefresh()}async _getUrlForProvider(e,t,r){let s=[`p
+rovider=${encodeURIComponent(t)}`];if((null==r?void 0:r.redirectTo)&&s.push(`redirect_to=${encodeURIComponent(r.redirec
+tTo)}`),(null==r?void 0:r.scopes)&&s.push(`scopes=${encodeURIComponent(r.scopes)}`),"pkce"===this.flowType){let[e,t]=aw
+ait t3(this.storage,this.storageKey),r=new URLSearchParams({code_challenge:`${encodeURIComponent(e)}`,code_challenge_me
+thod:`${encodeURIComponent(t)}`});s.push(r.toString())}if(null==r?void 0:r.queryParams){let e=new URLSearchParams(r.que
+ryParams);s.push(e.toString())}return(null==r?void 0:r.skipBrowserRedirect)&&s.push(`skip_http_redirect=${r.skipBrowser
+Redirect}`),`${e}?${s.join("&")}`}async _unenroll(e){try{return await this._useSession(async t=>{var r;let{data:s,error
+:i}=t;return i?this._returnResult({data:null,error:i}):await rn(this.fetch,"DELETE",`${this.url}/factors/${e.factorId}`
+,{headers:this.headers,jwt:null==(r=null==s?void 0:s.session)?void 0:r.access_token})})}catch(e){if(tO(e))return this._
+returnResult({data:null,error:e});throw e}}async _enroll(e){try{return await this._useSession(async t=>{var r,s;let{dat
+a:i,error:n}=t;if(n)return this._returnResult({data:null,error:n});let a=Object.assign({friendly_name:e.friendlyName,fa
+ctor_type:e.factorType},"phone"===e.factorType?{phone:e.phone}:"totp"===e.factorType?{issuer:e.issuer}:{}),{data:o,erro
+r:l}=await rn(this.fetch,"POST",`${this.url}/factors`,{body:a,headers:this.headers,jwt:null==(r=null==i?void 0:i.sessio
+n)?void 0:r.access_token});return l?this._returnResult({data:null,error:l}):("totp"===e.factorType&&"totp"===o.type&&(n
+ull==(s=null==o?void 0:o.totp)?void 0:s.qr_code)&&(o.totp.qr_code=`data:image/svg+xml;utf-8,${o.totp.qr_code}`),this._r
+eturnResult({data:o,error:null}))})}catch(e){if(tO(e))return this._returnResult({data:null,error:e});throw e}}async _ve
+rify(e){return this._acquireLock(this.lockAcquireTimeout,async()=>{try{return await this._useSession(async t=>{var r,s,
+i;let{data:n,error:a}=t;if(a)return this._returnResult({data:null,error:a});let o=Object.assign({challenge_id:e.challen
+geId},"webauthn"in e?{webauthn:Object.assign(Object.assign({},e.webauthn),{credential_response:"create"===e.webauthn.ty
+pe?(s=e.webauthn.credential_response,"toJSON"in s&&"function"==typeof s.toJSON?s.toJSON():{id:s.id,rawId:s.id,response:
+{attestationObject:tV(new Uint8Array(s.response.attestationObject)),clientDataJSON:tV(new Uint8Array(s.response.clientD
+ataJSON))},type:"public-key",clientExtensionResults:s.getClientExtensionResults(),authenticatorAttachment:null!=(i=s.au
+thenticatorAttachment)?i:void 0}):function(e){var t;if("toJSON"in e&&"function"==typeof e.toJSON)return e.toJSON();let 
+r=e.getClientExtensionResults(),s=e.response;return{id:e.id,rawId:e.id,response:{authenticatorData:tV(new Uint8Array(s.
+authenticatorData)),clientDataJSON:tV(new Uint8Array(s.clientDataJSON)),signature:tV(new Uint8Array(s.signature)),userH
+andle:s.userHandle?tV(new Uint8Array(s.userHandle)):void 0},type:"public-key",clientExtensionResults:r,authenticatorAtt
+achment:null!=(t=e.authenticatorAttachment)?t:void 0}}(e.webauthn.credential_response)})}:{code:e.code}),{data:l,error:
+h}=await rn(this.fetch,"POST",`${this.url}/factors/${e.factorId}/verify`,{body:o,headers:this.headers,jwt:null==(r=null
+==n?void 0:n.session)?void 0:r.access_token});return h?this._returnResult({data:null,error:h}):(await this._saveSession
+(Object.assign({expires_at:Math.round(Date.now()/1e3)+l.expires_in},l)),await this._notifyAllSubscribers("MFA_CHALLENGE
+_VERIFIED",l),this._returnResult({data:l,error:h}))})}catch(e){if(tO(e))return this._returnResult({data:null,error:e});
+throw e}})}async _challenge(e){return this._acquireLock(this.lockAcquireTimeout,async()=>{try{return await this._useSes
+sion(async t=>{var r;let{data:s,error:i}=t;if(i)return this._returnResult({data:null,error:i});let n=await rn(this.fetc
+h,"POST",`${this.url}/factors/${e.factorId}/challenge`,{body:e,headers:this.headers,jwt:null==(r=null==s?void 0:s.sessi
+on)?void 0:r.access_token});if(n.error)return n;let{data:a}=n;if("webauthn"!==a.type)return{data:a,error:null};switch(a
+.webauthn.type){case"create":return{data:Object.assign(Object.assign({},a),{webauthn:Object.assign(Object.assign({},a.w
+ebauthn),{credential_options:Object.assign(Object.assign({},a.webauthn.credential_options),{publicKey:function(e){if(!e
+)throw Error("Credential creation options are required");if("u">typeof PublicKeyCredential&&"parseCreationOptionsFromJS
+ON"in PublicKeyCredential&&"function"==typeof PublicKeyCredential.parseCreationOptionsFromJSON)return PublicKeyCredenti
+al.parseCreationOptionsFromJSON(e);let{challenge:t,user:r,excludeCredentials:s}=e,i=U(e,["challenge","user","excludeCre
+dentials"]),n=tz(t).buffer,a=Object.assign(Object.assign({},r),{id:tz(r.id).buffer}),o=Object.assign(Object.assign({},i
+),{challenge:n,user:a});if(s&&s.length>0){o.excludeCredentials=Array(s.length);for(let e=0;e<s.length;e++){let t=s[e];o
+.excludeCredentials[e]=Object.assign(Object.assign({},t),{id:tz(t.id).buffer,type:t.type||"public-key",transports:t.tra
+nsports})}}return o}(a.webauthn.credential_options.publicKey)})})}),error:null};case"request":return{data:Object.assign
+(Object.assign({},a),{webauthn:Object.assign(Object.assign({},a.webauthn),{credential_options:Object.assign(Object.assi
+gn({},a.webauthn.credential_options),{publicKey:function(e){if(!e)throw Error("Credential request options are required"
+);if("u">typeof PublicKeyCredential&&"parseRequestOptionsFromJSON"in PublicKeyCredential&&"function"==typeof PublicKeyC
+redential.parseRequestOptionsFromJSON)return PublicKeyCredential.parseRequestOptionsFromJSON(e);let{challenge:t,allowCr
+edentials:r}=e,s=U(e,["challenge","allowCredentials"]),i=tz(t).buffer,n=Object.assign(Object.assign({},s),{challenge:i}
+);if(r&&r.length>0){n.allowCredentials=Array(r.length);for(let e=0;e<r.length;e++){let t=r[e];n.allowCredentials[e]=Obj
+ect.assign(Object.assign({},t),{id:tz(t.id).buffer,type:t.type||"public-key",transports:t.transports})}}return n}(a.web
+authn.credential_options.publicKey)})})}),error:null}}})}catch(e){if(tO(e))return this._returnResult({data:null,error:e
+});throw e}})}async _challengeAndVerify(e){let{data:t,error:r}=await this._challenge({factorId:e.factorId});return r?th
+is._returnResult({data:null,error:r}):await this._verify({factorId:e.factorId,challengeId:t.id,code:e.code})}async _lis
+tFactors(){var e;let{data:{user:t},error:r}=await this.getUser();if(r)return{data:null,error:r};let s={all:[],phone:[],
+totp:[],webauthn:[]};for(let r of null!=(e=null==t?void 0:t.factors)?e:[])s.all.push(r),"verified"===r.status&&s[r.fact
+or_type].push(r);return{data:s,error:null}}async _getAuthenticatorAssuranceLevel(e){var t,r,s,i;if(e)try{let{payload:s}
+=t1(e),i=null;s.aal&&(i=s.aal);let n=i,{data:{user:a},error:o}=await this.getUser(e);if(o)return this._returnResult({da
+ta:null,error:o});(null!=(r=null==(t=null==a?void 0:a.factors)?void 0:t.filter(e=>"verified"===e.status))?r:[]).length>
+0&&(n="aal2");let l=s.amr||[];return{data:{currentLevel:i,nextLevel:n,currentAuthenticationMethods:l},error:null}}catch
+(e){if(tO(e))return this._returnResult({data:null,error:e});throw e}let{data:{session:n},error:a}=await this.getSession
+();if(a)return this._returnResult({data:null,error:a});if(!n)return{data:{currentLevel:null,nextLevel:null,currentAuthe
+nticationMethods:[]},error:null};let{payload:o}=t1(n.access_token),l=null;o.aal&&(l=o.aal);let h=l;return(null!=(i=null
+==(s=n.user.factors)?void 0:s.filter(e=>"verified"===e.status))?i:[]).length>0&&(h="aal2"),{data:{currentLevel:l,nextLe
+vel:h,currentAuthenticationMethods:o.amr||[]},error:null}}async _getAuthorizationDetails(e){try{return await this._useS
+ession(async t=>{let{data:{session:r},error:s}=t;return s?this._returnResult({data:null,error:s}):r?await rn(this.fetch
+,"GET",`${this.url}/oauth/authorizations/${e}`,{headers:this.headers,jwt:r.access_token,xform:e=>({data:e,error:null})}
+):this._returnResult({data:null,error:new t$})})}catch(e){if(tO(e))return this._returnResult({data:null,error:e});throw
+ e}}async _approveAuthorization(e,t){try{return await this._useSession(async t=>{let{data:{session:r},error:s}=t;if(s)r
+eturn this._returnResult({data:null,error:s});if(!r)return this._returnResult({data:null,error:new t$});let i=await rn(
+this.fetch,"POST",`${this.url}/oauth/authorizations/${e}/consent`,{headers:this.headers,jwt:r.access_token,body:{action
+:"approve"},xform:e=>({data:e,error:null})});return i.data&&i.data.redirect_url,i})}catch(e){if(tO(e))return this._retu
+rnResult({data:null,error:e});throw e}}async _denyAuthorization(e,t){try{return await this._useSession(async t=>{let{da
+ta:{session:r},error:s}=t;if(s)return this._returnResult({data:null,error:s});if(!r)return this._returnResult({data:nul
+l,error:new t$});let i=await rn(this.fetch,"POST",`${this.url}/oauth/authorizations/${e}/consent`,{headers:this.headers
+,jwt:r.access_token,body:{action:"deny"},xform:e=>({data:e,error:null})});return i.data&&i.data.redirect_url,i})}catch(
+e){if(tO(e))return this._returnResult({data:null,error:e});throw e}}async _listOAuthGrants(){try{return await this._use
+Session(async e=>{let{data:{session:t},error:r}=e;return r?this._returnResult({data:null,error:r}):t?await rn(this.fetc
+h,"GET",`${this.url}/user/oauth/grants`,{headers:this.headers,jwt:t.access_token,xform:e=>({data:e,error:null})}):this.
+_returnResult({data:null,error:new t$})})}catch(e){if(tO(e))return this._returnResult({data:null,error:e});throw e}}asy
+nc _revokeOAuthGrant(e){try{return await this._useSession(async t=>{let{data:{session:r},error:s}=t;return s?this._retu
+rnResult({data:null,error:s}):r?(await rn(this.fetch,"DELETE",`${this.url}/user/oauth/grants`,{headers:this.headers,jwt
+:r.access_token,query:{client_id:e.clientId},noResolveJson:!0}),{data:{},error:null}):this._returnResult({data:null,err
+or:new t$})})}catch(e){if(tO(e))return this._returnResult({data:null,error:e});throw e}}async fetchJwk(e,t={keys:[]}){l
+et r=t.keys.find(t=>t.kid===e);if(r)return r;let s=Date.now();if((r=this.jwks.keys.find(t=>t.kid===e))&&this.jwks_cache
+d_at+6e5>s)return r;let{data:i,error:n}=await rn(this.fetch,"GET",`${this.url}/.well-known/jwks.json`,{headers:this.hea
+ders});if(n)throw n;return i.keys&&0!==i.keys.length&&(this.jwks=i,this.jwks_cached_at=s,r=i.keys.find(t=>t.kid===e))?r
+:null}async getClaims(e,t={}){try{var r;let s,i=e;if(!i){let{data:e,error:t}=await this.getSession();if(t||!e.session)r
+eturn this._returnResult({data:null,error:t});i=e.session.access_token}let{header:n,payload:a,signature:o,raw:{header:l
+,payload:h}}=t1(i);(null==t?void 0:t.allowExpired)||function(e){if(!e)throw Error("Missing exp claim");if(e<=Math.floor
+(Date.now()/1e3))throw Error("JWT has expired")}(a.exp);let c=!n.alg||n.alg.startsWith("HS")||!n.kid||!("crypto"in glob
+alThis&&"subtle"in globalThis.crypto)?null:await this.fetchJwk(n.kid,(null==t?void 0:t.keys)?{keys:t.keys}:null==t?void
+ 0:t.jwks);if(!c){let{error:e}=await this.getUser(i);if(e)throw e;return{data:{claims:a,header:n,signature:o},error:nul
+l}}let u=function(e){switch(e){case"RS256":return{name:"RSASSA-PKCS1-v1_5",hash:{name:"SHA-256"}};case"ES256":return{na
+me:"ECDSA",namedCurve:"P-256",hash:{name:"SHA-256"}};default:throw Error("Invalid alg claim")}}(n.alg),d=await crypto.s
+ubtle.importKey("jwk",c,u,!0,["verify"]);if(!await crypto.subtle.verify(u,d,o,(r=`${l}.${h}`,s=[],!function(e,t){for(le
+t r=0;r<e.length;r+=1){let s=e.charCodeAt(r);if(s>55295&&s<=56319){let t=(s-55296)*1024&65535;s=(e.charCodeAt(r+1)-5632
+0&65535|t)+65536,r+=1}!function(e,t){if(e<=127)return t(e);if(e<=2047){t(192|e>>6),t(128|63&e);return}if(e<=65535){t(22
+4|e>>12),t(128|e>>6&63),t(128|63&e);return}if(e<=1114111){t(240|e>>18),t(128|e>>12&63),t(128|e>>6&63),t(128|63&e);retur
+n}throw Error(`Unrecognized Unicode codepoint: ${e.toString(16)}`)}(s,t)}}(r,e=>s.push(e)),new Uint8Array(s))))throw ne
+w tH("Invalid JWT signature");return{data:{claims:a,header:n,signature:o},error:null}}catch(e){if(tO(e))return this._re
+turnResult({data:null,error:e});throw e}}}rj.nextInstanceID={};let r$=rj,rI="";rI="u">typeof Deno?"deno":"u">typeof doc
+ument?"web":"u">typeof navigator&&"ReactNative"===navigator.product?"react-native":"node";let rx={headers:{"X-Client-In
+fo":`supabase-js-${rI}/2.102.0`}},rN={schema:"public"},rU={autoRefreshToken:!0,persistSession:!0,detectSessionInUrl:!0,
+flowType:"implicit"},rL={};function rD(e){return(rD="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?functio
+n(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"sy
+mbol":typeof e})(e)}function rB(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var s=Object.getOwnPropertyS
+ymbols(e);t&&(s=s.filter(function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable})),r.push.apply(r,s)}return
+ r}function rq(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?rB(Object(r),!0).for
+Each(function(t){!function(e,t,r){var s;(s=function(e,t){if("object"!=rD(e)||!e)return e;var r=e[Symbol.toPrimitive];if
+(void 0!==r){var s=r.call(e,t||"default");if("object"!=rD(s))return s;throw TypeError("@@toPrimitive must return a prim
+itive value.")}return("string"===t?String:Number)(e)}(t,"string"),(t="symbol"==rD(s)?s:s+"")in e)?Object.defineProperty
+(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r}(e,t,r[t])}):Object.getOwnPropertyDescriptors?Object.d
+efineProperties(e,Object.getOwnPropertyDescriptors(r)):rB(Object(r)).forEach(function(t){Object.defineProperty(e,t,Obje
+ct.getOwnPropertyDescriptor(r,t))})}return e}var rH=class extends r${constructor(e){super(e)}},rM=class{constructor(e,t
+,r){var s,i,n;this.supabaseUrl=e,this.supabaseKey=t;const a=function(e){let t=null==e?void 0:e.trim();if(!t)throw Error
+("supabaseUrl is required.");if(!t.match(/^https?:\/\//i))throw Error("Invalid supabaseUrl: Must be a valid HTTP or HTT
+PS URL.");try{return new URL(t.endsWith("/")?t:t+"/")}catch(e){throw Error("Invalid supabaseUrl: Provided URL is malfor
+med.")}}(e);if(!t)throw Error("supabaseKey is required.");this.realtimeUrl=new URL("realtime/v1",a),this.realtimeUrl.pr
+otocol=this.realtimeUrl.protocol.replace("http","ws"),this.authUrl=new URL("auth/v1",a),this.storageUrl=new URL("storag
+e/v1",a),this.functionsUrl=new URL("functions/v1",a);const o=`sb-${a.hostname.split(".")[0]}-auth-token`,l=function(e,t
+){var r,s;let{db:i,auth:n,realtime:a,global:o}=e,{db:l,auth:h,realtime:c,global:u}=t,d={db:rq(rq({},l),i),auth:rq(rq({}
+,h),n),realtime:rq(rq({},c),a),storage:{},global:rq(rq(rq({},u),o),{},{headers:rq(rq({},null!=(r=null==u?void 0:u.heade
+rs)?r:{}),null!=(s=null==o?void 0:o.headers)?s:{})}),accessToken:async()=>""};return e.accessToken?d.accessToken=e.acce
+ssToken:delete d.accessToken,d}(null!=r?r:{},{db:rN,realtime:rL,auth:rq(rq({},rU),{},{storageKey:o}),global:rx});this.s
+torageKey=null!=(s=l.auth.storageKey)?s:"",this.headers=null!=(i=l.global.headers)?i:{},l.accessToken?(this.accessToken
+=l.accessToken,this.auth=new Proxy({},{get:(e,t)=>{throw Error(`@supabase/supabase-js: Supabase Client is configured wi
+th the accessToken option, accessing supabase.auth.${String(t)} is not possible`)}})):this.auth=this._initSupabaseAuthC
+lient(null!=(n=l.auth)?n:{},this.headers,l.global.fetch),this.fetch=((e,t,r)=>{let s=r?(...e)=>r(...e):(...e)=>fetch(..
+.e),i=Headers;return async(r,n)=>{var a;let o=null!=(a=await t())?a:e,l=new i(null==n?void 0:n.headers);return l.has("a
+pikey")||l.set("apikey",e),l.has("Authorization")||l.set("Authorization",`Bearer ${o}`),s(r,rq(rq({},n),{},{headers:l})
+)}})(t,this._getAccessToken.bind(this),l.global.fetch),this.realtime=this._initRealtimeClient(rq({headers:this.headers,
+accessToken:this._getAccessToken.bind(this)},l.realtime)),this.accessToken&&Promise.resolve(this.accessToken()).then(e=
+>this.realtime.setAuth(e)).catch(e=>console.warn("Failed to set initial Realtime auth token:",e)),this.rest=new X(new U
+RL("rest/v1",a).href,{headers:this.headers,schema:l.db.schema,fetch:this.fetch,timeout:l.db.timeout,urlLengthLimit:l.db
+.urlLengthLimit}),this.storage=new t_(this.storageUrl.href,this.headers,this.fetch,null==r?void 0:r.storage),l.accessTo
+ken||this._listenForAuthEvents()}get functions(){return new L(this.functionsUrl.href,{headers:this.headers,customFetch:
+this.fetch})}from(e){return this.rest.from(e)}schema(e){return this.rest.schema(e)}rpc(e,t={},r={head:!1,get:!1,count:v
+oid 0}){return this.rest.rpc(e,t,r)}channel(e,t={config:{}}){return this.realtime.channel(e,t)}getChannels(){return thi
+s.realtime.getChannels()}removeChannel(e){return this.realtime.removeChannel(e)}removeAllChannels(){return this.realtim
+e.removeAllChannels()}async _getAccessToken(){var e,t;if(this.accessToken)return await this.accessToken();let{data:r}=a
+wait this.auth.getSession();return null!=(e=null==(t=r.session)?void 0:t.access_token)?e:this.supabaseKey}_initSupabase
+AuthClient({autoRefreshToken:e,persistSession:t,detectSessionInUrl:r,storage:s,userStorage:i,storageKey:n,flowType:a,lo
+ck:o,debug:l,throwOnError:h},c,u){let d={Authorization:`Bearer ${this.supabaseKey}`,apikey:`${this.supabaseKey}`};retur
+n new rH({url:this.authUrl.href,headers:rq(rq({},d),c),storageKey:n,autoRefreshToken:e,persistSession:t,detectSessionIn
+Url:r,storage:s,userStorage:i,flowType:a,lock:o,debug:l,throwOnError:h,fetch:u,hasCustomAuthorizationHeader:Object.keys
+(this.headers).some(e=>"authorization"===e.toLowerCase())})}_initRealtimeClient(e){return new eW(this.realtimeUrl.href,
+rq(rq({},e),{},{params:rq(rq({},{apikey:this.supabaseKey}),null==e?void 0:e.params)}))}_listenForAuthEvents(){return th
+is.auth.onAuthStateChange((e,t)=>{this._handleTokenChanged(e,"CLIENT",null==t?void 0:t.access_token)})}_handleTokenChan
+ged(e,t,r){("TOKEN_REFRESHED"===e||"SIGNED_IN"===e)&&this.changedAccessToken!==r?(this.changedAccessToken=r,this.realti
+me.setAuth(r)):"SIGNED_OUT"===e&&(this.realtime.setAuth(),"STORAGE"==t&&this.auth.signOut(),this.changedAccessToken=voi
+d 0)}};(function(){let e=globalThis.process;if(!e)return!1;let t=e.version;if(null==t)return!1;let r=t.match(/^v(\d+)\.
+/);return!!r&&18>=parseInt(r[1],10)})()&&console.warn("??  Node.js 18 and below are deprecated and will no longer be su
+pported in future versions of @supabase/supabase-js. Please upgrade to Node.js 20 or later. For more information, visit
+: https://github.com/orgs/supabase/discussions/37217");let rK=new rM("https://jssoyjwjqykcuovdydtz.supabase.co","sb_pub
+lishable_RztM_8dNswdYyCo_3ZTFyA_94mkh6xz",void 0);var rW=e.i(22880);async function rF(e){try{let t=process.env.STRIPE_S
+ECRET_KEY;if(!t)return j.NextResponse.json({error:"Stripe API key is not configured."},{status:500});let r=new rW.defau
+lt(t,{apiVersion:"2025-02-24.acacia"}),{townId:s}=await e.json();if(!s)return j.NextResponse.json({error:"townId is req
+uired"},{status:400});let{data:i,error:n}=await rK.from("neighborhoods").select("*").eq("id",s).single();if(n||!i)retur
+n j.NextResponse.json({error:"Neighborhood not found"},{status:404});let{data:a}=await rK.from("neighborhood_admins").s
+elect("admin_email").eq("neighborhood_id",s).limit(1).single(),o=i.stripe_account_id;if(!o){let e={type:"express",count
+ry:"JP",capabilities:{card_payments:{requested:!0},transfers:{requested:!0}},business_type:"non_profit",business_profil
+e:{name:i.name}};a?.admin_email&&(e.email=a.admin_email),o=(await r.accounts.create(e)).id;let{error:t}=await rK.from("
+neighborhoods").update({stripe_account_id:o}).eq("id",s);if(t)return console.error("Failed to save stripe_account_id to
+ DB",t),j.NextResponse.json({error:"Failed to save account"},{status:500})}let l=process.env.NEXT_PUBLIC_BASE_URL||new 
+URL(e.url).origin,h=await r.accountLinks.create({account:o,refresh_url:`${l}/admin/stripe/refresh?townId=${s}`,return_u
+rl:`${l}/admin/stripe/return?townId=${s}`,type:"account_onboarding"});return j.NextResponse.json({url:h.url})}catch(e){
+return console.error("Stripe API error:",e),j.NextResponse.json({error:e.message},{status:500})}}e.s(["POST",0,rF],7924
+4);var rJ=e.i(79244);let rG=new f.AppRouteRouteModule({definition:{kind:g.RouteKind.APP_ROUTE,page:"/api/admin/stripe/c
+reate-account-link/route",pathname:"/api/admin/stripe/create-account-link",filename:"route",bundlePath:""},distDir:".ne
+xt",relativeProjectDir:"",resolvedPagePath:"[project]/src/app/api/admin/stripe/create-account-link/route.ts",nextConfig
+Output:"export",userland:rJ,...{}}),{workAsyncStorage:rz,workUnitAsyncStorage:rV,serverHooks:rY}=rG;async function rX(e
+,t,r){r.requestMeta&&(0,y.setRequestMeta)(e,r.requestMeta),rG.isDev&&(0,y.addRequestMeta)(e,"devRequestTimingInternalsE
+nd",process.hrtime.bigint());let s="/api/admin/stripe/create-account-link/route";s=s.replace(/\/index$/,"")||"/";let i=
+await rG.prepare(e,t,{srcPage:s,multiZoneDraftMode:!1});if(!i)return t.statusCode=400,t.end("Bad Request"),null==r.wait
+Until||r.waitUntil.call(r,Promise.resolve()),null;let{buildId:n,params:a,nextConfig:o,parsedUrl:l,isDraftMode:h,prerend
+erManifest:c,routerServerContext:u,isOnDemandRevalidate:d,revalidateOnlyGenerated:p,resolvedPathname:f,clientReferenceM
+anifest:m,serverActionsManifest:j}=i,$=(0,v.normalizeAppPath)(s),I=!!(c.dynamicRoutes[$]||c.routes[f]),x=async()=>((nul
+l==u?void 0:u.render404)?await u.render404(e,t,l,!1):t.end("This page could not be found"),null);if(I&&!h){let e=!!c.ro
+utes[f],t=c.dynamicRoutes[$];if(t&&!1===t.fallback&&!e){if(o.adapterPath)return await x();throw new C.NoFallbackError}}
+let N=null;!I||rG.isDev||h||(N="/index"===(N=f)?"/":N);let U=!0===rG.isDev||!I,L=I&&!U;j&&m&&(0,w.setManifestsSingleton
+)({page:s,clientReferenceManifest:m,serverActionsManifest:j});let D=e.method||"GET",B=(0,b.getTracer)(),q=B.getActiveSc
+opeSpan(),H=!!(null==u?void 0:u.isWrappedByNextServer),M=!!(0,y.getRequestMeta)(e,"minimalMode"),K=(0,y.getRequestMeta)
+(e,"incrementalCache")||await rG.getIncrementalCache(e,o,c,M);null==K||K.resetRequestCache(),globalThis.__incrementalCa
+che=K;let W={params:a,previewProps:c.preview,renderOpts:{experimental:{authInterrupts:!!o.experimental.authInterrupts},
+cacheComponents:!!o.cacheComponents,supportsDynamicResponse:U,incrementalCache:K,cacheLifeProfiles:o.cacheLife,waitUnti
+l:r.waitUntil,onClose:e=>{t.on("close",e)},onAfterTaskError:void 0,onInstrumentationRequestError:(t,r,s,i)=>rG.onReques
+tError(e,t,s,i,u)},sharedContext:{buildId:n}},F=new _.NodeNextRequest(e),J=new _.NodeNextResponse(t),G=k.NextRequestAda
+pter.fromNodeNextRequest(F,(0,k.signalFromNodeResponse)(t));try{let i,n=async e=>rG.handle(G,W).finally(()=>{if(!e)retu
+rn;e.setAttributes({"http.status_code":t.statusCode,"next.rsc":!1});let r=B.getRootSpanAttributes();if(!r)return;if(r.g
+et("next.span_type")!==S.BaseServerSpan.handleRequest)return void console.warn(`Unexpected root span type '${r.get("nex
+t.span_type")}'. Please report this Next.js issue https://github.com/vercel/next.js`);let n=r.get("next.route");if(n){l
+et t=`${D} ${n}`;e.setAttributes({"next.route":n,"http.route":n,"next.span_name":t}),e.updateName(t),i&&i!==e&&(i.setAt
+tribute("http.route",n),i.updateName(t))}else e.updateName(`${D} ${s}`)}),a=async i=>{var a,l;let f=async({previousCach
+eEntry:a})=>{try{if(!M&&d&&p&&!a)return t.statusCode=404,t.setHeader("x-nextjs-cache","REVALIDATED"),t.end("This page c
+ould not be found"),null;let s=await n(i);e.fetchMetrics=W.renderOpts.fetchMetrics;let o=W.renderOpts.pendingWaitUntil;
+o&&r.waitUntil&&(r.waitUntil(o),o=void 0);let l=W.renderOpts.collectedTags;if(!I)return await (0,E.sendResponse)(F,J,s,
+W.renderOpts.pendingWaitUntil),null;{let e=await s.blob(),t=(0,R.toNodeOutgoingHttpHeaders)(s.headers);l&&(t[O.NEXT_CAC
+HE_TAGS_HEADER]=l),!t["content-type"]&&e.type&&(t["content-type"]=e.type);let r=void 0!==W.renderOpts.collectedRevalida
+te&&!(W.renderOpts.collectedRevalidate>=O.INFINITE_CACHE)&&W.renderOpts.collectedRevalidate,i=void 0===W.renderOpts.col
+lectedExpire||W.renderOpts.collectedExpire>=O.INFINITE_CACHE?void 0:W.renderOpts.collectedExpire;return{value:{kind:P.C
+achedRouteKind.APP_ROUTE,status:s.status,body:Buffer.from(await e.arrayBuffer()),headers:t},cacheControl:{revalidate:r,
+expire:i}}}}catch(t){throw(null==a?void 0:a.isStale)&&await rG.onRequestError(e,t,{routerKind:"App Router",routePath:s,
+routeType:"route",revalidateReason:(0,T.getRevalidateReason)({isStaticGeneration:L,isOnDemandRevalidate:d})},!1,u),t}},
+m=await rG.handleResponse({req:e,nextConfig:o,cacheKey:N,routeKind:g.RouteKind.APP_ROUTE,isFallback:!1,prerenderManifes
+t:c,isRoutePPREnabled:!1,isOnDemandRevalidate:d,revalidateOnlyGenerated:p,responseGenerator:f,waitUntil:r.waitUntil,isM
+inimalMode:M});if(!I)return null;if((null==m||null==(a=m.value)?void 0:a.kind)!==P.CachedRouteKind.APP_ROUTE)throw Obje
+ct.defineProperty(Error(`Invariant: app-route received invalid cache entry ${null==m||null==(l=m.value)?void 0:l.kind}`
+),"__NEXT_ERROR_CODE",{value:"E701",enumerable:!1,configurable:!0});M||t.setHeader("x-nextjs-cache",d?"REVALIDATED":m.i
+sMiss?"MISS":m.isStale?"STALE":"HIT"),h&&t.setHeader("Cache-Control","private, no-cache, no-store, max-age=0, must-reva
+lidate");let y=(0,R.fromNodeOutgoingHttpHeaders)(m.value.headers);return M&&I||y.delete(O.NEXT_CACHE_TAGS_HEADER),!m.ca
+cheControl||t.getHeader("Cache-Control")||y.get("Cache-Control")||y.set("Cache-Control",(0,A.getCacheControlHeader)(m.c
+acheControl)),await (0,E.sendResponse)(F,J,new Response(m.value.body,{headers:y,status:m.value.status||200})),null};H&&
+q?await a(q):(i=B.getActiveScopeSpan(),await B.withPropagatedContext(e.headers,()=>B.trace(S.BaseServerSpan.handleReque
+st,{spanName:`${D} ${s}`,kind:b.SpanKind.SERVER,attributes:{"http.method":D,"http.target":e.url}},a),void 0,!H))}catch(
+t){if(t instanceof C.NoFallbackError||await rG.onRequestError(e,t,{routerKind:"App Router",routePath:$,routeType:"route
+",revalidateReason:(0,T.getRevalidateReason)({isStaticGeneration:L,isOnDemandRevalidate:d})},!1,u),I)throw t;return awa
+it (0,E.sendResponse)(F,J,new Response(null,{status:500})),null}}e.s(["handler",0,rX,"patchFetch",0,function(){return(0
+,m.patchFetch)({workAsyncStorage:rz,workUnitAsyncStorage:rV})},"routeModule",0,rG,"serverHooks",0,rY,"workAsyncStorage"
+,0,rz,"workUnitAsyncStorage",0,rV],20309)}];
+netlify\functions\create-stripe-account.ts:97:      return_url: returnUrl,
+node_modules\stripe\cjs\resources\BillingPortal\Configurations.d.ts:46:     * The default URL to redirect customers to 
+when they click on the portal's link to return to your website. This can be [overriden](https://docs.stripe.com/api/cus
+tomer_portal/sessions/create#create_portal_session-return_url) when creating the session.
+node_modules\stripe\cjs\resources\BillingPortal\Configurations.d.ts:48:    default_return_url: string | null;
+node_modules\stripe\cjs\resources\BillingPortal\Configurations.d.ts:260:         * The default URL to redirect customer
+s to when they click on the portal's link to return to your website. This can be [overriden](https://docs.stripe.com/ap
+i/customer_portal/sessions/create#create_portal_session-return_url) when creating the session.
+node_modules\stripe\cjs\resources\BillingPortal\Configurations.d.ts:262:        default_return_url?: Emptyable<string>;
+node_modules\stripe\cjs\resources\BillingPortal\Configurations.d.ts:493:         * The default URL to redirect customer
+s to when they click on the portal's link to return to your website. This can be [overriden](https://docs.stripe.com/ap
+i/customer_portal/sessions/create#create_portal_session-return_url) when creating the session.
+node_modules\stripe\cjs\resources\BillingPortal\Configurations.d.ts:495:        default_return_url?: Emptyable<string>;
+node_modules\stripe\cjs\resources\BillingPortal\Sessions.d.ts:54:    return_url: string | null;
+node_modules\stripe\cjs\resources\BillingPortal\Sessions.d.ts:139:                    return_url: string;
+node_modules\stripe\cjs\resources\BillingPortal\Sessions.d.ts:225:        return_url?: string;
+node_modules\stripe\cjs\resources\BillingPortal\Sessions.d.ts:308:                    return_url: string;
+node_modules\stripe\cjs\resources\Checkout\Sessions.d.ts:260:    return_url?: string;
+node_modules\stripe\cjs\resources\Checkout\Sessions.d.ts:1922:                    return_url?: string;
+node_modules\stripe\cjs\resources\Checkout\Sessions.d.ts:2272:        return_url?: string;
+node_modules\stripe\cjs\resources\FinancialConnections\Sessions.d.ts:52:    return_url?: string;
+node_modules\stripe\cjs\resources\FinancialConnections\Sessions.d.ts:118:        return_url?: string;
+node_modules\stripe\cjs\resources\Identity\VerificationSessions.d.ts:349:        return_url?: string;
+node_modules\stripe\cjs\resources\Terminal\Readers.d.ts:493:                    return_url?: string;
+node_modules\stripe\cjs\resources\Terminal\Readers.d.ts:505:                    return_url?: string;
+
+

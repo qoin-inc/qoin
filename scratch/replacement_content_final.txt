@@ -1,0 +1,25 @@
+"              {/* タブ8: オンライン集金(Stripe連携) */}
+              {settingsTab === 'stripe' && (
+                <div className="space-y-6 animate-fadeIn">
+                  <div className="bg-indigo-50/75 border-2 border-indigo-200 p-4 md:p-6 rounded-2xl shadow-sm relative overflow-hidden">
+                    <h4 className="font-bold text-indigo-800 mb-4 text-lg flex items-center border-b border-indigo-200 pb-3">
+                      <i className="fas fa-credit-card mr-2 text-indigo-600"></i>町内会費集集金システム（Stripe連携）
+                    </h4>
+                    
+                    <div className="space-y-6">
+                      {/* メイン連携カード */}
+                      <div className="bg-white p-5 md:p-8 rounded-2xl border border-indigo-100 text-center shadow-md relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                        
+                        <h4 className="font-black text-indigo-900 mb-3 text-base md:text-xl flex items-center justify-center mt-2">
+                          <i className="fas fa-link text-indigo-600 mr-2"></i>Stripe（ストライプ）アカウントの連携
+                        </h4>
+                        
+                        <p className="text-xs md:text-sm text-gray-600 max-w-lg mx-auto mb-6 leading-relaxed">
+                          町内会費・自治会費のクレジットカード決済を受け取るには、世界水準の安全な決済システム「Stripe」のアカウントを作成・連携する必要があります。
+                        </p>
+
+                        {settingsData?.stripe_account_id ? (
+                          <div className="flex flex-col items-center justify-center space-y-4">
+                            <div className="inline-flex items-center bg-green-50 text-green-700 px-6 py-3 rounded-xl border b
+<truncated 16524 bytes>

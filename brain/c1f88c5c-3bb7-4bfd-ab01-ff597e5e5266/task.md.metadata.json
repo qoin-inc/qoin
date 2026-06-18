@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_TASK",
+  "summary":  "Tasks for implementing pagination and load-more functionality in Qoin app.",
+  "updatedAt":  "2026-04-08T10:28:54.537781900Z",
+  "version":  "3"
+}

@@ -1,0 +1,49 @@
+
+Users\info\.gemini\antigravity\scratch\qoin\src\app\page.tsx:31:    if (typeof window !== 'undefined' && window.locatio
+n.pathname !== '/') {
+Users\info\.gemini\antigravity\scratch\qoin\src\app\page.tsx:48:          window.location.href = '/portal';
+Users\info\.gemini\antigravity\scratch\qoin\src\app\admin\page.tsx:26:      if (typeof window !== 'undefined' && window
+.location.search.includes('mode=signup')) {
+Users\info\.gemini\antigravity\scratch\qoin\src\app\admin\page.tsx:32:      if (typeof window !== 'undefined' && window
+.location.search.includes('mode=update_password')) {
+Users\info\.gemini\antigravity\scratch\qoin\src\app\admin\page.tsx:37:      if (typeof window !== 'undefined' && window
+.location.search.includes('mode=invite')) {
+Users\info\.gemini\antigravity\scratch\qoin\src\app\admin\page.tsx:39:        const params = new URLSearchParams(window
+.location.search);
+Users\info\.gemini\antigravity\scratch\qoin\src\app\admin\page.tsx:45:      if (typeof window !== 'undefined' && window
+.location.search.includes('mode=join')) {
+Users\info\.gemini\antigravity\scratch\qoin\src\app\admin\page.tsx:323:        redirectTo: `${window.location.origin}/a
+dmin?mode=update_password`,
+Users\info\.gemini\antigravity\scratch\qoin\src\app\admin\page.tsx:344:      window.location.href = '/admin';
+Users\info\.gemini\antigravity\scratch\qoin\src\app\resident\page.tsx:51:    const hash = window.location.hash;
+Users\info\.gemini\antigravity\scratch\qoin\src\app\resident\page.tsx:87:        window.location.href = '/portal';
+Users\info\.gemini\antigravity\scratch\qoin\src\app\resident\page.tsx:161:        liff.login({ redirectUri: `${window.l
+ocation.origin}/resident` });
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:318:        linkUrl: `${window.location.origin
+}/resident/?open=${insertedId}`
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:357:        linkUrl: `${window.location.origin
+}/resident/?open=${id}`
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:539:        linkUrl: `${window.location.origin
+}/resident/?open=${editCircular.id}`
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:654:      window.location.reload(); 
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:2113:                         value={settingsD
+ata.invite_token ? `${window.location.origin}/admin?mode=invite&token=${settingsData.invite_token}` : 'URL�s (SQL�
+�s�ăJ�ǉ�Ă�)'}
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:2119:                             navigator.cl
+ipboard.writeText(`${window.location.origin}/admin?mode=invite&token=${settingsData.invite_token}`);
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:2517:                                  const b
+aseUrl = window.location.origin;
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:2518:                                  const r
+es = await fetch('/.netlify/functions/create-stripe-account', {
+Users\info\.gemini\antigravity\scratch\qoin\src\components\AdminView.tsx:2529:                                    windo
+w.location.href = data.url;
+Users\info\.gemini\antigravity\scratch\qoin\src\components\LiffProvider.tsx:55:              window.location.reload();
+Users\info\.gemini\antigravity\scratch\qoin\src\components\LiffProvider.tsx:67:            window.location.reload();
+Users\info\.gemini\antigravity\scratch\qoin\src\components\LiffProvider.tsx:92:              window.location.reload();
+Users\info\.gemini\antigravity\scratch\qoin\src\components\ResidentView.tsx:273:          returnUrl: window.location.hr
+ef, // �ϊ�ɖ߂�Ă�URL
+Users\info\.gemini\antigravity\scratch\qoin\src\components\ResidentView.tsx:284:        window.location.href = url;
+Users\info\.gemini\antigravity\scratch\qoin\src\components\SignupTown.tsx:69:      window.location.href = '/'; // �
+�|�[�^�֖߂�
+
+

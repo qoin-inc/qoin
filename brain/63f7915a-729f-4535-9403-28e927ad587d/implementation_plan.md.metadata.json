@@ -1,0 +1,7 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "プロトタイプ作成完了後の次のフェーズとして、Next.jsへの移行およびバックエンド（DB）構築のロードマップを提案。",
+  "updatedAt":  "2026-04-06T11:56:02.815216400Z",
+  "version":  "3",
+  "requestFeedback":  true
+}

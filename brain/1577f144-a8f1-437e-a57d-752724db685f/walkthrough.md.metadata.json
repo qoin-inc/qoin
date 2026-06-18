@@ -1,0 +1,5 @@
+{
+  "artifactType": "ARTIFACT_TYPE_WALKTHROUGH",
+  "summary": "Update walkthrough.md with the detailed explanation of the Stripe RLS bug, the automatic administrator login fallback solution, verification tests, and Netlify production deployment.",
+  "updatedAt": "2026-05-22T23:02:54.895961200Z"
+}

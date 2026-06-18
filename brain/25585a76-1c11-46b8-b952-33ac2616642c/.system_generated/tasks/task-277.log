@@ -1,0 +1,9 @@
+& : �p� 'C:\Program Files\Git\cmd\git.exe' �́A�R�}�h�b�g�A�֐�A�X�N�v�g �t�@�C�A�܂�͑�\�ȃv�O�̖�O
+�Ƃ�ĔF�܂�B�O�L�q�Ă�邱�Ƃ�m�F�A�p�X�܂܂�Ă�ꍇ�͂�̃p�X�Ƃ�m�F�Ă�A
+�Ď�s�Ă�B
+�ꏊ �s:1 �:3
++ & "C:\Program Files\Git\cmd\git.exe" status
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Program Files\Git\cmd\git.exe:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 

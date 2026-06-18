@@ -1,0 +1,13 @@
+- [x] Update `ResidentView.tsx` to fetch billing data and display payment UI
+  - [x] Add state variables for `feeBilling` and `stripeAccountId`
+  - [x] Fetch data from `fee_billings` and `neighborhoods` inside `useEffect`
+  - [x] Implement UI for `currentTab === 'fee'`
+  - [x] Add `handlePayment` function to invoke checkout session API
+- [x] Create `netlify/functions/create-checkout-session.ts`
+  - [x] Parse request parameters (feeBillingId, amount, stripeAccountId, etc.)
+  - [x] Create checkout session with direct charge option
+  - [x] Return session URL
+- [x] Create `netlify/functions/stripe-webhook.ts`
+  - [x] Verify signature using `STRIPE_WEBHOOK_SECRET`
+  - [x] Handle `checkout.session.completed`
+  - [x] Update Supabase `fee_billings` table status to 'paid'

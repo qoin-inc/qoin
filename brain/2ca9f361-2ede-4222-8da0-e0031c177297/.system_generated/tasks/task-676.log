@@ -1,0 +1,30 @@
+  Finished TypeScript in 4.5s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/17) ...
+  Generating static pages using 15 workers (4/17) 
+  Generating static pages using 15 workers (8/17) 
+  Generating static pages using 15 workers (12/17) 
+✁EGenerating static pages using 15 workers (17/17) in 364ms
+  Finalizing page optimization ...
+
+Route (app)
+━E◁E/
+━E◁E/_not-found
+━E◁E/admin
+━E◁E/admin/stripe/refresh
+━E◁E/admin/stripe/return
+━EƁE/api/admin/stripe/create-account-link
+━EƁE/api/webhooks/stripe
+━E◁E/manual
+━E◁E/manual/admin
+━E◁E/manual/member
+━E◁E/manual/stripe
+━E◁E/portal
+━E◁E/resident
+━E◁E/richmenu
+━E◁E/system
+
+
+◁E (Static)   prerendered as static content
+ƁE (Dynamic)  server-rendered on demand
+

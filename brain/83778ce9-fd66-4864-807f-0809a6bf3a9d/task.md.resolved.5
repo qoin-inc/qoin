@@ -1,0 +1,6 @@
+- `[ ]` `app/portal/page.tsx` からカレンダー関連のState（`sightViewMode`, `currentDate`, `selectedDate`）とUI（`renderCalendar` など）を削除する
+- `[ ]` 投稿モーダルから「イベント日時」を削除し、すべてのカテゴリで「場所」を入力できるようにする
+- `[ ]` `fetchData` における `towns` の生成ロジックを修正し、各町内会の「最新の投稿」が確実に保持されるようにする
+- `[ ]` マイel-town（地図）上でピンをタップした際、その町内会の情報一覧を表示するための `selectedTownId` Stateと下部スライドUIを追加する
+- `[ ]` `components/MapComponent.tsx` の「観れ」を「映え」に修正する
+- `[ ]` UIの整合性を確認し、動作検証を行う

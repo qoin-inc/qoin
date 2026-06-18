@@ -1,0 +1,23 @@
+<current_dom_explanation>
+This is a temporary snapshot of the current page's DOM structure. The DOM will change if you navigate to or interact with another page. Use a tool like browser_get_dom to capture and preserve the DOM in your trajectory if needed for later reference.
+</current_dom_explanation>
+<current_dom>
+el-town
+電子回覧板・町内会・自治会アプリ (会員用)
+[0] (500,328)<button class='w-full bg-[#06C755] text-white font-black py-4 rounded-xl shadow-md hover:bg-[#05b34c] transition disabled:opacity-50 cursor-pointer flex justify-center items-center group relative overflow-hidden' />
+	[1] (348,328)<i  />
+	[2] (500,328)<span >LINEでログインする />
+[Debug] LiffInit:
+Yes
+| InClient:
+No
+| LoggedIn:
+No
+※取得したLINEのメールアドレスおよび公開プロフィール情報は、ユーザーの認証機能および重複登録防止の目的に限り利用されます。
+アプリを利用するにはLINEアカウントの連携が必要です。
+[3] (500,719)<button class='text-gray-500 hover:text-qoin-main hover:bg-sky-50 py-3 rounded-xl transition font-bold text-sm flex justify-center items-center w-full cursor-pointer'>はじめての方はこちら（新規名簿登録） />
+	[4] (375,719)<i  />
+[5] (500,819)<a class='bg-white border-2 border-gray-200 text-gray-500 font-bold py-3 px-6 rounded-xl hover:bg-gray-50 transition shadow-sm w-full cursor-pointer flex justify-center items-center group' href='/'>トップメニューへ戻る />
+	[6] (419,819)<i  />
+
+</current_dom>

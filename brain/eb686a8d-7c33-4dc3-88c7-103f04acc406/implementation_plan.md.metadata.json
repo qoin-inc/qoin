@@ -1,0 +1,6 @@
+{
+  "artifactType":  "ARTIFACT_TYPE_IMPLEMENTATION_PLAN",
+  "summary":  "Stripe Connect Expressの導入による町内会・自治会の会費集金アプリ（プラットフォーム型）の実装計画。バックエンドのAPI実装、フロントエンドのUI/UX設計（WebView連携）、リダイレクトおよびWebhookの処理方針をまとめています。",
+  "updatedAt":  "2026-05-19T23:03:01.890330200Z",
+  "requestFeedback":  true
+}

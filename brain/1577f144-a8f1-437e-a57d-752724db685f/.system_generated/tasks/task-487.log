@@ -1,0 +1,7 @@
+Successfully scheduled one-shot timer.
+Expected to fire at: 2026-05-23T07:18:39+09:00
+Prompt: Check Netlify deploy status for return page
+
+[2026-05-23T07:18:19+09:00] Still waiting. Remaining time: 20s
+[2026-05-23T07:18:29+09:00] Still waiting. Remaining time: 10s
+[2026-05-23T07:18:38+09:00] Timer cancelled: agent received a message during wait.

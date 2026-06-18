@@ -1,0 +1,6 @@
+# Task: Capture Rich Menu Screenshot
+
+## Progress
+- [X] Open `rich_menu_mock.html`
+- [X] Resize window to 1200x405
+- [X] Capture screenshot as `rich_menu_final` (Saved as artifact)

@@ -1,0 +1,44 @@
+# [広域交流サイト（ポータル）の構築]
+
+町内会・自治会の垣根を超えて、すべての会員が情報を発信・共有できる「全国交流ポータル」を構築します。
+「食べel-town」「見えel-town」などのカテゴリ分けと、日本地図上での発信元表示機能を備えます。
+
+## Proposed Changes
+
+### 1. Database (Supabase)
+#### [NEW] database/Day16_public_portal.sql
+- 投稿データを保存する `public_posts` テーブルを新設します。
+  - カラム: `id`, `user_auth_id`, `neighborhood_id`, `category`, `content`, `image_url`, `created_at`
+- `neighborhoods` テーブルに地図表示用の位置情報カラム `lat` (緯度), `lng` (経度) を追加します。
+
+### 2. Packages
+- 地図を表示するためのオープンソースライブラリ `leaflet` と `react-leaflet` をインストールします。
+  - コマンド: `npm install leaflet react-leaflet` / `npm install -D @types/leaflet`
+
+### 3. Components & Pages
+#### [NEW] src/components/MapComponent.tsx
+- 日本地図を描画し、各町内会・自治会の緯度経度に基づいてピン（マーカー）を立てるコンポーネントを作成します。
+- ピンをタップすると、その自治会からの最新の投稿や名称がポップアップ表示されます。
+
+#### [NEW] src/app/portal/page.tsx
+- 広域交流サイトのメイン画面です。
+- **上部:** `MapComponent` を表示。
+- **下部:** 投稿のタイムラインを表示。「すべて」「食べel-town」「見えel-town」のタブ切り替え機能を実装。
+- **投稿機能:** 画面右下の「＋」ボタンから、写真とコメント付きで情報を発信できるモーダルを実装します。
+
+#### [MODIFY] src/components/ResidentView.tsx
+- ログイン済みの会員がポータルへ移動できるよう、メニュー（上部の案内エリア、またはリッチメニュー等）に「全国交流ポータル」へのボタン（リンク）を追加します。
+
+#### [MODIFY] src/components/AdminView.tsx
+- 管理者が「設定」画面で郵便番号を保存した際に、自動で外部の郵便番号API等を利用して大まかな緯度・経度を取得し、DBの `lat`, `lng` に保存する処理を追加します。これにより、地図へのピン立てが自動化されます。
+
+## User Review Required
+> [!IMPORTANT]
+> - 地図ライブラリとして「Leaflet（無料・オープンソース）」を使用する想定ですが問題ありませんでしょうか？
+> - ポータル画面へは、既存の「電子回覧板」画面（ResidentView）からボタンを押して別画面として移動する形（URL: `/portal`）で実装します。
+
+## Verification Plan
+1. `npm install` 後、ビルドが通るか確認。
+2. AdminViewで郵便番号を設定・保存し、緯度経度が正しくDBに登録されるか確認。
+3. 会員画面からポータルへ移動し、日本地図上にピンが表示されるか確認。
+4. ポータル内で「食べel-town」として写真を投稿し、タイムラインと地図に反映されるか確認。

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>LINE Rich Menu (4 Items)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 1200px;
+      height: 810px; /* 大サイズ */
+      background: #f0f2f5;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      display: flex;
+      box-sizing: border-box;
+    }
+    .menu-container {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 3px;
+      background: #e2e8f0;
+    }
+    .menu-item {
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .menu-item:hover {
+      background: #f9fafb;
+    }
+    .icon-wrapper {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 25px;
+      box-shadow: inset 0 -4px 10px rgba(0,0,0,0.05);
+    }
+    .icon {
+      font-size: 60px;
+    }
+    .label {
+      font-size: 38px;
+      font-weight: 900;
+      color: #334155;
+      letter-spacing: 2px;
+    }
+    
+    /* 会員の方 */
+    .icon-wrapper.member { background: #fee2e2; color: #ef4444; }
+    /* 役員の方 */
+    .icon-wrapper.admin { background: #e0e7ff; color: #6366f1; }
+    /* 操作方法 */
+    .icon-wrapper.manual { background: #f3f4f6; color: #6b7280; }
+    
+    /* マイel-town */
+    .menu-item.my-eltown {
+      background: linear-gradient(135deg, #fffcf9 0%, #fff0f5 100%);
+    }
+    .icon-wrapper.portal {
+      background: linear-gradient(135deg, #fb923c 0%, #ec4899 100%);
+      color: white;
+      box-shadow: 0 10px 20px rgba(236, 72, 153, 0.3);
+    }
+    .label-portal {
+      background: linear-gradient(135deg, #fb923c 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="menu-container">
+    <div class="menu-item">
+      <div class="icon-wrapper member">
+        <i class="fas fa-users icon"></i>
+      </div>
+      <div class="label">会員の方</div>
+    </div>
+    <div class="menu-item">
+      <div class="icon-wrapper admin">
+        <i class="fas fa-user-tie icon"></i>
+      </div>
+      <div class="label">役員の方</div>
+    </div>
+    <div class="menu-item my-eltown">
+      <div class="icon-wrapper portal">
+        <i class="fas fa-map-marked-alt icon"></i>
+      </div>
+      <div class="label label-portal">マイel-town</div>
+    </div>
+    <div class="menu-item">
+      <div class="icon-wrapper manual">
+        <i class="fas fa-book-open icon"></i>
+      </div>
+      <div class="label">操作方法</div>
+    </div>
+  </div>
+</body>
+</html>

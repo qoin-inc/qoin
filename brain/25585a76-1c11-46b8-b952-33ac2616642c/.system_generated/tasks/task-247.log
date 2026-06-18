@@ -1,0 +1,9 @@
+Select-String : �p�X 'C:\Users\info\.gemini\antigravity\brain\25585a76-1c11-46b8-b952-33ac2616642c\.system_generated\lo
+gs\transcript.jsonl' �݂�Ȃ�ߌ�o�ł�܂�B
+�ꏊ �s:1 �:1
++ Select-String -Path "C:\Users\info\.gemini\antigravity\brain\25585a76 ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\info\....ranscript.jsonl:String) [Select-String], ItemNotFound 
+   Exception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SelectStringCommand
+ 
