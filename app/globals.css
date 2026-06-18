@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  /* Qoin default light background */
+  --background: #f0f9ff; 
+  /* Qoin dark gray text */
+  --foreground: #5c5c59; 
+}
+
+@theme inline {
+  /* Qoin Custom Colors */
+  --color-qoin-main: #38bdf8;
+  --color-qoin-main_hover: #0ea5e9;
+  --color-qoin-yellow: #facc15;
+  --color-qoin-gray: #7a7974;
+  --color-qoin-gray_dark: #5c5c59;
+  --color-qoin-light: #f0f9ff;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'Inter', 'Noto Sans JP', sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* スクロールバー非表示（デザイン目的） */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

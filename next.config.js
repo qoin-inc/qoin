@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
   reactStrictMode: true,
   swcMinify: true,
-  // Custom source directory where the Next.js app lives
-  srcDir: "scratch/qoin/src",
+  // Use the copied app folder as the Next.js app directory
+  appDir: "app",
 };
-
-module.exports = nextConfig;
