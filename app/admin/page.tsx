@@ -748,14 +748,6 @@ export default function AdminPage() {
         </form>
 
         <div className="mt-8 pt-6 border-t border-gray-100 text-center space-y-4">
-           <button 
-             type="button"
-             onClick={() => setView('join')}
-             className="text-sm font-bold text-orange-600 hover:text-orange-700 transition group flex items-center justify-center w-full cursor-pointer bg-orange-50 py-3 rounded-xl border border-orange-100"
-           >
-             <i className="fas fa-envelope-open-text mr-2"></i>
-             代表者から招待された方はこちら
-           </button>
            
            <button 
              type="button"
