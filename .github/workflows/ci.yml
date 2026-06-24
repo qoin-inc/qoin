@@ -3,23 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches: ["main", "develop"]
-    # Run CI only when code files change (exclude docs, assets)
-    paths:
-      - "src/**/*"
-      - "pages/**/*"
-      - "components/**/*"
-      - "infra/**/*"
-      - "scripts/**/*"
   pull_request:
     branches: ["main", "develop"]
-    paths:
-      - "src/**/*"
-      - "pages/**/*"
-      - "components/**/*"
-      - "infra/**/*"
-      - "scripts/**/*"
   schedule:
-    - cron: "0 2 * * *"   # 毎日 02:00 にバックアップ実行
+    - cron: "0 2 * * *"
 
 jobs:
   lint-test:
