@@ -14,11 +14,11 @@ package = "@netlify/plugin-nextjs"
 [plugins.inputs]
 
 [build]
-publish = "C:\\Users\\info\\.gemini\\antigravity\\.next"
+publish = ".next"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
-functions = "C:\\Users\\info\\.gemini\\antigravity\\netlify\\functions"
+functions = "netlify/functions"
 
 [build.environment]
 
