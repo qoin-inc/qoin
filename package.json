@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "echo \"No lint script\""
+    "lint": "echo \"No lint script\"",
+    "test": "echo \"No tests\""
   },
   "dependencies": {
     "next": "14.2.5",
