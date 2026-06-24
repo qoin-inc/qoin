@@ -1,95 +1,176 @@
-              {/* -------------------- 総会（予算書・決算書）管理モーダル -------------------- */}
-              {isAssemblyModalOpen && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn">
-                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden relative border border-slate-100 animate-scaleIn">
-                    {/* 閉じるボタン */}
-                    <button 
-                      onClick={() => setIsAssemblyModalOpen(false)}
-                      className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition cursor-pointer z-10"
-                      title="閉じる"
-                    >
-                      <i className="fas fa-times text-2xl"></i>
-                    </button>
-                    {/* ヘッダー領域 */}
-                    <div className="p-6 md:p-8 border-b border-gray-200 shrink-0 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-indigo-50 text-indigo-600 w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0">
-                          <i className="fas fa-file-invoice-dollar"></i>
-                        </div>
-                        <div>
-                          <h3 className="font-black text-slate-800 text-base">総会 予算書・決算書管理</h3>
-                          <p className="text-xs text-slate-500 font-semibold">年度ごとの予算編成、決算集計、および配布用書類の作成が行えます。</p>
-                        </div>
-                      </div>
-                      
-                      {/* 年度選択ドロップダウン */}
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-slate-600 whitespace-nowrap">対象会計年度:</label>
-                        <select
-                          value={selectedFiscalYear}
-                          onChange={(e) => setSelectedFiscalYear(parseInt(e.target.value, 10))}
-                          className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                        >
-                          {Array.from({ length: 5 }, (_, i: number) => new Date().getFullYear() - 2 + i).map((y: number) => (
-                            <option key={y} value={y}>{y}年度 (令和{y - 2018}年度)</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    
-                    {/* モーダルコンテンツ（スクロール可能）領域 */}
-                    <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white">
+import React from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useRouter } from 'next/router';
 
-                    {/* サブタブ切り替え */}
-                    <div className="flex border-b border-slate-100 mb-6 overflow-x-auto gap-1">
-                      <button
-                        onClick={() => setAssemblySubTab('category')}
-                        className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${
-                          assemblySubTab === 'category'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        <i className="fas fa-tags mr-1.5"></i>科目・補助科目設定
-                      </button>
-                      <button
-                        onClick={() => setAssemblySubTab('budget')}
-                        className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${
-                          assemblySubTab === 'budget'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        <i className="fas fa-calculator mr-1.5"></i>予算書作成
-                      </button>
-                      <button
-                        onClick={() => setAssemblySubTab('settlement_input')}
-                        className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${
-                          assemblySubTab === 'settlement_input'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        <i className="fas fa-edit mr-1.5"></i>実績・決算入力
-                      </button>
-                      <button
-                        onClick={() => setAssemblySubTab('settlement_view')}
-                        className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${
-                          assemblySubTab === 'settlement_view'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        <i className="fas fa-file-alt mr-1.5"></i>決算書作成
-                      </button>
-                    </div>
+interface AssemblyUIProps {
+  // Allow any additional props for flexibility
+  [key: string]: any;
+  // Modal state
+  isAssemblyModalOpen: boolean;
+  setIsAssemblyModalOpen: (v: boolean) => void;
+  // Fiscal year
+  selectedFiscalYear: number;
+  setSelectedFiscalYear: (v: number) => void;
+  // Active sub-tab
+  assemblySubTab: 'category' | 'budget' | 'settlement_input' | 'settlement_view';
+  setAssemblySubTab: (v: AssemblyUIProps['assemblySubTab']) => void;
+  // Loading state
+  isAssemblyLoading: boolean;
+  setIsAssemblyLoading: (v: boolean) => void;
+  // Category form state
+  newCatName: string;
+  setNewCatName: (v: string) => void;
+  newCatParentId: string;
+  setNewCatParentId: (v: string) => void;
+  newCatType: "income" | "expense";
+  setNewCatType: React.Dispatch<React.SetStateAction<"income" | "expense">>;
+  editingCatId: number | null;
+  setEditingCatId: (v: number | null) => void;
+  editingCatName: string;
+  setEditingCatName: (v: string) => void;
+  // Budget draft state
+  budgetDraft: any;
+  setBudgetDraft: (v: any) => void;
+  // Settlement input state
+  newSettlementDate: string;
+  setNewSettlementDate: (v: string) => void;
+  newSettlementType: "income" | "expense";
+  setNewSettlementType: React.Dispatch<React.SetStateAction<"income" | "expense">>;
+  newSettlementCatId: string;
+  setNewSettlementCatId: (v: string) => void;
+  newSettlementAmount: number;
+  setNewSettlementAmount: (v: number) => void;
+  newSettlementDesc: string;
+  setNewSettlementDesc: (v: string) => void;
+  newSettlementFile: File | null;
+  setNewSettlementFile: (v: File | null) => void;
+  isUploadingReceipt: boolean;
+  setIsUploadingReceipt: (v: boolean) => void;
+  assemblyFeeRevenue: number;
+  setAssemblyFeeRevenue: (v: number) => void;
+  // Data collections
+  assemblyCategories: any[];
+  setAssemblyCategories: (v: any[]) => void;
+  assemblyBudgets: any[];
+  setAssemblyBudgets: (v: any[]) => void;
+  assemblySettlements: any[];
+  setAssemblySettlements: (v: any[]) => void;
+  selectedSettlementMonth: string;
+  setSelectedSettlementMonth: (v: string) => void;
+  // Handlers from backend
+  handleAddCategory: (e: React.FormEvent) => void;
+  handleUpdateCategoryName: (id: number, name: string) => void;
+  handleDeleteCategory: (id: number, name: string) => void;
+  handlePrintBudget: (year: number, townName: string, categories: any[], budgets: any[]) => void;
+  handleExportBudgetCSV: (year: number, categories: any[], budgets: any[]) => void;
+  handleExportSettlementCSV: (year: number, categories: any[], budgets: any[], settlements: any[], feeRevenue: number) => void;
+  handleSaveSettlement: (e: React.FormEvent) => void;
+  handleSaveBudgets: () => void;
+  handleDeleteSettlement: (id: number) => void;
+  handlePrintSettlement: (year: number, townName: string, categories: any[], budgets: any[], settlements: any[], feeRevenue: number) => void;
+  townName: string;
+   
+  // add other needed props as required
+}
 
-                    {isAssemblyLoading && (
-                      <div className="flex flex-col items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
-                        <p className="text-xs text-slate-500 font-bold">データを読み込み中...</p>
-                      </div>
-                    )}
+export default function AssemblyUI(props: AssemblyUIProps) {
+  const {
+    isAssemblyModalOpen,
+    setIsAssemblyModalOpen,
+    selectedFiscalYear,
+    setSelectedFiscalYear,
+    assemblySubTab,
+    setAssemblySubTab,
+    isAssemblyLoading,
+    setIsAssemblyLoading,
+    newCatName,
+    setNewCatName,
+    newCatParentId,
+    setNewCatParentId,
+    newCatType,
+    setNewCatType,
+    editingCatId,
+    setEditingCatId,
+    editingCatName,
+    setEditingCatName,
+    // handlers from backend
+    handleAddCategory,
+    handleUpdateCategoryName,
+    handleDeleteCategory,
+    handlePrintBudget,
+    handleExportBudgetCSV,
+    handleExportSettlementCSV,
+    handleSaveSettlement,
+    handleSaveBudgets,
+    handleDeleteSettlement,
+    handlePrintSettlement,
+    budgetDraft,
+    setBudgetDraft,
+    newSettlementDate,
+    setNewSettlementDate,
+    newSettlementType,
+    setNewSettlementType,
+    newSettlementCatId,
+    setNewSettlementCatId,
+    townName,
+    // add other needed props as required
+    
+    newSettlementAmount,
+    setNewSettlementAmount,
+    newSettlementDesc,
+    setNewSettlementDesc,
+    newSettlementFile,
+    setNewSettlementFile,
+    isUploadingReceipt,
+    setIsUploadingReceipt,
+    assemblyFeeRevenue,
+    setAssemblyFeeRevenue,
+    // data collections
+    assemblyCategories,
+    setAssemblyCategories,
+    assemblyBudgets,
+    setAssemblyBudgets,
+    assemblySettlements,
+    setAssemblySettlements,
+    selectedSettlementMonth,
+    setSelectedSettlementMonth
+  } = props;
+   return (
+    <div className="assembly-ui-wrapper">
+      {/* タブナビゲーション */}
+      <div className="flex gap-4 mb-4">
+        <button
+          onClick={() => setAssemblySubTab('category')}
+          className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${assemblySubTab === 'category' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <i className="fas fa-tags mr-1.5"></i>科目・補助科目設定
+        </button>
+        <button
+          onClick={() => setAssemblySubTab('budget')}
+          className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${assemblySubTab === 'budget' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <i className="fas fa-calculator mr-1.5"></i>予算書作成
+        </button>
+        <button
+          onClick={() => setAssemblySubTab('settlement_input')}
+          className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${assemblySubTab === 'settlement_input' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <i className="fas fa-edit mr-1.5"></i>実績・決算入力
+        </button>
+        <button
+          onClick={() => setAssemblySubTab('settlement_view')}
+          className={`px-4 py-2 text-xs font-bold transition whitespace-nowrap border-b-2 cursor-pointer ${assemblySubTab === 'settlement_view' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <i className="fas fa-file-alt mr-1.5"></i>決算書作成
+        </button>
+      </div>
+      {/* Loading indicator */}
+      {isAssemblyLoading && (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-3"></div>
+          <p className="text-xs text-slate-500 font-bold">データを読み込み中...</p>
+        </div>
+      )}
 
                     {!isAssemblyLoading && (
                       <div>
@@ -214,7 +295,7 @@
                                               className="border border-slate-200 text-xs px-2 py-1 rounded w-full focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                             />
                                             <button
-                                              onClick={() => handleUpdateCategoryName(parent.id)}
+                                              onClick={() => handleUpdateCategoryName(parent.id, editingCatName)}
                                               className="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold shrink-0 cursor-pointer"
                                             >
                                               保存
@@ -268,7 +349,7 @@
                                                   className="border border-slate-200 text-xs px-2 py-1 rounded w-full focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                                 />
                                                 <button
-                                                  onClick={() => handleUpdateCategoryName(child.id)}
+                                                  onClick={() => handleUpdateCategoryName(child.id, editingCatName)}
                                                   className="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold shrink-0 cursor-pointer"
                                                 >
                                                   保存
@@ -336,7 +417,7 @@
                                               className="border border-slate-200 text-xs px-2 py-1 rounded w-full focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                             />
                                             <button
-                                              onClick={() => handleUpdateCategoryName(parent.id)}
+                                              onClick={() => handleUpdateCategoryName(parent.id, editingCatName)}
                                               className="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold shrink-0 cursor-pointer"
                                             >
                                               保存
@@ -388,7 +469,7 @@
                                                   className="border border-slate-200 text-xs px-2 py-1 rounded w-full focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                                 />
                                                 <button
-                                                  onClick={() => handleUpdateCategoryName(child.id)}
+                                                  onClick={() => handleUpdateCategoryName(child.id, editingCatName)}
                                                   className="bg-indigo-600 text-white px-2 py-1 rounded text-[10px] font-bold shrink-0 cursor-pointer"
                                                 >
                                                   保存
@@ -447,7 +528,7 @@
                               </h4>
                               <div className="flex gap-2">
                                 <button
-                                  onClick={() => handlePrintBudget(selectedFiscalYear, settingsData?.town_name || '', assemblyCategories, assemblyBudgets)}
+                                  onClick={() => handlePrintBudget(selectedFiscalYear, '', assemblyCategories, assemblyBudgets)}
                                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-md transition cursor-pointer flex items-center gap-1"
                                 >
                                   <i className="fas fa-print"></i>印刷 (PDF)
@@ -810,7 +891,7 @@
                                     <input
                                       type="number"
                                       value={newSettlementAmount}
-                                      onChange={(e) => setNewSettlementAmount(e.target.value)}
+                                      onChange={(e) => setNewSettlementAmount(Number(e.target.value))}
                                       placeholder="金額を入力"
                                       className="w-full bg-white border border-slate-200 text-slate-700 text-xs py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                                       required
@@ -1139,7 +1220,7 @@
                               </h4>
                               <div className="flex gap-2">
                                 <button
-                                  onClick={() => handlePrintSettlement(selectedFiscalYear, settingsData?.town_name || '', assemblyCategories, assemblyBudgets, assemblySettlements, assemblyFeeRevenue)}
+                                  onClick={() => handlePrintSettlement(selectedFiscalYear, townName, assemblyCategories, assemblyBudgets, assemblySettlements, assemblyFeeRevenue)}
                                   className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-md transition cursor-pointer flex items-center gap-1"
                                 >
                                   <i className="fas fa-print"></i>印刷 (PDF)
@@ -1380,6 +1461,6 @@
                       </div>
                     )}
                     </div>
-                  </div>
-                </div>
+
+
               )}
