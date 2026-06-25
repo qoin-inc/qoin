@@ -25,8 +25,8 @@
     "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["*"],
-      "@/components/*": ["scratch/qoin/src/components/*"],
-      "@/lib/*": ["scratch/qoin/src/lib/*"]
+      "@/components/*": ["components/*"],
+      "@/lib/*": ["lib/*"]
     }
   },
   "include": [

@@ -1,0 +1,4 @@
+2026-06-24T06:38:02.8880000Z Evaluating backup-db.if
+2026-06-24T06:38:02.8880000Z Evaluating: (success() && ((github.event_name == 'schedule')))
+2026-06-24T06:38:02.8880000Z Expanded: (true && ('push' == 'schedule'))
+2026-06-24T06:38:02.8880000Z Result: false

@@ -1,0 +1,17 @@
+﻿2026-06-24T09:45:42.7549271Z ##[group]Run npm ci
+2026-06-24T09:45:42.7549863Z [36;1mnpm ci[0m
+2026-06-24T09:45:42.7691370Z shell: /usr/bin/bash -e {0}
+2026-06-24T09:45:42.7691692Z ##[endgroup]
+2026-06-24T09:45:50.5347850Z npm warn deprecated next@14.2.5: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/security-update-2025-12-11 for more details.
+2026-06-24T09:45:50.5486860Z 
+2026-06-24T09:45:50.5487747Z added 36 packages, and audited 37 packages in 8s
+2026-06-24T09:45:50.5488198Z 
+2026-06-24T09:45:50.5488472Z 3 packages are looking for funding
+2026-06-24T09:45:50.5488956Z   run `npm fund` for details
+2026-06-24T09:45:50.6926204Z 
+2026-06-24T09:45:50.6927316Z 4 vulnerabilities (2 low, 1 moderate, 1 critical)
+2026-06-24T09:45:50.6927772Z 
+2026-06-24T09:45:50.6927993Z To address all issues, run:
+2026-06-24T09:45:50.6928434Z   npm audit fix --force
+2026-06-24T09:45:50.6928709Z 
+2026-06-24T09:45:50.6928920Z Run `npm audit` for details.

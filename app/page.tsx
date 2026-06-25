@@ -23,7 +23,7 @@ function PortalContent() {
   }
   const willRedirect = !!redirectTarget;
 
-  const [isCheckingUser, setIsCheckingUser] = React.useState(true);
+  const [isCheckingUser, setIsCheckingUser] = React.useState(false);
   const { lineProfile } = useLiff();
   const supabase = require('@/lib/supabaseClient').supabase;
 
@@ -84,7 +84,7 @@ function PortalContent() {
     checkExistingUser();
   }, [redirectTarget, router, isInitialized, lineProfile]);
 
-  if (!isInitialized || willRedirect || isCheckingUser) {
+  if (willRedirect || isCheckingUser) {
     return (
       <div className="w-full min-h-screen flex flex-col items-center justify-center bg-[#f0f2f5]">
         <div className="w-16 h-16 border-4 border-qoin-main border-t-transparent rounded-full animate-spin"></div>
