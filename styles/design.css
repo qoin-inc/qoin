@@ -1,107 +1,50 @@
-/* design.css – UI 基盤デザイン */
+/* Design system additions */
 
-/* カラーパレット */
-:root {
-  --color-qoin-main: #38bdf8;
-  --color-qoin-main-hover: #0ea5e9;
-  --color-background: #f5f9fc;
-  --color-surface: #ffffff;
-  --color-text-primary: #212529;
-  --color-text-secondary: #6c757d;
-  --radius-md: 0.5rem;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+/* Backgrounds */
+.bg-background { background: #f5f6fa; } /* light neutral background */
+.bg-primary-dark { background: #1a1a2e; } /* dark mode fallback */
+
+/* Buttons */
+.button-primary {
+  background: var(--color-primary, #4a90e2);
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  transition: background 0.2s ease;
+  font-weight: 600;
 }
-
-/* グローバルフォント */
-body {
-  font-family: 'Inter', 'Noto Sans JP', sans-serif;
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+.button-primary:hover {
+  background: var(--color-primary-hover, #357ab8);
 }
-
-/* ボタン */
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.button-secondary {
+  background: var(--color-secondary, #7f8c8d);
+  color: #fff;
+  border-radius: 0.75rem;
   padding: 0.5rem 1rem;
-  border: none;
-  border-radius: var(--radius-md);
-  background-color: var(--color-qoin-main);
-  color: #fff;
-  cursor: pointer;
+  transition: background 0.2s ease;
   font-weight: 600;
-  transition: background-color 0.2s;
 }
-.button:hover {
-  background-color: var(--color-qoin-main-hover);
+.button-secondary:hover {
+  background: var(--color-secondary-hover, #5f6c6d);
 }
 
-/* カード */
-.card {
-  background-color: var(--color-surface);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+/* Cards */
+.admin-card {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   padding: 1.5rem;
-  margin-bottom: 1rem;
-}
-.card:hover {
-  box-shadow: var(--shadow-md);
+  margin: 1rem 0;
 }
 
-/* ヘッダー/フッター */
-.header, .footer {
-  background-color: var(--color-qoin-main);
-  color: #fff;
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* ナビゲーションメニュー */
-.nav-menu {
-  display: flex;
-  gap: 1rem;
-}
-.nav-menu a {
-  color: #fff;
-  text-decoration: none;
+/* Alerts */
+.alert-error {
+  background: #ffe5e5;
+  color: #b71c1c;
+  border: 1px solid #f44336;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
-}
-.nav-menu a.active {
-  text-decoration: underline;
-}
-
-/* ハンバーガーメニュー（モバイル） */
-.hamburger {
-  display: none;
-  flex-direction: column;
-  cursor: pointer;
-}
-.hamburger span {
-  height: 3px;
-  width: 25px;
-  background: #fff;
-  margin-bottom: 4px;
-  border-radius: 2px;
-}
-@media (max-width: 768px) {
-  .nav-menu {
-    display: none;
-    flex-direction: column;
-    background-color: var(--color-qoin-main);
-    position: absolute;
-    top: 60px;
-    right: 0;
-    width: 200px;
-    padding: 1rem;
-  }
-  .nav-menu.open {
-    display: flex;
-  }
-  .hamburger {
-    display: flex;
-  }
 }

@@ -47,7 +47,7 @@ const manuals: ManualCard[] = [
 
 export default function ManualHubPage() {
   return (
-    <div className="bg-gray-100 min-h-screen font-sans flex flex-col items-center py-8 px-4">
+    <div className="bg-background min-h-screen font-sans flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-lg">
 
         {/* ヘッダー */}
@@ -62,32 +62,22 @@ export default function ManualHubPage() {
         {/* マニュアルカード一覧 */}
         <div className="space-y-4">
           {manuals.map((m, i) => (
-            <Link
-              key={i}
-              href={m.href}
-              className={`block ${m.bgColor} rounded-2xl p-5 border border-gray-200 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group`}
-            >
-              <div className="absolute top-0 left-0 right-0 h-1 opacity-80" style={{ backgroundColor: m.color }}></div>
-
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-md" style={{ backgroundColor: m.color }}>
-                  <i className={`fas ${m.icon} text-xl`}></i>
+            <Card key={i} className={m.bgColor}>
+              <Link href={m.href} className="card-link">
+                <div className="card-icon" style={{ backgroundColor: m.color }}>
+                  <i className={`fas ${m.icon}`} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h2 className="font-black text-gray-800 text-sm">{m.title}</h2>
-                    {m.badge && (
-                      <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{m.badge}</span>
-                    )}
-                  </div>
-                  <p className="text-xs font-bold mb-1.5" style={{ color: m.color }}>{m.subtitle}</p>
-                  <p className="text-[11px] text-gray-500 leading-relaxed">{m.description}</p>
+                <div className="card-text">
+                  <h2 className="card-title">{m.title}</h2>
+                  {m.badge && <span className="badge">{m.badge}</span>}
+                  <p className="card-subtitle" style={{ color: m.color }}>{m.subtitle}</p>
+                  <p className="card-description">{m.description}</p>
                 </div>
-                <div className="shrink-0 self-center opacity-40 group-hover:opacity-80 group-hover:translate-x-1 transition-all duration-300">
-                  <i className="fas fa-chevron-right text-gray-400"></i>
+                <div className="card-arrow">
+                  <i className="fas fa-chevron-right" />
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </Card>
           ))}
         </div>
 

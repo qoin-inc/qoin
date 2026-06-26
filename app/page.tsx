@@ -96,7 +96,7 @@ function PortalContent() {
 
   return (
     <div className="bg-background min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-50 p-6 pb-8 flex flex-col pointer-events-auto">
+      <div className="card">
         <div className="text-center mb-8 mt-2 flex flex-col items-center">
           <img src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" />
           <p className="text-gray-500 font-bold text-sm">町内会・自治会DXアプリ</p>
@@ -105,36 +105,31 @@ function PortalContent() {
         <div className="flex flex-col gap-4 flex-1">
           {/* 役員の方 */}
           <Card>
-            <Link href="/admin/" className="block p-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-500">
-                  <i className="fas fa-user-tie" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-base font-black text-gray-800 mb-1">役員の方</h2>
-                  <p className="text-xs text-gray-500 font-bold">el-townを開始する場合や管理機能を使う</p>
-                </div>
+            <Link href="/admin/" className="card-link">
+              <div className="card-icon">
+                <i className="fas fa-user-tie" />
+              </div>
+              <div className="card-text">
+                <h2 className="card-title">役員の方</h2>
+                <p className="card-subtitle">el-townを開始する場合や管理機能を使う</p>
               </div>
             </Link>
           </Card>
 
           {/* 会員の方 */}
           <Card>
-            <Link href="/resident/" className="block p-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-orange-500">
-                  <i className="fas fa-user-plus" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-base font-black text-gray-800 mb-1">会員の方</h2>
-                  <p className="text-xs text-gray-500 font-bold">利用のための照合・連携</p>
-                </div>
+            <Link href="/resident/" className="card-link">
+              <div className="card-icon">
+                <i className="fas fa-user-plus" />
+              </div>
+              <div className="card-text">
+                <h2 className="card-title">会員の方</h2>
+                <p className="card-subtitle">利用のための照合・連携</p>
               </div>
             </Link>
           </Card>
 
           {/* 操作マニュアル */}
-          </Link>
         </div>
         
       </div>
