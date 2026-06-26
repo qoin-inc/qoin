@@ -4,6 +4,7 @@ import React, { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLiff } from '@/components/LiffProvider';
 import Link from 'next/link';
+import Card from '@/components/Card';
 
 function PortalContent() {
   const router = useRouter();
@@ -94,7 +95,7 @@ function PortalContent() {
   }
 
   return (
-    <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="bg-background min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-50 p-6 pb-8 flex flex-col pointer-events-auto">
         <div className="text-center mb-8 mt-2 flex flex-col items-center">
           <img src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" />
@@ -103,40 +104,39 @@ function PortalContent() {
 
         <div className="flex flex-col gap-4 flex-1">
           {/* 役員の方 */}
-          <a href="/admin/" className="bg-white border-2 border-indigo-100 rounded-2xl p-4 shadow-sm hover:shadow-md hover:bg-indigo-50 transition cursor-pointer flex items-center group active:scale-95">
-             <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-500 text-2xl mr-4 group-hover:scale-110 transition-transform flex-shrink-0">
-                <i className="fas fa-user-tie"></i>
-             </div>
-             <div className="flex-1 text-left">
-                <h2 className="text-base font-black text-gray-800 mb-1">役員の方</h2>
-                <p className="text-xs text-gray-500 font-bold">el-townを開始する場合や管理機能を使う</p>
-             </div>
-          </a>
+          <Card>
+            <Link href="/admin/" className="block p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-500">
+                  <i className="fas fa-user-tie" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-base font-black text-gray-800 mb-1">役員の方</h2>
+                  <p className="text-xs text-gray-500 font-bold">el-townを開始する場合や管理機能を使う</p>
+                </div>
+              </div>
+            </Link>
+          </Card>
 
           {/* 会員の方 */}
-          <a href="/resident/" className="bg-white border-2 border-orange-100 rounded-2xl p-4 shadow-sm hover:shadow-md hover:bg-orange-50 transition cursor-pointer flex items-center group active:scale-95">
-             <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-2xl mr-4 group-hover:scale-110 transition-transform flex-shrink-0">
-                <i className="fas fa-user-plus"></i>
-             </div>
-             <div className="flex-1 text-left">
-                <h2 className="text-base font-black text-gray-800 mb-1">会員の方</h2>
-                <p className="text-xs text-gray-500 font-bold">利用のための照合・連携</p>
-             </div>
-          </a>
+          <Card>
+            <Link href="/resident/" className="block p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-orange-500">
+                  <i className="fas fa-user-plus" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-base font-black text-gray-800 mb-1">会員の方</h2>
+                  <p className="text-xs text-gray-500 font-bold">利用のための照合・連携</p>
+                </div>
+              </div>
+            </Link>
+          </Card>
 
           {/* 操作マニュアル */}
-          <Link href="/manual" className="bg-white border-2 border-gray-100 rounded-2xl p-4 shadow-sm hover:shadow-md hover:bg-gray-50 transition cursor-pointer flex items-center group active:scale-95">
-             <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 text-2xl mr-4 group-hover:scale-110 transition-transform flex-shrink-0">
-                <i className="fas fa-book-open"></i>
-             </div>
-             <div className="flex-1 text-left">
-                <h2 className="text-base font-black text-gray-800 mb-1">操作マニュアル</h2>
-                <p className="text-xs text-gray-500 font-bold">はじめてお使いなる方の操作方法など</p>
-             </div>
           </Link>
         </div>
         
-        {/* 下部のロゴは不要のため削除 */}
       </div>
       
       {/* 背景の装飾 */}
