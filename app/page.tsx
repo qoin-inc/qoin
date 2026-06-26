@@ -133,10 +133,7 @@ function PortalContent() {
         
       </div>
       
-      {/* 背景の装飾 */}
-      <div className="absolute top-0 right-0 w-full h-80 bg-gradient-to-b from-qoin-main/80 to-qoin-main rounded-b-[6rem] z-0 shadow-lg transform -skew-y-6 origin-top-left -translate-y-12 pointer-events-none"></div>
-      <div className="absolute bottom-10 left-10 w-32 h-32 bg-qoin-main/10 rounded-full blur-3xl z-0 pointer-events-none"></div>
-      <div className="absolute top-1/2 right-0 w-48 h-48 bg-sky-200/20 rounded-full blur-3xl z-0 pointer-events-none"></div>
+
     </div>
   );
 }
