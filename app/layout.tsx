@@ -22,7 +22,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <LiffProvider>
-          {children}
+          <Layout>{children}</Layout>
         </LiffProvider>
       </body>
     </html>

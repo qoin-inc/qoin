@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Card from '@/components/Card';
 
 interface ManualCard {
   title: string;
@@ -55,7 +56,7 @@ export default function ManualHubPage() {
             <i className="fas fa-book-open text-3xl text-blue-500"></i>
           </div>
           <h1 className="text-2xl font-black text-gray-800 tracking-tight">el-town 操作マニュアル</h1>
-          <p className="text-gray-500 font-bold text-sm mt-2">アニメーション付きの操作ガイドで<br />使い方を確認できます</p>
+          <p className="text-gray-500 font-bold text-sm mt-2">操作ガイドで<br />使い方を確認できます</p>
         </div>
 
         {/* マニュアルカード一覧 */}

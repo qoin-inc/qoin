@@ -1,6 +1,6 @@
 headersOrigin = "inline"
 redirectsOrigin = "inline"
-functionsDirectory = "C:\\Users\\info\\.gemini\\antigravity\\netlify\\functions"
+functionsDirectory = "C:\\Users\\info\\.gemini\\antgravity\\netlify\\functions"
 functionsDirectoryOrigin = "config-v1"
 
 [functions]
@@ -14,11 +14,11 @@ package = "@netlify/plugin-nextjs"
 [plugins.inputs]
 
 [build]
-publish = "C:\\Users\\info\\.gemini\\antigravity\\.next"
+publish = "C:\\Users\\info\\.gemini\\antgravity\\.next"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
-functions = "C:\\Users\\info\\.gemini\\antigravity\\netlify\\functions"
+functions = "C:\\Users\\info\\.gemini\\antgravity\\netlify\\functions"
 
 [build.environment]
 NEXT_PUBLIC_SUPABASE_URL = "https://jssoyjwjqykcuovdydtz.supabase.co"
