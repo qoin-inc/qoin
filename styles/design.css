@@ -1,4 +1,61 @@
 /* Design system additions */
+/* Card component for initial menu */
+.card {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.07);
+  padding: 2rem;
+  max-width: 360px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.card-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem;
+  border-radius: 1rem;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.card-link:hover {
+  background: rgba(0,0,0,0.05);
+  transform: translateY(-4px);
+}
+
+.card-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary, #4a90e2);
+  color: #fff;
+  border-radius: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.card-text {
+  flex: 1;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.card-subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
 
 /* Backgrounds */
 .bg-background { background: #f5f6fa; } /* light neutral background */

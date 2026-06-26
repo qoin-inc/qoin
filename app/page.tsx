@@ -98,8 +98,7 @@ function PortalContent() {
     <div className="bg-background min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="card">
         <div className="text-center mb-8 mt-2 flex flex-col items-center">
-          <img src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" />
-          <p className="text-gray-500 font-bold text-sm">町内会・自治会DXアプリ</p>
+          <h1 className="text-2xl font-bold mb-4">el-town</h1>
         </div>
 
         <div className="flex flex-col gap-4 flex-1">

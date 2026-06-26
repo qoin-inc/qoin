@@ -20,8 +20,7 @@ const ResidentView: React.FC<ResidentViewProps> = ({ townId, townName, residentN
   return (
     <>
       <header className="card-header">
-          <img src="/icon_el_town.png" alt="el-town ロゴ" class="logo" />
-          <h1 class="title">el-town</h1>
+          <h1 className="text-2xl font-bold mb-4">el-town</h1>
         </header>
         <main class="card-body">
         <Card>
