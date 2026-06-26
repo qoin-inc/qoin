@@ -87,7 +87,7 @@ function PortalContent() {
 
   if (willRedirect || isCheckingUser) {
     return (
-      <div className="w-full min-h-screen flex flex-col items-center justify-center bg-[#f0f2f5]">
+      <div className="w-full min-h-screen flex flex-col items-center justify-center bg-background">
         <div className="w-16 h-16 border-4 border-qoin-main border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-4 font-bold text-gray-500 text-sm">el-townを開いています...</p>
       </div>
