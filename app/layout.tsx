@@ -21,7 +21,8 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <LiffProvider>
-          {children}
+import Menu from '@/components/Menu';
+          <Menu />
         </LiffProvider>
       </body>
     </html>
