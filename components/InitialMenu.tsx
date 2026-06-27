@@ -6,9 +6,9 @@ import React from 'react';
 // ルート: /resident/ , /admin/ , /portal/
 
 const menuItems = [
-  { href: '/resident/', label: '住民ポータル', icon: '/icons/resident.svg' },
-  { href: '/admin/', label: '管理者ページ', icon: '/icons/admin.svg' },
-  { href: '/portal/', label: 'ポータル', icon: '/icons/portal.svg' },
+  { href: '/resident/', label: '会員の方', icon: '/icons/resident.svg' },
+  { href: '/admin/', label: '役員の方', icon: '/icons/admin.svg' },
+  { href: '/portal/', label: '操作方法', icon: '/icons/portal.svg' },
 ];
 
 export default function InitialMenu() {
