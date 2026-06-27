@@ -1,3 +1,4 @@
+"use client";
 // components/LiffProvider.tsx
 import React, { createContext, useEffect, useState, ReactNode } from 'react';
 

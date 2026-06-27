@@ -1,5 +1,7 @@
-@import "tailwindcss";
-@import "leaflet/dist/leaflet.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Leaflet CSS import removed - not used */
 
 :root {
   /* Qoin default light background */
