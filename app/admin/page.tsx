@@ -757,15 +757,6 @@ export default function AdminPage() {
              代表者から招待された方はこちら
            </button>
            
-           <button 
-             type="button"
-             onClick={() => setView('signup')}
-             className="text-sm font-bold text-qoin-main hover:text-qoin-main_hover transition group flex items-center justify-center w-full cursor-pointer mt-4"
-           >
-             はじめての町内会・自治会を開設（新規登録）
-             <i className="fas fa-chevron-right ml-1 text-xs transition-transform group-hover:translate-x-1"></i>
-           </button>
-           
            <Link href="/" className="inline-flex items-center justify-center text-sm font-bold text-gray-500 hover:text-gray-700 transition group cursor-pointer bg-gray-50 px-6 py-3 rounded-xl border border-gray-200 w-full mb-2">
              <i className="fas fa-arrow-left mr-2 text-gray-400 group-hover:text-gray-600 transition-colors"></i>
              トップメニューへ戻る
