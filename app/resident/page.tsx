@@ -1,5 +1,5 @@
-'use client';
-
+"use client";
+export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, Suspense } from 'react';
 import ResidentView from '@/components/ResidentView';
 import SignupResident from '@/components/SignupResident';

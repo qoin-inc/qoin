@@ -1,4 +1,4 @@
-// src/components/ResidentView.tsx
+"use client";
 import React from "react";
 
 type ResidentViewProps = {

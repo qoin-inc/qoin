@@ -4,14 +4,14 @@ import React, { createContext, useEffect, useState, ReactNode } from 'react';
 
 interface LiffContextProps {
   liff: any | null;
-  initialized: boolean;
+  isInitialized: boolean;
 }
 
-export const LiffContext = createContext<LiffContextProps>({ liff: null, initialized: false });
+export const LiffContext = createContext<LiffContextProps>({ liff: null, isInitialized: false });
 
 export const LiffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [liff, setLiff] = useState<any>(null);
-  const [initialized, setInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Placeholder initialization – replace with actual LIFF SDK init when available
@@ -26,15 +26,24 @@ export const LiffProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } catch (e) {
         console.warn('LIFF init failed (placeholder)', e);
       } finally {
-        setInitialized(true);
+        setIsInitialized(true);
       }
     };
     initLiff();
   }, []);
 
   return (
-    <LiffContext.Provider value={{ liff, initialized }}>
+    <LiffContext.Provider value={{ liff, isInitialized }}>
       {children}
     </LiffContext.Provider>
   );
+};
+export default LiffProvider;
+
+export const useLiff = () => {
+  const context = React.useContext(LiffContext);
+  if (!context) {
+    throw new Error('useLiff must be used within LiffProvider');
+  }
+  return { ...context, isInitialized: context.isInitialized };
 };

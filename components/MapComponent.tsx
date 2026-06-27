@@ -1,4 +1,4 @@
-// src/components/MapComponent.tsx
+"use client";
 import React from "react";
 
 /**
