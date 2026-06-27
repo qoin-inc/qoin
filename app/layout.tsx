@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 import LiffProvider from "@/components/LiffProvider";
+import InitialMenu from "@/components/InitialMenu";
 
 export default function RootLayout({
   children,
@@ -21,8 +22,8 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <LiffProvider>
-import Menu from '@/components/Menu';
-          <Menu />
+
+          <InitialMenu />
         </LiffProvider>
       </body>
     </html>
