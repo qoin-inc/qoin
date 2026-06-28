@@ -1,48 +1,49 @@
-'use client';
-// Force rebuild after cache clear
-import React, { ReactNode, useEffect, useState } from 'react';
-import liff from '@line/liff';
+"use client";
+// components/LiffProvider.tsx
+import React, { createContext, useEffect, useState, ReactNode } from 'react';
 
-/**
- * Hook to access LIFF SDK data.
- * Returns readiness flags, the liff instance, and the user profile when available.
- */
-export const useLiff = () => {
-  const [profile, setProfile] = useState<any>(null);
+interface LiffContextProps {
+  liff: any | null;
+  isInitialized: boolean;
+}
 
-  // Attempt to initialise LIFF – ignore any errors to avoid blocking UI.
+export const LiffContext = createContext<LiffContextProps>({ liff: null, isInitialized: false });
+
+export const LiffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [liff, setLiff] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
-    const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-    if (!liffId) return;
-    liff
-      .init({ liffId })
-      .catch(() => {
-        // LIFF init failed – continue without it.
-      })
-      .finally(() => {
-        if (liff.isLoggedIn()) {
-          liff
-            .getProfile()
-            .then(p => setProfile(p))
-            .catch(() => {});
+    // Placeholder initialization – replace with actual LIFF SDK init when available
+    const initLiff = async () => {
+      try {
+        // @ts-ignore – LIFF SDK is loaded externally in production
+        const liffInstance = (window as any).liff;
+        if (liffInstance) {
+          await liffInstance.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID });
+          setLiff(liffInstance);
         }
-      });
+      } catch (e) {
+        console.warn('LIFF init failed (placeholder)', e);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+    initLiff();
   }, []);
 
-  return {
-    isReady: true,
-    isInitialized: true,
-    liff,
-    lineProfile: profile,
-  };
+  return (
+    <LiffContext.Provider value={{ liff, isInitialized }}>
+      {children}
+    </LiffContext.Provider>
+  );
 };
-
-/**
- * Simple provider that always renders its children.
- * The previous loading / error UI has been removed to ensure the app UI appears immediately.
- */
-const LiffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <>{children}</>;
-};
-
 export default LiffProvider;
+
+export const useLiff = () => {
+  const context = React.useContext(LiffContext);
+  if (!context) {
+    throw new Error('useLiff must be used within LiffProvider');
+  }
+  return { ...context, isInitialized: context.isInitialized };
+};
