@@ -1,7 +1,9 @@
-import type { Metadata } from "next";
+// trigger rebuild
+
 import '../styles/design.css';
 import LiffProvider from "@/components/LiffProvider";
 import Menu from '@/components/Menu';
+import type { Metadata } from 'next';
 
 
 export const metadata: Metadata = {
