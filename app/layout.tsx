@@ -2,7 +2,7 @@
 
 import '../styles/design.css';
 import dynamic from 'next/dynamic';
-const LiffProvider = dynamic(() => import('@/components/LiffProvider'), { ssr: false });
+import DynamicLiffProvider from '@/components/DynamicLiffProvider';
 import Menu from '@/components/Menu';
 import type { Metadata } from 'next';
 
@@ -25,11 +25,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased">
-        <LiffProvider>
+        <DynamicLiffProvider>
           <p className="subtitle">町内会・自治会DXアプリ</p>
           <Menu />
           {children}
-        </LiffProvider>
+        </DynamicLiffProvider>
       </body>
     </html>
   );
