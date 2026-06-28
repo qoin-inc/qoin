@@ -324,7 +324,7 @@ export default function PortalPage() {
   }
 
   return (
-    <div className="bg-[#e4e4e4] h-[100dvh] w-full font-sans flex flex-col items-center justify-start md:py-10">
+    <div className="bg-[#e0f5ff] h-[100dvh] w-full font-sans flex flex-col items-center justify-start md:py-10">
       <div className="w-full h-full md:w-[390px] md:h-[844px] md:rounded-[3rem] overflow-hidden md:border-[12px] md:border-gray-800 md:shadow-2xl relative bg-gray-50 flex flex-col">
         
         {/* ヘッダー (flex-shrink-0 を追加して潰れ・めり込みを防止、左矢印を削除、スリム化) */}
@@ -419,7 +419,7 @@ export default function PortalPage() {
         </div>
 
         {/* Toggle Menu Area (電子回覧板のUIと統一し、開閉に伴ってコンテンツを押し上げる) */}
-        <div className="w-full flex-shrink-0 bg-gray-100 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] z-50 flex flex-col">
+        <div className="w-full flex-shrink-0 bg-white p-6 rounded-2xl shadow-lg z-50 flex flex-col">
           {isMenuOpen && (
             <div className="w-full max-w-[600px] mx-auto bg-gray-100 pb-1 shadow-inner">
               <div className="p-2.5 bg-gray-100 w-full">

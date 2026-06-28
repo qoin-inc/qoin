@@ -32,7 +32,7 @@ NEXT_PUBLIC_LIFF_ID = "2009817872-zldmH8LW"
 [functions."*"]
 
 [[plugins]]
-origin = "config"
+origin = "default"
 package = "@netlify/plugin-nextjs"
 
 [plugins.inputs]

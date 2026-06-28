@@ -96,7 +96,7 @@ function PortalContent() {
   }
 
   return (
-    <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="bg-[#e0f5ff] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-50 p-6 pb-8 flex flex-col pointer-events-auto">
         <div className="text-center mb-8 mt-2 flex flex-col items-center">
           <Image src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" width={56} height={56} priority unoptimized />

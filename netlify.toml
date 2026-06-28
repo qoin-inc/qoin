@@ -8,5 +8,4 @@
   NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_RztM_8dNswdYyCo_3ZTFyA_94mkh6xz"
   NEXT_PUBLIC_LIFF_ID = "2009817872-zldmH8LW"
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+
