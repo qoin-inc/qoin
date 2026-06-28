@@ -1,20 +1,10 @@
-headersOrigin = "inline"
-redirectsOrigin = "inline"
 functionsDirectory = "C:\\Users\\info\\.gemini\\antigravity\\netlify\\functions"
 functionsDirectoryOrigin = "config-v1"
-
-[functions]
-
-[functions."*"]
-
-[[plugins]]
-origin = "config"
-package = "@netlify/plugin-nextjs"
-
-[plugins.inputs]
+headersOrigin = "inline"
+redirectsOrigin = "inline"
 
 [build]
-publish = "C:\\Users\\info\\.gemini\\antigravity\\.next"
+publish = "C:\\Users\\info\\.gemini\\antigravity\\out"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
@@ -36,6 +26,16 @@ NEXT_PUBLIC_LIFF_ID = "2009817872-zldmH8LW"
 [build.processing.js]
 
 [build.services]
+
+[functions]
+
+[functions."*"]
+
+[[plugins]]
+origin = "config"
+package = "@netlify/plugin-nextjs"
+
+[plugins.inputs]
 
 [[headers]]
 for = "/_next/static/*"

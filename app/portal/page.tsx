@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import liff from '@line/liff';
 
 // Leafletを使用するコンポーネントはSSRを無効化する
@@ -331,7 +332,7 @@ export default function PortalPage() {
           <h1 className="font-black text-base tracking-wider flex items-center justify-center gap-1">
             マイ
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo_horizontal_final.png" alt="el-town" className="h-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            <Image src="/logo_horizontal_final.png" alt="el-town" className="h-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} width={16} height={16} priority unoptimized />
           </h1>
         </div>
 

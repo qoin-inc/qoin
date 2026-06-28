@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, Suspense } from 'react';
+import Image from 'next/image';
 import InitialMenu from '@/components/InitialMenu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLiff } from '@/components/LiffProvider';
@@ -98,7 +99,7 @@ function PortalContent() {
     <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-50 p-6 pb-8 flex flex-col pointer-events-auto">
         <div className="text-center mb-8 mt-2 flex flex-col items-center">
-          <img src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" />
+          <Image src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" width={56} height={56} priority unoptimized />
           <p className="text-gray-500 font-bold text-sm">町内会・自治会DXアプリ</p>
         </div>
 
