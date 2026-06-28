@@ -1,7 +1,8 @@
 // trigger rebuild
 
 import '../styles/design.css';
-import LiffProvider from "@/components/LiffProvider";
+import dynamic from 'next/dynamic';
+const LiffProvider = dynamic(() => import('@/components/LiffProvider'), { ssr: false });
 import Menu from '@/components/Menu';
 import type { Metadata } from 'next';
 
