@@ -14,14 +14,19 @@ export const LiffProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Placeholder initialization – replace with actual LIFF SDK init when available
+    // Server 側では LIFF を初期化しない
+    if (typeof window === 'undefined') {
+      setIsInitialized(true);
+      return;
+    }
     const initLiff = async () => {
       try {
-        // @ts-ignore – LIFF SDK is loaded externally in production
         const liffInstance = (window as any).liff;
         if (liffInstance) {
           await liffInstance.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID });
           setLiff(liffInstance);
+        } else {
+          console.warn('LIFF SDK not loaded');
         }
       } catch (e) {
         console.warn('LIFF init failed (placeholder)', e);
