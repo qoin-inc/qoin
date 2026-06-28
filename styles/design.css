@@ -108,3 +108,35 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
+
+.menu-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+}
+
+/* Responsive container */
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 350px; /* increased height for logo-to-menu area */
+}
+
+/* Subtitle under logo area */
+.subtitle {
+  color: #bbb; /* gray */
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Sub-links under each menu button */
+.sub-link {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #ddd;
+  text-decoration: underline;
+}

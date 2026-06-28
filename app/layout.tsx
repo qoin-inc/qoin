@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import '../styles/design.css';
+import LiffProvider from "@/components/LiffProvider";
+import Menu from '@/components/Menu';
 
 export const metadata: Metadata = {
   title: "el-town",
   description: "町内会・自治会向け電子回覧板アプリ el-town",
 };
-
-import LiffProvider from "@/components/LiffProvider";
 
 export default function RootLayout({
   children,
@@ -23,7 +23,8 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <LiffProvider>
-          <Layout>{children}</Layout>
+          <Menu />
+          {children}
         </LiffProvider>
       </body>
     </html>
