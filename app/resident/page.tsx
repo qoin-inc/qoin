@@ -6,11 +6,11 @@ import SignupResident from '@/components/SignupResident';
 import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import liff from '@line/liff';
+// Direct LIFF import removed; use useLiff hook
 import { useLiff } from '@/components/LiffProvider';
 
 function ResidentPageContent() {
-  const { isInitialized: liffInitializedProvider } = useLiff();
+  const { isInitialized: liffInitializedProvider, liff } = useLiff();
   const searchParams = useSearchParams();
   const router = useRouter();
   const mode = searchParams?.get('mode');
@@ -132,7 +132,7 @@ function ResidentPageContent() {
   const performSupabaseLoginWithLiff = async () => {
     setIsSubmitting(true);
     try {
-      const profile = await liff.getProfile();
+      const profile = await liff?.getProfile();
       const email = `${profile.userId}@line.eltown.local`;
       const password = `lineAuth_${profile.userId}_eltown`;
 
@@ -169,8 +169,8 @@ function ResidentPageContent() {
         return;
       }
       
-      if (!liff.isLoggedIn()) {
-        liff.login({ redirectUri: `${window.location.origin}/resident` });
+      if (!liff?.isLoggedIn()) {
+        liff?.login({ redirectUri: `${window.location.origin}/resident` });
         return;
       }
       await performSupabaseLoginWithLiff();
@@ -184,8 +184,8 @@ function ResidentPageContent() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     try {
-      if (liff.isLoggedIn()) {
-        liff.logout();
+      if (liff?.isLoggedIn()) {
+        liff?.logout();
       }
     } catch (e) {
       console.error('LIFF logout error:', e);
