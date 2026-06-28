@@ -11,10 +11,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <div className="layout-root">
       {/* Header */}
       <header className="header">
-        <div className="logo-wrapper" style={{ display: 'flex', alignItems: 'center' }}>
-          <Image src="/icon_el_town.png" alt="el-town ロゴ" width={48} height={48} priority />
-          <h1 style={{ marginLeft: '0.75rem', color: '#fff', fontSize: '1.5rem' }}>el-town</h1>
-        </div>
+
         <NavMenu />
       </header>
 

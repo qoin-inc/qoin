@@ -216,7 +216,7 @@ function ResidentPageContent() {
       <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative z-50">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-10 p-8 pb-10">
           <div className="text-center mb-8 flex flex-col items-center">
-            <img src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" />
+
             <p className="text-gray-500 font-bold text-sm">電子回覧板・町内会・自治会アプリ (会員用)</p>
           </div>
 

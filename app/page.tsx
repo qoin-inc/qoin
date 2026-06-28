@@ -25,7 +25,7 @@ function PortalContent() {
   const willRedirect = !!redirectTarget;
 
   const [isCheckingUser, setIsCheckingUser] = React.useState(false);
-  const { lineProfile } = useLiff();
+  const lineProfile = null; // placeholder (no profile in current LiffProvider)
   const supabase = require('@/lib/supabaseClient').supabase;
 
   useEffect(() => {

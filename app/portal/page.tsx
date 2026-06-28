@@ -331,7 +331,7 @@ export default function PortalPage() {
           <h1 className="font-black text-base tracking-wider flex items-center justify-center gap-1">
             マイ
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo_horizontal_final.png" alt="el-town" className="h-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+            
           </h1>
         </div>
 

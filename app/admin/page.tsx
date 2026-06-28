@@ -135,6 +135,12 @@ export default function AdminPage() {
 
         if (oldTownData && oldTownData.length > 0) {
           const oldTown = oldTownData[0];
+          const menuItems = [
+  { name: 'ホーム', href: '/', icon: 'fas fa-home', bg: 'var(--color-primary)', subLink: '' },
+  { name: 'ポータル', href: '/portal', icon: 'fas fa-th', bg: '#6366f1', subLink: '機能一覧はこちら' },
+  { name: 'マニュアル', href: '/manual', icon: 'fas fa-book', bg: '#10b981', subLink: '活用ガイドはこちら' },
+  { name: '設定', href: '/admin', icon: 'fas fa-cog', bg: '#f59e0b', subLink: '管理者設定はこちら' },
+];
           const { error: insErr } = await supabase.from('neighborhood_admins').insert({
              neighborhood_id: oldTown.id,
              admin_auth_id: authData.user?.id,
@@ -685,7 +691,7 @@ export default function AdminPage() {
             <AdminView townId={town.id} townName={town.name} />
             <div className="fixed bottom-6 right-8 z-50 opacity-70 hidden md:flex flex-col items-end pointer-events-none">
                {/* eslint-disable-next-line @next/next/no-img-element */}
-               <img src="/logo_horizontal_final.png" alt="el-town" className="h-5 w-auto object-contain drop-shadow-sm mb-1" />
+               
             </div>
           </div>
         </div>
@@ -698,7 +704,7 @@ export default function AdminPage() {
     <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-10 p-8 pb-10">
         <div className="text-center mb-8 flex flex-col items-center">
-          <img src="/logo_horizontal_final.png" alt="el-town" className="h-14 w-auto object-contain drop-shadow-sm mb-4" />
+          
           <p className="text-gray-500 font-bold text-sm">el-town管理機能</p>
         </div>
 
