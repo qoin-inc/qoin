@@ -1,6 +1,8 @@
 [build]
   command = "npm run build"
   publish = ".next"
+  [build.environment]
+    NEXT_PUBLIC_LIFF_ID = "2009817872-zldmH8LW"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
