@@ -3,8 +3,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import dynamic from 'next/dynamic';
+import LiffProvider from '@/components/LiffProvider';
+import '@/styles/homepage.css';
 import { useRouter } from 'next/navigation';
-import liff from '@line/liff';
+// Direct LIFF import removed; will use window.liff within DynamicLiffProvider
 
 // Leafletを使用するコンポーネントはSSRを無効化する
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
@@ -62,16 +64,18 @@ export default function PortalPage() {
     // セッションがない場合は、LIFFから直接復元を試みる（バックアップ機構）
     if (!session) {
       try {
-        await liff.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID || '2009817872-zldmH8LW' });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          const email = `${profile.userId}@line.eltown.local`;
+          if (typeof window !== 'undefined' && (window as any).liff) {
+            await (window as any).liff.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID || '2009817872-zldmH8LW' });
+            if ((window as any).liff.isLoggedIn()) {
+            const profile = await (window as any).liff.getProfile();
+            const email = `${profile.userId}@line.eltown.local`;
           const password = `lineAuth_${profile.userId}_eltown`;
           const { data } = await supabase.auth.signInWithPassword({ email, password });
           if (data.session) {
             session = data.session;
           }
         }
+      }
       } catch (e) {
         console.error('Portal LIFF fallback error:', e);
       }
@@ -93,8 +97,8 @@ export default function PortalPage() {
       if (rosterData.withdrawal_status === 'withdrawn') {
         await supabase.auth.signOut();
         try {
-          if (liff.isLoggedIn()) {
-            liff.logout();
+          if (typeof window !== 'undefined' && (window as any).liff && (window as any).liff.isLoggedIn()) {
+            (window as any).liff.logout();
           }
         } catch (e) {
           console.error('Portal logout error:', e);
@@ -256,75 +260,80 @@ export default function PortalPage() {
 
 
 
-  // タイムライン描画用（食べel-town または 選択されたイベント）
-  const renderPostCard = (post: any) => (
-    <div key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
-      <div className="p-3 border-b border-gray-50 flex items-start justify-between">
-        <div className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white mr-2 shadow-inner ${post.category === 'food' ? 'bg-orange-400' : 'bg-blue-500'}`}>
-            <i className={`fas ${post.category === 'food' ? 'fa-camera-retro' : 'fa-bullhorn'} text-xs`}></i>
-          </div>
-          <div>
-            <div 
-              className="text-xs font-black text-blue-600 cursor-pointer hover:text-blue-800 hover:underline transition inline-flex items-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (post.neighborhood_id) {
-                  setSelectedTownId(post.neighborhood_id);
-                  setIsMapModalExpanded(false);
-                  setActiveTab('map');
-                }
-              }}
-            >
-              <i className="fas fa-map-marker-alt mr-1"></i>
-              {post.neighborhoods?.name || '不明な自治会'}
-            </div>
-            <span className="text-[10px] text-gray-400 font-normal ml-1">から</span>
-            <div className="text-[10px] text-gray-500 mt-0.5">@{post.nickname}</div>
-          </div>
-        </div>
-        <div className="flex flex-col items-end">
-          <div className="text-[10px] text-gray-400 font-bold mb-1">
-            {new Date(post.created_at).toLocaleDateString('ja-JP')}
-          </div>
-          {user && post.user_auth_id === user.id && (
-            <div className="flex items-center gap-2 mt-1">
-              <button onClick={() => handleEditClick(post)} className="text-gray-400 hover:text-blue-500 transition"><i className="fas fa-pen text-xs"></i></button>
-              <button onClick={() => handleDeletePost(post.id)} className="text-gray-400 hover:text-red-500 transition"><i className="fas fa-trash text-xs"></i></button>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="p-4">
-        <h3 className={`font-black text-base mb-2 leading-tight ${post.category === 'food' ? 'text-orange-600' : 'text-blue-600'}`}>
-          {post.title}
-        </h3>
-        {post.location_info && (
-          <div className="text-xs text-gray-500 mb-2 flex items-start">
-            <i className={`fas fa-map-marker-alt mt-0.5 mr-1.5 ${post.category === 'food' ? 'text-orange-400' : 'text-blue-400'}`}></i>
-            <span>{post.location_info}</span>
-          </div>
-        )}
-        <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed mt-2 bg-gray-50 p-3 rounded-xl border border-gray-100">{post.content}</p>
-      </div>
-
-      {post.image_url && (
-        <div className="w-full max-h-[400px] bg-gray-100 flex items-center justify-center overflow-hidden border-t border-gray-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.image_url} alt="投稿画像" className="w-full h-full object-contain" />
-        </div>
-      )}
-    </div>
-  );
-
+// Loading UI moved to JSX
+const renderPostCard = (post: any) => {
+  // Loading check before main return
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-qoin-light text-qoin-main"><i className="fas fa-spinner fa-spin text-3xl"></i></div>;
   }
 
+    return (
+      <div key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
+        <div className="p-3 border-b border-gray-50 flex items-start justify-between">
+          <div className="flex items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white mr-2 shadow-inner ${post.category === 'food' ? 'bg-orange-400' : 'bg-blue-500'}`}>
+              <i className={`fas ${post.category === 'food' ? 'fa-camera-retro' : 'fa-bullhorn'} text-xs`} />
+            </div>
+            <div>
+              <div
+                className="text-xs font-black text-blue-600 cursor-pointer hover:text-blue-800 hover:underline transition inline-flex items-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (post.neighborhood_id) {
+                    setSelectedTownId(post.neighborhood_id);
+                    setIsMapModalExpanded(false);
+                    setActiveTab('map');
+                  }
+                }}
+              >
+                <i className="fas fa-map-marker-alt mr-1" />
+                {post.neighborhoods?.name || '不明な自治会'}
+              </div>
+              <span className="text-[10px] text-gray-400 font-normal ml-1">から</span>
+              <div className="text-[10px] text-gray-500 mt-0.5">@{post.nickname}</div>
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="text-[10px] text-gray-400 font-bold mb-1">
+              {new Date(post.created_at).toLocaleDateString('ja-JP')}
+            </div>
+            {user && post.user_auth_id === user.id && (
+              <div className="flex items-center gap-2 mt-1">
+                <button onClick={() => handleEditClick(post)} className="text-gray-400 hover:text-blue-500 transition"><i className="fas fa-pen text-xs" /></button>
+                <button onClick={() => handleDeletePost(post.id)} className="text-gray-400 hover:text-red-500 transition"><i className="fas fa-trash text-xs" /></button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4">
+          <h3 className={`font-black text-base mb-2 leading-tight ${post.category === 'food' ? 'text-orange-600' : 'text-blue-600'}`}>
+            {post.title}
+          </h3>
+          {post.location_info && (
+            <div className="text-xs text-gray-500 mb-2 flex items-start">
+              <i className={`fas fa-map-marker-alt mt-0.5 mr-1.5 ${post.category === 'food' ? 'text-orange-400' : 'text-blue-400'}`} />
+              <span>{post.location_info}</span>
+            </div>
+          )}
+          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed mt-2 bg-gray-50 p-3 rounded-xl border border-gray-100">{post.content}</p>
+        </div>
+
+        {post.image_url && (
+          <div className="w-full max-h-[400px] bg-gray-100 flex items-center justify-center overflow-hidden border-t border-gray-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={post.image_url} alt="投稿画像" className="w-full h-full object-contain" />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
   return (
-    <div className="bg-[#e4e4e4] h-[100dvh] w-full font-sans flex flex-col items-center justify-start md:py-10">
-      <div className="w-full h-full md:w-[390px] md:h-[844px] md:rounded-[3rem] overflow-hidden md:border-[12px] md:border-gray-800 md:shadow-2xl relative bg-gray-50 flex flex-col">
+  
+    <div className="hero-bg font-sans flex flex-col items-center justify-start md:py-10">
+      <div className="w-full h-full md:w-[390px] md:h-[844px] md:rounded-[3rem] overflow-hidden md:border-[12px] md:border-gray-800 md:shadow-2xl relative bg-transparent flex flex-col">
         
         {/* ヘッダー (flex-shrink-0 を追加して潰れ・めり込みを防止、左矢印を削除、スリム化) */}
         <div className="flex-shrink-0 bg-gradient-to-r from-orange-400 to-pink-500 text-white py-2.5 px-4 flex items-center justify-center shadow-md relative z-20">
@@ -585,7 +594,8 @@ export default function PortalPage() {
 
               </div>
             </div>
-        )}
+        
+    )}
 
       </div>
     </div>

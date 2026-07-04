@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useLiff } from '@/components/LiffProvider';
 import Link from 'next/link';
 import Card from '@/components/Card';
+import Logo from '@/components/Logo';
 
 function PortalContent() {
   const router = useRouter();
@@ -98,10 +99,12 @@ function PortalContent() {
     <div className="bg-background min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="card">
         <div className="text-center mb-8 mt-2 flex flex-col items-center">
-          <h1 className="text-2xl font-bold mb-4">el-town</h1>
+          <Logo />
+          <p className="subtitle">町内会・自治会DXアプリ</p>
         </div>
 
-        <div className="flex flex-col gap-4 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
+
           {/* 役員の方 */}
           <Card>
             <Link href="/admin/" className="card-link">
@@ -129,7 +132,16 @@ function PortalContent() {
           </Card>
 
           {/* 操作マニュアル */}
-        </div>
+          <Card>
+            <Link href="/help" className="card-link">
+              <div className="card-icon"><i className="fas fa-info-circle" /></div>
+              <div className="card-text">
+                <h2 className="card-title">操作方法</h2>
+                <p className="card-subtitle">使い方・ヘルプ</p>
+              </div>
+            </Link>
+          </Card>
+          </div>
         
       </div>
       

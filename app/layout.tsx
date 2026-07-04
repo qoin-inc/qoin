@@ -1,7 +1,7 @@
 // trigger rebuild
 
 import '../styles/design.css';
-import dynamic from 'next/dynamic';
+import NextDynamic from 'next/dynamic';
 import DynamicLiffProvider from '@/components/DynamicLiffProvider';
 import Menu from '@/components/Menu';
 import type { Metadata } from 'next';
