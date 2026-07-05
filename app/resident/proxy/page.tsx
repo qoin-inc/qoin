@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -6,13 +6,13 @@ import { useSearchParams } from 'next/navigation';
 function ProxyPrintContent() {
   const searchParams = useSearchParams();
 
-  const title = searchParams.get('title') || '';
-  const date = searchParams.get('date') || '';
-  const signer = searchParams.get('signer') || '';
-  const agent = searchParams.get('agent') || '';
-  const text = searchParams.get('text') || '';
+  const title = searchParams?.get('title') || '';
+  const date = searchParams?.get('date') || '';
+  const signer = searchParams?.get('signer') || '';
+  const agent = searchParams?.get('agent') || '';
+  const text = searchParams?.get('text') || '';
 
-  // 西暦(YYYY-MM-DD)を和暦(令和◯年◯月◯日)に変換する関数
+  // 隘ｿ證ｦ(YYYY-MM-DD)繧貞柱證ｦ(莉､蜥娯留蟷ｴ笳ｯ譛遺留譌･)縺ｫ螟画鋤縺吶ｋ髢｢謨ｰ
   const formatToJapaneseDate = (dateStr: string) => {
     if (!dateStr) return '';
     const parts = dateStr.split('-');
@@ -22,13 +22,13 @@ function ProxyPrintContent() {
       const day = parseInt(parts[2], 10);
       if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
         let eraYear = year - 2018;
-        let eraName = '令和';
+        let eraName = '莉､蜥・;
         if (year < 2019) {
           eraYear = year - 1988;
-          eraName = '平成';
+          eraName = '蟷ｳ謌・;
         }
-        const eraYearStr = eraYear === 1 ? '元' : String(eraYear);
-        return `${eraName}${eraYearStr}年${month}月${day}日`;
+        const eraYearStr = eraYear === 1 ? '蜈・ : String(eraYear);
+        return `${eraName}${eraYearStr}蟷ｴ${month}譛・{day}譌･`;
       }
     }
     return dateStr;
@@ -37,7 +37,7 @@ function ProxyPrintContent() {
   const formattedDate = formatToJapaneseDate(date);
 
   useEffect(() => {
-    // 画面ロード時に自動的に印刷ダイアログを起動
+    // 逕ｻ髱｢繝ｭ繝ｼ繝画凾縺ｫ閾ｪ蜍慕噪縺ｫ蜊ｰ蛻ｷ繝繧､繧｢繝ｭ繧ｰ繧定ｵｷ蜍・
     const timer = setTimeout(() => {
       window.print();
     }, 500);
@@ -145,23 +145,23 @@ function ProxyPrintContent() {
       `}</style>
 
       <div className="proxy-container">
-        {/* 本文 */}
+        {/* 譛ｬ譁・*/}
         <div className="proxy-body-text">
-          {text || `私は、${title}に出席できませんので、同総会における議決権を委任します。`}
+          {text || `遘√・縲・{title}縺ｫ蜃ｺ蟶ｭ縺ｧ縺阪∪縺帙ｓ縺ｮ縺ｧ縲∝酔邱丈ｼ壹↓縺翫￠繧玖ｭｰ豎ｺ讓ｩ繧貞ｧ比ｻｻ縺励∪縺吶Ａ}
         </div>
 
-        {/* 下部の署名欄 */}
+        {/* 荳矩Κ縺ｮ鄂ｲ蜷肴ｬ・*/}
         <div className="proxy-signatures">
           <div className="proxy-sig-row">
             <span className="proxy-sig-date">{formattedDate}</span>
           </div>
           <div className="proxy-sig-row">
-            <span className="proxy-sig-label">(本人)</span>
+            <span className="proxy-sig-label">(譛ｬ莠ｺ)</span>
             <span className="proxy-sig-value">{signer}</span>
           </div>
           {agent && (
             <div className="proxy-sig-row">
-              <span className="proxy-sig-label">(代理人)</span>
+              <span className="proxy-sig-label">(莉｣逅・ｺｺ)</span>
               <span className="proxy-sig-value">{agent}</span>
             </div>
           )}
@@ -173,8 +173,9 @@ function ProxyPrintContent() {
 
 export default function ProxyPrintPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-gray-500">読み込み中...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-gray-500">隱ｭ縺ｿ霎ｼ縺ｿ荳ｭ...</div>}>
       <ProxyPrintContent />
     </Suspense>
   );
 }
+
