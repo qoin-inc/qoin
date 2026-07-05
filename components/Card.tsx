@@ -1,9 +1,10 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode } from "react";
 
-/**
- * Simple reusable Card component.
- * Applies the .card style defined in design.css.
- */
-export default function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={"card" + (className ? " " + className : "")}>{children}</div>;
+type CardProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+export default function Card({ children, className = "" }: CardProps) {
+  return <div className={["card", className].filter(Boolean).join(" ")}>{children}</div>;
 }
