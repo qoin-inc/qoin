@@ -1,77 +1,43 @@
-﻿"use client";
-
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useLiff } from "@/components/LiffProvider";
-import { supabase } from "@/lib/supabaseClient";
+import InitialRedirectHandler from "@/components/InitialRedirectHandler";
 
-function PortalContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { isInitialized, lineProfile } = useLiff();
+type PageProps = {
+  searchParams?: Record<string, string | string[] | undefined>;
+};
 
-  let redirectTarget = searchParams?.get("redirect") || searchParams?.get("goto") || searchParams?.get("open");
-  if (!redirectTarget) {
-    let liffState = searchParams?.get("liff.state");
-    if (liffState) {
-      try { liffState = decodeURIComponent(liffState); } catch (e) {}
-      const stateParams = new URLSearchParams(liffState.startsWith("?") ? liffState : `?${liffState}`);
-      redirectTarget = stateParams.get("redirect") || stateParams.get("goto") || stateParams.get("open");
-    }
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getRedirectTarget(searchParams?: PageProps["searchParams"]) {
+  const redirect = firstParam(searchParams?.redirect) || firstParam(searchParams?.goto) || firstParam(searchParams?.open);
+  if (redirect) return redirect;
+
+  const rawLiffState = firstParam(searchParams?.["liff.state"]);
+  if (!rawLiffState) return null;
+
+  let liffState = rawLiffState;
+  try {
+    liffState = decodeURIComponent(liffState);
+  } catch {
+    // Keep the original value if LINE has already decoded it.
   }
 
-  useEffect(() => {
-    if (!isInitialized) return;
+  const stateParams = new URLSearchParams(liffState.startsWith("?") ? liffState : `?${liffState}`);
+  return stateParams.get("redirect") || stateParams.get("goto") || stateParams.get("open");
+}
 
-    const checkExistingUser = async () => {
-      if (redirectTarget) {
-        if (redirectTarget === "portal") {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session && lineProfile?.userId) {
-            await supabase.auth.signInWithPassword({
-              email: `${lineProfile.userId}@line.eltown.local`,
-              password: `lineAuth_${lineProfile.userId}_eltown`,
-            });
-          }
-          window.location.href = "/portal";
-          return;
-        }
-        if (redirectTarget === "resident") router.push("/resident/");
-        else if (redirectTarget === "admin") router.push("/admin/");
-        else router.push(`/resident/?open=${redirectTarget}`);
-        return;
-      }
+function LoadingScreen() {
+  return (
+    <div className="el-loading-screen">
+      <div className="el-spinner" />
+      <p>el-townを開いています...</p>
+    </div>
+  );
+}
 
-      if (lineProfile?.userId) {
-        try {
-          const { data } = await supabase
-            .from("resident_rosters")
-            .select("id")
-            .or(`user_auth_id.eq.${lineProfile.userId},family_user_auth_id_1.eq.${lineProfile.userId},family_user_auth_id_2.eq.${lineProfile.userId}`)
-            .limit(1);
-          if (data && data.length > 0) {
-            router.push("/resident/");
-            return;
-          }
-        } catch (e) {
-          console.error("Auto login check failed:", e);
-        }
-      }
-    };
-
-    checkExistingUser();
-  }, [isInitialized, lineProfile, redirectTarget, router]);
-
-  if (redirectTarget) {
-    return (
-      <div className="el-loading-screen">
-        <div className="el-spinner" />
-        <p>el-townを開いています...</p>
-      </div>
-    );
-  }
-
+function InitialMenu() {
   return (
     <main className="initial-menu-screen initial-menu-screenshot-style">
       <div className="initial-menu-sky" aria-hidden="true" />
@@ -111,15 +77,15 @@ function PortalContent() {
   );
 }
 
-export default function PortalPage() {
+export default function PortalPage({ searchParams }: PageProps) {
+  const redirectTarget = getRedirectTarget(searchParams);
+
   return (
-    <Suspense fallback={<div className="el-loading-screen"><div className="el-spinner" /></div>}>
-      <PortalContent />
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <InitialRedirectHandler initialRedirectTarget={redirectTarget} />
+      </Suspense>
+      {redirectTarget ? <LoadingScreen /> : <InitialMenu />}
+    </>
   );
 }
-
-
-
-
-
