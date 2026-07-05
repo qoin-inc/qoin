@@ -1,26 +1,33 @@
-"use client";
-import React from "react";
+﻿import React from 'react';
 
-/**
- * MapComponent コンポーネント（スタブ）
- * 地図表示のプレースホルダーです。実装は後で追加してください。
- */
-export const MapComponent: React.FC<{
-  towns: any[];
-  selectedTownId: number;
-  onMarkerClick: (id: any) => void;
-}> = ({ towns, selectedTownId, onMarkerClick }) => {
-  return (
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <h2>MapComponent（スタブ）</h2>
-      <p>ここに地図コンポーネントを実装します。</p>
-      {/* Props preview for debugging */}
-      <pre>{JSON.stringify({ towns, selectedTownId }, null, 2)}</pre>
-      <button onClick={() => onMarkerClick(towns[0]?.id)}>Select First Town</button>
-    </div>
-  );
+type MapComponentProps = {
+  towns?: any[];
+  selectedTownId?: number | null;
+  onMarkerClick?: (id: any) => void;
 };
 
-
-
-export default MapComponent;
+export default function MapComponent({ towns = [], selectedTownId, onMarkerClick }: MapComponentProps) {
+  return (
+    <div className="map-placeholder">
+      <div>
+        <i className="fas fa-map-location-dot" />
+        <strong>地域マップ</strong>
+        <span>{towns.length > 0 ? `${towns.length}件の自治会を表示できます` : '表示できる地域情報はまだありません'}</span>
+      </div>
+      {towns.length > 0 && (
+        <div className="map-town-list">
+          {towns.slice(0, 6).map((town: any) => (
+            <button
+              key={town.id}
+              type="button"
+              className={selectedTownId === town.id ? 'active' : ''}
+              onClick={() => onMarkerClick?.(town.id)}
+            >
+              {town.name || '名称未設定'}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

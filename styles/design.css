@@ -374,3 +374,53 @@ button { cursor: pointer; }
     padding: 30px 22px 28px;
   }
 }
+
+.map-placeholder {
+  min-height: 260px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #eff9ff, #ffffff);
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  padding: 24px;
+  color: #334155;
+  text-align: center;
+}
+.map-placeholder > div:first-child {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+.map-placeholder i {
+  color: var(--qoin-main);
+  font-size: 34px;
+}
+.map-placeholder strong {
+  font-size: 18px;
+  font-weight: 900;
+}
+.map-placeholder span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.map-town-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.map-town-list button {
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #fff;
+  color: #2563eb;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.map-town-list button.active {
+  background: var(--qoin-main);
+  color: #fff;
+}
