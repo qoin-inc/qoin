@@ -34,3 +34,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.log
+# Netlify local/deploy output
+.netlify/
+
+# Local run artifacts
+build_logs.zip
+run_logs.zip
+browser_recordings/
