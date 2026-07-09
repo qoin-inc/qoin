@@ -7,8 +7,15 @@ const shouldAutoInitializeLiff = () => {
   if (typeof window === 'undefined') return false;
   const params = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const isInitialEntryPath = window.location.pathname === '/';
 
-  return [
+  const hasInitialEntryParam = isInitialEntryPath && [
+    'redirect',
+    'goto',
+    'open',
+  ].some((key) => params.has(key));
+
+  return hasInitialEntryParam || [
     'liff.state',
     'liffClientId',
     'liffRedirectUri',
@@ -28,31 +35,40 @@ const shouldAutoInitializeLiff = () => {
  */
 export const useLiff = () => {
   const [profile, setProfile] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Attempt to initialise LIFF – ignore any errors to avoid blocking UI.
   useEffect(() => {
+    let cancelled = false;
     const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-    if (!liffId) return;
-    if (!shouldAutoInitializeLiff()) return;
+    if (!liffId || !shouldAutoInitializeLiff()) {
+      setIsInitialized(true);
+      return;
+    }
 
-    liff
-      .init({ liffId })
-      .catch(() => {
-        // LIFF init failed – continue without it.
-      })
-      .finally(() => {
+    const initialize = async () => {
+      try {
+        await liff.init({ liffId });
         if (liff.isLoggedIn()) {
-          liff
-            .getProfile()
-            .then(p => setProfile(p))
-            .catch(() => {});
+          const lineProfile = await liff.getProfile().catch(() => null);
+          if (!cancelled && lineProfile) setProfile(lineProfile);
         }
-      });
+      } catch {
+        // LIFF init failed – continue without it.
+      } finally {
+        if (!cancelled) setIsInitialized(true);
+      }
+    };
+
+    initialize();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return {
     isReady: true,
-    isInitialized: true,
+    isInitialized,
     liff,
     lineProfile: profile,
   };

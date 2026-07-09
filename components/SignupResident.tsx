@@ -9,6 +9,10 @@ type SignupResidentProps = {
   onCancel?: () => void;
 };
 
+const normalizeName = (value?: string | null) => String(value || "").replace(/[\s　]+/g, "").trim();
+
+const rosterPrimaryName = (roster: any) => roster.full_name || `${roster.last_name || ""}${roster.first_name || ""}`;
+
 export default function SignupResident({ sessionUser, onComplete, onCancel }: SignupResidentProps) {
   const [fullName, setFullName] = useState(sessionUser?.user_metadata?.name || "");
   const [townCode, setTownCode] = useState("");
@@ -38,6 +42,80 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         .eq("invite_token", townCode.trim())
         .single();
       if (townError || !town) throw new Error("招待コードに一致する町内会が見つかりません。");
+
+      const normalizedInputName = normalizeName(fullName);
+      const { data: existingRosters, error: rosterLookupError } = await supabase
+        .from("resident_rosters")
+        .select("*")
+        .eq("neighborhood_id", town.id)
+        .limit(1000);
+      if (rosterLookupError) throw rosterLookupError;
+
+      const matchedRoster = existingRosters?.find((roster: any) => {
+        return [
+          rosterPrimaryName(roster),
+          roster.family_name_1,
+          roster.family_name_2,
+        ].some((name) => normalizeName(name) === normalizedInputName);
+      });
+
+      if (matchedRoster) {
+        if (matchedRoster.withdrawal_status === "withdrawn") {
+          throw new Error("この会員名簿は退会済みのため連携できません。役員へ確認してください。");
+        }
+
+        const primaryNameMatched = normalizeName(rosterPrimaryName(matchedRoster)) === normalizedInputName;
+        const family1Matched = normalizeName(matchedRoster.family_name_1) === normalizedInputName;
+        const family2Matched = normalizeName(matchedRoster.family_name_2) === normalizedInputName;
+        let updatePayload: Record<string, any> | null = null;
+
+        if (primaryNameMatched) {
+          if (matchedRoster.user_auth_id && matchedRoster.user_auth_id !== sessionUser.id) {
+            throw new Error("この会員名簿はすでに別のLINEアカウントと連携済みです。");
+          }
+          updatePayload = {
+            user_auth_id: sessionUser.id,
+            line_display_name: sessionUser?.user_metadata?.name || null,
+            status: "active",
+          };
+        } else if (family1Matched) {
+          if (matchedRoster.family_user_auth_id_1 && matchedRoster.family_user_auth_id_1 !== sessionUser.id) {
+            throw new Error("この家族名はすでに別のLINEアカウントと連携済みです。");
+          }
+          updatePayload = {
+            family_user_auth_id_1: sessionUser.id,
+            status: "active",
+          };
+        } else if (family2Matched) {
+          if (matchedRoster.family_user_auth_id_2 && matchedRoster.family_user_auth_id_2 !== sessionUser.id) {
+            throw new Error("この家族名はすでに別のLINEアカウントと連携済みです。");
+          }
+          updatePayload = {
+            family_user_auth_id_2: sessionUser.id,
+            status: "active",
+          };
+        }
+
+        if (!updatePayload) throw new Error("一致する会員名簿を確認できませんでした。");
+
+        let { error: updateError } = await supabase
+          .from("resident_rosters")
+          .update(updatePayload)
+          .eq("id", matchedRoster.id);
+
+        if (updateError && String(updateError.message || "").includes("line_display_name")) {
+          const { line_display_name, ...fallbackPayload } = updatePayload;
+          const fallback = await supabase
+            .from("resident_rosters")
+            .update(fallbackPayload)
+            .eq("id", matchedRoster.id);
+          updateError = fallback.error;
+        }
+
+        if (updateError) throw updateError;
+        onComplete?.();
+        return;
+      }
 
       const { error: rosterError } = await supabase.from("resident_rosters").insert({
         neighborhood_id: town.id,
