@@ -36,8 +36,8 @@ const manuals: ManualCard[] = [
   },
   {
     title: 'Stripe連携 操作マニュアル',
-    subtitle: 'テスト接続から本番登録まで',
-    description: 'オンライン集金のためのStripeアカウント登録、テスト決済、本番切替の手順',
+    subtitle: '本番Stripe登録から会費請求まで',
+    description: '町内会・自治会が本番モードでStripe登録し、会員へオンライン請求する手順',
     href: '/manual/stripe',
     icon: 'fa-credit-card',
     color: '#635BFF',

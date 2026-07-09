@@ -28,7 +28,7 @@ export default function StripeReturnPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-indigo-900">
-          Stripe連携手続き完了
+          Stripe本番連携手続き完了
         </h2>
         <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-green-400 to-indigo-500"></div>
@@ -38,11 +38,11 @@ export default function StripeReturnPage() {
           </div>
           
           <h3 className="text-lg font-bold text-gray-800 mb-2">
-            Stripe連携手続きが完了しました！
+            Stripe本番連携手続きが完了しました
           </h3>
           
           <p className="text-xs md:text-sm text-gray-600 mb-8 leading-relaxed">
-            アカウント登録・接続手続きが正常に完了しました。<br/>
+            町内会・自治会の本番アカウント登録・接続手続きが正常に完了しました。<br/>
             Stripeによるアカウント審査が自動的に開始されます。
           </p>
 

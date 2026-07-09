@@ -21,7 +21,7 @@ function getRedirectTarget(searchParams?: PageProps["searchParams"]) {
   try {
     liffState = decodeURIComponent(liffState);
   } catch {
-    // Keep the original value if LINE has already decoded it.
+    // LINE may already pass the value decoded.
   }
 
   const stateParams = new URLSearchParams(liffState.startsWith("?") ? liffState : `?${liffState}`);
@@ -60,7 +60,7 @@ function InitialMenu() {
             <span className="initial-menu-icon initial-menu-icon-orange"><i className="fas fa-user-plus" /></span>
             <span>
               <strong>会員の方</strong>
-              <small>会員の新規登録・連携はこちら</small>
+              <small>会員登録・LINE連携はこちら</small>
             </span>
           </Link>
 
@@ -68,7 +68,7 @@ function InitialMenu() {
             <span className="initial-menu-icon initial-menu-icon-gray"><i className="fas fa-book-open" /></span>
             <span>
               <strong>操作方法</strong>
-              <small>使い方・ヘルプ</small>
+              <small>使い方・ヘルプを見る</small>
             </span>
           </Link>
         </div>

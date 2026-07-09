@@ -7,15 +7,15 @@ export default function StripeRefreshPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Stripe登録中断
+          Stripe本番登録中断
         </h2>
         <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
           <div className="text-yellow-500 text-5xl mb-4">
             <i className="fas fa-exclamation-triangle"></i>
           </div>
           <p className="text-gray-700 mb-6">
-            登録手続きが中断されたか、リンクの有効期限が切れました。<br/>
-            恐れ入りますが、設定画面から再度「Stripeと連携する」ボタンを押して手続きをやり直してください。
+            本番登録手続きが中断されたか、リンクの有効期限が切れました。<br/>
+            恐れ入りますが、管理画面の「Stripe連携」から再度「本番登録を再開・確認」ボタンを押してください。
           </p>
           <Link 
             href="/admin" 

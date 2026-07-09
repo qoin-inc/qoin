@@ -4,7 +4,7 @@ import LiffProvider from "@/components/LiffProvider";
 
 export const metadata: Metadata = {
   title: "el-town",
-  description: "町内会・自治会DXアプリ el-town",
+  description: "町内会・自治会向けDXアプリ el-town",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

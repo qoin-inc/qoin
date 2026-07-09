@@ -78,7 +78,7 @@ function Step1Content() {
   );
 }
 
-/* ─────────────────── ステップ2：テスト連携を開始する ─────────────────── */
+/* ─────────────────── ステップ2：本番連携を開始する ─────────────────── */
 function Step2Content() {
   return (
     <div className="h-full bg-[#f0f2f5] flex flex-col">
@@ -111,11 +111,11 @@ function Step2Content() {
             </div>
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="flex items-start gap-2">
-              <i className="fas fa-info-circle text-yellow-500 text-sm mt-0.5"></i>
-              <p className="text-sm text-yellow-700 font-bold leading-relaxed">
-                まずはテストモードで連携を開始します。テスト用のカード情報で動作確認ができます。
+              <i className="fas fa-info-circle text-blue-500 text-sm mt-0.5"></i>
+              <p className="text-sm text-blue-700 font-bold leading-relaxed">
+                町内会・自治会は本番モードでStripe登録を行います。事前登録や環境切替の操作は不要です。
               </p>
             </div>
           </div>
@@ -194,7 +194,7 @@ function Step3Content() {
   );
 }
 
-/* ─────────────────── ステップ4：テスト連携の完了 ─────────────────── */
+/* ─────────────────── ステップ4：本番連携の完了 ─────────────────── */
 function Step4Content() {
   return (
     <div className="h-full bg-[#f0f2f5] flex flex-col">
@@ -220,12 +220,12 @@ function Step4Content() {
             <i className="fas fa-check-circle text-4xl text-green-500"></i>
           </div>
           <h3 className="font-black text-gray-800 text-lg mb-1">Stripe連携が完了しています</h3>
-          <p className="text-sm text-gray-500 font-bold mb-4">テストモードで動作中</p>
+          <p className="text-sm text-gray-500 font-bold mb-4">本番モードで接続中</p>
 
           <div className="bg-gray-50 rounded-lg p-3 mb-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm text-gray-500 font-bold">アカウントID</span>
-              <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-bold">テスト</span>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">本番</span>
             </div>
             <div className="text-sm font-mono text-gray-700 font-bold">acct_1Abc2DefGhIjKlMn</div>
           </div>
@@ -240,7 +240,7 @@ function Step4Content() {
   );
 }
 
-/* ─────────────────── ステップ5：テスト決済で動作確認 ─────────────────── */
+/* ─────────────────── ステップ5：会員支払いの流れ ─────────────────── */
 function Step5Content() {
   return (
     <div className="h-full bg-gradient-to-b from-[#f0f2f5] to-[#e8eaed] flex flex-col items-center justify-center p-5">
@@ -280,22 +280,22 @@ function Step5Content() {
           </div>
 
           <div className="bg-[#635BFF] text-white font-black py-3 rounded-lg text-center text-base shadow-md">
-            テスト決済する
+            オンラインで支払う
           </div>
         </div>
       </div>
 
-      <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2.5 w-full">
+      <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 w-full">
         <div className="flex items-center gap-2">
-          <i className="fas fa-flask text-yellow-500 text-sm"></i>
-          <p className="text-sm text-yellow-700 font-bold">テスト用カード情報 ─ 実際のお金は動きません</p>
+          <i className="fas fa-lock text-blue-500 text-sm"></i>
+          <p className="text-sm text-blue-700 font-bold">本番登録完了後、会員はStripeの安全な決済画面で支払います</p>
         </div>
       </div>
     </div>
   );
 }
 
-/* ─────────────────── ステップ6：本番への切替 ─────────────────── */
+/* ─────────────────── ステップ6：登録後の審査確認 ─────────────────── */
 function Step6Content() {
   return (
     <div className="h-full bg-[#f0f2f5] flex flex-col">
@@ -319,24 +319,24 @@ function Step6Content() {
               <i className="fas fa-check-circle text-green-500 text-xl"></i>
             </div>
             <div>
-              <div className="font-black text-base text-gray-800">Stripe連携済み</div>
-              <div className="text-sm text-yellow-600 font-bold"><i className="fas fa-flask mr-1"></i>テスト環境</div>
+              <div className="font-black text-base text-gray-800">Stripe本番登録中</div>
+              <div className="text-sm text-orange-600 font-bold"><i className="fas fa-hourglass-half mr-1"></i>審査・確認中</div>
             </div>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-            <div className="text-sm text-green-700 font-bold mb-1">✅ テスト確認が完了したら</div>
-            <p className="text-sm text-green-600 font-bold leading-relaxed">「本番環境へ切り替える」ボタンを押して、本番用の登録に進みます。</p>
+            <div className="text-sm text-green-700 font-bold mb-1">✅ 登録情報を送信したら</div>
+            <p className="text-sm text-green-600 font-bold leading-relaxed">Stripeの審査が進みます。不足情報がある場合は、同じボタンから登録を再開できます。</p>
           </div>
         </div>
         <div className="bg-white rounded-xl p-5 shadow-sm border border-blue-100">
           <div className="flex items-center gap-2 mb-2">
             <i className="fas fa-rocket text-blue-500 text-sm"></i>
-            <span className="text-sm font-black text-blue-600">本番環境への切替</span>
+            <span className="text-sm font-black text-blue-600">登録情報の確認・再開</span>
           </div>
-          <p className="text-sm text-gray-500 font-bold mb-3 leading-relaxed">テスト用アカウントが解除され、本番用アカウントの登録画面が表示されます。</p>
+          <p className="text-sm text-gray-500 font-bold mb-3 leading-relaxed">入力途中で中断した場合や追加情報が必要な場合は、Stripe登録画面を再度開きます。</p>
           <div className="relative">
             <button className="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl text-base shadow-md flex items-center justify-center gap-2">
-              <i className="fas fa-rocket"></i>本番環境へ切り替える
+              <i className="fas fa-arrow-up-right-from-square"></i>登録を再開・確認する
             </button>
             <div className="absolute right-4 -bottom-2 text-5xl transform -rotate-12 animate-bounce drop-shadow-xl z-50">👆</div>
           </div>
@@ -346,7 +346,7 @@ function Step6Content() {
   );
 }
 
-/* ─────────────────── ステップ7：本番アカウントの登録 ─────────────────── */
+/* ─────────────────── ステップ7：追加情報の提出 ─────────────────── */
 function Step7Content() {
   return (
     <div className="h-full bg-[#f0f2f5] flex flex-col">
@@ -363,7 +363,7 @@ function Step7Content() {
             <i className="fas fa-rocket text-[#635BFF] text-sm"></i>
             <span className="text-sm font-black text-[#635BFF]">本番用アカウントを登録</span>
           </div>
-          <p className="text-sm text-gray-600 font-bold leading-relaxed">今度は本番用の登録画面が開きます</p>
+          <p className="text-sm text-gray-600 font-bold leading-relaxed">不足情報がある場合は、Stripe画面で追加提出します</p>
         </div>
         <div className="relative">
           <button className="w-full bg-[#635BFF] text-white font-black py-3.5 rounded-xl text-base shadow-md flex items-center justify-center gap-2">
@@ -552,9 +552,9 @@ const steps: ManualStep[] = [
     content: <Step1Content />,
   },
   {
-    title: '② テスト連携を開始する',
+    title: '② 本番Stripe登録を開始する',
     description:
-      '管理画面の「設定」→「オンライン集金」タブから「Stripeアカウントを登録・連携する」ボタンを押します。最初はテストモードで安全に動作確認ができます。',
+      '管理画面の「Stripe連携」から「本番Stripe登録を開始」ボタンを押します。町内会・自治会は本番登録から開始します。',
     content: <Step2Content />,
   },
   {
@@ -564,37 +564,19 @@ const steps: ManualStep[] = [
     content: <Step3Content />,
   },
   {
-    title: '④ テスト連携の完了',
+    title: '④ 本番登録の完了と審査',
     description:
-      '登録画面での手続きが終わると、管理画面に戻ります。「Stripe連携が完了しています」と表示されれば成功です。',
-    content: <Step4Content />,
-  },
-  {
-    title: '⑤ 本番への切替',
-    description:
-      'テスト連携が確認できたら「本番環境へ切り替える」ボタンを押します。テスト用アカウントが解除され、本番用の登録が可能になります。',
-    content: <Step6Content />,
-  },
-  {
-    title: '⑥ 本番アカウントの登録',
-    description:
-      'もう一度「連携する」ボタンを押すと、今度は本番用のStripe登録画面が開きます。実際の本人確認書類と銀行口座情報を入力してください。',
-    content: <Step7Content />,
-  },
-  {
-    title: '⑦ 本番連携の完了＆審査',
-    description:
-      '本番アカウントの登録後、Stripeによるアカウント審査が自動開始されます。審査は通常1〜2営業日で完了し、完了後に実際の会費決済・入金が可能になります。',
+      '本番アカウント登録後、Stripeによる審査が開始されます。審査完了後に会費決済・入金が可能になります。',
     content: <Step8Content />,
   },
   {
-    title: '⑧ 会費の請求（役員の操作）',
+    title: '⑤ 会費の請求（役員の操作）',
     description:
       '審査完了後、管理画面の「会費管理」タブから会員への請求を送信します。未納の会員にLINEで請求通知が届き、スマホから簡単に支払いが可能になります。',
     content: <Step9Content />,
   },
   {
-    title: '⑨ 会員のお支払い画面',
+    title: '⑥ 会員のお支払い画面',
     description:
       '会員のスマホには「会費のお支払い」画面が表示されます。「オンラインで支払う」ボタンを押すとStripeの安全な決済画面が開き、クレジットカードで支払いが完了します。',
     content: <Step10Content />,
@@ -605,7 +587,7 @@ export default function StripeManualPage() {
   return (
     <ManualViewer
       title="Stripe連携 操作マニュアル"
-      subtitle="テスト接続から本番登録まで"
+      subtitle="本番Stripe登録から会費請求まで"
       steps={steps}
       accentColor="#635BFF"
       icon="fa-credit-card"

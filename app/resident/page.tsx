@@ -28,6 +28,22 @@ function ResidentPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liffInitialized, setLiffInitialized] = useState(false);
 
+  const safeIsLiffLoggedIn = () => {
+    try {
+      return Boolean(liff?.isLoggedIn?.());
+    } catch {
+      return false;
+    }
+  };
+
+  const safeIsLiffInClient = () => {
+    try {
+      return Boolean(liff?.isInClient?.());
+    } catch {
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (searchParams?.get('test_bypass') === '1') {
       setSession({ user: { id: 'test' }});
@@ -38,7 +54,7 @@ function ResidentPageContent() {
       return;
     }
 
-    if (liffInitializedProvider && liff.isLoggedIn()) {
+    if (liffInitializedProvider && safeIsLiffLoggedIn()) {
       supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
          if (!existingSession && !isSubmitting) {
             performSupabaseLoginWithLiff();
@@ -48,6 +64,10 @@ function ResidentPageContent() {
   }, [liffInitializedProvider]);
 
   useEffect(() => {
+    if (searchParams?.get('test_bypass') === '1') {
+      return;
+    }
+
     const hash = window.location.hash;
     if (hash && hash.includes('error_description')) {
       const params = new URLSearchParams(hash.substring(1));
@@ -169,7 +189,7 @@ function ResidentPageContent() {
         return;
       }
       
-      if (!liff?.isLoggedIn()) {
+      if (!safeIsLiffLoggedIn()) {
         liff?.login({ redirectUri: `${window.location.origin}/resident` });
         return;
       }
@@ -184,7 +204,7 @@ function ResidentPageContent() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     try {
-      if (liff?.isLoggedIn()) {
+      if (safeIsLiffLoggedIn()) {
         liff?.logout();
       }
     } catch (e) {
@@ -242,7 +262,7 @@ function ResidentPageContent() {
               )}
             </button>
             <div className="text-xs text-center text-gray-400 mt-2">
-              [Debug] LiffInit: {liffInitializedProvider ? 'Yes' : 'No'} | InClient: {liffInitializedProvider && liff.isInClient() ? 'Yes' : 'No'} | LoggedIn: {liffInitializedProvider && liff.isLoggedIn() ? 'Yes' : 'No'}
+              [Debug] LiffInit: {liffInitializedProvider ? 'Yes' : 'No'} | InClient: {liffInitializedProvider && safeIsLiffInClient() ? 'Yes' : 'No'} | LoggedIn: {liffInitializedProvider && safeIsLiffLoggedIn() ? 'Yes' : 'No'}
             </div>
             <p className="text-xs text-gray-400 mt-4 text-left leading-relaxed">
               ※取得したLINEのメールアドレスおよび公開プロフィール情報は、ユーザーの認証機能および重複登録防止の目的に限り利用されます。
