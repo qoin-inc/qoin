@@ -44,6 +44,17 @@ function ResidentPageContent() {
     }
   };
 
+  const openLiffLogin = () => {
+    const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
+    if (!liffId) {
+      setLoginError('LIFF IDが未設定です。管理者に確認してください。');
+      setIsSubmitting(false);
+      return;
+    }
+
+    window.location.href = `https://liff.line.me/${liffId}/?redirect=resident`;
+  };
+
   useEffect(() => {
     if (searchParams?.get('test_bypass') === '1') {
       setSession({ user: { id: 'test' }});
@@ -190,7 +201,7 @@ function ResidentPageContent() {
       }
       
       if (!safeIsLiffLoggedIn()) {
-        liff?.login({ redirectUri: `${window.location.origin}/resident` });
+        openLiffLogin();
         return;
       }
       await performSupabaseLoginWithLiff();

@@ -3,6 +3,25 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import liff from '@line/liff';
 
+const shouldAutoInitializeLiff = () => {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+  return [
+    'liff.state',
+    'liffClientId',
+    'liffRedirectUri',
+    'code',
+    'liff.hback',
+  ].some((key) => params.has(key)) || [
+    'access_token',
+    'context_token',
+    'feature_token',
+    'id_token',
+  ].some((key) => hashParams.has(key));
+};
+
 /**
  * Hook to access LIFF SDK data.
  * Returns readiness flags, the liff instance, and the user profile when available.
@@ -14,6 +33,8 @@ export const useLiff = () => {
   useEffect(() => {
     const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
     if (!liffId) return;
+    if (!shouldAutoInitializeLiff()) return;
+
     liff
       .init({ liffId })
       .catch(() => {
