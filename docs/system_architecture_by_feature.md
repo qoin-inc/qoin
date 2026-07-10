@@ -121,7 +121,7 @@ flowchart TD
 役割:
 - LINE LIFF でログインし、LIFF の `userId` をもとに Supabase Auth の疑似メールアカウントを作成・ログインします。
 - `resident_rosters` から会員名簿を取得し、所属する町内会・自治会を `neighborhoods` から取得します。
-- 未登録の場合は、招待コードで会員情報を連携します。
+- 未登録の場合は、町内会名、郵便番号、住所２、必要に応じて住所３、お名前で既存名簿を照合し、LINEアカウントを連携します。招待コードは役員招待で使用します。
 - 会員画面では、ホーム、回覧、会費、プロフィールのタブを表示します。
 - `open` パラメータにより、特定の回覧を直接開けます。
 - 委任状・領収書の印刷用ページを提供します。
@@ -134,8 +134,8 @@ flowchart TD
   D --> E[Supabase Auth\nlineUserId@line.eltown.local]
   B -->|Yes| F[resident_rosters 検索]
   E --> F
-  F -->|未登録| G[SignupResident\n招待コード入力]
-  G --> H[resident_rosters 登録]
+  F -->|未登録| G[SignupResident\n名簿照合入力]
+  G --> H[resident_rosters LINE連携更新]
   F -->|登録済み| I[neighborhoods 取得]
   I --> J[ResidentView]
   J --> K[circulars 一覧]
@@ -249,7 +249,7 @@ flowchart TD
 | 役員画面 | `/admin` | `app/admin/page.tsx`, `components/AdminView.tsx` | 役員ログイン、管理ダッシュボード |
 | 自治会登録 | `/admin?mode=signup` | `components/SignupTown.tsx` | 町内会・自治会と初期役員登録 |
 | 会員画面 | `/resident` | `app/resident/page.tsx`, `components/ResidentView.tsx` | LINEログイン、回覧、会費、プロフィール |
-| 会員登録 | `/resident?mode=signup` | `components/SignupResident.tsx` | 招待コードによる会員連携 |
+| 会員登録 | `/resident?mode=signup` | `components/SignupResident.tsx` | 町内会名・郵便番号・住所２/３・氏名による名簿照合 |
 | ポータル | `/portal` | `app/portal/page.tsx` | 地域投稿、地図、画像投稿 |
 | 委任状 | `/resident/proxy` | `app/resident/proxy/page.tsx` | 印刷用委任状 |
 | 領収書 | `/resident/receipt` | `app/resident/receipt/page.tsx` | 印刷用領収書 |

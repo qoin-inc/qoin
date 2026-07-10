@@ -9,15 +9,21 @@ type SignupResidentProps = {
   onCancel?: () => void;
 };
 
-const normalizeName = (value?: string | null) => String(value || "").replace(/[\s　]+/g, "").trim();
+const normalizeText = (value?: string | null) => String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim();
+const normalizeName = normalizeText;
+const normalizePostalCode = (value?: string | null) => normalizeText(value).replace(/[^\d]/g, "");
 
 const rosterPrimaryName = (roster: any) => roster.full_name || `${roster.last_name || ""}${roster.first_name || ""}`;
+const rosterPostalCode = (roster: any) => roster.postal_code || "";
+const rosterAddressLine2 = (roster: any) => roster.address_line2 || roster.address2 || roster.address || "";
+const rosterAddressLine3 = (roster: any) => roster.address_line3 || roster.address3 || "";
 
 export default function SignupResident({ sessionUser, onComplete, onCancel }: SignupResidentProps) {
   const [fullName, setFullName] = useState(sessionUser?.user_metadata?.name || "");
-  const [townCode, setTownCode] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
+  const [townName, setTownName] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [addressLine3, setAddressLine3] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -29,19 +35,26 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       setError("ログイン情報を確認できません。LINEログイン後にもう一度お試しください。");
       return;
     }
-    if (!fullName.trim() || !townCode.trim()) {
-      setError("お名前と招待コードを入力してください。");
+    if (!fullName.trim() || !townName.trim() || !postalCode.trim() || !addressLine2.trim()) {
+      setError("町内会名、郵便番号、住所２、お名前を入力してください。");
       return;
     }
 
     setSubmitting(true);
     try {
-      const { data: town, error: townError } = await supabase
+      const normalizedTownName = normalizeText(townName);
+      const normalizedPostalCode = normalizePostalCode(postalCode);
+      const normalizedAddressLine2 = normalizeText(addressLine2);
+      const normalizedAddressLine3 = normalizeText(addressLine3);
+
+      const { data: towns, error: townError } = await supabase
         .from("neighborhoods")
         .select("id, name")
-        .eq("invite_token", townCode.trim())
-        .single();
-      if (townError || !town) throw new Error("招待コードに一致する町内会が見つかりません。");
+        .limit(1000);
+      if (townError) throw townError;
+
+      const town = towns?.find((item: any) => normalizeText(item.name) === normalizedTownName);
+      if (!town) throw new Error("町内会名に一致する町内会が見つかりません。名称を確認してください。");
 
       const normalizedInputName = normalizeName(fullName);
       const { data: existingRosters, error: rosterLookupError } = await supabase
@@ -52,11 +65,19 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       if (rosterLookupError) throw rosterLookupError;
 
       const matchedRoster = existingRosters?.find((roster: any) => {
-        return [
+        const nameMatched = [
           rosterPrimaryName(roster),
           roster.family_name_1,
           roster.family_name_2,
         ].some((name) => normalizeName(name) === normalizedInputName);
+
+        if (!nameMatched) return false;
+        if (normalizePostalCode(rosterPostalCode(roster)) !== normalizedPostalCode) return false;
+        if (normalizeText(rosterAddressLine2(roster)) !== normalizedAddressLine2) return false;
+        const normalizedRosterAddressLine3 = normalizeText(rosterAddressLine3(roster));
+        if ((normalizedAddressLine3 || normalizedRosterAddressLine3) && normalizedRosterAddressLine3 !== normalizedAddressLine3) return false;
+
+        return true;
       });
 
       if (matchedRoster) {
@@ -117,18 +138,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         return;
       }
 
-      const { error: rosterError } = await supabase.from("resident_rosters").insert({
-        neighborhood_id: town.id,
-        full_name: fullName.trim(),
-        address: address.trim() || null,
-        phone: phone.trim() || null,
-        user_auth_id: sessionUser.id,
-        line_display_name: sessionUser?.user_metadata?.name || null,
-        status: "active",
-      });
-      if (rosterError) throw rosterError;
-
-      onComplete?.();
+      throw new Error("入力内容に一致する会員名簿が見つかりません。町内会名、郵便番号、住所２、住所３、お名前を確認してください。");
     } catch (err: any) {
       setError(err.message || "会員登録に失敗しました。");
     } finally {
@@ -148,23 +158,28 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           {error && <div className="form-alert"><i className="fas fa-circle-exclamation" /> {error}</div>}
 
           <label>
+            <span>町内会名</span>
+            <input value={townName} onChange={(e) => setTownName(e.target.value)} placeholder="例：東京町内会" required />
+          </label>
+
+          <label>
+            <span>郵便番号</span>
+            <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} placeholder="例：1000001" inputMode="numeric" required />
+          </label>
+
+          <label>
+            <span>住所２</span>
+            <input value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="例：1丁目2-3" required />
+          </label>
+
+          <label>
+            <span>住所３</span>
+            <input value={addressLine3} onChange={(e) => setAddressLine3(e.target.value)} placeholder="建物名・部屋番号など（あれば）" />
+          </label>
+
+          <label>
             <span>お名前</span>
             <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="例：山田 花子" required />
-          </label>
-
-          <label>
-            <span>招待コード</span>
-            <input value={townCode} onChange={(e) => setTownCode(e.target.value)} placeholder="役員から案内されたコード" required />
-          </label>
-
-          <label>
-            <span>住所・班など</span>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="例：1区3班" />
-          </label>
-
-          <label>
-            <span>電話番号</span>
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="任意" />
           </label>
 
           <button type="submit" className="el-primary-action" disabled={submitting}>
