@@ -2,7 +2,7 @@
 
 作成日: 2026-07-06  
 対象ソース: `qoin-inc/qoin` `main` 相当の `C:\Users\info\.gemini\antgravity`  
-位置づけ: `docs/system_architecture_by_feature.md` の追加確認資料
+位置づけ: `docs/architecture/system_architecture_by_feature.md` の追加確認資料
 
 ## 1. 確認方針
 

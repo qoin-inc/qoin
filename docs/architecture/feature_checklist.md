@@ -2,7 +2,7 @@
 
 作成日: 2026-07-06  
 対象: `C:\Users\info\.gemini\antgravity`  
-参照元: `docs/system_architecture_by_feature.md`、主要ソースコード
+参照元: `docs/architecture/system_architecture_by_feature.md`、主要ソースコード
 
 ## 判定凡例
 

@@ -884,7 +884,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       const isMissingSchema = message.includes("assembly_categories") || message.includes("assembly_budgets") || message.includes("assembly_settlements") || message.includes("schema cache");
       setAssemblyData({ categories: [], budgets: [], settlements: [] });
       setAssemblyBudgetDrafts({});
-      setAssemblyMessage(isMissingSchema ? "総会会計DBが未作成です。docs/assembly_accounting_columns_2026-07-09.sql をSupabase SQL Editorで実行してください。" : error?.message || "総会会計データを取得できませんでした。");
+      setAssemblyMessage(isMissingSchema ? "総会会計DBが未作成です。docs/sql/assembly_accounting_columns_2026-07-09.sql をSupabase SQL Editorで実行してください。" : error?.message || "総会会計データを取得できませんでした。");
     } finally {
       setAssemblyBusy(false);
     }
@@ -1451,7 +1451,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             if (result.reason === "LINE channel access token is not configured") {
               notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINEチャネル未設定のため通知は未送信です。`;
             } else if (result.reason === "LINE user ID columns are not configured") {
-              notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE送信用IDの保存カラムが未設定です。docs/line_push_user_id_columns_2026-07-10.sql を実行してください。`;
+              notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE送信用IDの保存カラムが未設定です。docs/sql/line_push_user_id_columns_2026-07-10.sql を実行してください。`;
             } else {
               notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE送信先IDが未登録です。会員が一度LINEから会員画面を開くと送信可能になります。`;
             }
@@ -1726,7 +1726,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             if (result.reason === "LINE channel access token is not configured") {
               lineNotice = `LINEチャネルアクセストークン未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。会員画面の回覧板には表示されています。`;
             } else if (result.reason === "LINE user ID columns are not configured") {
-              lineNotice = `LINE送信用IDの保存カラムが未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。docs/line_push_user_id_columns_2026-07-10.sql を実行してください。`;
+              lineNotice = `LINE送信用IDの保存カラムが未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。docs/sql/line_push_user_id_columns_2026-07-10.sql を実行してください。`;
             } else {
               lineNotice = `LINE送信先IDが未登録のため、${editingPublishId ? "更新" : "保存"}のみ行いました。会員が一度LINEから会員画面を開くと送信可能になります。`;
             }
@@ -1755,7 +1755,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       const message = String(error?.message || "");
       setPublishMessage(
         message.includes("check constraint") || message.includes("violates")
-          ? "発信種別のDB制約を更新してください。docs/publish_feature_columns_2026-07-08.sql をSupabase SQL Editorで実行すると保存できます。"
+          ? "発信種別のDB制約を更新してください。docs/sql/publish_feature_columns_2026-07-08.sql をSupabase SQL Editorで実行すると保存できます。"
           : error?.message || "発信内容の保存に失敗しました。",
       );
     } finally {
@@ -1960,7 +1960,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         .eq("neighborhood_id", townId)
         .in("category_id", targetCategoryIds);
       if (settlementUpdate.error) {
-        setAssemblyMessage("科目削除前に docs/assembly_accounting_category_delete_set_null_2026-07-09.sql をSupabase SQL Editorで実行してください。決算明細を未設定項目に移せるようにします。");
+        setAssemblyMessage("科目削除前に docs/sql/assembly_accounting_category_delete_set_null_2026-07-09.sql をSupabase SQL Editorで実行してください。決算明細を未設定項目に移せるようにします。");
         setAssemblyBusy(false);
         return;
       }
