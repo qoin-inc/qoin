@@ -171,14 +171,14 @@ button { cursor: pointer; border: 0; }
 .form-alert.success { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
 .el-danger-action { width: 100%; min-height: 50px; margin-top: 16px; border: 1px solid #fecaca; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #dc2626; color: #fff; font-weight: 900; box-shadow: 0 8px 18px rgba(220,38,38,.18); }
 .el-danger-action:disabled { opacity: .6; cursor: not-allowed; }
-.el-bottom-nav { flex: 0 0 auto; height: 82px; padding: 8px 6px 14px; background: #fff; border-top: 1px solid var(--border); display: grid; box-shadow: 0 -8px 18px rgba(17,24,39,.06); }
+.el-bottom-nav { flex: 0 0 auto; height: 96px; padding: 10px 8px 16px; background: #fff; border-top: 1px solid var(--border); display: grid; box-shadow: 0 -8px 18px rgba(17,24,39,.06); }
 .el-bottom-nav.is-main { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.el-bottom-nav.is-sub { grid-auto-flow: column; grid-auto-columns: minmax(74px, 1fr); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.el-bottom-nav.is-sub { grid-auto-flow: column; grid-auto-columns: minmax(92px, 25%); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
 .el-bottom-nav.is-sub::-webkit-scrollbar { display: none; }
-.el-bottom-nav button { min-width: 0; border: 0; background: transparent; color: #9ca3af; display: grid; place-items: center; gap: 4px; font-size: 11px; font-weight: 900; white-space: nowrap; }
-.el-bottom-nav.is-sub button { min-width: 74px; }
+.el-bottom-nav button { min-width: 0; border: 0; background: transparent; color: #9ca3af; display: grid; place-items: center; gap: 6px; font-size: 12px; line-height: 1.2; font-weight: 900; white-space: nowrap; touch-action: manipulation; }
+.el-bottom-nav.is-sub button { min-width: 92px; }
 .el-bottom-nav.is-sub button.is-menu { color: #64748b; }
-.el-bottom-nav i { font-size: 18px; }
+.el-bottom-nav i { font-size: 22px; }
 .el-bottom-nav button.active { color: var(--qoin-main-dark); }
 .el-bottom-nav.is-sub button.active { color: #ea580c; }
 
@@ -3857,7 +3857,7 @@ button { cursor: pointer; border: 0; }
   }
 
   .el-bottom-nav button {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .admin-fee-actions {
