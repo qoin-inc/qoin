@@ -35,6 +35,8 @@ type Circular = {
 };
 
 type BoardFilter = "all" | "circular" | "notice" | "event";
+type ResidentTab = "board" | "payment" | "live" | "settings";
+type ViewMode = "cards" | "calendar";
 
 type ReplyDraft = {
   adults: string;
@@ -131,13 +133,19 @@ type FacilityReservationDraft = {
 type LiveScreen = "live" | "facility";
 
 const tabs = [
-  { id: "home", label: "ホーム", icon: "fa-home" },
-  { id: "notice", label: "掲示板", icon: "fa-bullhorn" },
-  { id: "event", label: "イベント", icon: "fa-calendar-days" },
+  { id: "board", label: "回覧板", icon: "fa-clipboard-list" },
+  { id: "payment", label: "会費", icon: "fa-yen-sign" },
   { id: "live", label: "Live", icon: "fa-video" },
-  { id: "payment", label: "会費", icon: "fa-credit-card" },
-  { id: "profile", label: "設定", icon: "fa-user" },
-] as const;
+  { id: "settings", label: "設定", icon: "fa-gear" },
+] satisfies { id: ResidentTab; label: string; icon: string }[];
+
+const normalizeResidentTab = (tab?: string | null, openTargetId?: string | null): ResidentTab => {
+  if (openTargetId) return "board";
+  if (tab === "payment" || tab === "fee") return "payment";
+  if (tab === "live" || tab === "facility") return "live";
+  if (tab === "settings" || tab === "profile") return "settings";
+  return "board";
+};
 
 const yen = (value: number) => `¥${Math.round(value || 0).toLocaleString()}`;
 const getFeeYear = (fee: FeeRecord) => Number(fee.fiscal_year ?? fee.year ?? new Date().getFullYear());
@@ -284,7 +292,7 @@ const createReplyDraft = (name = "", circular?: Circular | null): ReplyDraft => 
 });
 
 export default function ResidentView({ townId, townName, residentName, userId, openTargetId, initialTab }: ResidentViewProps) {
-  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]["id"]>((initialTab as any) || (openTargetId ? "notice" : "home"));
+  const [activeTab, setActiveTab] = useState<ResidentTab>(() => normalizeResidentTab(initialTab, openTargetId));
   const [circulars, setCirculars] = useState<Circular[]>([]);
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -302,6 +310,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
   const [replyFile, setReplyFile] = useState<File | null>(null);
   const [replyBusy, setReplyBusy] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
+  const [boardViewMode, setBoardViewMode] = useState<ViewMode>("cards");
   const [liveReplyDraft, setLiveReplyDraft] = useState<LiveReplyDraft>({ sessionId: "", participantCount: "1" });
   const [facilityReservationDraft, setFacilityReservationDraft] = useState<FacilityReservationDraft>({
     facilityId: "",
@@ -313,6 +322,9 @@ export default function ResidentView({ townId, townName, residentName, userId, o
   });
   const [liveMessage, setLiveMessage] = useState("");
   const [activeLiveScreen, setActiveLiveScreen] = useState<LiveScreen>("live");
+  const [liveViewMode, setLiveViewMode] = useState<ViewMode>("calendar");
+  const [withdrawalBusy, setWithdrawalBusy] = useState(false);
+  const [withdrawalMessage, setWithdrawalMessage] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -438,7 +450,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
   }, [residentName, townId, userId]);
 
   const boardCirculars = circulars.filter((item) => item.category !== "assembly");
-  const latest = boardCirculars.slice(0, 3);
   const eventItems = circulars.filter((item) => item.category === "event");
   const assemblyItems = circulars.filter((item) => item.category === "assembly");
   const boardItems = boardCirculars.filter((item) => {
@@ -776,6 +787,42 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     }
   };
 
+  const handleWithdrawalRequest = async () => {
+    setWithdrawalMessage("");
+    if (!residentRosterId) {
+      setWithdrawalMessage("会員名簿を確認中です。少し待ってからもう一度お試しください。");
+      return;
+    }
+
+    const confirmed = window.confirm("退会申請を送信します。役員が承認すると、この町内会・自治会ではel-townを利用できなくなります。よろしいですか？");
+    if (!confirmed) return;
+
+    setWithdrawalBusy(true);
+    try {
+      let result = await supabase
+        .from("resident_rosters")
+        .update({
+          withdrawal_status: "requested",
+          withdrawal_reply_message: `${displayName}さんから退会申請が送信されました。`,
+        })
+        .eq("id", residentRosterId);
+
+      if (result.error && String(result.error.message || "").includes("withdrawal_reply_message")) {
+        result = await supabase
+          .from("resident_rosters")
+          .update({ withdrawal_status: "requested" })
+          .eq("id", residentRosterId);
+      }
+
+      if (result.error) throw result.error;
+      setWithdrawalMessage("退会申請を送信しました。役員の承認をお待ちください。");
+    } catch (error: any) {
+      setWithdrawalMessage(error?.message || "退会申請を送信できませんでした。");
+    } finally {
+      setWithdrawalBusy(false);
+    }
+  };
+
   const handleEventReply = async () => {
     if (!selectedCircular) return;
     const adults = Math.max(Number(replyDraft.adults || 0), 0);
@@ -972,54 +1019,16 @@ export default function ResidentView({ townId, townName, residentName, userId, o
       </header>
 
       <main className="el-scroll-area">
-        {activeTab === "home" && (
-          <div className="el-stack">
-            <section className="el-hero-panel">
-              <div>
-                <p className="el-kicker">LINEで使える町内会アプリ</p>
-                <h2>今日の確認</h2>
-                <p>未読の電子掲示板、イベント、総会通知、会費状況をここから確認できます。</p>
-              </div>
-              <div className="el-count-badge">
-                <strong>{unreadCount}</strong>
-                <span>未読</span>
-              </div>
-            </section>
-
-            <section>
-              <div className="el-section-title">
-                <h2>新着電子掲示板</h2>
-                <button onClick={() => setActiveTab("notice")}>すべて</button>
-              </div>
-              {loading ? (
-                <div className="el-empty"><i className="fas fa-spinner fa-spin" /> 読み込み中...</div>
-              ) : latest.length > 0 ? (
-                <div className="el-list">
-                  {latest.map((item) => (
-                    <button key={item.id} className="el-list-item" onClick={() => openCircular(item)}>
-                      <span className="el-date">{formatDate(item)}</span>
-                      <strong>{item.title}</strong>
-                      <small>{bodyText(item)}</small>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="el-empty">現在表示できる回覧板はありません。</div>
-              )}
-            </section>
-          </div>
-        )}
-
-        {activeTab === "notice" && (
+        {activeTab === "board" && (
           <section className="el-stack">
             <div className="el-board-title">
-              <h2>{placeName} 電子掲示板</h2>
-              <small>役員からの発信</small>
+              <h2>{placeName} 回覧板</h2>
+              <small>未読 {unreadCount} 件</small>
             </div>
             <div className="el-board-filters" aria-label="掲示板タグ">
               {[
-                ["all", "全て", "fa-house"],
-                ["circular", "回覧板", "fa-clipboard-list"],
+                ["all", "全て", "fa-layer-group"],
+                ["circular", "電子回覧板", "fa-clipboard-list"],
                 ["notice", "連絡", "fa-circle-info"],
                 ["event", "イベント", "fa-calendar-days"],
               ].map(([id, label, icon]) => (
@@ -1029,67 +1038,65 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                 </button>
               ))}
             </div>
-            <div className="el-board-feed">
-              {boardItems.map((item) => {
-                const attachments = parseAttachmentList(item);
-                return (
-                  <article key={item.id} className={`el-board-card ${item.category || "circular"}`}>
-                    <div className="el-board-meta">
-                      <span><i className={`fas ${categoryIcon(item)}`} /> {authorName(item)}</span>
-                      <strong>{formatDate(item)}配信</strong>
-                    </div>
-                    <button type="button" onClick={() => openCircular(item)}>
-                      <span className="el-board-tag">{categoryLabel(item)}</span>
-                      <h3>{item.title} {attachments.length > 0 && <i className="fas fa-paperclip" />}</h3>
-                      <p>{bodyText(item)}</p>
-                      <em>詳細を確認する <i className="fas fa-chevron-right" /></em>
-                    </button>
-                  </article>
-                );
-              })}
-              {!loading && boardItems.length === 0 && <div className="el-empty">表示できる発信はまだありません。</div>}
-            </div>
-          </section>
-        )}
 
-        {activeTab === "event" && (
-          <section className="el-stack">
-            <div className="el-section-title">
-              <h2>イベント</h2>
-              <span className="el-date">{monthFormatter.format(calendarMonth)}</span>
-            </div>
-            <div className="el-calendar">
-              <div className="el-calendar-tools">
-                <button type="button" onClick={() => shiftCalendarMonth(-1)} aria-label="前月"><i className="fas fa-chevron-left" /></button>
-                <strong>{monthFormatter.format(calendarMonth)}</strong>
-                <button type="button" onClick={() => shiftCalendarMonth(1)} aria-label="翌月"><i className="fas fa-chevron-right" /></button>
-              </div>
-              <div className="el-calendar-weekdays">
-                {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
-              </div>
-              <div className="el-calendar-grid">
-                {calendarDays.map((day) => (
-                  <div key={day.key} className={day.inMonth ? "" : "muted"}>
-                    <span>{day.date.getDate()}</span>
-                    {day.events.slice(0, 2).map((item) => (
-                      <button key={item.id} type="button" onClick={() => openCircular(item)}>
-                        {item.event_time ? `${item.event_time} ` : ""}{item.title}
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="el-list">
-              {eventItems.map((item) => (
-                <button key={item.id} className="el-list-item event" onClick={() => openCircular(item)}>
-                  <span className="el-date">{formatDate(item)}</span>
-                  <strong>{item.title}</strong>
-                  <small>{item.event_time ? `${item.event_time} / ${bodyText(item)}` : bodyText(item)}</small>
+            {boardFilter === "event" && (
+              <div className="el-view-switch" aria-label="イベント表示切替">
+                <button type="button" className={boardViewMode === "cards" ? "active" : ""} onClick={() => setBoardViewMode("cards")}>
+                  <i className="fas fa-list" />
+                  <span>カード</span>
                 </button>
-              ))}
-              {!loading && eventItems.length === 0 && <div className="el-empty">参加返信できるイベントはまだありません。</div>}
-            </div>
+                <button type="button" className={boardViewMode === "calendar" ? "active" : ""} onClick={() => setBoardViewMode("calendar")}>
+                  <i className="fas fa-calendar-days" />
+                  <span>カレンダー</span>
+                </button>
+              </div>
+            )}
+
+            {boardFilter === "event" && boardViewMode === "calendar" ? (
+              <div className="el-calendar">
+                <div className="el-calendar-tools">
+                  <button type="button" onClick={() => shiftCalendarMonth(-1)} aria-label="前月"><i className="fas fa-chevron-left" /></button>
+                  <strong>{monthFormatter.format(calendarMonth)}</strong>
+                  <button type="button" onClick={() => shiftCalendarMonth(1)} aria-label="翌月"><i className="fas fa-chevron-right" /></button>
+                </div>
+                <div className="el-calendar-weekdays">
+                  {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
+                </div>
+                <div className="el-calendar-grid">
+                  {calendarDays.map((day) => (
+                    <div key={day.key} className={day.inMonth ? "" : "muted"}>
+                      <span>{day.date.getDate()}</span>
+                      {day.events.slice(0, 2).map((item) => (
+                        <button key={item.id} type="button" onClick={() => openCircular(item)}>
+                          {item.event_time ? `${item.event_time} ` : ""}{item.title}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="el-board-feed">
+                {boardItems.map((item) => {
+                  const attachments = parseAttachmentList(item);
+                  return (
+                    <article key={item.id} className={`el-board-card ${item.category || "circular"}`}>
+                      <div className="el-board-meta">
+                        <span><i className={`fas ${categoryIcon(item)}`} /> {authorName(item)}</span>
+                        <strong>{formatDate(item)}配信</strong>
+                      </div>
+                      <button type="button" onClick={() => openCircular(item)}>
+                        <span className="el-board-tag">{categoryLabel(item)}</span>
+                        <h3>{item.title} {attachments.length > 0 && <i className="fas fa-paperclip" />}</h3>
+                        <p>{bodyText(item)}</p>
+                        <em>詳細を確認する <i className="fas fa-chevron-right" /></em>
+                      </button>
+                    </article>
+                  );
+                })}
+                {!loading && boardItems.length === 0 && <div className="el-empty">表示できる発信はまだありません。</div>}
+              </div>
+            )}
           </section>
         )}
 
@@ -1103,7 +1110,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
             <div className="el-live-switch" aria-label="Live画面切替">
               <button type="button" className={activeLiveScreen === "live" ? "active" : ""} onClick={() => setActiveLiveScreen("live")}>
                 <i className="fas fa-video" />
-                <span>Web会議</span>
+                <span>Live</span>
               </button>
               <button type="button" className={activeLiveScreen === "facility" ? "active" : ""} onClick={() => setActiveLiveScreen("facility")}>
                 <i className="fas fa-building" />
@@ -1111,32 +1118,45 @@ export default function ResidentView({ townId, townName, residentName, userId, o
               </button>
             </div>
 
-            <div className="el-calendar">
-              <div className="el-calendar-tools">
-                <button type="button" onClick={() => shiftCalendarMonth(-1)} aria-label="前月"><i className="fas fa-chevron-left" /></button>
-                <strong>{monthFormatter.format(calendarMonth)}</strong>
-                <button type="button" onClick={() => shiftCalendarMonth(1)} aria-label="翌月"><i className="fas fa-chevron-right" /></button>
-              </div>
-              <div className="el-calendar-weekdays">
-                {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
-              </div>
-              <div className="el-calendar-grid live">
-                {liveCalendarDays.map((day) => (
-                  <div key={day.key} className={day.inMonth ? "" : "muted"}>
-                    <span>{day.date.getDate()}</span>
-                    {day.entries.slice(0, 3).map((entry) => (
-                      <button key={entry.id} type="button" className={entry.kind} onClick={entry.onSelect}>
-                        {entry.label}
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </div>
+            <div className="el-view-switch" aria-label="Live表示切替">
+              <button type="button" className={liveViewMode === "calendar" ? "active" : ""} onClick={() => setLiveViewMode("calendar")}>
+                <i className="fas fa-calendar-days" />
+                <span>カレンダー</span>
+              </button>
+              <button type="button" className={liveViewMode === "cards" ? "active" : ""} onClick={() => setLiveViewMode("cards")}>
+                <i className="fas fa-list" />
+                <span>カード</span>
+              </button>
             </div>
+
+            {liveViewMode === "calendar" && (
+              <div className="el-calendar">
+                <div className="el-calendar-tools">
+                  <button type="button" onClick={() => shiftCalendarMonth(-1)} aria-label="前月"><i className="fas fa-chevron-left" /></button>
+                  <strong>{monthFormatter.format(calendarMonth)}</strong>
+                  <button type="button" onClick={() => shiftCalendarMonth(1)} aria-label="翌月"><i className="fas fa-chevron-right" /></button>
+                </div>
+                <div className="el-calendar-weekdays">
+                  {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
+                </div>
+                <div className="el-calendar-grid live">
+                  {liveCalendarDays.map((day) => (
+                    <div key={day.key} className={day.inMonth ? "" : "muted"}>
+                      <span>{day.date.getDate()}</span>
+                      {day.entries.slice(0, 3).map((entry) => (
+                        <button key={entry.id} type="button" className={entry.kind} onClick={entry.onSelect}>
+                          {entry.label}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {liveMessage && <div className={`form-alert ${liveMessage.includes("送信しました") ? "success" : ""}`}>{liveMessage}</div>}
 
-            {activeLiveScreen === "live" && (
+            {activeLiveScreen === "live" && liveViewMode === "cards" && (
             <section className="el-reply-panel">
               <h3>Web会議開催案内</h3>
               <div className="el-list">
@@ -1183,7 +1203,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
             </section>
             )}
 
-            {activeLiveScreen === "facility" && (
+            {activeLiveScreen === "facility" && liveViewMode === "cards" && (
             <section className="el-reply-panel">
               <h3>施設予約</h3>
               <div className="el-facility-list">
@@ -1252,7 +1272,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
             </section>
             )}
 
-            {activeLiveScreen === "live" && (
+            {activeLiveScreen === "live" && liveViewMode === "cards" && (
             <section className="el-reply-panel">
               <h3>総会通知</h3>
               <div className="el-list">
@@ -1272,6 +1292,12 @@ export default function ResidentView({ townId, townName, residentName, userId, o
 
         {activeTab === "payment" && (
           <section className="el-stack">
+            <div className="el-subtabs" aria-label="会費メニュー">
+              <button type="button" className="active">
+                <i className="fas fa-yen-sign" />
+                <span>会費</span>
+              </button>
+            </div>
             {feeLoading ? (
               <div className="el-empty"><i className="fas fa-spinner fa-spin" /> 会費情報を確認中...</div>
             ) : latestFee ? (
@@ -1314,12 +1340,29 @@ export default function ResidentView({ townId, townName, residentName, userId, o
           </section>
         )}
 
-        {activeTab === "profile" && (
+        {activeTab === "settings" && (
           <section className="el-stack">
             <div className="el-status-card">
               <p className="el-kicker">登録情報</p>
               <h2>{displayName}</h2>
               <p>{placeName} に連携済みです。</p>
+            </div>
+
+            <div className="el-status-card danger">
+              <p className="el-kicker">退会申請</p>
+              <h2>退会を申請する</h2>
+              <p>申請後、役員が承認すると同じ町内会・自治会ではel-townを利用できなくなります。</p>
+              <button type="button" className="el-danger-action" onClick={handleWithdrawalRequest} disabled={withdrawalBusy}>
+                <i className={`fas ${withdrawalBusy ? "fa-spinner fa-spin" : "fa-right-from-bracket"}`} />
+                退会申請を送信
+              </button>
+              {withdrawalMessage && <div className={`form-alert ${withdrawalMessage.includes("送信しました") ? "success" : ""}`}>{withdrawalMessage}</div>}
+            </div>
+
+            <div className="el-status-card">
+              <p className="el-kicker">ナビゲーション</p>
+              <h2>トップメニュー</h2>
+              <p>役員画面や操作説明を開く場合はこちらから戻れます。</p>
               <Link href="/" className="el-secondary-action">トップへ戻る</Link>
             </div>
           </section>
