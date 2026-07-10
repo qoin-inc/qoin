@@ -16,6 +16,12 @@ const categoryLabel = (category?: string) => {
 
 const isLineUserId = (value?: string | null) => /^U[0-9a-f]{32}$/i.test(String(value || ""));
 
+const normalizeLineUserId = (value?: string | null) => {
+  const raw = String(value || "").trim();
+  if (!isLineUserId(raw)) return "";
+  return `U${raw.slice(1)}`;
+};
+
 const maskLineUserId = (value: string) => `${value.slice(0, 5)}...${value.slice(-4)}`;
 
 const lineSafeImageUrl = (value?: string | null) => {
@@ -174,7 +180,7 @@ export async function POST(request: NextRequest) {
       row.user_auth_id,
       row.family_user_auth_id_1,
       row.family_user_auth_id_2,
-    ]).filter(isLineUserId),
+    ]).map(normalizeLineUserId).filter(Boolean),
   ));
 
   if (!lineAccessToken) {

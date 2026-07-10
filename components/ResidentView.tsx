@@ -193,6 +193,12 @@ const parseAttachmentList = (item: Circular) => {
   });
 };
 
+const isImageAttachment = (attachment: any) => {
+  const type = String(attachment?.type || "");
+  const url = String(attachment?.url || "");
+  return type.startsWith("image/") || /\.(png|jpe?g|gif|webp)(?:[?#]|$)/i.test(url);
+};
+
 const categoryLabel = (item: Circular) => {
   if (item.category === "event") return "イベント";
   if (item.category === "assembly") return "総会通知";
@@ -1048,6 +1054,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
               <div className="el-board-feed">
                 {boardItems.map((item) => {
                   const attachments = parseAttachmentList(item);
+                  const previewImage = attachments.find(isImageAttachment);
                   return (
                     <article key={item.id} className={`el-board-card ${item.category || "circular"}`}>
                       <div className="el-board-meta">
@@ -1055,6 +1062,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                         <strong>{formatDate(item)}配信</strong>
                       </div>
                       <button type="button" onClick={() => openCircular(item)}>
+                        {previewImage && <img className="el-board-thumb" src={previewImage.url} alt={previewImage.name || item.title || "添付画像"} />}
                         <span className="el-board-tag">{categoryLabel(item)}</span>
                         <h3>{item.title} {attachments.length > 0 && <i className="fas fa-paperclip" />}</h3>
                         <p>{bodyText(item)}</p>
