@@ -1025,32 +1025,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
               <h2>{placeName} 回覧板</h2>
               <small>未読 {unreadCount} 件</small>
             </div>
-            <div className="el-board-filters" aria-label="掲示板タグ">
-              {[
-                ["all", "全て", "fa-layer-group"],
-                ["circular", "電子回覧板", "fa-clipboard-list"],
-                ["notice", "連絡", "fa-circle-info"],
-                ["event", "イベント", "fa-calendar-days"],
-              ].map(([id, label, icon]) => (
-                <button key={id} type="button" className={boardFilter === id ? "active" : ""} onClick={() => setBoardFilter(id as BoardFilter)}>
-                  <i className={`fas ${icon}`} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-
-            {boardFilter === "event" && (
-              <div className="el-view-switch" aria-label="イベント表示切替">
-                <button type="button" className={boardViewMode === "cards" ? "active" : ""} onClick={() => setBoardViewMode("cards")}>
-                  <i className="fas fa-list" />
-                  <span>カード</span>
-                </button>
-                <button type="button" className={boardViewMode === "calendar" ? "active" : ""} onClick={() => setBoardViewMode("calendar")}>
-                  <i className="fas fa-calendar-days" />
-                  <span>カレンダー</span>
-                </button>
-              </div>
-            )}
 
             {boardFilter === "event" && boardViewMode === "calendar" ? (
               <div className="el-calendar">
@@ -1105,28 +1079,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
             <div className="el-section-title">
               <h2>{activeLiveScreen === "facility" ? "施設予約" : "Live"}</h2>
               <span className="el-date">{monthFormatter.format(calendarMonth)}</span>
-            </div>
-
-            <div className="el-live-switch" aria-label="Live画面切替">
-              <button type="button" className={activeLiveScreen === "live" ? "active" : ""} onClick={() => setActiveLiveScreen("live")}>
-                <i className="fas fa-video" />
-                <span>Live</span>
-              </button>
-              <button type="button" className={activeLiveScreen === "facility" ? "active" : ""} onClick={() => setActiveLiveScreen("facility")}>
-                <i className="fas fa-building" />
-                <span>施設予約</span>
-              </button>
-            </div>
-
-            <div className="el-view-switch" aria-label="Live表示切替">
-              <button type="button" className={liveViewMode === "calendar" ? "active" : ""} onClick={() => setLiveViewMode("calendar")}>
-                <i className="fas fa-calendar-days" />
-                <span>カレンダー</span>
-              </button>
-              <button type="button" className={liveViewMode === "cards" ? "active" : ""} onClick={() => setLiveViewMode("cards")}>
-                <i className="fas fa-list" />
-                <span>カード</span>
-              </button>
             </div>
 
             {liveViewMode === "calendar" && (
@@ -1292,12 +1244,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
 
         {activeTab === "payment" && (
           <section className="el-stack">
-            <div className="el-subtabs" aria-label="会費メニュー">
-              <button type="button" className="active">
-                <i className="fas fa-yen-sign" />
-                <span>会費</span>
-              </button>
-            </div>
             {feeLoading ? (
               <div className="el-empty"><i className="fas fa-spinner fa-spin" /> 会費情報を確認中...</div>
             ) : latestFee ? (
@@ -1368,6 +1314,81 @@ export default function ResidentView({ townId, townName, residentName, userId, o
           </section>
         )}
       </main>
+
+      <nav className="el-secondary-nav" aria-label="住民サブメニュー">
+        {activeTab === "board" && (
+          <>
+            <div className="el-secondary-nav-row four">
+              {[
+                ["all", "全て", "fa-layer-group"],
+                ["circular", "電子回覧板", "fa-clipboard-list"],
+                ["notice", "連絡", "fa-circle-info"],
+                ["event", "イベント", "fa-calendar-days"],
+              ].map(([id, label, icon]) => (
+                <button key={id} type="button" className={boardFilter === id ? "active" : ""} onClick={() => setBoardFilter(id as BoardFilter)}>
+                  <i className={`fas ${icon}`} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+            {boardFilter === "event" && (
+              <div className="el-secondary-nav-row two compact">
+                <button type="button" className={boardViewMode === "cards" ? "active" : ""} onClick={() => setBoardViewMode("cards")}>
+                  <i className="fas fa-list" />
+                  <span>カード</span>
+                </button>
+                <button type="button" className={boardViewMode === "calendar" ? "active" : ""} onClick={() => setBoardViewMode("calendar")}>
+                  <i className="fas fa-calendar-days" />
+                  <span>カレンダー</span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === "payment" && (
+          <div className="el-secondary-nav-row one compact">
+            <button type="button" className="active">
+              <i className="fas fa-yen-sign" />
+              <span>会費</span>
+            </button>
+          </div>
+        )}
+
+        {activeTab === "live" && (
+          <>
+            <div className="el-secondary-nav-row two">
+              <button type="button" className={activeLiveScreen === "live" ? "active" : ""} onClick={() => setActiveLiveScreen("live")}>
+                <i className="fas fa-video" />
+                <span>Live</span>
+              </button>
+              <button type="button" className={activeLiveScreen === "facility" ? "active" : ""} onClick={() => setActiveLiveScreen("facility")}>
+                <i className="fas fa-building" />
+                <span>施設予約</span>
+              </button>
+            </div>
+            <div className="el-secondary-nav-row two compact">
+              <button type="button" className={liveViewMode === "calendar" ? "active" : ""} onClick={() => setLiveViewMode("calendar")}>
+                <i className="fas fa-calendar-days" />
+                <span>カレンダー</span>
+              </button>
+              <button type="button" className={liveViewMode === "cards" ? "active" : ""} onClick={() => setLiveViewMode("cards")}>
+                <i className="fas fa-list" />
+                <span>カード</span>
+              </button>
+            </div>
+          </>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="el-secondary-nav-row one compact">
+            <button type="button" className="active">
+              <i className="fas fa-right-from-bracket" />
+              <span>退会申請</span>
+            </button>
+          </div>
+        )}
+      </nav>
 
       <nav className="el-bottom-nav" aria-label="住民メニュー">
         {tabs.map((tab) => (
