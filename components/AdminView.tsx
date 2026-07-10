@@ -436,6 +436,15 @@ const parseAttachmentList = (value: any): any[] => {
   return [];
 };
 
+const isImageAttachment = (attachment: any) => {
+  const type = String(attachment?.type || "");
+  const url = String(attachment?.url || "");
+  return type.startsWith("image/") || /\.(png|jpe?g|gif|webp)(?:[?#]|$)/i.test(url);
+};
+
+const firstImageAttachmentUrl = (attachments: any[], fallback?: string | null) =>
+  fallback || attachments.find(isImageAttachment)?.url || "";
+
 const summarizeReplies = (type: WorkItem["type"], replies: any[]) => {
   if (type === "event") {
     const adultTotal = replies.reduce((sum, reply) => sum + Number(reply.adult_count ?? reply.adults ?? 0), 0);
@@ -1694,6 +1703,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       const saved = editingPublishId
         ? await updateRowWithFallback("circulars", editingPublishId, payload, "発信内容を更新できませんでした。")
         : await insertCircularWithFallback(payload);
+      const lineImageUrl = firstImageAttachmentUrl(attachments, saved.image_url || payload.image_url);
       let lineNotice = editingPublishId ? "LINEプッシュ通知は送信していません。" : "電子掲示板へ保存しました。LINEプッシュ通知は送信していません。";
       if (pushEnabled) {
         lineNotice = "LINE通知用リンクとして利用できます。";
@@ -1708,6 +1718,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               category,
               content,
               pushEnabled,
+              imageUrl: lineImageUrl,
             }),
           });
           const result = await response.json().catch(() => ({}));

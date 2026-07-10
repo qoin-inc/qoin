@@ -18,6 +18,100 @@ const isLineUserId = (value?: string | null) => /^U[0-9a-f]{32}$/i.test(String(v
 
 const maskLineUserId = (value: string) => `${value.slice(0, 5)}...${value.slice(-4)}`;
 
+const lineSafeImageUrl = (value?: string | null) => {
+  const url = String(value || "").trim();
+  if (!url) return "";
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return "";
+    if (!/\.(png|jpe?g)$/i.test(parsed.pathname)) return "";
+    return url;
+  } catch {
+    return "";
+  }
+};
+
+const buildLineMessages = (params: {
+  category: string;
+  title: string;
+  content: string;
+  detailUrl: string;
+  imageUrl: string;
+}) => {
+  const label = categoryLabel(params.category);
+  const bodyContents = [
+    {
+      type: "text",
+      text: label,
+      size: "sm",
+      color: "#2e8bc0",
+      weight: "bold",
+    },
+    {
+      type: "text",
+      text: params.title.slice(0, 80),
+      size: "lg",
+      color: "#111827",
+      weight: "bold",
+      wrap: true,
+    },
+    params.content
+      ? {
+          type: "text",
+          text: params.content.slice(0, 280),
+          size: "sm",
+          color: "#4b5563",
+          wrap: true,
+        }
+      : null,
+  ].filter(Boolean);
+  const bubble: Record<string, any> = {
+    type: "bubble",
+    body: {
+      type: "box",
+      layout: "vertical",
+      spacing: "md",
+      contents: bodyContents,
+    },
+    footer: {
+      type: "box",
+      layout: "vertical",
+      spacing: "sm",
+      contents: [
+        {
+          type: "button",
+          style: "primary",
+          color: "#58aede",
+          action: {
+            type: "uri",
+            label: "詳細はこちら",
+            uri: params.detailUrl,
+          },
+        },
+      ],
+    },
+  };
+
+  if (params.imageUrl) {
+    bubble.hero = {
+      type: "image",
+      url: params.imageUrl,
+      size: "full",
+      aspectRatio: "20:13",
+      aspectMode: "cover",
+    };
+  }
+
+  return [
+    {
+      type: "flex",
+      altText: `【${label}】${params.title}`.slice(0, 400),
+      contents: bubble,
+    },
+  ];
+};
+
 const logLinePush = (event: string, detail: Record<string, unknown>) => {
   console.info("[line-push]", event, detail);
 };
@@ -31,6 +125,7 @@ export async function POST(request: NextRequest) {
   const content = String(body.content || "");
   const pushEnabled = body.pushEnabled !== false;
   const targetUrl = body.targetUrl ? String(body.targetUrl) : "";
+  const imageUrl = lineSafeImageUrl(body.imageUrl || body.image_url);
 
   if (!townId) {
     logLinePush("invalid-request", { reason: "townId is required" });
@@ -113,12 +208,7 @@ export async function POST(request: NextRequest) {
 
   const origin = new URL(request.url).origin;
   const detailUrl = targetUrl || (circularId ? `${origin}/resident?open=${encodeURIComponent(String(circularId))}` : `${origin}/resident`);
-  const text = [
-    `【${categoryLabel(category)}】${title}`,
-    content.slice(0, 280),
-    "リッチメニューの「会員の方」から開く回覧板でも確認できます。",
-    detailUrl,
-  ].filter(Boolean).join("\n");
+  const messages = buildLineMessages({ category, title, content, detailUrl, imageUrl });
 
   const results = await Promise.allSettled(targets.map(async (to) => {
     const response = await fetch("https://api.line.me/v2/bot/message/push", {
@@ -129,7 +219,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         to,
-        messages: [{ type: "text", text }],
+        messages,
       }),
     });
     const detail = response.ok ? "" : await response.text().catch(() => "");

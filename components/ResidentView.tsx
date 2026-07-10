@@ -1013,14 +1013,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
 
   return (
     <div className="el-phone-screen">
-      <header className="el-mobile-header">
-        <div>
-          <p className="el-kicker">{placeName}</p>
-          <h1>{displayName}さん</h1>
-        </div>
-        <img src="/assets/logo_icon_stacked.png" alt="el-town" className="el-header-logo" />
-      </header>
-
       <main className={`el-scroll-area ${showViewModeSwitch ? "has-view-switch" : ""}`}>
         {activeTab === "board" && (
           <section className="el-stack">
