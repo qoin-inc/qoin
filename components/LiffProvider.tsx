@@ -15,7 +15,7 @@ const shouldAutoInitializeLiff = () => {
     'open',
   ].some((key) => params.has(key));
 
-  return hasInitialEntryParam || [
+  return isInitialEntryPath || hasInitialEntryParam || [
     'liff.state',
     'liffClientId',
     'liffRedirectUri',

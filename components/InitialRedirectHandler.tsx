@@ -15,6 +15,13 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
 
   useEffect(() => {
     if (!isInitialized) return;
+    if (!initialRedirectTarget) {
+      delete document.documentElement.dataset.initialMenuReady;
+    }
+
+    const revealInitialMenu = () => {
+      document.documentElement.dataset.initialMenuReady = "true";
+    };
 
     const ensureSupabaseSessionFromLineProfile = async () => {
       if (!lineProfile?.userId) return null;
@@ -84,11 +91,14 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
 
           if (await hasLinkedResidentRoster(userId)) {
             router.replace("/resident/");
+            return;
           }
         } catch (error) {
           console.error("Auto login check failed:", error);
         }
       }
+
+      revealInitialMenu();
     };
 
     checkExistingUser();

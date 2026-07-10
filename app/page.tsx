@@ -24,7 +24,8 @@ function getRedirectTarget(searchParams?: PageProps["searchParams"]) {
     // LINE may already pass the value decoded.
   }
 
-  const stateParams = new URLSearchParams(liffState.startsWith("?") ? liffState : `?${liffState}`);
+  const stateQuery = liffState.includes("?") ? liffState.slice(liffState.indexOf("?")) : liffState;
+  const stateParams = new URLSearchParams(stateQuery.startsWith("?") ? stateQuery : `?${stateQuery}`);
   return stateParams.get("redirect") || stateParams.get("goto") || stateParams.get("open");
 }
 
@@ -77,6 +78,16 @@ function InitialMenu() {
   );
 }
 
+function InitialMenuGateStyle() {
+  return (
+    <style
+      dangerouslySetInnerHTML={{
+        __html: 'html:not([data-initial-menu-ready="true"]) .initial-menu-guard{display:none}',
+      }}
+    />
+  );
+}
+
 export default function PortalPage({ searchParams }: PageProps) {
   const redirectTarget = getRedirectTarget(searchParams);
 
@@ -85,7 +96,16 @@ export default function PortalPage({ searchParams }: PageProps) {
       <Suspense fallback={null}>
         <InitialRedirectHandler initialRedirectTarget={redirectTarget} />
       </Suspense>
-      {redirectTarget ? <LoadingScreen /> : <InitialMenu />}
+      {redirectTarget ? (
+        <LoadingScreen />
+      ) : (
+        <>
+          <InitialMenuGateStyle />
+          <div className="initial-menu-guard">
+            <InitialMenu />
+          </div>
+        </>
+      )}
     </>
   );
 }
