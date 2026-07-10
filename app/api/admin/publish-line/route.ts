@@ -18,6 +18,10 @@ const isLineUserId = (value?: string | null) => /^U[0-9a-f]{32}$/i.test(String(v
 
 const maskLineUserId = (value: string) => `${value.slice(0, 5)}...${value.slice(-4)}`;
 
+const logLinePush = (event: string, detail: Record<string, unknown>) => {
+  console.info("[line-push]", event, detail);
+};
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const townId = body.townId;
@@ -29,10 +33,12 @@ export async function POST(request: NextRequest) {
   const targetUrl = body.targetUrl ? String(body.targetUrl) : "";
 
   if (!townId) {
+    logLinePush("invalid-request", { reason: "townId is required" });
     return NextResponse.json({ error: "townId is required" }, { status: 400 });
   }
 
   if (!pushEnabled) {
+    logLinePush("skipped", { townId, category, reason: "LINE push is disabled for this publish item" });
     return NextResponse.json({ skipped: true, reason: "LINE push is disabled for this publish item", targets: 0 });
   }
 
@@ -57,6 +63,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (error) {
+    logLinePush("roster-query-error", { townId, category, message: error.message });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
@@ -76,10 +83,25 @@ export async function POST(request: NextRequest) {
   ));
 
   if (!lineAccessToken) {
+    logLinePush("skipped", {
+      townId,
+      category,
+      reason: "LINE channel access token is not configured",
+      targets: targets.length,
+      linkedAccounts,
+    });
     return NextResponse.json({ skipped: true, reason: "LINE channel access token is not configured", targets: targets.length, linkedAccounts });
   }
 
   if (targets.length === 0) {
+    logLinePush("skipped", {
+      townId,
+      category,
+      reason: missingLineColumns ? "LINE user ID columns are not configured" : "No LINE user IDs are registered",
+      activeRosters: activeRosters.length,
+      linkedAccounts,
+      missingLineColumns,
+    });
     return NextResponse.json({
       skipped: true,
       reason: missingLineColumns ? "LINE user ID columns are not configured" : "No LINE user IDs are registered",
@@ -120,6 +142,18 @@ export async function POST(request: NextRequest) {
     .filter((result): result is PromiseFulfilledResult<{ ok: boolean; status: number; to: string; detail: string }> => result.status === "fulfilled" && !result.value.ok)
     .map((result) => result.value)
     .slice(0, 5);
+  const rejected = results.filter((result) => result.status === "rejected").length;
+
+  logLinePush(failed === 0 && rejected === 0 ? "completed" : "completed-with-errors", {
+    townId,
+    category,
+    targets: targets.length,
+    linkedAccounts,
+    sent,
+    failed,
+    rejected,
+    errors,
+  });
 
   return NextResponse.json({ sent, failed, targets: targets.length, linkedAccounts, errors });
 }
