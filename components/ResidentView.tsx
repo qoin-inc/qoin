@@ -1017,7 +1017,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
           <p className="el-kicker">{placeName}</p>
           <h1>{displayName}さん</h1>
         </div>
-        <img src="/icon_el_town.png" alt="el-town" className="el-header-logo" />
+        <img src="/assets/logo_icon_stacked.png" alt="el-town" className="el-header-logo" />
       </header>
 
       <main className="el-scroll-area">

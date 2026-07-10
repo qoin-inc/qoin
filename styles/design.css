@@ -82,7 +82,7 @@ button { cursor: pointer; border: 0; }
 .el-mobile-header.compact { min-height: 86px; justify-content: flex-start; }
 .el-mobile-header h1 { margin: 3px 0 0; font-size: 22px; line-height: 1.2; font-weight: 900; }
 .el-kicker { margin: 0; color: var(--muted); font-size: 11px; letter-spacing: 0; font-weight: 900; }
-.el-header-logo { width: 48px; height: 48px; object-fit: contain; }
+.el-header-logo { width: 58px; height: 58px; object-fit: contain; }
 .el-icon-button { width: 42px; height: 42px; border: 0; border-radius: 50%; background: var(--qoin-soft); color: var(--qoin-main-dark); }
 .el-scroll-area { flex: 1 1 auto; overflow-y: auto; padding: 18px 16px; }
 .el-stack { display: grid; gap: 16px; }
@@ -171,16 +171,17 @@ button { cursor: pointer; border: 0; }
 .form-alert.success { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
 .el-danger-action { width: 100%; min-height: 50px; margin-top: 16px; border: 1px solid #fecaca; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #dc2626; color: #fff; font-weight: 900; box-shadow: 0 8px 18px rgba(220,38,38,.18); }
 .el-danger-action:disabled { opacity: .6; cursor: not-allowed; }
-.el-bottom-nav { flex: 0 0 auto; height: 96px; padding: 10px 8px 16px; background: #fff; border-top: 1px solid var(--border); display: grid; box-shadow: 0 -8px 18px rgba(17,24,39,.06); }
+.el-bottom-nav { flex: 0 0 auto; height: 104px; padding: 10px 8px 16px; background: #fff; border-top: 1px solid var(--border); display: grid; gap: 6px; box-shadow: 0 -8px 18px rgba(17,24,39,.06); }
 .el-bottom-nav.is-main { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.el-bottom-nav.is-sub { grid-auto-flow: column; grid-auto-columns: minmax(92px, 25%); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.el-bottom-nav.is-sub { grid-auto-flow: column; grid-auto-columns: minmax(0, calc((100% - 24px) / 5)); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
 .el-bottom-nav.is-sub::-webkit-scrollbar { display: none; }
-.el-bottom-nav button { min-width: 0; border: 0; background: transparent; color: #9ca3af; display: grid; place-items: center; gap: 6px; font-size: 12px; line-height: 1.2; font-weight: 900; white-space: nowrap; touch-action: manipulation; }
-.el-bottom-nav.is-sub button { min-width: 92px; }
-.el-bottom-nav.is-sub button.is-menu { color: #64748b; }
+.el-bottom-nav button { min-width: 0; border: 1px solid #e5e7eb; border-radius: 8px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); color: #64748b; display: grid; place-items: center; align-content: center; gap: 6px; font-size: 12px; line-height: 1.2; font-weight: 900; white-space: normal; touch-action: manipulation; box-shadow: inset 0 -3px 0 rgba(15,23,42,.08), 0 4px 10px rgba(17,24,39,.08); }
+.el-bottom-nav.is-sub button { min-width: 0; }
+.el-bottom-nav.is-sub button.is-menu { color: #475569; background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%); }
+.el-bottom-nav button:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(15,23,42,.12); }
 .el-bottom-nav i { font-size: 22px; }
-.el-bottom-nav button.active { color: var(--qoin-main-dark); }
-.el-bottom-nav.is-sub button.active { color: #ea580c; }
+.el-bottom-nav button.active { border-color: var(--qoin-main); background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%); color: var(--qoin-main-dark); box-shadow: inset 0 -4px 0 rgba(46,139,192,.24), 0 8px 16px rgba(46,139,192,.18); transform: translateY(-1px); }
+.el-bottom-nav.is-sub button.active { border-color: var(--qoin-accent); background: linear-gradient(180deg, #fff7ed 0%, #fed7aa 100%); color: #c2410c; box-shadow: inset 0 -4px 0 rgba(194,65,12,.22), 0 8px 16px rgba(242,140,40,.18); }
 
 .admin-dashboard { width: min(1040px, 100%); margin: 0 auto; padding: 0 16px 36px; }
 .admin-hero { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
