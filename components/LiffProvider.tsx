@@ -8,6 +8,8 @@ const shouldAutoInitializeLiff = () => {
   const params = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const isInitialEntryPath = window.location.pathname === '/';
+  const isResidentPath = window.location.pathname.startsWith('/resident');
+  const isPortalPath = window.location.pathname.startsWith('/portal');
 
   const hasInitialEntryParam = isInitialEntryPath && [
     'redirect',
@@ -15,7 +17,7 @@ const shouldAutoInitializeLiff = () => {
     'open',
   ].some((key) => params.has(key));
 
-  return isInitialEntryPath || hasInitialEntryParam || [
+  return isInitialEntryPath || isResidentPath || isPortalPath || hasInitialEntryParam || [
     'liff.state',
     'liffClientId',
     'liffRedirectUri',

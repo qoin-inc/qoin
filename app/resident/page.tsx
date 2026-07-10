@@ -45,7 +45,7 @@ const hasLiffResponseParams = () => {
 };
 
 function ResidentPageContent() {
-  const { isInitialized: liffInitializedProvider, liff } = useLiff();
+  const { isInitialized: liffInitializedProvider, liff, lineProfile } = useLiff();
   const searchParams = useSearchParams();
   const router = useRouter();
   const mode = searchParams?.get('mode');
@@ -213,7 +213,7 @@ function ResidentPageContent() {
 
   const fetchRosterAndTown = async (authUser: any) => {
     const userId = typeof authUser === 'string' ? authUser : authUser?.id;
-    const lineUserId = typeof authUser === 'string' ? '' : lineUserIdFromAuthUser(authUser);
+    const lineUserId = typeof authUser === 'string' ? '' : (lineProfile?.userId || lineUserIdFromAuthUser(authUser));
     if (!userId) {
       setLoading(false);
       return;
@@ -286,6 +286,11 @@ function ResidentPageContent() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!session?.user?.id || !roster?.id || !lineProfile?.userId) return;
+    syncRosterLineUserId(roster, session.user.id, lineProfile.userId);
+  }, [session?.user?.id, roster?.id, lineProfile?.userId]);
 
   const handleLineLogin = async () => {
     setLoginError('');
