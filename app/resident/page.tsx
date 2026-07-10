@@ -9,6 +9,29 @@ import { useSearchParams, useRouter } from 'next/navigation';
 // Direct LIFF import removed; use useLiff hook
 import { useLiff } from '@/components/LiffProvider';
 
+const RESIDENT_AUTO_LOGIN_KEY = 'eltown.resident.autoLoginAt';
+const RESIDENT_AUTO_LOGIN_RETRY_MS = 2 * 60 * 1000;
+
+const hasLiffResponseParams = () => {
+  if (typeof window === 'undefined') return false;
+
+  const params = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+  return [
+    'liff.state',
+    'liffClientId',
+    'liffRedirectUri',
+    'code',
+    'liff.hback',
+  ].some((key) => params.has(key)) || [
+    'access_token',
+    'context_token',
+    'feature_token',
+    'id_token',
+  ].some((key) => hashParams.has(key));
+};
+
 function ResidentPageContent() {
   const { isInitialized: liffInitializedProvider, liff } = useLiff();
   const searchParams = useSearchParams();
@@ -27,6 +50,7 @@ function ResidentPageContent() {
   const [loginError, setLoginError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liffInitialized, setLiffInitialized] = useState(false);
+  const [autoLoginStarted, setAutoLoginStarted] = useState(false);
 
   const safeIsLiffLoggedIn = () => {
     try {
@@ -44,15 +68,32 @@ function ResidentPageContent() {
     }
   };
 
-  const openLiffLogin = () => {
+  const openLiffLogin = (auto = false) => {
     const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
     if (!liffId) {
       setLoginError('LIFF IDが未設定です。管理者に確認してください。');
+      setAutoLoginStarted(false);
+      setLoading(false);
       setIsSubmitting(false);
       return;
     }
 
+    if (auto) setAutoLoginStarted(true);
+    setIsSubmitting(true);
     window.location.href = `https://liff.line.me/${liffId}/?redirect=resident`;
+  };
+
+  const shouldStartAutoLineLogin = () => {
+    if (typeof window === 'undefined') return false;
+    if (searchParams?.get('test_bypass') === '1') return false;
+    if (window.location.hash.includes('error_description')) return false;
+    if (hasLiffResponseParams()) return false;
+
+    const lastStartedAt = Number(window.sessionStorage.getItem(RESIDENT_AUTO_LOGIN_KEY) || 0);
+    if (lastStartedAt && Date.now() - lastStartedAt < RESIDENT_AUTO_LOGIN_RETRY_MS) return false;
+
+    window.sessionStorage.setItem(RESIDENT_AUTO_LOGIN_KEY, String(Date.now()));
+    return true;
   };
 
   useEffect(() => {
@@ -69,6 +110,8 @@ function ResidentPageContent() {
       supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
          if (!existingSession && !isSubmitting) {
             performSupabaseLoginWithLiff();
+         } else if (existingSession) {
+            window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
          }
       });
     }
@@ -93,7 +136,10 @@ function ResidentPageContent() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
+        window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
         fetchRosterAndTown(session.user.id);
+      } else if (shouldStartAutoLineLogin()) {
+        openLiffLogin(true);
       } else {
         setLoading(false);
       }
@@ -104,6 +150,7 @@ function ResidentPageContent() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
+        window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
         fetchRosterAndTown(session.user.id);
       } else {
         setRoster(null);
@@ -164,6 +211,7 @@ function ResidentPageContent() {
     setIsSubmitting(true);
     try {
       const profile = await liff?.getProfile();
+      if (!profile?.userId) throw new Error('LINE profile is unavailable.');
       const email = `${profile.userId}@line.eltown.local`;
       const password = `lineAuth_${profile.userId}_eltown`;
 
@@ -182,10 +230,12 @@ function ResidentPageContent() {
       
       // LIFFの特殊なブラウザ環境でreloadするとURLのパスが消えてトップメニューに戻る不具合があるため、
       // reloadはせずにSupabaseのonAuthStateChangeイベントに状態更新を任せる
+      window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
       setIsSubmitting(false);
     } catch (err: any) {
       console.error('LIFF Auth Error:', err);
       setLoginError('バックエンド認証中にエラーが発生しました。');
+      setAutoLoginStarted(false);
       setIsSubmitting(false);
     }
   };
@@ -223,7 +273,7 @@ function ResidentPageContent() {
     }
   };
 
-  if (loading || (!session && !liffInitializedProvider)) {
+  if (loading || autoLoginStarted || (!session && !liffInitializedProvider)) {
     return <div className="w-full min-h-screen flex items-center justify-center bg-[#f0f2f5]"><i className="fas fa-spinner fa-spin text-3xl text-qoin-main"></i></div>;
   }
 

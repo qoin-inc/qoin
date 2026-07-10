@@ -38,6 +38,16 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       return signup.data.session;
     };
 
+    const hasLinkedResidentRoster = async (userId: string) => {
+      const { data } = await supabase
+        .from("resident_rosters")
+        .select("id")
+        .or(`user_auth_id.eq.${userId},family_user_auth_id_1.eq.${userId},family_user_auth_id_2.eq.${userId}`)
+        .limit(1);
+
+      return Boolean(data && data.length > 0);
+    };
+
     const checkExistingUser = async () => {
       if (initialRedirectTarget) {
         if (initialRedirectTarget === "resident") {
@@ -57,18 +67,23 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
         return;
       }
 
+      try {
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (existingSession?.user?.id && await hasLinkedResidentRoster(existingSession.user.id)) {
+          router.replace("/resident/");
+          return;
+        }
+      } catch (error) {
+        console.error("Existing session check failed:", error);
+      }
+
       if (lineProfile?.userId) {
         try {
           const session = await ensureSupabaseSessionFromLineProfile();
           const userId = session?.user?.id || lineProfile.userId;
-          const { data } = await supabase
-            .from("resident_rosters")
-            .select("id")
-            .or(`user_auth_id.eq.${userId},family_user_auth_id_1.eq.${userId},family_user_auth_id_2.eq.${userId}`)
-            .limit(1);
 
-          if (data && data.length > 0) {
-            router.push("/resident/");
+          if (await hasLinkedResidentRoster(userId)) {
+            router.replace("/resident/");
           }
         } catch (error) {
           console.error("Auto login check failed:", error);
