@@ -1437,7 +1437,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               pushEnabled: true,
             }),
           });
-          const result = await response.json();
+          const result = await response.json().catch(() => ({}));
           if (response.ok && result.skipped) {
             if (result.reason === "LINE channel access token is not configured") {
               notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINEチャネル未設定のため通知は未送信です。`;
@@ -1449,6 +1449,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           } else if (response.ok) {
             const firstError = Array.isArray(result.errors) && result.errors[0] ? ` 先頭エラー: HTTP ${result.errors[0].status}` : "";
             notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。${firstError}`;
+          } else {
+            const reason = result.error || result.message || `HTTP ${response.status}`;
+            notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE通知送信に失敗しました（${reason}）。`;
           }
         } catch {
           notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE通知は設定確認後に再実行してください。`;
@@ -1707,7 +1710,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               pushEnabled,
             }),
           });
-          const result = await response.json();
+          const result = await response.json().catch(() => ({}));
           if (response.ok && result.skipped) {
             if (result.reason === "LINE channel access token is not configured") {
               lineNotice = `LINEチャネルアクセストークン未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。会員画面の回覧板には表示されています。`;
@@ -1719,6 +1722,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           } else if (response.ok) {
             const firstError = Array.isArray(result.errors) && result.errors[0] ? ` 先頭エラー: HTTP ${result.errors[0].status}` : "";
             lineNotice = `LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。会員画面の回覧板にも表示されています。${firstError}`;
+          } else {
+            const reason = result.error || result.message || `HTTP ${response.status}`;
+            lineNotice = `LINE通知送信に失敗しました（${reason}）。会員画面の回覧板には表示されています。`;
           }
         } catch {
           lineNotice = `${editingPublishId ? "更新" : "保存"}しました。LINE送信はネットワークまたは設定確認後に再実行してください。会員画面の回覧板には表示されています。`;

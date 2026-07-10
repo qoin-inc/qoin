@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 const lineAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN || process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN || "";
 
-const baseRosterSelect = "user_auth_id,family_user_auth_id_1,family_user_auth_id_2,withdrawal_status,status";
+const baseRosterSelect = "user_auth_id,family_user_auth_id_1,family_user_auth_id_2,withdrawal_status";
 const lineRosterSelect = `${baseRosterSelect},line_user_id,family_line_user_id_1,family_line_user_id_2`;
 
 const categoryLabel = (category?: string) => {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const activeRosters = (rosters || []).filter((row: any) => row.withdrawal_status !== "withdrawn" && row.status !== "withdrawn");
+  const activeRosters = (rosters || []).filter((row: any) => row.withdrawal_status !== "withdrawn");
   const linkedAccounts = Array.from(new Set(
     activeRosters.flatMap((row: any) => [row.user_auth_id, row.family_user_auth_id_1, row.family_user_auth_id_2]).filter(Boolean),
   )).length;
