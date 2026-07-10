@@ -11,6 +11,18 @@ import { useLiff } from '@/components/LiffProvider';
 
 const RESIDENT_AUTO_LOGIN_KEY = 'eltown.resident.autoLoginAt';
 const RESIDENT_AUTO_LOGIN_RETRY_MS = 2 * 60 * 1000;
+const LINE_EMAIL_SUFFIX = '@line.eltown.local';
+
+const lineUserIdFromAuthUser = (user: any) => {
+  const email = String(user?.email || '');
+  if (!email.endsWith(LINE_EMAIL_SUFFIX)) return '';
+  return email.slice(0, -LINE_EMAIL_SUFFIX.length);
+};
+
+const withoutLineUserIdColumns = (payload: Record<string, any>) => {
+  const { line_user_id, family_line_user_id_1, family_line_user_id_2, ...fallback } = payload;
+  return fallback;
+};
 
 const hasLiffResponseParams = () => {
   if (typeof window === 'undefined') return false;
@@ -137,7 +149,7 @@ function ResidentPageContent() {
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
-        fetchRosterAndTown(session.user.id);
+        fetchRosterAndTown(session.user);
       } else if (shouldStartAutoLineLogin()) {
         openLiffLogin(true);
       } else {
@@ -151,7 +163,7 @@ function ResidentPageContent() {
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
-        fetchRosterAndTown(session.user.id);
+        fetchRosterAndTown(session.user);
       } else {
         setRoster(null);
         setTown(null);
@@ -172,7 +184,41 @@ function ResidentPageContent() {
     }
   }, [session, roster, town, searchParams]);
 
-  const fetchRosterAndTown = async (userId: string) => {
+  const syncRosterLineUserId = async (rosterData: any, userId: string, lineUserId: string) => {
+    if (!rosterData?.id || !userId || !lineUserId) return;
+
+    const payload: Record<string, any> = {};
+    if (rosterData.user_auth_id === userId) payload.line_user_id = lineUserId;
+    if (rosterData.family_user_auth_id_1 === userId) payload.family_line_user_id_1 = lineUserId;
+    if (rosterData.family_user_auth_id_2 === userId) payload.family_line_user_id_2 = lineUserId;
+    if (Object.keys(payload).length === 0) return;
+
+    const { error } = await supabase
+      .from('resident_rosters')
+      .update(payload)
+      .eq('id', rosterData.id);
+
+    if (error && /line_user_id|family_line_user_id/i.test(String(error.message || ''))) {
+      const fallbackPayload = withoutLineUserIdColumns(payload);
+      if (Object.keys(fallbackPayload).length === 0) return;
+      await supabase
+        .from('resident_rosters')
+        .update(fallbackPayload)
+        .eq('id', rosterData.id);
+      return;
+    }
+
+    if (error) console.warn('LINE user ID sync failed:', error.message);
+  };
+
+  const fetchRosterAndTown = async (authUser: any) => {
+    const userId = typeof authUser === 'string' ? authUser : authUser?.id;
+    const lineUserId = typeof authUser === 'string' ? '' : lineUserIdFromAuthUser(authUser);
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: rosters, error: rosterError } = await supabase
@@ -185,6 +231,7 @@ function ResidentPageContent() {
       
       if (rosters && rosters.length > 0) {
         const rosterData = rosters[0];
+        await syncRosterLineUserId(rosterData, userId, lineUserId);
         if (rosterData.withdrawal_status === 'withdrawn') {
           setLoginError('このアカウントはすでに退会済みのため、ご利用いただけません。');
           await handleLogout();
@@ -284,7 +331,7 @@ function ResidentPageContent() {
         sessionUser={session?.user}
         onComplete={() => { 
           if (mode === 'signup') router.push('/resident/'); 
-          fetchRosterAndTown(session.user.id);
+          fetchRosterAndTown(session.user);
         }}
         onCancel={() => { handleLogout(); router.push('/'); }} 
       />

@@ -3,6 +3,9 @@ import { supabase } from "@/lib/supabaseClient";
 
 const lineAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN || process.env.LINE_MESSAGING_CHANNEL_ACCESS_TOKEN || "";
 
+const baseRosterSelect = "user_auth_id,family_user_auth_id_1,family_user_auth_id_2,withdrawal_status,status";
+const lineRosterSelect = `${baseRosterSelect},line_user_id,family_line_user_id_1,family_line_user_id_2`;
+
 const categoryLabel = (category?: string) => {
   if (category === "live") return "Web会議";
   if (category === "event") return "イベント";
@@ -10,6 +13,10 @@ const categoryLabel = (category?: string) => {
   if (category === "notice" || category === "info") return "連絡";
   return "電子回覧板";
 };
+
+const isLineUserId = (value?: string | null) => /^U[0-9a-f]{32}$/i.test(String(value || ""));
+
+const maskLineUserId = (value: string) => `${value.slice(0, 5)}...${value.slice(-4)}`;
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -29,25 +36,57 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ skipped: true, reason: "LINE push is disabled for this publish item", targets: 0 });
   }
 
-  const { data: rosters, error } = await supabase
+  let missingLineColumns = false;
+  let rosters: any[] | null = null;
+  let { data: rosterRows, error } = await supabase
     .from("resident_rosters")
-    .select("user_auth_id,family_user_auth_id_1,family_user_auth_id_2,withdrawal_status,status")
+    .select(lineRosterSelect)
     .eq("neighborhood_id", townId)
     .limit(10000);
+  rosters = rosterRows as any[] | null;
+
+  if (error && /line_user_id|family_line_user_id/i.test(String(error.message || ""))) {
+    missingLineColumns = true;
+    const fallback = await supabase
+      .from("resident_rosters")
+      .select(baseRosterSelect)
+      .eq("neighborhood_id", townId)
+      .limit(10000);
+    rosters = fallback.data as any[] | null;
+    error = fallback.error;
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const activeRosters = (rosters || []).filter((row: any) => row.withdrawal_status !== "withdrawn" && row.status !== "withdrawn");
+  const linkedAccounts = Array.from(new Set(
+    activeRosters.flatMap((row: any) => [row.user_auth_id, row.family_user_auth_id_1, row.family_user_auth_id_2]).filter(Boolean),
+  )).length;
   const targets = Array.from(new Set(
-    (rosters || [])
-      .filter((row: any) => row.withdrawal_status !== "withdrawn" && row.status !== "withdrawn")
-      .flatMap((row: any) => [row.user_auth_id, row.family_user_auth_id_1, row.family_user_auth_id_2])
-      .filter(Boolean),
+    activeRosters.flatMap((row: any) => [
+      row.line_user_id,
+      row.family_line_user_id_1,
+      row.family_line_user_id_2,
+      row.user_auth_id,
+      row.family_user_auth_id_1,
+      row.family_user_auth_id_2,
+    ]).filter(isLineUserId),
   ));
 
   if (!lineAccessToken) {
-    return NextResponse.json({ skipped: true, reason: "LINE channel access token is not configured", targets: targets.length });
+    return NextResponse.json({ skipped: true, reason: "LINE channel access token is not configured", targets: targets.length, linkedAccounts });
+  }
+
+  if (targets.length === 0) {
+    return NextResponse.json({
+      skipped: true,
+      reason: missingLineColumns ? "LINE user ID columns are not configured" : "No LINE user IDs are registered",
+      targets: 0,
+      linkedAccounts,
+      missingLineColumns,
+    });
   }
 
   const origin = new URL(request.url).origin;
@@ -59,20 +98,28 @@ export async function POST(request: NextRequest) {
     detailUrl,
   ].filter(Boolean).join("\n");
 
-  const results = await Promise.allSettled(targets.map((to) => fetch("https://api.line.me/v2/bot/message/push", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${lineAccessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      to,
-      messages: [{ type: "text", text }],
-    }),
-  })));
+  const results = await Promise.allSettled(targets.map(async (to) => {
+    const response = await fetch("https://api.line.me/v2/bot/message/push", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${lineAccessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to,
+        messages: [{ type: "text", text }],
+      }),
+    });
+    const detail = response.ok ? "" : await response.text().catch(() => "");
+    return { ok: response.ok, status: response.status, to: maskLineUserId(to), detail: detail.slice(0, 300) };
+  }));
 
   const sent = results.filter((result) => result.status === "fulfilled" && result.value.ok).length;
   const failed = targets.length - sent;
+  const errors = results
+    .filter((result): result is PromiseFulfilledResult<{ ok: boolean; status: number; to: string; detail: string }> => result.status === "fulfilled" && !result.value.ok)
+    .map((result) => result.value)
+    .slice(0, 5);
 
-  return NextResponse.json({ sent, failed, targets: targets.length });
+  return NextResponse.json({ sent, failed, targets: targets.length, linkedAccounts, errors });
 }

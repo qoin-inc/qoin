@@ -12,11 +12,21 @@ type SignupResidentProps = {
 const normalizeText = (value?: string | null) => String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim();
 const normalizeName = normalizeText;
 const normalizePostalCode = (value?: string | null) => normalizeText(value).replace(/[^\d]/g, "");
+const LINE_EMAIL_SUFFIX = "@line.eltown.local";
 
 const rosterPrimaryName = (roster: any) => roster.full_name || `${roster.last_name || ""}${roster.first_name || ""}`;
 const rosterPostalCode = (roster: any) => roster.postal_code || "";
 const rosterAddressLine2 = (roster: any) => roster.address_line2 || roster.address2 || roster.address || "";
 const rosterAddressLine3 = (roster: any) => roster.address_line3 || roster.address3 || "";
+const lineUserIdFromAuthUser = (user: any) => {
+  const email = String(user?.email || "");
+  if (!email.endsWith(LINE_EMAIL_SUFFIX)) return "";
+  return email.slice(0, -LINE_EMAIL_SUFFIX.length);
+};
+const withoutLineColumns = (payload: Record<string, any>) => {
+  const { line_user_id, family_line_user_id_1, family_line_user_id_2, line_display_name, ...fallback } = payload;
+  return fallback;
+};
 
 export default function SignupResident({ sessionUser, onComplete, onCancel }: SignupResidentProps) {
   const [fullName, setFullName] = useState(sessionUser?.user_metadata?.name || "");
@@ -57,6 +67,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       if (!town) throw new Error("町内会名に一致する町内会が見つかりません。名称を確認してください。");
 
       const normalizedInputName = normalizeName(fullName);
+      const lineUserId = lineUserIdFromAuthUser(sessionUser);
       const { data: existingRosters, error: rosterLookupError } = await supabase
         .from("resident_rosters")
         .select("*")
@@ -96,6 +107,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           }
           updatePayload = {
             user_auth_id: sessionUser.id,
+            line_user_id: lineUserId || null,
             line_display_name: sessionUser?.user_metadata?.name || null,
             status: "active",
           };
@@ -105,6 +117,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           }
           updatePayload = {
             family_user_auth_id_1: sessionUser.id,
+            family_line_user_id_1: lineUserId || null,
             status: "active",
           };
         } else if (family2Matched) {
@@ -113,6 +126,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           }
           updatePayload = {
             family_user_auth_id_2: sessionUser.id,
+            family_line_user_id_2: lineUserId || null,
             status: "active",
           };
         }
@@ -124,8 +138,8 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           .update(updatePayload)
           .eq("id", matchedRoster.id);
 
-        if (updateError && String(updateError.message || "").includes("line_display_name")) {
-          const { line_display_name, ...fallbackPayload } = updatePayload;
+        if (updateError && /line_display_name|line_user_id|family_line_user_id/i.test(String(updateError.message || ""))) {
+          const fallbackPayload = withoutLineColumns(updatePayload);
           const fallback = await supabase
             .from("resident_rosters")
             .update(fallbackPayload)

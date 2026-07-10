@@ -1438,8 +1438,18 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             }),
           });
           const result = await response.json();
-          if (response.ok && result.skipped) notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINEチャネル未設定のため通知は未送信です。`;
-          else if (response.ok) notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。`;
+          if (response.ok && result.skipped) {
+            if (result.reason === "LINE channel access token is not configured") {
+              notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINEチャネル未設定のため通知は未送信です。`;
+            } else if (result.reason === "LINE user ID columns are not configured") {
+              notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE送信用IDの保存カラムが未設定です。docs/line_push_user_id_columns_2026-07-10.sql を実行してください。`;
+            } else {
+              notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE送信先IDが未登録です。会員が一度LINEから会員画面を開くと送信可能になります。`;
+            }
+          } else if (response.ok) {
+            const firstError = Array.isArray(result.errors) && result.errors[0] ? ` 先頭エラー: HTTP ${result.errors[0].status}` : "";
+            notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。${firstError}`;
+          }
         } catch {
           notice = `${editingLiveSessionId ? "Web会議予定を更新" : "Web会議予定を保存"}しました。LINE通知は設定確認後に再実行してください。`;
         }
@@ -1699,9 +1709,16 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           });
           const result = await response.json();
           if (response.ok && result.skipped) {
-            lineNotice = `LINEチャネルアクセストークン未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。会員画面の回覧板には表示されています。`;
+            if (result.reason === "LINE channel access token is not configured") {
+              lineNotice = `LINEチャネルアクセストークン未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。会員画面の回覧板には表示されています。`;
+            } else if (result.reason === "LINE user ID columns are not configured") {
+              lineNotice = `LINE送信用IDの保存カラムが未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。docs/line_push_user_id_columns_2026-07-10.sql を実行してください。`;
+            } else {
+              lineNotice = `LINE送信先IDが未登録のため、${editingPublishId ? "更新" : "保存"}のみ行いました。会員が一度LINEから会員画面を開くと送信可能になります。`;
+            }
           } else if (response.ok) {
-            lineNotice = `LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。会員画面の回覧板にも表示されています。`;
+            const firstError = Array.isArray(result.errors) && result.errors[0] ? ` 先頭エラー: HTTP ${result.errors[0].status}` : "";
+            lineNotice = `LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。会員画面の回覧板にも表示されています。${firstError}`;
           }
         } catch {
           lineNotice = `${editingPublishId ? "更新" : "保存"}しました。LINE送信はネットワークまたは設定確認後に再実行してください。会員画面の回覧板には表示されています。`;
