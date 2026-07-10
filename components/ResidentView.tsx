@@ -37,6 +37,7 @@ type Circular = {
 type BoardFilter = "all" | "circular" | "notice" | "event";
 type ResidentTab = "board" | "payment" | "live" | "settings";
 type ViewMode = "cards" | "calendar";
+type BottomNavMode = "main" | "sub";
 
 type ReplyDraft = {
   adults: string;
@@ -293,6 +294,7 @@ const createReplyDraft = (name = "", circular?: Circular | null): ReplyDraft => 
 
 export default function ResidentView({ townId, townName, residentName, userId, openTargetId, initialTab }: ResidentViewProps) {
   const [activeTab, setActiveTab] = useState<ResidentTab>(() => normalizeResidentTab(initialTab, openTargetId));
+  const [bottomNavMode, setBottomNavMode] = useState<BottomNavMode>(() => (initialTab || openTargetId ? "sub" : "main"));
   const [circulars, setCirculars] = useState<Circular[]>([]);
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -1315,88 +1317,93 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         )}
       </main>
 
-      <nav className="el-secondary-nav" aria-label="住民サブメニュー">
-        {activeTab === "board" && (
+      <nav className={`el-bottom-nav ${bottomNavMode === "sub" ? "is-sub" : "is-main"}`} aria-label={bottomNavMode === "sub" ? "住民サブメニュー" : "住民メニュー"}>
+        {bottomNavMode === "main" ? (
+          tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={activeTab === tab.id ? "active" : ""}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setBottomNavMode("sub");
+              }}
+            >
+              <i className={`fas ${tab.icon}`} />
+              <span>{tab.label}</span>
+            </button>
+          ))
+        ) : (
           <>
-            <div className="el-secondary-nav-row four">
-              {[
-                ["all", "全て", "fa-layer-group"],
-                ["circular", "電子回覧板", "fa-clipboard-list"],
-                ["notice", "連絡", "fa-circle-info"],
-                ["event", "イベント", "fa-calendar-days"],
-              ].map(([id, label, icon]) => (
-                <button key={id} type="button" className={boardFilter === id ? "active" : ""} onClick={() => setBoardFilter(id as BoardFilter)}>
-                  <i className={`fas ${icon}`} />
-                  <span>{label}</span>
+            <button type="button" className="is-menu" onClick={() => setBottomNavMode("main")}>
+              <i className="fas fa-bars" />
+              <span>メニュー</span>
+            </button>
+
+            {activeTab === "board" && (
+              <>
+                {[
+                  ["all", "全て", "fa-layer-group"],
+                  ["circular", "電子回覧板", "fa-clipboard-list"],
+                  ["notice", "連絡", "fa-circle-info"],
+                  ["event", "イベント", "fa-calendar-days"],
+                ].map(([id, label, icon]) => (
+                  <button key={id} type="button" className={boardFilter === id ? "active" : ""} onClick={() => setBoardFilter(id as BoardFilter)}>
+                    <i className={`fas ${icon}`} />
+                    <span>{label}</span>
+                  </button>
+                ))}
+                {boardFilter === "event" && (
+                  <>
+                    <button type="button" className={boardViewMode === "cards" ? "active" : ""} onClick={() => setBoardViewMode("cards")}>
+                      <i className="fas fa-list" />
+                      <span>カード</span>
+                    </button>
+                    <button type="button" className={boardViewMode === "calendar" ? "active" : ""} onClick={() => setBoardViewMode("calendar")}>
+                      <i className="fas fa-calendar-days" />
+                      <span>カレンダー</span>
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+
+            {activeTab === "payment" && (
+              <button type="button" className="active">
+                <i className="fas fa-yen-sign" />
+                <span>会費</span>
+              </button>
+            )}
+
+            {activeTab === "live" && (
+              <>
+                <button type="button" className={activeLiveScreen === "live" ? "active" : ""} onClick={() => setActiveLiveScreen("live")}>
+                  <i className="fas fa-video" />
+                  <span>Live</span>
                 </button>
-              ))}
-            </div>
-            {boardFilter === "event" && (
-              <div className="el-secondary-nav-row two compact">
-                <button type="button" className={boardViewMode === "cards" ? "active" : ""} onClick={() => setBoardViewMode("cards")}>
-                  <i className="fas fa-list" />
-                  <span>カード</span>
+                <button type="button" className={activeLiveScreen === "facility" ? "active" : ""} onClick={() => setActiveLiveScreen("facility")}>
+                  <i className="fas fa-building" />
+                  <span>施設予約</span>
                 </button>
-                <button type="button" className={boardViewMode === "calendar" ? "active" : ""} onClick={() => setBoardViewMode("calendar")}>
+                <button type="button" className={liveViewMode === "calendar" ? "active" : ""} onClick={() => setLiveViewMode("calendar")}>
                   <i className="fas fa-calendar-days" />
                   <span>カレンダー</span>
                 </button>
-              </div>
+                <button type="button" className={liveViewMode === "cards" ? "active" : ""} onClick={() => setLiveViewMode("cards")}>
+                  <i className="fas fa-list" />
+                  <span>カード</span>
+                </button>
+              </>
+            )}
+
+            {activeTab === "settings" && (
+              <button type="button" className="active">
+                <i className="fas fa-right-from-bracket" />
+                <span>退会申請</span>
+              </button>
             )}
           </>
         )}
-
-        {activeTab === "payment" && (
-          <div className="el-secondary-nav-row one compact">
-            <button type="button" className="active">
-              <i className="fas fa-yen-sign" />
-              <span>会費</span>
-            </button>
-          </div>
-        )}
-
-        {activeTab === "live" && (
-          <>
-            <div className="el-secondary-nav-row two">
-              <button type="button" className={activeLiveScreen === "live" ? "active" : ""} onClick={() => setActiveLiveScreen("live")}>
-                <i className="fas fa-video" />
-                <span>Live</span>
-              </button>
-              <button type="button" className={activeLiveScreen === "facility" ? "active" : ""} onClick={() => setActiveLiveScreen("facility")}>
-                <i className="fas fa-building" />
-                <span>施設予約</span>
-              </button>
-            </div>
-            <div className="el-secondary-nav-row two compact">
-              <button type="button" className={liveViewMode === "calendar" ? "active" : ""} onClick={() => setLiveViewMode("calendar")}>
-                <i className="fas fa-calendar-days" />
-                <span>カレンダー</span>
-              </button>
-              <button type="button" className={liveViewMode === "cards" ? "active" : ""} onClick={() => setLiveViewMode("cards")}>
-                <i className="fas fa-list" />
-                <span>カード</span>
-              </button>
-            </div>
-          </>
-        )}
-
-        {activeTab === "settings" && (
-          <div className="el-secondary-nav-row one compact">
-            <button type="button" className="active">
-              <i className="fas fa-right-from-bracket" />
-              <span>退会申請</span>
-            </button>
-          </div>
-        )}
-      </nav>
-
-      <nav className="el-bottom-nav" aria-label="住民メニュー">
-        {tabs.map((tab) => (
-          <button key={tab.id} className={activeTab === tab.id ? "active" : ""} onClick={() => setActiveTab(tab.id)}>
-            <i className={`fas ${tab.icon}`} />
-            <span>{tab.label}</span>
-          </button>
-        ))}
       </nav>
     </div>
   );
