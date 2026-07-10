@@ -49,13 +49,6 @@ const buildLineMessages = (params: {
   const bodyContents = [
     {
       type: "text",
-      text: label,
-      size: "sm",
-      color: "#2e8bc0",
-      weight: "bold",
-    },
-    {
-      type: "text",
       text: params.title.slice(0, 80),
       size: "lg",
       color: "#111827",
@@ -69,6 +62,15 @@ const buildLineMessages = (params: {
           size: "sm",
           color: "#4b5563",
           wrap: true,
+        }
+      : null,
+    params.imageUrl
+      ? {
+          type: "image",
+          url: params.imageUrl,
+          size: "full",
+          aspectRatio: "3:4",
+          aspectMode: "fit",
         }
       : null,
   ].filter(Boolean);
@@ -98,16 +100,6 @@ const buildLineMessages = (params: {
       ],
     },
   };
-
-  if (params.imageUrl) {
-    bubble.hero = {
-      type: "image",
-      url: params.imageUrl,
-      size: "full",
-      aspectRatio: "20:13",
-      aspectMode: "cover",
-    };
-  }
 
   return [
     {

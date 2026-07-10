@@ -121,8 +121,7 @@ button { cursor: pointer; border: 0; }
 .el-board-meta span { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .el-board-meta strong { flex: 0 0 auto; color: #111827; }
 .el-board-card > button { width: 100%; text-align: left; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; box-shadow: 0 7px 15px rgba(17,24,39,.1); padding: 18px 18px 14px; }
-.el-board-thumb { width: 100%; max-height: 180px; margin-bottom: 12px; border-radius: 8px; object-fit: cover; background: #f8fafc; border: 1px solid #eef2f7; display: block; }
-.el-board-tag { display: inline-flex; margin-bottom: 10px; border-radius: 6px; background: #e0f2fe; color: var(--qoin-main-dark); padding: 5px 9px; font-size: 12px; font-weight: 900; }
+.el-board-thumb { width: 100%; height: 220px; margin: 12px 0; border-radius: 8px; object-fit: contain; object-position: top center; background: #f8fafc; border: 1px solid #eef2f7; display: block; }
 .el-board-card h3 { margin: 0 0 8px; color: #111827; font-size: 19px; line-height: 1.35; font-weight: 900; }
 .el-board-card p { margin: 0; color: #4b5563; font-size: 14px; line-height: 1.6; font-weight: 700; white-space: pre-wrap; }
 .el-board-card em { margin-top: 14px; padding-top: 12px; border-top: 1px solid #eef2f7; display: flex; align-items: center; justify-content: space-between; color: var(--qoin-main-dark); font-size: 14px; font-style: normal; font-weight: 900; }

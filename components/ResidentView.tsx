@@ -1062,10 +1062,9 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                         <strong>{formatDate(item)}配信</strong>
                       </div>
                       <button type="button" onClick={() => openCircular(item)}>
-                        {previewImage && <img className="el-board-thumb" src={previewImage.url} alt={previewImage.name || item.title || "添付画像"} />}
-                        <span className="el-board-tag">{categoryLabel(item)}</span>
                         <h3>{item.title} {attachments.length > 0 && <i className="fas fa-paperclip" />}</h3>
                         <p>{bodyText(item)}</p>
+                        {previewImage && <img className="el-board-thumb" src={previewImage.url} alt={previewImage.name || item.title || "添付画像"} />}
                         <em>詳細を確認する <i className="fas fa-chevron-right" /></em>
                       </button>
                     </article>
