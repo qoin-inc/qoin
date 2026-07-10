@@ -1699,12 +1699,12 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           });
           const result = await response.json();
           if (response.ok && result.skipped) {
-            lineNotice = `LINEチャネルアクセストークン未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。`;
+            lineNotice = `LINEチャネルアクセストークン未設定のため、${editingPublishId ? "更新" : "保存"}のみ行いました。会員画面の回覧板には表示されています。`;
           } else if (response.ok) {
-            lineNotice = `LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。`;
+            lineNotice = `LINEへ ${result.sent || 0}件送信しました。失敗 ${result.failed || 0}件。会員画面の回覧板にも表示されています。`;
           }
         } catch {
-          lineNotice = `${editingPublishId ? "更新" : "保存"}しました。LINE送信はネットワークまたは設定確認後に再実行してください。`;
+          lineNotice = `${editingPublishId ? "更新" : "保存"}しました。LINE送信はネットワークまたは設定確認後に再実行してください。会員画面の回覧板には表示されています。`;
         }
       }
       const nextReplies = existingItem?.replies || [];
@@ -3422,7 +3422,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             />
             <span>
               <strong>LINEへプッシュ通知する</strong>
-              <small>チェックすると会員のLINEに通知メッセージを送信し、リッチメニューから詳細を確認できます。</small>
+              <small>チェックすると会員のLINEに通知メッセージを送信します。保存した内容はリッチメニューの「会員の方」から開く回覧板で確認できます。</small>
             </span>
           </label>
         </div>

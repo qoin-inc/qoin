@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   const text = [
     `【${categoryLabel(category)}】${title}`,
     content.slice(0, 280),
-    "LINEのリッチメニューからも詳細を確認できます。",
+    "リッチメニューの「会員の方」から開く回覧板でも確認できます。",
     detailUrl,
   ].filter(Boolean).join("\n");
 

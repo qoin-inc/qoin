@@ -462,6 +462,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
   const unreadCount = circulars.filter((item) => !item.is_read).length;
   const displayName = residentName || "会員";
   const placeName = townName || "町内会・自治会";
+  const showViewModeSwitch = (activeTab === "board" && boardFilter === "event") || activeTab === "live";
 
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric" }), []);
   const monthFormatter = useMemo(() => new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long" }), []);
@@ -1020,7 +1021,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         <img src="/assets/logo_icon_stacked.png" alt="el-town" className="el-header-logo" />
       </header>
 
-      <main className="el-scroll-area">
+      <main className={`el-scroll-area ${showViewModeSwitch ? "has-view-switch" : ""}`}>
         {activeTab === "board" && (
           <section className="el-stack">
             <div className="el-board-title">
@@ -1317,6 +1318,32 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         )}
       </main>
 
+      {activeTab === "board" && boardFilter === "event" && (
+        <div className="el-floating-view-switch" aria-label="イベント表示切替">
+          <button type="button" className={boardViewMode === "calendar" ? "active" : ""} onClick={() => setBoardViewMode("calendar")}>
+            <i className="fas fa-calendar-days" />
+            <span>カレンダー</span>
+          </button>
+          <button type="button" className={boardViewMode === "cards" ? "active" : ""} onClick={() => setBoardViewMode("cards")}>
+            <i className="fas fa-list" />
+            <span>一覧</span>
+          </button>
+        </div>
+      )}
+
+      {activeTab === "live" && (
+        <div className="el-floating-view-switch" aria-label="Live表示切替">
+          <button type="button" className={liveViewMode === "calendar" ? "active" : ""} onClick={() => setLiveViewMode("calendar")}>
+            <i className="fas fa-calendar-days" />
+            <span>カレンダー</span>
+          </button>
+          <button type="button" className={liveViewMode === "cards" ? "active" : ""} onClick={() => setLiveViewMode("cards")}>
+            <i className="fas fa-list" />
+            <span>一覧</span>
+          </button>
+        </div>
+      )}
+
       <nav className={`el-bottom-nav ${bottomNavMode === "sub" ? "is-sub" : "is-main"}`} aria-label={bottomNavMode === "sub" ? "住民サブメニュー" : "住民メニュー"}>
         {bottomNavMode === "main" ? (
           tabs.map((tab) => (
@@ -1353,18 +1380,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                     <span>{label}</span>
                   </button>
                 ))}
-                {boardFilter === "event" && (
-                  <>
-                    <button type="button" className={boardViewMode === "cards" ? "active" : ""} onClick={() => setBoardViewMode("cards")}>
-                      <i className="fas fa-list" />
-                      <span>カード</span>
-                    </button>
-                    <button type="button" className={boardViewMode === "calendar" ? "active" : ""} onClick={() => setBoardViewMode("calendar")}>
-                      <i className="fas fa-calendar-days" />
-                      <span>カレンダー</span>
-                    </button>
-                  </>
-                )}
               </>
             )}
 
@@ -1384,14 +1399,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                 <button type="button" className={activeLiveScreen === "facility" ? "active" : ""} onClick={() => setActiveLiveScreen("facility")}>
                   <i className="fas fa-building" />
                   <span>施設予約</span>
-                </button>
-                <button type="button" className={liveViewMode === "calendar" ? "active" : ""} onClick={() => setLiveViewMode("calendar")}>
-                  <i className="fas fa-calendar-days" />
-                  <span>カレンダー</span>
-                </button>
-                <button type="button" className={liveViewMode === "cards" ? "active" : ""} onClick={() => setLiveViewMode("cards")}>
-                  <i className="fas fa-list" />
-                  <span>カード</span>
                 </button>
               </>
             )}
