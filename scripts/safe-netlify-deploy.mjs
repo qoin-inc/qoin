@@ -134,8 +134,9 @@ const executePlan = async () => {
   // Consume approval before starting the external side effect. Failed attempts require a new plan.
   unlinkSync(pendingPath);
   const startedAt = new Date().toISOString();
-  const npx = process.platform === "win32" ? "npx.cmd" : "npx";
-  const result = run(npx, deployArgs(plan.environment));
+  const result = process.platform === "win32"
+    ? run(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npx.cmd", ...deployArgs(plan.environment)])
+    : run("npx", deployArgs(plan.environment));
   if (result.status !== 0) {
     appendRecord({ ...plan, status: "failed", startedAt, finishedAt: new Date().toISOString(), error: result.stderr.trim().slice(0, 500) });
     throw new Error(result.stderr.trim() || "Netlify deployment failed.");
