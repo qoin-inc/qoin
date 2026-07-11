@@ -87,6 +87,12 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
 
     const checkExistingUser = async () => {
       if (initialRedirectTarget) {
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        if (!existingSession && !lineProfile?.userId) {
+          revealInitialMenu();
+          return;
+        }
+
         if (initialRedirectTarget === "resident") {
           await ensureSupabaseSessionFromLineProfile();
           window.location.href = "/resident/";
@@ -100,7 +106,10 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
         }
 
         if (initialRedirectTarget === "admin") router.push("/admin/");
-        else router.push(`/resident/?open=${initialRedirectTarget}`);
+        else {
+          await ensureSupabaseSessionFromLineProfile();
+          window.location.href = `/resident/?open=${encodeURIComponent(initialRedirectTarget)}`;
+        }
         return;
       }
 

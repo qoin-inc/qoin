@@ -70,7 +70,7 @@ const buildLineMessages = (params: {
           type: "image",
           url: params.imageUrl,
           size: "full",
-          aspectRatio: "4:3",
+          aspectRatio: "3:4",
           aspectMode: "fit",
           action: {
             type: "uri",
