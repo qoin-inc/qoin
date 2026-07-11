@@ -2384,6 +2384,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     }
 
     if (updateResult.error) throw updateResult.error;
+    if (!updateResult.data) {
+      throw new Error("会員情報を更新できませんでした。管理者の名簿更新権限（RLS）を確認してください。");
+    }
 
     return {
       ...(updateResult.data || {}),
