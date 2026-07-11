@@ -2321,7 +2321,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const basePayload = {
       neighborhood_id: townId,
       full_name: normalizedDraft.fullName,
-      address: compactAddress(normalizedDraft) || null,
     };
     const detailPayload = {
       ...basePayload,
