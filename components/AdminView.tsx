@@ -368,7 +368,7 @@ const defaultMemberDraft: MemberDraft = {
 
 const memberCsvHeaders = ["氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族２"];
 const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所３"]);
-const rosterDetailColumns = ["kana_name", "postal_code", "address_line2", "address_line3", "family_name_1", "family_name_2", "withdrawal_status", "withdrawal_reply_message"];
+const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_name_2", "withdrawal_status", "withdrawal_reply_message"];
 const adminDetailColumns = ["admin_role", "admin_invite_token", "invite_token", "invited_at", "retired_at"];
 const feeDetailColumns = [
   "neighborhood_id",
@@ -2326,8 +2326,8 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       ...basePayload,
       kana_name: normalizedDraft.kanaName || null,
       postal_code: normalizedDraft.postalCode || null,
-      address_line2: normalizedDraft.addressLine2 || null,
-      address_line3: normalizedDraft.addressLine3 || null,
+      address2: normalizedDraft.addressLine2 || null,
+      address3: normalizedDraft.addressLine3 || null,
       family_name_1: normalizedDraft.familyName1 || null,
       family_name_2: normalizedDraft.familyName2 || null,
       withdrawal_status: "active",
