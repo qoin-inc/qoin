@@ -148,6 +148,9 @@ const executePlan = async () => {
   const publicUrl = plan.environment === "production" ? plan.publicUrl : deployUrl;
   if (!publicUrl) throw new Error("Deployment completed but no public URL was returned.");
 
+  const finalBuildIdPath = join(root, config.artifactDirectory, "BUILD_ID");
+  const finalBuildId = existsSync(finalBuildIdPath) ? readFileSync(finalBuildIdPath, "utf8").trim() : plan.buildId;
+
   const response = await fetch(`${publicUrl}${publicUrl.includes("?") ? "&" : "?"}deploy_check=${Date.now()}`, {
     headers: { "Cache-Control": "no-cache" },
   });
@@ -155,7 +158,7 @@ const executePlan = async () => {
   const checks = {
     publicUrlReachable: response.ok,
     commitUnchanged: git("rev-parse", "HEAD") === plan.commitId,
-    buildIdMatches: plan.buildId === "unavailable" ? "unavailable" : html.includes(plan.buildId),
+    buildIdMatches: finalBuildId === "unavailable" ? "unavailable" : html.includes(finalBuildId),
     deploymentIdAvailable: deploymentId !== "unavailable",
   };
   const requiredPassed = checks.publicUrlReachable && checks.commitUnchanged && checks.buildIdMatches !== false;
@@ -168,12 +171,14 @@ const executePlan = async () => {
     finishedAt: new Date().toISOString(),
     publicUrl,
     deploymentId,
+    plannedBuildId: plan.buildId,
+    finalBuildId,
     checks,
   };
   appendRecord(record);
 
   console.log("\nDEPLOYMENT RECONCILIATION\n");
-  console.table({ publicUrl, deploymentId, commitId: plan.commitId, buildId: plan.buildId, ...checks });
+  console.table({ publicUrl, deploymentId, commitId: plan.commitId, plannedBuildId: plan.buildId, finalBuildId, ...checks });
   if (!requiredPassed) throw new Error("Deployment finished, but reconciliation failed. Review .deploy/deployments.jsonl.");
   console.log("\nDeployment verified successfully.");
 };
