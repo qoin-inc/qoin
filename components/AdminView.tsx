@@ -2520,29 +2520,23 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     URL.revokeObjectURL(url);
   };
 
-  const handleMemberWithdrawal = async (member: any, action: "approve" | "reinstate") => {
-    const approving = action === "approve";
+  const handleMemberWithdrawal = async (member: any) => {
     const fullName = getMemberFullName(member);
-    const reply = approving
-      ? `${fullName}様の退会申請を承認しました。今後、同じ町内会・自治会ではel-townをご利用いただけません。`
-      : `${fullName}様のel-town利用を復活しました。再度LINE連携してご利用いただけます。`;
-    const statusValue = approving ? "withdrawn" : "active";
+    const reply = `${fullName}様の退会申請を承認しました。今後、同じ町内会・自治会ではel-townをご利用いただけません。`;
+    const statusValue = "withdrawn";
     const withdrawalReplyPayload: Record<string, any> = {
       withdrawal_status: statusValue,
       status: statusValue,
       withdrawal_reply_message: reply,
     };
-    if (approving) {
-      Object.assign(withdrawalReplyPayload, {
-        user_auth_id: null,
-        family_user_auth_id_1: null,
-        family_user_auth_id_2: null,
-        line_user_id: null,
-        family_line_user_id_1: null,
-        family_line_user_id_2: null,
-        line_display_name: null,
-      });
-    }
+    Object.assign(withdrawalReplyPayload, {
+      user_auth_id: null,
+      family_user_auth_id_1: null,
+      family_user_auth_id_2: null,
+      line_user_id: null,
+      family_line_user_id_1: null,
+      family_line_user_id_2: null,
+    });
 
     setMemberBusy(true);
     setMemberMessage("");
@@ -2553,7 +2547,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         "resident_rosters",
         member.id,
         withdrawalReplyPayload,
-        approving ? "退会承認とLINE連携解除に失敗しました。" : "会員の復活に失敗しました。",
+        "退会承認とLINE連携解除に失敗しました。",
       );
 
       const updatedMember = {
@@ -2578,9 +2572,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       setMemberReply(reply);
       try {
         await navigator.clipboard?.writeText(reply);
-        setMemberMessage(approving ? "退会を承認しました。返信文をコピーしました。" : "会員を復活しました。返信文をコピーしました。");
+        setMemberMessage("退会を承認しました。返信文をコピーしました。");
       } catch {
-        setMemberMessage(approving ? "退会を承認しました。下の返信文を送信してください。" : "会員を復活しました。下の返信文を送信してください。");
+        setMemberMessage("退会を承認しました。下の返信文を送信してください。");
       }
     } catch (error: any) {
       setMemberMessage(error?.message || "会員状態の更新に失敗しました。");
@@ -3636,7 +3630,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会員一覧</h3>
-                <p>退会承認後は同じ町内会・自治会でel-townを利用不可にします。必要に応じて復活できます。</p>
+                <p>退会承認時にすべてのLINE連携を解除します。退会済み状態は通常操作では元に戻せません。</p>
               </div>
               <span className="admin-member-count">退会申請 {withdrawalRequestMembers.length.toLocaleString()}件 / 退会済み {withdrawnMembers.length.toLocaleString()}件</span>
             </div>
@@ -3674,9 +3668,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                     <span className="admin-member-row-actions">
                       <button type="button" className="edit" onClick={() => handleMemberEditStart(member)} disabled={memberBusy || member.id === "empty"}>編集</button>
                       {withdrawn ? (
-                        <button type="button" onClick={() => handleMemberWithdrawal(member, "reinstate")} disabled={memberBusy || member.id === "empty"}>復活</button>
+                        <span className="admin-member-no-action">退会確定</span>
                       ) : requested ? (
-                        <button type="button" onClick={() => handleMemberWithdrawal(member, "approve")} disabled={memberBusy || member.id === "empty"}>退会承認</button>
+                        <button type="button" onClick={() => handleMemberWithdrawal(member)} disabled={memberBusy || member.id === "empty"}>退会承認</button>
                       ) : (
                         <span className="admin-member-no-action">申請なし</span>
                       )}
