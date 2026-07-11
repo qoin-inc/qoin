@@ -654,6 +654,16 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     setReplyFile(null);
   };
 
+  const toggleBottomNav = () => {
+    setBottomNavHidden((current) => !current);
+    if (activeTab !== "board" || boardViewMode !== "cards") return;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        boardFeedEndRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+      });
+    });
+  };
+
   const shiftCalendarMonth = (amount: number) => {
     setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1));
   };
@@ -1422,7 +1432,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
       <button
         type="button"
         className={`el-bottom-nav-toggle ${bottomNavHidden ? "is-hidden" : ""}`}
-        onClick={() => setBottomNavHidden((current) => !current)}
+        onClick={toggleBottomNav}
         aria-label={bottomNavHidden ? "下部メニューを表示" : "下部メニューを隠す"}
       >
         <i className={`fas ${bottomNavHidden ? "fa-chevron-up" : "fa-chevron-down"}`} />
