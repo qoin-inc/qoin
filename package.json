@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "deploy:plan": "node scripts/safe-netlify-deploy.mjs plan",
+    "deploy:approved": "node scripts/safe-netlify-deploy.mjs execute"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.44.4",

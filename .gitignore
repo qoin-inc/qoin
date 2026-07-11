@@ -36,6 +36,7 @@ yarn-error.log*
 *.log
 # Netlify local/deploy output
 .netlify/
+.deploy/
 
 # Local run artifacts
 build_logs.zip

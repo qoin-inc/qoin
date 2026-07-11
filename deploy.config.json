@@ -1,0 +1,7 @@
+{
+  "service": "netlify",
+  "siteName": "el-town",
+  "publicUrl": "https://el-town.jp",
+  "artifactDirectory": ".next",
+  "approvalTtlMinutes": 15
+}
