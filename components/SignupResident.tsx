@@ -68,6 +68,22 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
 
       const normalizedInputName = normalizeName(fullName);
       const lineUserId = lineUserIdFromAuthUser(sessionUser);
+      const rpcResult = await supabase.rpc("link_resident_roster_by_identity", {
+        p_neighborhood_id: town.id,
+        p_full_name: fullName,
+        p_postal_code: postalCode,
+        p_address2: addressLine2,
+        p_address3: addressLine3,
+        p_line_user_id: lineUserId || null,
+        p_line_display_name: sessionUser?.user_metadata?.name || null,
+      });
+      if (!rpcResult.error) {
+        onComplete?.();
+        return;
+      }
+      const rpcUnavailable = rpcResult.error.code === "PGRST202" || /link_resident_roster_by_identity|schema cache|function/i.test(String(rpcResult.error.message || ""));
+      if (!rpcUnavailable) throw rpcResult.error;
+
       const { data: existingRosters, error: rosterLookupError } = await supabase
         .from("resident_rosters")
         .select("*")
