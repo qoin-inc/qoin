@@ -62,6 +62,7 @@ const buildLineMessages = (params: {
           size: "sm",
           color: "#4b5563",
           wrap: true,
+          maxLines: 5,
         }
       : null,
     params.imageUrl
@@ -69,8 +70,13 @@ const buildLineMessages = (params: {
           type: "image",
           url: params.imageUrl,
           size: "full",
-          aspectRatio: "3:4",
+          aspectRatio: "4:3",
           aspectMode: "fit",
+          action: {
+            type: "uri",
+            label: "詳細を開く",
+            uri: params.detailUrl,
+          },
         }
       : null,
   ].filter(Boolean);
@@ -85,6 +91,7 @@ const buildLineMessages = (params: {
     footer: {
       type: "box",
       layout: "vertical",
+      flex: 0,
       spacing: "sm",
       contents: [
         {
