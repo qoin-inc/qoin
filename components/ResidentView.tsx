@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -337,6 +337,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const boardFeedEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const fetchCirculars = async () => {
@@ -345,13 +346,29 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         return;
       }
       setLoading(true);
-      const [circularResult, liveResult, facilityResult, reservationResult] = await Promise.all([
-        supabase
-          .from("circulars")
-          .select("*")
-          .eq("neighborhood_id", townId)
-          .order("created_at", { ascending: false })
-          .limit(30),
+      const circularRequest = supabase
+        .from("circulars")
+        .select("*")
+        .eq("neighborhood_id", townId)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      const targetRequest = openTargetId
+        ? supabase.from("circulars").select("*").eq("neighborhood_id", townId).eq("id", openTargetId).maybeSingle()
+        : Promise.resolve({ data: null, error: null });
+      const [circularResult, targetResult] = await Promise.all([circularRequest, targetRequest]);
+
+      if (!circularResult.error && circularResult.data) {
+        const items = [...(circularResult.data as Circular[])].reverse();
+        setCirculars(items);
+        const target = targetResult.data as Circular | null;
+        if (target) {
+          setSelectedCircular(target);
+          setReplyDraft(createReplyDraft(displayName, target));
+        }
+      }
+      setLoading(false);
+
+      const [liveResult, facilityResult, reservationResult] = await Promise.all([
         supabase
           .from("live_sessions")
           .select("*")
@@ -371,20 +388,19 @@ export default function ResidentView({ townId, townName, residentName, userId, o
           .limit(300),
       ]);
 
-      if (!circularResult.error && circularResult.data) {
-        const items = circularResult.data as Circular[];
-        setCirculars(items);
-        const target = openTargetId ? items.find((item) => String(item.id) === String(openTargetId)) : null;
-        if (target) setSelectedCircular(target);
-      }
       if (!liveResult.error && liveResult.data) setLiveSessions(liveResult.data as LiveSession[]);
       if (!facilityResult.error && facilityResult.data) setFacilities((facilityResult.data as Facility[]).filter((facility) => facility.is_active !== false));
       if (!reservationResult.error && reservationResult.data) setFacilityReservations(reservationResult.data as FacilityReservation[]);
-      setLoading(false);
     };
 
     fetchCirculars();
   }, [townId, openTargetId]);
+
+  useEffect(() => {
+    if (!loading && !openTargetId && activeTab === "board" && boardViewMode === "cards") {
+      boardFeedEndRef.current?.scrollIntoView({ block: "end" });
+    }
+  }, [activeTab, boardFilter, boardViewMode, loading, openTargetId]);
 
   useEffect(() => {
     const fetchFees = async () => {
@@ -493,6 +509,18 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     const raw = item.event_date || item.published_at || item.created_at;
     if (!raw) return "日付未設定";
     return dateFormatter.format(new Date(raw));
+  };
+
+  const formatPublishedDate = (item: Circular) => {
+    const raw = item.published_at || item.created_at;
+    if (!raw) return "日付未設定";
+    return dateFormatter.format(new Date(raw));
+  };
+
+  const eventSchedule = (item: Circular) => {
+    if (!item.event_date) return "開催日未設定";
+    const date = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date(item.event_date));
+    return `${date}${item.event_time ? ` ${item.event_time}` : ""}`;
   };
 
   const bodyText = (item: Circular) => item.content || item.body || "本文はまだ登録されていません。";
@@ -917,8 +945,8 @@ export default function ResidentView({ townId, townName, residentName, userId, o
           </div>
         </header>
         <main className="el-scroll-area el-detail">
-          <span className="el-pill">{formatDate(selectedCircular)}</span>
-          {(isEvent || isAssembly) && selectedCircular.event_time && <span className="el-pill muted">{selectedCircular.event_time}</span>}
+          <span className="el-pill">配信日 {formatPublishedDate(selectedCircular)}</span>
+          {(isEvent || isAssembly) && <div className="el-event-schedule"><i className="fas fa-calendar-alt" /> <strong>開催日時</strong><span>{eventSchedule(selectedCircular)}</span></div>}
           <h2>{selectedCircular.title}</h2>
           <p className="el-meta"><i className="fas fa-user-circle" /> {authorName(selectedCircular)}</p>
           <article className="el-message-box">{bodyText(selectedCircular)}</article>
@@ -1059,10 +1087,11 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                     <article key={item.id} className={`el-board-card ${item.category || "circular"}`}>
                       <div className="el-board-meta">
                         <span><i className={`fas ${categoryIcon(item)}`} /> {authorName(item)}</span>
-                        <strong>{formatDate(item)}配信</strong>
+                        <strong>{formatPublishedDate(item)}配信</strong>
                       </div>
                       <button type="button" onClick={() => openCircular(item)}>
                         <h3>{item.title} {attachments.length > 0 && <i className="fas fa-paperclip" />}</h3>
+                        {item.category === "event" && <div className="el-card-event-date"><i className="fas fa-calendar-alt" /> 開催日時：{eventSchedule(item)}</div>}
                         <p>{bodyText(item)}</p>
                         {previewImage && <img className="el-board-thumb" src={previewImage.url} alt={previewImage.name || item.title || "添付画像"} />}
                         <em>詳細を確認する <i className="fas fa-chevron-right" /></em>
@@ -1071,6 +1100,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                   );
                 })}
                 {!loading && boardItems.length === 0 && <div className="el-empty">表示できる発信はまだありません。</div>}
+                <div ref={boardFeedEndRef} aria-hidden="true" />
               </div>
             )}
           </section>

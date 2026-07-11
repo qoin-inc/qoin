@@ -92,7 +92,10 @@ function ResidentPageContent() {
 
     if (auto) setAutoLoginStarted(true);
     setIsSubmitting(true);
-    window.location.href = `https://liff.line.me/${liffId}/?redirect=resident`;
+    const liffTarget = openTargetId
+      ? `?open=${encodeURIComponent(openTargetId)}`
+      : "?redirect=resident";
+    window.location.href = `https://liff.line.me/${liffId}/${liffTarget}`;
   };
 
   const shouldStartAutoLineLogin = () => {

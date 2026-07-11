@@ -205,7 +205,9 @@ export async function POST(request: NextRequest) {
   }
 
   const origin = new URL(request.url).origin;
-  const detailUrl = targetUrl || (circularId ? `${origin}/resident?open=${encodeURIComponent(String(circularId))}` : `${origin}/resident`);
+  const detailUrl = circularId
+    ? `${origin}/resident?open=${encodeURIComponent(String(circularId))}`
+    : targetUrl || `${origin}/resident`;
   const messages = buildLineMessages({ category, title, content, detailUrl, imageUrl });
 
   const results = await Promise.allSettled(targets.map(async (to) => {
