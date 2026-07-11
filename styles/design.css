@@ -120,6 +120,10 @@ button { cursor: pointer; border: 0; }
 .el-board-meta { display: flex; justify-content: space-between; gap: 10px; color: #475569; padding: 0 4px; font-size: 12px; font-weight: 900; }
 .el-board-meta span { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .el-board-meta strong { flex: 0 0 auto; color: #111827; }
+.el-board-meta-right { display: inline-flex; align-items: center; justify-content: flex-end; gap: 7px; flex: 0 0 auto; }
+.el-read-status { min-width: 42px; padding: 3px 7px; border-radius: 999px; text-align: center; font-size: 11px; line-height: 1.3; font-weight: 900; }
+.el-read-status.unread { background: #fee2e2; color: #b91c1c; }
+.el-read-status.read { background: #e2e8f0; color: #475569; }
 .el-board-card > button { width: 100%; text-align: left; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; box-shadow: 0 7px 15px rgba(17,24,39,.1); padding: 18px 18px 14px; }
 .el-board-thumb { width: calc(100% + 36px); height: auto; max-height: 520px; margin: 12px -18px; object-fit: contain; object-position: top center; background: #f8fafc; border-block: 1px solid #eef2f7; display: block; }
 .el-card-event-date { margin: 0 0 10px; padding: 9px 10px; border-radius: 7px; background: #fff7ed; color: #c2410c; font-size: 13px; line-height: 1.5; font-weight: 900; }

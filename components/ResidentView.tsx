@@ -493,7 +493,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     if (boardFilter === "notice") return item.category === "notice" || item.category === "info";
     return item.category === boardFilter;
   });
-  const unreadCount = boardCirculars.filter((item) => !item.is_read && !readCircularIds.has(String(item.id))).length;
   const displayName = residentName || "会員";
   const placeName = townName || "町内会・自治会";
   const showViewModeSwitch = (activeTab === "board" && boardFilter === "event") || activeTab === "live";
@@ -1096,7 +1095,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
           <section className="el-stack">
             <div className="el-board-title">
               <h2>{placeName} 回覧板</h2>
-              <small>未読 {unreadCount} 件</small>
             </div>
 
             {boardFilter === "event" && boardViewMode === "calendar" ? (
@@ -1127,11 +1125,15 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                 {boardItems.map((item) => {
                   const attachments = parseAttachmentList(item);
                   const previewImage = attachments.find(isImageAttachment);
+                  const isRead = item.is_read || readCircularIds.has(String(item.id));
                   return (
                     <article key={item.id} data-circular-id={String(item.id)} className={`el-board-card ${item.category || "circular"}`}>
                       <div className="el-board-meta">
                         <span><i className={`fas ${categoryIcon(item)}`} /> {authorName(item)}</span>
-                        <strong>{formatPublishedDate(item)}配信</strong>
+                        <span className="el-board-meta-right">
+                          <strong>{formatPublishedDate(item)}配信</strong>
+                          <span className={`el-read-status ${isRead ? "read" : "unread"}`}>{isRead ? "既読" : "未読"}</span>
+                        </span>
                       </div>
                       <button type="button" onClick={() => openCircular(item)}>
                         <h3>{item.title} {attachments.length > 0 && <i className="fas fa-paperclip" />}</h3>
