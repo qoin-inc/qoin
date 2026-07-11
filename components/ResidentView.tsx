@@ -1426,7 +1426,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         aria-label={bottomNavHidden ? "下部メニューを表示" : "下部メニューを隠す"}
       >
         <i className={`fas ${bottomNavHidden ? "fa-chevron-up" : "fa-chevron-down"}`} />
-        <span>{bottomNavHidden ? "メニューを表示" : "隠す"}</span>
+        <span>{bottomNavHidden ? "メニューを表示" : "メニューを隠す"}</span>
       </button>
 
       {!bottomNavHidden && <nav className={`el-bottom-nav ${bottomNavMode === "sub" ? "is-sub" : "is-main"}`} aria-label={bottomNavMode === "sub" ? "住民サブメニュー" : "住民メニュー"}>
