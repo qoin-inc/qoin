@@ -181,6 +181,8 @@ button { cursor: pointer; border: 0; }
 .el-floating-view-switch button.active { background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%); border-color: #ea580c; color: #fff; box-shadow: inset 0 -4px 0 rgba(124,45,18,.25), 0 8px 16px rgba(234,88,12,.24); transform: translateY(-1px); }
 .el-floating-view-switch button:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(124,45,18,.22); }
 .el-bottom-nav { flex: 0 0 auto; height: 104px; padding: 10px 8px 16px; background: #fff; border-top: 1px solid var(--border); display: grid; gap: 6px; box-shadow: 0 -8px 18px rgba(17,24,39,.06); }
+.el-bottom-nav-toggle { position: absolute; z-index: 8; right: 12px; bottom: 104px; min-height: 30px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1; border-bottom: 0; border-radius: 8px 8px 0 0; background: rgba(255,255,255,.96); color: #475569; font-size: 11px; font-weight: 900; box-shadow: 0 -4px 10px rgba(17,24,39,.08); }
+.el-bottom-nav-toggle.is-hidden { bottom: 0; border-bottom: 1px solid #cbd5e1; border-radius: 8px 8px 0 0; color: var(--qoin-main-dark); }
 .el-bottom-nav.is-main { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .el-bottom-nav.is-sub { grid-auto-flow: column; grid-auto-columns: minmax(0, calc((100% - 24px) / 5)); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
 .el-bottom-nav.is-sub::-webkit-scrollbar { display: none; }

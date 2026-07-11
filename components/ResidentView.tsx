@@ -301,6 +301,8 @@ const createReplyDraft = (name = "", circular?: Circular | null): ReplyDraft => 
 export default function ResidentView({ townId, townName, residentName, userId, openTargetId, initialTab }: ResidentViewProps) {
   const [activeTab, setActiveTab] = useState<ResidentTab>(() => normalizeResidentTab(initialTab, openTargetId));
   const [bottomNavMode, setBottomNavMode] = useState<BottomNavMode>(() => (initialTab || openTargetId ? "sub" : "main"));
+  const [bottomNavHidden, setBottomNavHidden] = useState(false);
+  const [readCircularIds, setReadCircularIds] = useState<Set<string>>(() => new Set());
   const [circulars, setCirculars] = useState<Circular[]>([]);
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -338,6 +340,16 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const boardFeedEndRef = useRef<HTMLDivElement | null>(null);
+  const readStorageKey = `eltown.circularReads.${townId || "town"}.${userId || residentName || "resident"}`;
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(readStorageKey) || "[]");
+      setReadCircularIds(new Set(Array.isArray(saved) ? saved.map(String) : []));
+    } catch {
+      setReadCircularIds(new Set());
+    }
+  }, [readStorageKey]);
 
   useEffect(() => {
     const fetchCirculars = async () => {
@@ -481,10 +493,42 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     if (boardFilter === "notice") return item.category === "notice" || item.category === "info";
     return item.category === boardFilter;
   });
-  const unreadCount = circulars.filter((item) => !item.is_read).length;
+  const unreadCount = boardCirculars.filter((item) => !item.is_read && !readCircularIds.has(String(item.id))).length;
   const displayName = residentName || "会員";
   const placeName = townName || "町内会・自治会";
   const showViewModeSwitch = (activeTab === "board" && boardFilter === "event") || activeTab === "live";
+
+  useEffect(() => {
+    if (loading || activeTab !== "board" || boardViewMode !== "cards") return;
+    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-circular-id]"));
+    if (!cards.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const visibleIds = entries
+        .filter((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.65)
+        .map((entry) => (entry.target as HTMLElement).dataset.circularId)
+        .filter((id): id is string => Boolean(id));
+      if (!visibleIds.length) return;
+
+      setReadCircularIds((current) => {
+        const next = new Set(current);
+        visibleIds.forEach((id) => next.add(id));
+        try {
+          window.localStorage.setItem(readStorageKey, JSON.stringify(Array.from(next)));
+        } catch {
+          // Continue with in-memory read status when storage is unavailable.
+        }
+        return next;
+      });
+      visibleIds.forEach((id) => {
+        const card = document.querySelector<HTMLElement>(`[data-circular-id="${id}"]`);
+        if (card) observer.unobserve(card);
+      });
+    }, { threshold: 0.65 });
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [activeTab, boardFilter, boardItems.length, boardViewMode, loading, readStorageKey]);
 
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat("ja-JP", { month: "numeric", day: "numeric" }), []);
   const monthFormatter = useMemo(() => new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long" }), []);
@@ -1084,7 +1128,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                   const attachments = parseAttachmentList(item);
                   const previewImage = attachments.find(isImageAttachment);
                   return (
-                    <article key={item.id} className={`el-board-card ${item.category || "circular"}`}>
+                    <article key={item.id} data-circular-id={String(item.id)} className={`el-board-card ${item.category || "circular"}`}>
                       <div className="el-board-meta">
                         <span><i className={`fas ${categoryIcon(item)}`} /> {authorName(item)}</span>
                         <strong>{formatPublishedDate(item)}配信</strong>
@@ -1373,7 +1417,17 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         </div>
       )}
 
-      <nav className={`el-bottom-nav ${bottomNavMode === "sub" ? "is-sub" : "is-main"}`} aria-label={bottomNavMode === "sub" ? "住民サブメニュー" : "住民メニュー"}>
+      <button
+        type="button"
+        className={`el-bottom-nav-toggle ${bottomNavHidden ? "is-hidden" : ""}`}
+        onClick={() => setBottomNavHidden((current) => !current)}
+        aria-label={bottomNavHidden ? "下部メニューを表示" : "下部メニューを隠す"}
+      >
+        <i className={`fas ${bottomNavHidden ? "fa-chevron-up" : "fa-chevron-down"}`} />
+        <span>{bottomNavHidden ? "メニューを表示" : "隠す"}</span>
+      </button>
+
+      {!bottomNavHidden && <nav className={`el-bottom-nav ${bottomNavMode === "sub" ? "is-sub" : "is-main"}`} aria-label={bottomNavMode === "sub" ? "住民サブメニュー" : "住民メニュー"}>
         {bottomNavMode === "main" ? (
           tabs.map((tab) => (
             <button
@@ -1440,7 +1494,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
             )}
           </>
         )}
-      </nav>
+      </nav>}
     </div>
   );
 }
