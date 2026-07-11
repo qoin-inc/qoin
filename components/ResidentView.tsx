@@ -318,7 +318,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
   const [residentRosterId, setResidentRosterId] = useState<number | string | null>(null);
   const [replyDraft, setReplyDraft] = useState<ReplyDraft>(() => createReplyDraft(residentName || ""));
   const [currentEventReplyId, setCurrentEventReplyId] = useState<number | string | null>(null);
-  const [replyFile, setReplyFile] = useState<File | null>(null);
+  const [currentAssemblyReplyId, setCurrentAssemblyReplyId] = useState<number | string | null>(null);
   const [replyBusy, setReplyBusy] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
   const [boardViewMode, setBoardViewMode] = useState<ViewMode>("cards");
@@ -652,7 +652,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     setSelectedCircular(item);
     setReplyDraft(createReplyDraft(displayName, item));
     setReplyMessage("");
-    setReplyFile(null);
   };
 
   const toggleBottomNav = () => {
@@ -667,27 +666,6 @@ export default function ResidentView({ townId, townName, residentName, userId, o
 
   const shiftCalendarMonth = (amount: number) => {
     setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1));
-  };
-
-  const uploadReplyFile = async (file: File, circularId: number | string) => {
-    const fileName = `${townId || "town"}/replies/${circularId}/${Date.now()}-${safeFileName(file.name)}`;
-    const { error } = await supabase.storage.from("attachments").upload(fileName, file);
-    if (error) throw error;
-    const { data } = supabase.storage.from("attachments").getPublicUrl(fileName);
-    return data.publicUrl;
-  };
-
-  const openProxyPreview = () => {
-    if (!selectedCircular) return;
-    const params = new URLSearchParams({
-      title: selectedCircular.title,
-      signer: replyDraft.proxySignerName.trim() || displayName,
-      town: placeName,
-      date: replyDraft.proxyDate || todayKey(),
-      text: replyDraft.proxyText.trim() || defaultProxyText(selectedCircular.title),
-    });
-    if (replyDraft.proxyAgentName.trim()) params.set("agent", replyDraft.proxyAgentName.trim());
-    window.open(`/resident/proxy?${params.toString()}`, "_blank", "noopener,noreferrer");
   };
 
   const insertReplyWithFallback = async (payload: Record<string, any>) => {
@@ -771,6 +749,53 @@ export default function ResidentView({ townId, townName, residentName, userId, o
 
     return () => { active = false; };
   }, [selectedCircular?.id, selectedCircular?.category, residentRosterId, userId]);
+
+  useEffect(() => {
+    if (!selectedCircular || selectedCircular.category !== "assembly" || (!residentRosterId && !userId)) {
+      setCurrentAssemblyReplyId(null);
+      return;
+    }
+
+    let active = true;
+    let query = supabase
+      .from("event_applications")
+      .select("*")
+      .eq("circular_id", selectedCircular.id)
+      .in("reply_status", ["present", "absent"])
+      .order("updated_at", { ascending: false })
+      .order("applied_at", { ascending: false })
+      .limit(1);
+    if (residentRosterId && userId) query = query.or(`roster_id.eq.${residentRosterId},user_auth_id.eq.${userId}`);
+    else if (residentRosterId) query = query.eq("roster_id", String(residentRosterId));
+    else query = query.eq("user_auth_id", userId as string);
+
+    const loadAssemblyReply = async () => {
+      try {
+        const { data, error } = await query.maybeSingle();
+        if (!active) return;
+        if (error) throw error;
+        if (!data) {
+          setCurrentAssemblyReplyId(null);
+          return;
+        }
+        setCurrentAssemblyReplyId(data.id);
+        setReplyDraft((current) => ({
+          ...current,
+          assemblyStatus: data.reply_status === "absent" ? "absent" : "present",
+          proxyEnabled: Boolean(data.proxy_signed_date || data.proxy_signer_name || data.proxy_agent_name),
+          proxyDate: data.proxy_signed_date || todayKey(),
+          proxySignerName: data.proxy_signer_name || displayName,
+          proxyAgentName: data.proxy_agent_name || "",
+        }));
+        setReplyMessage("総会出欠は返信済みです。内容を変更して更新できます。");
+      } catch (error: any) {
+        if (active) setReplyMessage(error?.message || "総会返信の確認に失敗しました。");
+      }
+    };
+    void loadAssemblyReply();
+
+    return () => { active = false; };
+  }, [selectedCircular?.id, selectedCircular?.category, residentRosterId, userId, displayName]);
 
   const insertResidentRowWithFallback = async (table: string, payload: Record<string, any>, errorMessage: string) => {
     let nextPayload = { ...payload };
@@ -1037,9 +1062,8 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     setReplyBusy(true);
     setReplyMessage("");
     try {
-      const proxyFileUrl = replyDraft.assemblyStatus === "absent" && replyFile ? await uploadReplyFile(replyFile, selectedCircular.id) : null;
       const proxyEnabled = replyDraft.assemblyStatus === "absent" && replyDraft.proxyEnabled;
-      await insertReplyWithFallback({
+      const payload = {
         circular_id: selectedCircular.id,
         event_id: selectedCircular.id,
         assembly_notice_id: selectedCircular.id,
@@ -1053,12 +1077,27 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         proxy_signed_date: proxyEnabled ? replyDraft.proxyDate || todayKey() : null,
         proxy_signer_name: proxyEnabled ? replyDraft.proxySignerName.trim() || displayName : null,
         proxy_agent_name: proxyEnabled ? replyDraft.proxyAgentName.trim() || null : null,
-        proxy_file_url: proxyFileUrl,
-        proxy_url: proxyFileUrl,
-        attachment_url: proxyFileUrl,
+        proxy_file_url: null,
+        proxy_url: null,
+        attachment_url: null,
         applied_at: new Date().toISOString(),
-      });
-      setReplyMessage(replyDraft.assemblyStatus === "present" ? "総会の出席返信を送信しました。" : proxyEnabled ? "総会の欠席返信と委任状を送信しました。" : "総会の欠席返信を送信しました。");
+        updated_at: new Date().toISOString(),
+      };
+      if (currentAssemblyReplyId) {
+        const { data, error } = await supabase
+          .from("event_applications")
+          .update(payload)
+          .eq("id", currentAssemblyReplyId)
+          .select("id")
+          .single();
+        if (error) throw error;
+        setCurrentAssemblyReplyId(data.id);
+        setReplyMessage("総会の返信内容を変更しました。");
+      } else {
+        const saved = await insertReplyWithFallback(payload);
+        setCurrentAssemblyReplyId(saved.id);
+        setReplyMessage("総会の返信を保存しました。");
+      }
     } catch (error: any) {
       setReplyMessage(error?.message || "総会返信の送信に失敗しました。");
     } finally {
@@ -1158,19 +1197,12 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                           <input value={replyDraft.proxyAgentName} onChange={(event) => setReplyDraft((current) => ({ ...current, proxyAgentName: event.target.value }))} placeholder="代理人名" />
                         </label>
                       </div>
-                      <label>
-                        <span>委任状本文</span>
-                        <textarea value={replyDraft.proxyText} onChange={(event) => setReplyDraft((current) => ({ ...current, proxyText: event.target.value }))} />
-                      </label>
-                      <button type="button" className="el-secondary-action" onClick={openProxyPreview}>
-                        委任状PDFを確認
-                      </button>
                     </>
                   )}
                 </div>
               )}
               <button className="el-primary-action" onClick={handleAssemblyReply} disabled={replyBusy}>
-                <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-paper-plane"}`} /> 出欠を返信する
+                <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-paper-plane"}`} /> {currentAssemblyReplyId ? "出欠・委任内容を変更する" : "出欠を保存する"}
               </button>
             </section>
           ) : (
