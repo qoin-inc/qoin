@@ -701,6 +701,17 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         continue;
       }
 
+      const errorMessage = String(result.error.message || "");
+      const rosterId = nextPayload.roster_id;
+      if (
+        rosterId != null &&
+        /invalid input syntax for type bigint/i.test(errorMessage) &&
+        errorMessage.includes(String(rosterId))
+      ) {
+        delete nextPayload.roster_id;
+        continue;
+      }
+
       throw result.error;
     }
 
