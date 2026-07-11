@@ -2524,50 +2524,38 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       ? `${fullName}様の退会申請を承認しました。今後、同じ町内会・自治会ではel-townをご利用いただけません。`
       : `${fullName}様のel-town利用を復活しました。再度LINE連携してご利用いただけます。`;
     const statusValue = approving ? "withdrawn" : "active";
-    const withdrawalPayload = {
+    const withdrawalReplyPayload: Record<string, any> = {
       withdrawal_status: statusValue,
-    };
-    const withdrawalReplyPayload = {
-      ...withdrawalPayload,
+      status: statusValue,
       withdrawal_reply_message: reply,
     };
-    const statusPayload = { status: statusValue };
+    if (approving) {
+      Object.assign(withdrawalReplyPayload, {
+        user_auth_id: null,
+        family_user_auth_id_1: null,
+        family_user_auth_id_2: null,
+        line_user_id: null,
+        family_line_user_id_1: null,
+        family_line_user_id_2: null,
+        line_display_name: null,
+      });
+    }
 
     setMemberBusy(true);
     setMemberMessage("");
     setMemberReply("");
 
     try {
-      let updateResult = await supabase
-        .from("resident_rosters")
-        .update(withdrawalReplyPayload)
-        .eq("id", member.id)
-        .select("*")
-        .maybeSingle();
-
-      if (isMissingColumnError(updateResult.error, "withdrawal_reply_message")) {
-        updateResult = await supabase
-          .from("resident_rosters")
-          .update(withdrawalPayload)
-          .eq("id", member.id)
-          .select("*")
-          .maybeSingle();
-      }
-
-      if (isMissingColumnError(updateResult.error, "withdrawal_status")) {
-        updateResult = await supabase
-          .from("resident_rosters")
-          .update(statusPayload)
-          .eq("id", member.id)
-          .select("*")
-          .maybeSingle();
-      }
-
-      if (updateResult.error) throw updateResult.error;
+      const savedMember = await updateRowWithFallback(
+        "resident_rosters",
+        member.id,
+        withdrawalReplyPayload,
+        approving ? "退会承認とLINE連携解除に失敗しました。" : "会員の復活に失敗しました。",
+      );
 
       const updatedMember = {
         ...member,
-        ...(updateResult.data || {}),
+        ...savedMember,
         withdrawal_status: statusValue,
         withdrawal_reply_message: reply,
       };

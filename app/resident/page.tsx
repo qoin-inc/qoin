@@ -229,11 +229,12 @@ function ResidentPageContent() {
         .select('*')
         .or(`user_auth_id.eq.${userId},family_user_auth_id_1.eq.${userId},family_user_auth_id_2.eq.${userId}`)
         .not('neighborhood_id', 'is', null) // テスト用などの空データを掴まないための安全策
-        .order('id', { ascending: false }) // 常に最新の登録データを引く
-        .limit(1);
+        .order('id', { ascending: false })
+        .limit(20);
+      if (rosterError) throw rosterError;
       
       if (rosters && rosters.length > 0) {
-        const rosterData = rosters[0];
+        const rosterData = rosters.find((item: any) => item.withdrawal_status !== 'withdrawn' && item.status !== 'withdrawn') || rosters[0];
         await syncRosterLineUserId(rosterData, userId, lineUserId);
         if (rosterData.withdrawal_status === 'withdrawn') {
           setLoginError('このアカウントはすでに退会済みのため、ご利用いただけません。');
