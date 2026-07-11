@@ -317,6 +317,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
   const [boardFilter, setBoardFilter] = useState<BoardFilter>("all");
   const [residentRosterId, setResidentRosterId] = useState<number | string | null>(null);
   const [replyDraft, setReplyDraft] = useState<ReplyDraft>(() => createReplyDraft(residentName || ""));
+  const [currentEventReplyId, setCurrentEventReplyId] = useState<number | string | null>(null);
   const [replyFile, setReplyFile] = useState<File | null>(null);
   const [replyBusy, setReplyBusy] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
@@ -718,6 +719,59 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     throw new Error("返信を保存できませんでした。");
   };
 
+  const findCurrentEventReply = async (circularId: number | string) => {
+    if (!residentRosterId && !userId) return null;
+    let query = supabase
+      .from("event_applications")
+      .select("*")
+      .eq("circular_id", circularId)
+      .eq("reply_status", "attend")
+      .order("updated_at", { ascending: false })
+      .order("applied_at", { ascending: false })
+      .limit(1);
+
+    if (residentRosterId && userId) {
+      query = query.or(`roster_id.eq.${residentRosterId},user_auth_id.eq.${userId}`);
+    } else if (residentRosterId) {
+      query = query.eq("roster_id", String(residentRosterId));
+    } else {
+      query = query.eq("user_auth_id", userId as string);
+    }
+
+    const result = await query.maybeSingle();
+    if (result.error) throw result.error;
+    return result.data;
+  };
+
+  useEffect(() => {
+    if (!selectedCircular || selectedCircular.category !== "event" || (!residentRosterId && !userId)) {
+      setCurrentEventReplyId(null);
+      return;
+    }
+
+    let active = true;
+    findCurrentEventReply(selectedCircular.id)
+      .then((reply) => {
+        if (!active) return;
+        if (!reply) {
+          setCurrentEventReplyId(null);
+          return;
+        }
+        setCurrentEventReplyId(reply.id);
+        setReplyDraft((current) => ({
+          ...current,
+          adults: String(reply.adult_count ?? reply.adults ?? 0),
+          children: String(reply.child_count ?? reply.children ?? 0),
+        }));
+        setReplyMessage("参加申込済みです。人数を変更して更新できます。");
+      })
+      .catch((error: any) => {
+        if (active) setReplyMessage(error?.message || "参加申込の確認に失敗しました。");
+      });
+
+    return () => { active = false; };
+  }, [selectedCircular?.id, selectedCircular?.category, residentRosterId, userId]);
+
   const insertResidentRowWithFallback = async (table: string, payload: Record<string, any>, errorMessage: string) => {
     let nextPayload = { ...payload };
     for (let attempt = 0; attempt < 18; attempt += 1) {
@@ -936,7 +990,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     setReplyBusy(true);
     setReplyMessage("");
     try {
-      await insertReplyWithFallback({
+      const payload = {
         circular_id: selectedCircular.id,
         event_id: selectedCircular.id,
         neighborhood_id: townId,
@@ -950,8 +1004,27 @@ export default function ResidentView({ townId, townName, residentName, userId, o
         adults,
         children,
         applied_at: new Date().toISOString(),
-      });
-      setReplyMessage(`参加返信を送信しました。大人${adults}名、子供${children}名で受け付けました。`);
+        updated_at: new Date().toISOString(),
+      };
+      const existingReply = currentEventReplyId
+        ? { id: currentEventReplyId }
+        : await findCurrentEventReply(selectedCircular.id);
+
+      if (existingReply?.id) {
+        const { data, error } = await supabase
+          .from("event_applications")
+          .update(payload)
+          .eq("id", existingReply.id)
+          .select("id")
+          .single();
+        if (error) throw error;
+        setCurrentEventReplyId(data.id);
+        setReplyMessage(`参加人数を更新しました。大人${adults}名、子供${children}名です。`);
+      } else {
+        const saved = await insertReplyWithFallback(payload);
+        setCurrentEventReplyId(saved.id);
+        setReplyMessage(`参加申込を保存しました。大人${adults}名、子供${children}名です。`);
+      }
     } catch (error: any) {
       setReplyMessage(error?.message || "参加返信の送信に失敗しました。");
     } finally {
@@ -1049,7 +1122,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                 </label>
               </div>
               <button className="el-primary-action" onClick={handleEventReply} disabled={replyBusy}>
-                <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-calendar-check"}`} /> 参加人数を返信する
+                <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-calendar-check"}`} /> {currentEventReplyId ? "参加人数を変更する" : "参加申込を保存する"}
               </button>
             </section>
           ) : isAssembly ? (
