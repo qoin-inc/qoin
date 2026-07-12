@@ -14,9 +14,10 @@ type MapComponentProps = {
   towns?: Town[];
   selectedTownId?: number | null;
   onMarkerClick?: (id: number) => void;
+  interactionDisabled?: boolean;
 };
 
-export default function MapComponent({ towns = [], selectedTownId, onMarkerClick }: MapComponentProps) {
+export default function MapComponent({ towns = [], selectedTownId, onMarkerClick, interactionDisabled = false }: MapComponentProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const markerLayerRef = useRef<any>(null);
@@ -94,8 +95,19 @@ export default function MapComponent({ towns = [], selectedTownId, onMarkerClick
     if (!selected || !mapRef.current) return;
     const lat = Number(selected.lat);
     const lng = Number(selected.lng);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) mapRef.current.flyTo([lat, lng], 12, { duration: 0.7 });
+    if (Number.isFinite(lat) && Number.isFinite(lng)) mapRef.current.panTo([lat, lng], { animate: true, duration: 0.5 });
   }, [selectedTownId, towns]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const handlers = [map.dragging, map.touchZoom, map.doubleClickZoom, map.scrollWheelZoom, map.boxZoom, map.keyboard];
+    handlers.forEach((handler: any) => {
+      if (!handler) return;
+      if (interactionDisabled) handler.disable();
+      else handler.enable();
+    });
+  }, [interactionDisabled, mapReady]);
 
   const positionedCount = towns.filter((town) => Number.isFinite(Number(town.lat)) && Number.isFinite(Number(town.lng))).length;
 

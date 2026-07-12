@@ -815,6 +815,11 @@ button { cursor: pointer; border: 0; }
   pointer-events: auto;
 }
 .portal-town-posts-drawer.tabs-hidden { bottom: 34px; height: min(70%, 610px); }
+.portal-town-posts-drawer.collapsed,
+.portal-town-posts-drawer.tabs-hidden.collapsed {
+  height: 82px;
+  min-height: 82px;
+}
 .portal-town-posts-drawer-content {
   width: 100%;
   min-height: 0;
@@ -831,6 +836,21 @@ button { cursor: pointer; border: 0; }
   touch-action: pan-y;
   pointer-events: auto;
 }
+.portal-town-posts-controls { display: inline-flex; align-items: center; gap: 7px; }
+.portal-town-posts-controls button.toggle {
+  width: auto;
+  min-width: 72px;
+  padding: 0 11px;
+  border: 1px solid #dbe3ea;
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 6px;
+  background: #fff;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 900;
+}
+.portal-town-posts-controls button.close { flex: 0 0 40px; }
 
 .portal-bottom-tabs {
   position: relative;

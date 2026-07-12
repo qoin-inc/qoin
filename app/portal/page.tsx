@@ -24,6 +24,7 @@ export default function PortalPage() {
   
   // マイel-town(地図)で選択された町内会ID
   const [selectedTownId, setSelectedTownId] = useState<number | null>(null);
+  const [areTownPostsOpen, setAreTownPostsOpen] = useState(true);
   const [areTabsVisible, setAreTabsVisible] = useState(true);
   
   // モーダル用
@@ -274,6 +275,7 @@ const renderPostCard = (post: any) => {
                   e.stopPropagation();
                   if (post.neighborhood_id) {
                     setSelectedTownId(post.neighborhood_id);
+                    setAreTownPostsOpen(true);
                     setActiveTab('map');
                   }
                 }}
@@ -367,8 +369,10 @@ const renderPostCard = (post: any) => {
                 <MapComponent 
                   towns={towns} 
                   selectedTownId={selectedTownId}
+                  interactionDisabled={Boolean(selectedTownId && areTownPostsOpen)}
                   onMarkerClick={(id) => {
                      setSelectedTownId(id);
+                     setAreTownPostsOpen(true);
                   }} 
                 />
              </div>
@@ -377,23 +381,34 @@ const renderPostCard = (post: any) => {
         </div>
 
         {activeTab === 'map' && selectedTownId && (
-          <aside className={`portal-town-posts-drawer ${areTabsVisible ? '' : 'tabs-hidden'}`} aria-label="選択した町内会・自治会の投稿">
+          <aside
+            className={`portal-town-posts-drawer ${areTabsVisible ? '' : 'tabs-hidden'} ${areTownPostsOpen ? '' : 'collapsed'}`}
+            aria-label="選択した町内会・自治会の投稿"
+            onTouchStart={(event) => event.stopPropagation()}
+            onTouchMove={(event) => event.stopPropagation()}
+            onWheel={(event) => event.stopPropagation()}
+          >
             <div className="portal-town-posts-header">
               <div>
                 <h3>{towns.find(t => t.id === selectedTownId)?.name || '町内会'} の投稿</h3>
                 <p>新しい順に表示</p>
               </div>
-              <button type="button" onClick={() => setSelectedTownId(null)} aria-label="投稿カードを閉じる">
-                <i className="fas fa-times"></i>
-              </button>
+              <div className="portal-town-posts-controls">
+                <button type="button" className="toggle" onClick={() => setAreTownPostsOpen((current) => !current)}>
+                  {areTownPostsOpen ? '閉じる' : '開く'} <i className={`fas ${areTownPostsOpen ? 'fa-chevron-down' : 'fa-chevron-up'}`} />
+                </button>
+                <button type="button" className="close" onClick={() => setSelectedTownId(null)} aria-label="投稿カードを終了">
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
             </div>
-            <div className="portal-town-posts-drawer-content hide-scrollbar">
+            {areTownPostsOpen && <div className="portal-town-posts-drawer-content hide-scrollbar">
               {posts.filter(p => p.neighborhood_id === selectedTownId).length === 0 ? (
                 <div className="portal-town-posts-empty">この町内会・自治会の投稿はまだありません。</div>
               ) : (
                 posts.filter(p => p.neighborhood_id === selectedTownId).map(post => renderPostCard(post))
               )}
-            </div>
+            </div>}
           </aside>
         )}
 
@@ -404,7 +419,7 @@ const renderPostCard = (post: any) => {
           <button type="button" className={activeTab === 'sight' ? 'active sight' : 'sight'} onClick={() => setActiveTab('sight')}>
             <i className="fas fa-bullhorn" /><span>伝え<br />el-town</span>
           </button>
-          <button type="button" className={activeTab === 'map' ? 'active map' : 'map'} onClick={() => { setSelectedTownId(null); setActiveTab('map'); }}>
+          <button type="button" className={activeTab === 'map' ? 'active map' : 'map'} onClick={() => { setSelectedTownId(null); setAreTownPostsOpen(true); setActiveTab('map'); }}>
             <i className="fas fa-map-marked-alt" /><span>マイ<br />el-town</span>
           </button>
         </nav>}
