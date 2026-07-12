@@ -332,11 +332,11 @@ const renderPostCard = (post: any) => {
 
   return (
   
-    <div className="hero-bg font-sans flex flex-col items-center justify-start md:py-10">
-      <div className="w-full h-full md:w-[390px] md:h-[844px] md:rounded-[3rem] overflow-hidden md:border-[12px] md:border-gray-800 md:shadow-2xl relative bg-transparent flex flex-col">
+    <div className="hero-bg portal-screen font-sans">
+      <div className="portal-phone-shell">
         
         {/* ヘッダー (flex-shrink-0 を追加して潰れ・めり込みを防止、左矢印を削除、スリム化) */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-orange-400 to-pink-500 text-white py-2.5 px-4 flex items-center justify-center shadow-md relative z-20">
+        <div className="portal-header">
           <h1 className="font-black text-base tracking-wider flex items-center justify-center gap-1">
             マイ
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -345,7 +345,7 @@ const renderPostCard = (post: any) => {
         </div>
 
         {/* コンテンツエリア (スクロール領域) */}
-        <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto relative bg-gray-50 hide-scrollbar pb-10">
+        <div ref={contentRef} className="portal-content hide-scrollbar">
           
           {/* ① 食べ・映えel-town (タイムライン) */}
           {activeTab === 'food' && (
