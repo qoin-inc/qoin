@@ -14,6 +14,11 @@ ALTER TABLE public.resident_rosters
   ADD COLUMN IF NOT EXISTS withdrawal_status TEXT DEFAULT 'active',
   ADD COLUMN IF NOT EXISTS withdrawal_reply_message TEXT;
 
+-- full_name を正規の表示名として使う現行画面との互換用。
+-- 旧スキーマで last_name が NOT NULL の場合も、未指定の INSERT を許可する。
+ALTER TABLE public.resident_rosters
+  ALTER COLUMN last_name SET DEFAULT '';
+
 COMMENT ON COLUMN public.resident_rosters.kana_name IS '氏名カタカナ。初回LINE連携時の照合情報。';
 COMMENT ON COLUMN public.resident_rosters.postal_code IS '会員住所の郵便番号。初回LINE連携時の照合情報。';
 COMMENT ON COLUMN public.resident_rosters.address_line2 IS '住所２。';
