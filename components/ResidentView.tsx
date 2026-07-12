@@ -1130,7 +1130,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
             <div className="el-attachments">
               {attachments.map((attachment, index) => {
                 const type = attachment.type || "";
-                const isImage = type.startsWith("image/") || /\.(png|jpe?g|gif|webp)$/i.test(attachment.url || "");
+                const isImage = type.startsWith("image/") || /\.(png|jpe?g|gif|webp)(?:$|\?)/i.test(attachment.name || attachment.url || "");
                 const isExcel = /spreadsheet|excel/i.test(type) || /\.(xls|xlsx)$/i.test(attachment.name || attachment.url || "");
                 const isWord = /word/i.test(type) || /\.(doc|docx)$/i.test(attachment.name || attachment.url || "");
                 const icon = isExcel ? "fa-file-excel" : isWord ? "fa-file-word" : "fa-file-pdf";
@@ -1141,7 +1141,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
                     ) : (
                       <i className={`fas ${icon}`} />
                     )}
-                    <span>{attachment.name || (isImage ? "画像を開く" : "添付を開く")}</span>
+                    {!isImage && <span>{attachment.name || "添付を開く"}</span>}
                   </a>
                 );
               })}

@@ -125,7 +125,7 @@ button { cursor: pointer; border: 0; }
 .el-read-status.unread { background: #fee2e2; color: #b91c1c; }
 .el-read-status.read { background: #e2e8f0; color: #475569; }
 .el-board-card > button { width: 100%; text-align: left; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; box-shadow: 0 7px 15px rgba(17,24,39,.1); padding: 18px 18px 14px; }
-.el-board-thumb { width: calc(100% + 36px); height: auto; max-height: 520px; margin: 12px -18px; object-fit: contain; object-position: top center; background: #f8fafc; border-block: 1px solid #eef2f7; display: block; }
+.el-board-thumb { width: calc(100% + 36px); height: auto; max-height: none; margin: 12px -18px; object-fit: contain; object-position: top center; background: #f8fafc; border-block: 1px solid #eef2f7; display: block; }
 .el-card-event-date { margin: 0 0 10px; padding: 9px 10px; border-radius: 7px; background: #fff7ed; color: #c2410c; font-size: 13px; line-height: 1.5; font-weight: 900; }
 .el-event-schedule { margin-top: 10px; padding: 12px; display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 8px; border-radius: 8px; background: #fff7ed; color: #9a3412; font-size: 14px; }
 .el-event-schedule span { text-align: right; font-weight: 900; }
@@ -149,7 +149,7 @@ button { cursor: pointer; border: 0; }
 .el-attachments a { min-height: 54px; display: flex; align-items: center; gap: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; padding: 10px; color: #1d4ed8; font-weight: 900; }
 .el-attachments a.image { display: grid; padding: 0; overflow: hidden; color: #334155; }
 .el-attachments a.image span { padding: 10px; }
-.el-attachments img { width: 100%; height: auto; max-height: 640px; object-fit: contain; background: #f8fafc; }
+.el-attachments img { width: 100%; height: auto; max-height: none; display: block; object-fit: contain; background: #f8fafc; }
 .el-reply-panel { display: grid; gap: 12px; margin-top: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; padding: 14px; }
 .el-reply-panel h3 { margin: 0; color: #111827; font-size: 16px; font-weight: 900; }
 .el-reply-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
