@@ -39,7 +39,7 @@ function ProxyPrintContent() {
       alignment: marker?.[1] || 'left',
       text: marker ? line.slice(marker[0].length) : line,
     };
-  });
+  }).filter((line) => line.text.trim() !== '委任状');
 
   useEffect(() => {
     const timer = window.setTimeout(() => window.print(), 500);
@@ -52,6 +52,7 @@ function ProxyPrintContent() {
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fff; color: #333; margin: 0; padding: 0; }
         .proxy-container { padding: 60px 50px; width: 100%; max-width: 700px; min-height: 800px; background: #fff; box-sizing: border-box; display: flex; flex-direction: column; }
+        .proxy-heading { margin: 0 0 34px; text-align: center; font-size: 28px; line-height: 1.4; font-weight: 900; letter-spacing: 0.12em; }
         .proxy-body-text { font-size: 17px; line-height: 2; margin-bottom: 80px; white-space: pre-wrap; font-weight: bold; }
         .proxy-body-line { min-height: 2em; white-space: pre-wrap; }
         .proxy-signatures { margin-top: auto; }
@@ -69,6 +70,7 @@ function ProxyPrintContent() {
       `}</style>
 
       <div className="proxy-container">
+        <h1 className="proxy-heading">委任状</h1>
         <div className="proxy-body-text">
           {proxyLines.map((line, index) => (
             <div key={index} className="proxy-body-line" style={{ textAlign: line.alignment as 'left' | 'center' | 'right' }}>{line.text || '\u00a0'}</div>
