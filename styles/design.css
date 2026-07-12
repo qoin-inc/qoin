@@ -806,35 +806,37 @@ button { cursor: pointer; border: 0; }
   width: 100%;
   height: min(62%, 540px);
   min-height: 300px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
   border-radius: 22px 22px 0 0;
   background: #f8fafc;
   box-shadow: 0 -10px 34px rgba(15,23,42,.32);
   pointer-events: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 .portal-town-posts-drawer.tabs-hidden { bottom: 34px; height: min(70%, 610px); }
 .portal-town-posts-drawer.collapsed,
 .portal-town-posts-drawer.tabs-hidden.collapsed {
   height: 82px;
   min-height: 82px;
+  overflow: hidden;
 }
 .portal-town-posts-drawer-content {
   width: 100%;
-  min-height: 0;
-  flex: 1 1 auto;
-  overflow-x: hidden;
-  overflow-y: scroll;
   display: grid;
   align-content: start;
   gap: 14px;
   padding: 14px 14px 34px;
   background: #f8fafc;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
   pointer-events: auto;
+}
+.portal-town-posts-drawer .portal-town-posts-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 .portal-town-posts-controls { display: inline-flex; align-items: center; gap: 7px; }
 .portal-town-posts-controls button.toggle {
@@ -851,6 +853,60 @@ button { cursor: pointer; border: 0; }
   font-weight: 900;
 }
 .portal-town-posts-controls button.close { flex: 0 0 40px; }
+
+.portal-post-card {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(15,23,42,.08);
+}
+.portal-post-card-header {
+  padding: 12px 13px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.portal-post-card-author { min-width: 0; display: flex; align-items: center; gap: 9px; }
+.portal-post-card-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #3b82f6;
+  color: #fff;
+}
+.portal-post-card.food .portal-post-card-icon { background: #fb923c; }
+.portal-post-card-town {
+  max-width: 190px;
+  padding: 0;
+  border: 0;
+  display: block;
+  overflow: hidden;
+  background: transparent;
+  color: #2563eb;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 900;
+}
+.portal-post-card-author small { display: block; margin-top: 3px; color: #64748b; font-size: 11px; }
+.portal-post-card-meta { flex: 0 0 auto; color: #94a3b8; text-align: right; font-size: 10px; font-weight: 800; }
+.portal-post-card-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 5px; }
+.portal-post-card-actions button { width: 28px; height: 28px; border: 0; border-radius: 50%; background: #f1f5f9; color: #64748b; }
+.portal-post-card-body { padding: 14px; }
+.portal-post-card-body h3 { margin: 0 0 10px; color: #2563eb; font-size: 17px; line-height: 1.4; font-weight: 900; }
+.portal-post-card.food .portal-post-card-body h3 { color: #ea580c; }
+.portal-post-card-location { margin-bottom: 10px; display: flex; align-items: flex-start; gap: 6px; color: #64748b; font-size: 12px; }
+.portal-post-card-body > p { margin: 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 11px; background: #f8fafc; color: #334155; white-space: pre-wrap; font-size: 14px; line-height: 1.65; }
+.portal-post-card-image { width: 100%; border-top: 1px solid #e2e8f0; background: #f1f5f9; }
+.portal-post-card-image img { display: block; width: 100%; height: auto; object-fit: contain; background: #f1f5f9; }
 
 .portal-bottom-tabs {
   position: relative;

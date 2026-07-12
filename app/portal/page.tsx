@@ -262,15 +262,16 @@ const renderPostCard = (post: any) => {
   }
 
     return (
-      <div key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
-        <div className="p-3 border-b border-gray-50 flex items-start justify-between">
-          <div className="flex items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white mr-2 shadow-inner ${post.category === 'food' ? 'bg-orange-400' : 'bg-blue-500'}`}>
-              <i className={`fas ${post.category === 'food' ? 'fa-camera-retro' : 'fa-bullhorn'} text-xs`} />
-            </div>
+      <article key={post.id} className={`portal-post-card ${post.category === 'food' ? 'food' : 'sight'}`}>
+        <header className="portal-post-card-header">
+          <div className="portal-post-card-author">
+            <span className="portal-post-card-icon">
+              <i className={`fas ${post.category === 'food' ? 'fa-camera-retro' : 'fa-bullhorn'}`} />
+            </span>
             <div>
-              <div
-                className="text-xs font-black text-blue-600 cursor-pointer hover:text-blue-800 hover:underline transition inline-flex items-center"
+              <button
+                type="button"
+                className="portal-post-card-town"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (post.neighborhood_id) {
@@ -282,44 +283,39 @@ const renderPostCard = (post: any) => {
               >
                 <i className="fas fa-map-marker-alt mr-1" />
                 {post.neighborhoods?.name || '不明な自治会'}
-              </div>
-              <span className="text-[10px] text-gray-400 font-normal ml-1">から</span>
-              <div className="text-[10px] text-gray-500 mt-0.5">@{post.nickname}</div>
+              </button>
+              <small>@{post.nickname}</small>
             </div>
           </div>
-          <div className="flex flex-col items-end">
-            <div className="text-[10px] text-gray-400 font-bold mb-1">
-              {new Date(post.created_at).toLocaleDateString('ja-JP')}
-            </div>
+          <div className="portal-post-card-meta">
+            <time>{new Date(post.created_at).toLocaleDateString('ja-JP')}</time>
             {user && post.user_auth_id === user.id && (
-              <div className="flex items-center gap-2 mt-1">
-                <button onClick={() => handleEditClick(post)} className="text-gray-400 hover:text-blue-500 transition"><i className="fas fa-pen text-xs" /></button>
-                <button onClick={() => handleDeletePost(post.id)} className="text-gray-400 hover:text-red-500 transition"><i className="fas fa-trash text-xs" /></button>
+              <div className="portal-post-card-actions">
+                <button type="button" onClick={() => handleEditClick(post)} aria-label="投稿を編集"><i className="fas fa-pen" /></button>
+                <button type="button" onClick={() => handleDeletePost(post.id)} aria-label="投稿を削除"><i className="fas fa-trash" /></button>
               </div>
             )}
           </div>
-        </div>
+        </header>
 
-        <div className="p-4">
-          <h3 className={`font-black text-base mb-2 leading-tight ${post.category === 'food' ? 'text-orange-600' : 'text-blue-600'}`}>
-            {post.title}
-          </h3>
+        <div className="portal-post-card-body">
+          <h3>{post.title}</h3>
           {post.location_info && (
-            <div className="text-xs text-gray-500 mb-2 flex items-start">
-              <i className={`fas fa-map-marker-alt mt-0.5 mr-1.5 ${post.category === 'food' ? 'text-orange-400' : 'text-blue-400'}`} />
+            <div className="portal-post-card-location">
+              <i className="fas fa-map-marker-alt" />
               <span>{post.location_info}</span>
             </div>
           )}
-          <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed mt-2 bg-gray-50 p-3 rounded-xl border border-gray-100">{post.content}</p>
+          <p>{post.content}</p>
         </div>
 
         {post.image_url && (
-          <div className="w-full max-h-[400px] bg-gray-100 flex items-center justify-center overflow-hidden border-t border-gray-50">
+          <div className="portal-post-card-image">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.image_url} alt="投稿画像" className="w-full h-full object-contain" />
+            <img src={post.image_url} alt={`${post.title || '投稿'}の画像`} />
           </div>
         )}
-      </div>
+      </article>
     );
   };
 
@@ -384,9 +380,6 @@ const renderPostCard = (post: any) => {
           <aside
             className={`portal-town-posts-drawer ${areTabsVisible ? '' : 'tabs-hidden'} ${areTownPostsOpen ? '' : 'collapsed'}`}
             aria-label="選択した町内会・自治会の投稿"
-            onTouchStart={(event) => event.stopPropagation()}
-            onTouchMove={(event) => event.stopPropagation()}
-            onWheel={(event) => event.stopPropagation()}
           >
             <div className="portal-town-posts-header">
               <div>
