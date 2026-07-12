@@ -24,6 +24,7 @@ export default function MapComponent({ towns = [], selectedTownId, onMarkerClick
 
   useEffect(() => {
     let active = true;
+    let resizeObserver: ResizeObserver | null = null;
 
     const initialize = async () => {
       if (!containerRef.current || mapRef.current) return;
@@ -47,11 +48,14 @@ export default function MapComponent({ towns = [], selectedTownId, onMarkerClick
       mapRef.current = map;
       setMapReady(true);
       setTimeout(() => map.invalidateSize(), 0);
+      resizeObserver = new ResizeObserver(() => map.invalidateSize({ animate: false }));
+      resizeObserver.observe(containerRef.current);
     };
 
     initialize();
     return () => {
       active = false;
+      resizeObserver?.disconnect();
       if (mapRef.current) mapRef.current.remove();
       mapRef.current = null;
       markerLayerRef.current = null;

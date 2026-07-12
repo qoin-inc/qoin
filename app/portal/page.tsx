@@ -49,15 +49,6 @@ export default function PortalPage() {
     checkSessionAndFetchData();
   }, []);
 
-  // 初期ロード時・新規投稿時のみ一番下にスクロールする
-  useEffect(() => {
-    setTimeout(() => {
-      if (messagesEndRef.current && posts.length > 0) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'auto' }); // smoothだとチラつくのでauto
-      }
-    }, 100);
-  }, [posts.length, activeTab]);
-
   const checkSessionAndFetchData = async () => {
     let { data: { session } } = await supabase.auth.getSession();
     
@@ -384,9 +375,9 @@ const renderPostCard = (post: any) => {
                 
                 {/* 地図上のピンタップ時に表示される投稿一覧 */}
                 {selectedTownId && (
-                  <div className={`absolute inset-x-0 bottom-0 ${isMapModalExpanded ? 'h-[85%]' : 'h-[45%]'} bg-white rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.2)] z-[100] flex flex-col transition-all duration-300 ease-in-out`}>
+                  <div className={`portal-map-sheet ${isMapModalExpanded ? 'expanded' : ''}`}>
                     <div 
-                      className="p-4 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl shrink-0 cursor-pointer relative"
+                      className="portal-map-sheet-header"
                       onClick={() => setIsMapModalExpanded(!isMapModalExpanded)}
                     >
                       <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full"></div>
@@ -409,7 +400,7 @@ const renderPostCard = (post: any) => {
                         </button>
                       </div>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                    <div className="portal-map-sheet-content">
                       {posts.filter(p => p.neighborhood_id === selectedTownId).length === 0 ? (
                         <div className="text-center text-gray-400 py-10 font-bold text-sm">投稿がありません。</div>
                       ) : (
