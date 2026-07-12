@@ -20,7 +20,7 @@ export default function PortalPage() {
   const [towns, setTowns] = useState<any[]>([]);
   
   // タブ: 'food'(食べ・映えel-town), 'sight'(伝えel-town), 'map'(マイel-town)
-  const [activeTab, setActiveTab] = useState<'food' | 'sight' | 'map'>('food');
+  const [activeTab, setActiveTab] = useState<'food' | 'sight' | 'map'>('map');
   
   // マイel-town(地図)で選択された町内会ID
   const [selectedTownId, setSelectedTownId] = useState<number | null>(null);
@@ -37,7 +37,6 @@ export default function PortalPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   
   // 画面下部のメニュー用 State
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [richMenuTab, setRichMenuTab] = useState<'main' | 'fee_submenu' | 'settings_submenu'>('main');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -123,32 +122,33 @@ export default function PortalPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const { data: postsData } = await supabase
-      .from('public_posts')
-      .select('*, neighborhoods(name, lat, lng)')
-      .order('created_at', { ascending: true }); // 元の順序（古い順）に戻す
+    const [{ data: postsData }, { data: neighborhoodsData }] = await Promise.all([
+      supabase
+        .from('public_posts')
+        .select('*, neighborhoods(name, lat, lng)')
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('neighborhoods')
+        .select('id, name, lat, lng')
+        .not('lat', 'is', null)
+        .not('lng', 'is', null),
+    ]);
 
     if (postsData) {
       setPosts(postsData);
       
-      const townMap = new Map();
+      const latestPostMap = new Map();
       postsData.forEach(post => {
-        if (post.neighborhoods && post.neighborhoods.lat && post.neighborhoods.lng) {
-          // 常に最新（ループの最後）で上書きすることで最新投稿を保持する
-          townMap.set(post.neighborhood_id, {
-            id: post.neighborhood_id,
-            name: post.neighborhoods.name,
-            lat: post.neighborhoods.lat,
-            lng: post.neighborhoods.lng,
-            latestPost: {
-              category: post.category,
-              title: post.title,
-              nickname: post.nickname
-            }
-          });
-        }
+        latestPostMap.set(post.neighborhood_id, {
+          category: post.category,
+          title: post.title,
+          nickname: post.nickname,
+        });
       });
-      setTowns(Array.from(townMap.values()));
+      setTowns((neighborhoodsData || []).map((item: any) => ({
+        ...item,
+        latestPost: latestPostMap.get(item.id) || null,
+      })));
     }
     setLoading(false);
   };
@@ -426,47 +426,17 @@ const renderPostCard = (post: any) => {
 
         </div>
 
-        {/* Toggle Menu Area (電子回覧板のUIと統一し、開閉に伴ってコンテンツを押し上げる) */}
-        <div className="w-full flex-shrink-0 bg-gray-100 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] z-50 flex flex-col">
-          {isMenuOpen && (
-            <div className="w-full max-w-[600px] mx-auto bg-gray-100 pb-1 shadow-inner">
-              <div className="p-2.5 bg-gray-100 w-full">
-                <div className="grid grid-cols-3 gap-2 h-auto animate-fadeIn">
-                  <div onClick={() => setActiveTab('food')} className={`bg-white rounded-xl flex flex-col items-center justify-center p-3 shadow-sm border-b-[4px] ${activeTab === 'food' ? 'border-orange-500 bg-orange-50' : 'border-orange-200 active:bg-orange-50'} transition cursor-pointer`}>
-                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-1 text-xl md:text-2xl ${activeTab === 'food' ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-500'}`}><i className="fas fa-camera-retro"></i></div>
-                     <span className="text-[10px] md:text-[11px] font-bold text-gray-700 whitespace-nowrap tracking-tighter scale-90 md:scale-100 origin-top">食べ・映え<br className="md:hidden"/>el-town</span>
-                  </div>
-                  <div onClick={() => setActiveTab('sight')} className={`bg-white rounded-xl flex flex-col items-center justify-center p-3 shadow-sm border-b-[4px] ${activeTab === 'sight' ? 'border-blue-500 bg-blue-50' : 'border-blue-200 active:bg-blue-50'} transition cursor-pointer`}>
-                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-1 text-xl md:text-2xl ${activeTab === 'sight' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-500'}`}><i className="fas fa-bullhorn"></i></div>
-                     <span className="text-[10px] md:text-xs font-bold text-gray-700 whitespace-nowrap">伝えel-town</span>
-                  </div>
-                  <div onClick={() => setActiveTab('map')} className={`bg-white rounded-xl flex flex-col items-center justify-center p-3 shadow-sm border-b-[4px] ${activeTab === 'map' ? 'border-teal-500 bg-teal-50' : 'border-teal-200 active:bg-teal-50'} transition cursor-pointer`}>
-                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-1 text-xl md:text-2xl ${activeTab === 'map' ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-500'}`}><i className="fas fa-map-marked-alt"></i></div>
-                     <span className="text-[10px] md:text-xs font-bold text-gray-700 whitespace-nowrap">マイel-town</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div 
-            onClick={() => {
-              setIsMenuOpen(!isMenuOpen);
-              setTimeout(() => {
-                if (messagesEndRef.current) {
-                  messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-                }
-              }, 50);
-            }}
-            className="w-full max-w-[600px] mx-auto bg-white border-t border-gray-200 text-gray-700 text-center py-4 text-sm font-bold flex items-center justify-center cursor-pointer hover:bg-gray-50 transition shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-10"
-          >
-            {isMenuOpen ? (
-              <><i className="fas fa-keyboard mr-2 text-gray-400"></i> メニューを閉じる <i className="fas fa-chevron-down ml-2 opacity-60"></i></>
-            ) : (
-              <><i className="fas fa-keyboard mr-2 text-gray-400"></i> メニューを開く <i className="fas fa-chevron-up ml-2 opacity-60"></i></>
-            )}
-          </div>
-        </div>
+        <nav className="portal-bottom-tabs" aria-label="マイel-town メニュー">
+          <button type="button" className={activeTab === 'food' ? 'active food' : 'food'} onClick={() => setActiveTab('food')}>
+            <i className="fas fa-camera-retro" /><span>食べ・映え<br />el-town</span>
+          </button>
+          <button type="button" className={activeTab === 'sight' ? 'active sight' : 'sight'} onClick={() => setActiveTab('sight')}>
+            <i className="fas fa-bullhorn" /><span>伝え<br />el-town</span>
+          </button>
+          <button type="button" className={activeTab === 'map' ? 'active map' : 'map'} onClick={() => setActiveTab('map')}>
+            <i className="fas fa-map-marked-alt" /><span>マイ<br />el-town</span>
+          </button>
+        </nav>
 
         {/* 投稿FABボタン (地図タブ以外で表示、あるいは常時表示) */}
         <button 
@@ -474,7 +444,7 @@ const renderPostCard = (post: any) => {
              setPostCategory(activeTab === 'sight' ? 'sight' : 'food'); // タブに応じて初期カテゴリを変える
              setIsModalOpen(true);
           }}
-          className={`absolute right-6 w-14 h-14 bg-gray-800 text-white rounded-full shadow-xl flex items-center justify-center text-2xl hover:scale-105 active:scale-95 transition-all z-30 ${isMenuOpen ? 'bottom-40' : 'bottom-20'}`}
+          className={`portal-post-fab ${activeTab === 'map' ? 'is-hidden' : ''}`}
         >
           <i className="fas fa-pen"></i>
         </button>
