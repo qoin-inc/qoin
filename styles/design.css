@@ -2925,6 +2925,25 @@ button { cursor: pointer; border: 0; }
   grid-column: span 3;
 }
 
+.admin-proxy-alignment-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.admin-proxy-alignment-toolbar button {
+  min-height: 36px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  padding: 6px 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-proxy-alignment-toolbar button i { margin-right: 6px; }
+
 .admin-publish-form .admin-publish-toggle {
   grid-column: 1 / -1;
   display: grid;

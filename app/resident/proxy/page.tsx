@@ -33,6 +33,13 @@ function ProxyPrintContent() {
 
   const formattedDate = formatToJapaneseDate(date);
   const proxyText = text || `私は、${title || '総会'}に出席できませんので、同総会における議決権を代理人に委任します。`;
+  const proxyLines = proxyText.split('\n').map((line) => {
+    const marker = line.match(/^\[(left|center|right)\]\s*/);
+    return {
+      alignment: marker?.[1] || 'left',
+      text: marker ? line.slice(marker[0].length) : line,
+    };
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => window.print(), 500);
@@ -45,7 +52,8 @@ function ProxyPrintContent() {
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
         body { font-family: 'Noto Sans JP', sans-serif; background-color: #fff; color: #333; margin: 0; padding: 0; }
         .proxy-container { padding: 60px 50px; width: 100%; max-width: 700px; min-height: 800px; background: #fff; box-sizing: border-box; display: flex; flex-direction: column; }
-        .proxy-body-text { font-size: 17px; line-height: 2; margin-bottom: 80px; white-space: pre-wrap; font-weight: bold; text-indent: 1em; }
+        .proxy-body-text { font-size: 17px; line-height: 2; margin-bottom: 80px; white-space: pre-wrap; font-weight: bold; }
+        .proxy-body-line { min-height: 2em; white-space: pre-wrap; }
         .proxy-signatures { margin-top: auto; }
         .proxy-sig-row { font-size: 18px; margin-bottom: 24px; display: flex; align-items: flex-end; }
         .proxy-sig-row:last-child { margin-bottom: 0; }
@@ -61,7 +69,11 @@ function ProxyPrintContent() {
       `}</style>
 
       <div className="proxy-container">
-        <div className="proxy-body-text">{proxyText}</div>
+        <div className="proxy-body-text">
+          {proxyLines.map((line, index) => (
+            <div key={index} className="proxy-body-line" style={{ textAlign: line.alignment as 'left' | 'center' | 'right' }}>{line.text || '\u00a0'}</div>
+          ))}
+        </div>
 
         <div className="proxy-signatures">
           <div className="proxy-sig-row">

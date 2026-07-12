@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type AdminViewProps = {
@@ -802,6 +802,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [stripeBusy, setStripeBusy] = useState(false);
   const [stripeMessage, setStripeMessage] = useState("");
   const [publishDraft, setPublishDraft] = useState<PublishDraft>(defaultPublishDraft);
+  const proxyTemplateTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [publishAttachment, setPublishAttachment] = useState<File | null>(null);
   const [editingPublishId, setEditingPublishId] = useState<number | string | null>(null);
   const [publishBusy, setPublishBusy] = useState(false);
@@ -1159,6 +1160,28 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const handlePublishDraftChange = <K extends keyof PublishDraft>(field: K, value: PublishDraft[K]) => {
     setPublishDraft((current) => ({ ...current, [field]: value }));
     setPublishMessage("");
+  };
+
+  const alignProxyTemplateLines = (alignment: "left" | "center" | "right") => {
+    const textarea = proxyTemplateTextareaRef.current;
+    if (!textarea) return;
+    const text = publishDraft.proxyTemplateText;
+    const selectionStart = textarea.selectionStart;
+    const selectionEnd = textarea.selectionEnd;
+    const lineStart = text.lastIndexOf("\n", Math.max(selectionStart - 1, 0)) + 1;
+    const nextBreak = text.indexOf("\n", selectionEnd);
+    const lineEnd = nextBreak === -1 ? text.length : nextBreak;
+    const selectedLines = text.slice(lineStart, lineEnd).split("\n");
+    const marker = alignment === "left" ? "" : `[${alignment}] `;
+    const aligned = selectedLines
+      .map((line) => `${marker}${line.replace(/^\[(?:left|center|right)\]\s*/, "")}`)
+      .join("\n");
+    const nextText = `${text.slice(0, lineStart)}${aligned}${text.slice(lineEnd)}`;
+    handlePublishDraftChange("proxyTemplateText", nextText);
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(lineStart, lineStart + aligned.length);
+    });
   };
 
   const cancelPublishEdit = () => {
@@ -3420,11 +3443,18 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <>
               <label className="admin-publish-wide">
                 <span>委任状定型文</span>
+                <span className="admin-proxy-alignment-toolbar" aria-label="選択した行の文字位置">
+                  <button type="button" onClick={() => alignProxyTemplateLines("left")}><i className="fas fa-align-left" />左揃え</button>
+                  <button type="button" onClick={() => alignProxyTemplateLines("center")}><i className="fas fa-align-center" />中央揃え</button>
+                  <button type="button" onClick={() => alignProxyTemplateLines("right")}><i className="fas fa-align-right" />右揃え</button>
+                </span>
                 <textarea
+                  ref={proxyTemplateTextareaRef}
                   value={publishDraft.proxyTemplateText}
                   onChange={(event) => handlePublishDraftChange("proxyTemplateText", event.target.value)}
                   placeholder={defaultProxyTemplateText(publishDraft.title || "総会")}
                 />
+                <small>位置を変える行を選択して、左・中央・右揃えを押してください。</small>
               </label>
               <button type="button" className="admin-publish-preview-button" onClick={openProxyTemplatePreview}>
                 <i className="fas fa-file-pdf" />
