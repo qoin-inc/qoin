@@ -362,10 +362,11 @@ const renderPostCard = (post: any) => {
           )}
 
           {/* ③ マイel-town (全面地図) */}
-          {activeTab === 'map' && !selectedTownId && (
+          {activeTab === 'map' && (
              <div className="portal-map-screen">
                 <MapComponent 
                   towns={towns} 
+                  selectedTownId={selectedTownId}
                   onMarkerClick={(id) => {
                      setSelectedTownId(id);
                   }} 
@@ -373,28 +374,28 @@ const renderPostCard = (post: any) => {
              </div>
           )}
 
-          {activeTab === 'map' && selectedTownId && (
-            <section className="portal-town-posts-page">
-              <div className="portal-town-posts-header">
-                <div>
-                  <h3>{towns.find(t => t.id === selectedTownId)?.name || '町内会'} の投稿</h3>
-                  <p>新しい順に表示</p>
-                </div>
-                <button type="button" onClick={() => setSelectedTownId(null)} aria-label="日本地図へ戻る">
-                  <i className="fas fa-times"></i>
-                </button>
-              </div>
-              <div className="portal-town-posts-list">
-                {posts.filter(p => p.neighborhood_id === selectedTownId).length === 0 ? (
-                  <div className="portal-town-posts-empty">この町内会・自治会の投稿はまだありません。</div>
-                ) : (
-                  posts.filter(p => p.neighborhood_id === selectedTownId).map(post => renderPostCard(post))
-                )}
-              </div>
-            </section>
-          )}
-
         </div>
+
+        {activeTab === 'map' && selectedTownId && (
+          <aside className={`portal-town-posts-drawer ${areTabsVisible ? '' : 'tabs-hidden'}`} aria-label="選択した町内会・自治会の投稿">
+            <div className="portal-town-posts-header">
+              <div>
+                <h3>{towns.find(t => t.id === selectedTownId)?.name || '町内会'} の投稿</h3>
+                <p>新しい順に表示</p>
+              </div>
+              <button type="button" onClick={() => setSelectedTownId(null)} aria-label="投稿カードを閉じる">
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="portal-town-posts-drawer-content hide-scrollbar">
+              {posts.filter(p => p.neighborhood_id === selectedTownId).length === 0 ? (
+                <div className="portal-town-posts-empty">この町内会・自治会の投稿はまだありません。</div>
+              ) : (
+                posts.filter(p => p.neighborhood_id === selectedTownId).map(post => renderPostCard(post))
+              )}
+            </div>
+          </aside>
+        )}
 
         {areTabsVisible && <nav className="portal-bottom-tabs" aria-label="マイel-town メニュー">
           <button type="button" className={activeTab === 'food' ? 'active food' : 'food'} onClick={() => setActiveTab('food')}>

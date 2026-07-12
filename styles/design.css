@@ -797,6 +797,40 @@ button { cursor: pointer; border: 0; }
   padding: 14px 14px 40px;
   background: #f8fafc;
 }
+.portal-town-posts-drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 116px;
+  z-index: 2200;
+  width: 100%;
+  height: min(62%, 540px);
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 22px 22px 0 0;
+  background: #f8fafc;
+  box-shadow: 0 -10px 34px rgba(15,23,42,.32);
+  pointer-events: auto;
+}
+.portal-town-posts-drawer.tabs-hidden { bottom: 34px; height: min(70%, 610px); }
+.portal-town-posts-drawer-content {
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 14px 14px 34px;
+  background: #f8fafc;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  pointer-events: auto;
+}
 
 .portal-bottom-tabs {
   position: relative;
