@@ -118,7 +118,7 @@ export default function PortalPage() {
       supabase
         .from('public_posts')
         .select('*, neighborhoods(name, lat, lng)')
-        .order('created_at', { ascending: true }),
+        .order('created_at', { ascending: false }),
       supabase
         .from('neighborhoods')
         .select('id, name, lat, lng')
@@ -131,11 +131,13 @@ export default function PortalPage() {
       
       const latestPostMap = new Map();
       postsData.forEach(post => {
-        latestPostMap.set(post.neighborhood_id, {
-          category: post.category,
-          title: post.title,
-          nickname: post.nickname,
-        });
+        if (!latestPostMap.has(post.neighborhood_id)) {
+          latestPostMap.set(post.neighborhood_id, {
+            category: post.category,
+            title: post.title,
+            nickname: post.nickname,
+          });
+        }
       });
       setTowns((neighborhoodsData || []).map((item: any) => ({
         ...item,
@@ -273,7 +275,7 @@ const renderPostCard = (post: any) => {
                   e.stopPropagation();
                   if (post.neighborhood_id) {
                     setSelectedTownId(post.neighborhood_id);
-                    setIsMapModalExpanded(false);
+                    setIsMapModalExpanded(true);
                     setActiveTab('map');
                   }
                 }}
@@ -369,44 +371,44 @@ const renderPostCard = (post: any) => {
                   selectedTownId={selectedTownId}
                   onMarkerClick={(id) => {
                      setSelectedTownId(id);
-                     setIsMapModalExpanded(false);
+                     setIsMapModalExpanded(true);
                   }} 
                 />
                 
                 {/* 地図上のピンタップ時に表示される投稿一覧 */}
                 {selectedTownId && (
                   <div className={`portal-map-sheet ${isMapModalExpanded ? 'expanded' : ''}`}>
-                    <div 
-                      className="portal-map-sheet-header"
-                      onClick={() => setIsMapModalExpanded(!isMapModalExpanded)}
-                    >
+                    <div className="portal-map-sheet-header">
                       <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-gray-300 rounded-full"></div>
                       <div className="pt-2">
                         <h3 className="font-black text-gray-800">{towns.find(t => t.id === selectedTownId)?.name || '町内会'} の投稿</h3>
-                        <p className="text-xs text-gray-500">最新情報一覧</p>
+                        <p className="text-xs text-gray-500">新しい順に表示</p>
                       </div>
-                      <div className="flex gap-2 pt-2 items-center">
-                        <span className="text-[10px] text-gray-400 font-bold hidden md:inline-block">タップして開閉</span>
-                        <button 
-                          className="px-3 py-1.5 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition text-xs font-bold gap-1"
+                      <div className="portal-map-sheet-actions">
+                        <button
+                          type="button"
+                          className="portal-map-sheet-toggle"
+                          onClick={() => setIsMapModalExpanded((current) => !current)}
                         >
-                          開閉 <i className={`fas ${isMapModalExpanded ? 'fa-chevron-down' : 'fa-chevron-up'}`}></i>
+                          {isMapModalExpanded ? '閉じる' : '投稿を見る'} <i className={`fas ${isMapModalExpanded ? 'fa-chevron-down' : 'fa-chevron-up'}`}></i>
                         </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedTownId(null); }}
-                          className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition ml-1"
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTownId(null)}
+                          className="portal-map-sheet-close"
+                          aria-label="投稿一覧を終了"
                         >
                           <i className="fas fa-times"></i>
                         </button>
                       </div>
                     </div>
-                    <div className="portal-map-sheet-content">
+                    {isMapModalExpanded && <div className="portal-map-sheet-content">
                       {posts.filter(p => p.neighborhood_id === selectedTownId).length === 0 ? (
                         <div className="text-center text-gray-400 py-10 font-bold text-sm">投稿がありません。</div>
                       ) : (
-                        posts.filter(p => p.neighborhood_id === selectedTownId).reverse().map(post => renderPostCard(post))
+                        posts.filter(p => p.neighborhood_id === selectedTownId).map(post => renderPostCard(post))
                       )}
-                    </div>
+                    </div>}
                   </div>
                 )}
              </div>
