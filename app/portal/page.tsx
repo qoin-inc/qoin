@@ -451,23 +451,24 @@ const renderPostCard = (post: any) => {
 
         {/* 投稿モーダル (全画面表示に変更し、キーボードによる見切れを防止) */}
         {isModalOpen && (
-          <div className="absolute inset-0 z-[500] bg-white flex flex-col overflow-hidden animate-fadeIn md:rounded-[3rem]">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100 pt-10 md:pt-4 bg-white shrink-0 shadow-sm relative z-10">
-              <button onClick={() => {setIsModalOpen(false); setEditingPostId(null);}} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition"><i className="fas fa-times text-xl"></i></button>
-              <h2 className="font-black text-gray-800 tracking-wider">{editingPostId ? '情報の編集' : '情報の発信'}</h2>
+          <div className="portal-post-modal">
+            <div className="portal-post-modal-header">
+              <button type="button" onClick={() => {setIsModalOpen(false); setEditingPostId(null);}} className="portal-post-modal-close" aria-label="入力画面を閉じる"><i className="fas fa-times"></i></button>
+              <h2>{editingPostId ? '情報の編集' : '情報の発信'}</h2>
                 <button 
+                  type="button"
                   onClick={handlePost} 
                   disabled={isSubmitting || !nickname.trim() || !title.trim() || !content.trim()}
-                  className="bg-gray-800 text-white px-4 py-1.5 rounded-full text-sm font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="portal-post-modal-submit"
                 >
                   {isSubmitting ? '送信中...' : editingPostId ? '更新する' : '発信する'}
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto p-5 pb-40 space-y-5 hide-scrollbar relative">
+              <div className="portal-post-modal-body hide-scrollbar">
                 
                 {/* 記述シート案内 */}
-                <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm font-bold text-blue-800 mb-4 shadow-sm">
+                <div className="portal-post-modal-note">
                   {postCategory === 'food' ? (
                     <><i className="fas fa-info-circle mr-2 text-blue-500"></i>ご近所の美味しいお店や綺麗な景色の情報を投稿してください</>
                   ) : (
@@ -476,17 +477,19 @@ const renderPostCard = (post: any) => {
                 </div>
                 
                 {/* カテゴリ選択 */}
-                <div className="flex gap-3">
+                <div className="portal-post-category-grid">
                   <button 
+                    type="button"
                     onClick={() => setPostCategory('food')}
-                    className={`flex-1 py-3 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border-2 transition ${postCategory === 'food' ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-gray-200 text-gray-400'}`}
+                    className={`food ${postCategory === 'food' ? 'active' : ''}`}
                   >
                     <i className="fas fa-camera-retro text-xl"></i>
                     <span className="text-xs">食べ・映えel-town</span>
                   </button>
                   <button 
+                    type="button"
                     onClick={() => setPostCategory('sight')}
-                    className={`flex-1 py-3 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border-2 transition ${postCategory === 'sight' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-200 text-gray-400'}`}
+                    className={`sight ${postCategory === 'sight' ? 'active' : ''}`}
                   >
                     <i className="fas fa-bullhorn text-xl"></i>
                     <span className="text-xs">伝えel-town</span>
@@ -494,7 +497,7 @@ const renderPostCard = (post: any) => {
                 </div>
 
                 {/* 共通項目: ニックネーム */}
-                <div>
+                <div className="portal-post-field">
                   <label className="block text-xs font-bold text-gray-500 mb-1">
                     {postCategory === 'food' ? 'ニックネーム' : 'ニックネーム（団体名や役職名でも可）'} <span className="text-red-500">*</span>
                   </label>
@@ -507,7 +510,7 @@ const renderPostCard = (post: any) => {
                 </div>
 
                 {/* タイトル (お店名前 / イベント名) */}
-                <div>
+                <div className="portal-post-field">
                   <label className="block text-xs font-bold text-gray-500 mb-1">
                     {postCategory === 'food' ? 'お店・スポット名' : '行事・活動のタイトル'} <span className="text-red-500">*</span>
                   </label>
@@ -520,7 +523,7 @@ const renderPostCard = (post: any) => {
                 </div>
 
                 {/* 個別項目: 場所 */}
-                <div>
+                <div className="portal-post-field">
                   <label className="block text-xs font-bold text-gray-500 mb-1">
                     {postCategory === 'food' ? '場所・アクセス（任意）' : '開催場所（任意）'}
                   </label>
@@ -533,7 +536,7 @@ const renderPostCard = (post: any) => {
                 </div>
 
                 {/* アピール内容 */}
-                <div>
+                <div className="portal-post-field">
                   <label className="block text-xs font-bold text-gray-500 mb-1">アピール内容 <span className="text-red-500">*</span></label>
                   <textarea 
                     value={content} onChange={e => setContent(e.target.value)}
@@ -543,9 +546,9 @@ const renderPostCard = (post: any) => {
                 </div>
 
                 {/* 写真 */}
-                <div>
+                <div className="portal-post-field">
                   <label className="block text-xs font-bold text-gray-500 mb-1">写真</label>
-                  <div className="relative">
+                  <div className="portal-post-file-picker">
                     <input 
                       type="file" 
                       accept="image/*"
