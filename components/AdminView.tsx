@@ -2549,7 +2549,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const statusValue = "withdrawn";
     const withdrawalReplyPayload: Record<string, any> = {
       withdrawal_status: statusValue,
-      status: statusValue,
       withdrawal_reply_message: reply,
     };
     Object.assign(withdrawalReplyPayload, {

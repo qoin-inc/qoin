@@ -16,7 +16,6 @@ BEGIN
 
   IF coalesce(NEW.withdrawal_status, 'active') = 'withdrawn' THEN
     NEW.withdrawal_status := 'withdrawn';
-    NEW.status := 'withdrawn';
     NEW.user_auth_id := NULL;
     NEW.line_user_id := NULL;
     NEW.family_user_auth_id_1 := NULL;
