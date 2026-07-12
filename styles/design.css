@@ -771,6 +771,32 @@ button { cursor: pointer; border: 0; }
   font-size: 13px;
   font-weight: 800;
 }
+.portal-map-screen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.portal-town-posts-page {
+  width: 100%;
+  min-height: 100%;
+  display: block;
+  background: #f8fafc;
+}
+.portal-town-posts-page .portal-town-posts-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.portal-town-posts-list {
+  width: 100%;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 14px 14px 40px;
+  background: #f8fafc;
+}
 
 .portal-bottom-tabs {
   position: relative;

@@ -362,38 +362,36 @@ const renderPostCard = (post: any) => {
           )}
 
           {/* ③ マイel-town (全面地図) */}
-          {activeTab === 'map' && (
-             <div className="absolute inset-0 z-0">
+          {activeTab === 'map' && !selectedTownId && (
+             <div className="portal-map-screen">
                 <MapComponent 
                   towns={towns} 
-                  selectedTownId={selectedTownId}
                   onMarkerClick={(id) => {
                      setSelectedTownId(id);
                   }} 
                 />
-                
-                {/* 地図上のピンタップ時に表示される投稿一覧 */}
-                {selectedTownId && (
-                  <div className="portal-town-posts-modal">
-                    <div className="portal-town-posts-header">
-                      <div>
-                        <h3 className="font-black text-gray-800">{towns.find(t => t.id === selectedTownId)?.name || '町内会'} の投稿</h3>
-                        <p className="text-xs text-gray-500">新しい順に表示</p>
-                      </div>
-                      <button type="button" onClick={() => setSelectedTownId(null)} aria-label="地図へ戻る">
-                        <i className="fas fa-times"></i>
-                      </button>
-                    </div>
-                    <div className="portal-town-posts-content hide-scrollbar">
-                      {posts.filter(p => p.neighborhood_id === selectedTownId).length === 0 ? (
-                        <div className="portal-town-posts-empty">この町内会・自治会の投稿はまだありません。</div>
-                      ) : (
-                        posts.filter(p => p.neighborhood_id === selectedTownId).map(post => renderPostCard(post))
-                      )}
-                    </div>
-                  </div>
-                )}
              </div>
+          )}
+
+          {activeTab === 'map' && selectedTownId && (
+            <section className="portal-town-posts-page">
+              <div className="portal-town-posts-header">
+                <div>
+                  <h3>{towns.find(t => t.id === selectedTownId)?.name || '町内会'} の投稿</h3>
+                  <p>新しい順に表示</p>
+                </div>
+                <button type="button" onClick={() => setSelectedTownId(null)} aria-label="日本地図へ戻る">
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              <div className="portal-town-posts-list">
+                {posts.filter(p => p.neighborhood_id === selectedTownId).length === 0 ? (
+                  <div className="portal-town-posts-empty">この町内会・自治会の投稿はまだありません。</div>
+                ) : (
+                  posts.filter(p => p.neighborhood_id === selectedTownId).map(post => renderPostCard(post))
+                )}
+              </div>
+            </section>
           )}
 
         </div>
@@ -405,7 +403,7 @@ const renderPostCard = (post: any) => {
           <button type="button" className={activeTab === 'sight' ? 'active sight' : 'sight'} onClick={() => setActiveTab('sight')}>
             <i className="fas fa-bullhorn" /><span>伝え<br />el-town</span>
           </button>
-          <button type="button" className={activeTab === 'map' ? 'active map' : 'map'} onClick={() => setActiveTab('map')}>
+          <button type="button" className={activeTab === 'map' ? 'active map' : 'map'} onClick={() => { setSelectedTownId(null); setActiveTab('map'); }}>
             <i className="fas fa-map-marked-alt" /><span>マイ<br />el-town</span>
           </button>
         </nav>}
