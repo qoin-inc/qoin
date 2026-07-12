@@ -25,6 +25,7 @@ export default function PortalPage() {
   // マイel-town(地図)で選択された町内会ID
   const [selectedTownId, setSelectedTownId] = useState<number | null>(null);
   const [isMapModalExpanded, setIsMapModalExpanded] = useState(false);
+  const [areTabsVisible, setAreTabsVisible] = useState(true);
   
   // モーダル用
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -337,11 +338,7 @@ const renderPostCard = (post: any) => {
         
         {/* ヘッダー (flex-shrink-0 を追加して潰れ・めり込みを防止、左矢印を削除、スリム化) */}
         <div className="portal-header">
-          <h1 className="font-black text-base tracking-wider flex items-center justify-center gap-1">
-            マイ
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            
-          </h1>
+          <h1>マイel-town</h1>
         </div>
 
         {/* コンテンツエリア (スクロール領域) */}
@@ -426,7 +423,7 @@ const renderPostCard = (post: any) => {
 
         </div>
 
-        <nav className="portal-bottom-tabs" aria-label="マイel-town メニュー">
+        {areTabsVisible && <nav className="portal-bottom-tabs" aria-label="マイel-town メニュー">
           <button type="button" className={activeTab === 'food' ? 'active food' : 'food'} onClick={() => setActiveTab('food')}>
             <i className="fas fa-camera-retro" /><span>食べ・映え<br />el-town</span>
           </button>
@@ -436,7 +433,17 @@ const renderPostCard = (post: any) => {
           <button type="button" className={activeTab === 'map' ? 'active map' : 'map'} onClick={() => setActiveTab('map')}>
             <i className="fas fa-map-marked-alt" /><span>マイ<br />el-town</span>
           </button>
-        </nav>
+        </nav>}
+        <button
+          type="button"
+          className="portal-tabs-toggle"
+          aria-expanded={areTabsVisible}
+          onClick={() => setAreTabsVisible((current) => !current)}
+        >
+          <i className="fas fa-keyboard" />
+          <span>{areTabsVisible ? 'メニューを閉じる' : 'メニューを開く'}</span>
+          <i className={`fas ${areTabsVisible ? 'fa-chevron-down' : 'fa-chevron-up'}`} />
+        </button>
 
         {/* 投稿FABボタン (地図タブ以外で表示、あるいは常時表示) */}
         <button 
@@ -444,7 +451,7 @@ const renderPostCard = (post: any) => {
              setPostCategory(activeTab === 'sight' ? 'sight' : 'food'); // タブに応じて初期カテゴリを変える
              setIsModalOpen(true);
           }}
-          className={`portal-post-fab ${activeTab === 'map' ? 'is-hidden' : ''}`}
+          className={`portal-post-fab ${activeTab === 'map' ? 'is-hidden' : ''} ${areTabsVisible ? '' : 'tabs-hidden'}`}
         >
           <i className="fas fa-pen"></i>
         </button>

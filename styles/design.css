@@ -549,6 +549,14 @@ button { cursor: pointer; border: 0; }
   color: #fff;
   box-shadow: 0 2px 8px rgba(15,23,42,.14);
 }
+.portal-header h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: .03em;
+  font-weight: 900;
+}
 .portal-content {
   position: relative;
   width: 100%;
@@ -654,6 +662,27 @@ button { cursor: pointer; border: 0; }
 .portal-bottom-tabs button.active.food { border-color: #fdba74; background: #fff7ed; color: #ea580c; }
 .portal-bottom-tabs button.active.sight { border-color: #93c5fd; background: #eff6ff; color: #2563eb; }
 .portal-bottom-tabs button.active.map { border-color: #5eead4; background: #f0fdfa; color: #0f766e; }
+.portal-tabs-toggle {
+  position: relative;
+  z-index: 205;
+  width: 100%;
+  min-height: 34px;
+  flex: 0 0 34px;
+  border: 0;
+  border-top: 1px solid #dbe3ea;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff;
+  color: #475569;
+  box-shadow: 0 -2px 8px rgba(15,23,42,.06);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 900;
+}
+.portal-tabs-toggle i:first-child { color: #94a3b8; }
+.portal-tabs-toggle i:last-child { font-size: 10px; color: #64748b; }
 .portal-post-fab {
   position: absolute;
   right: 20px;
@@ -670,6 +699,7 @@ button { cursor: pointer; border: 0; }
   box-shadow: 0 10px 24px rgba(15,23,42,.28);
   font-size: 21px;
 }
+.portal-post-fab.tabs-hidden { bottom: 50px; }
 .portal-post-fab.is-hidden { display: none; }
 
 @media (min-width: 768px) {
