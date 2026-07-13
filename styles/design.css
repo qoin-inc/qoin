@@ -4051,6 +4051,42 @@ button { cursor: pointer; border: 0; }
   padding: 20px 16px 44px;
 }
 
+.system-admin-login { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #eef7fb; }
+.system-admin-login-card { width: min(460px, 100%); padding: 34px; border-radius: 20px; background: #fff; box-shadow: 0 20px 55px rgba(15, 23, 42, .12); display: grid; gap: 18px; }
+.system-admin-login-card h1 { margin: 0; font-size: 30px; }
+.system-admin-login-card label { display: grid; gap: 7px; font-weight: 800; color: #334155; }
+.system-admin-login-card input { min-height: 50px; padding: 0 14px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 16px; }
+.system-admin-login-card button { min-height: 52px; border: 0; border-radius: 12px; background: #0f172a; color: #fff; font-weight: 900; font-size: 16px; }
+.system-admin-error { margin: 0; padding: 12px; border-radius: 10px; background: #fff1f2; color: #be123c; font-weight: 800; }
+.system-admin-back { margin-bottom: 14px; padding: 12px 18px; border: 1px solid #bfdbfe; border-radius: 12px; background: #eff6ff; color: #1d4ed8; font-weight: 900; }
+.system-admin-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.system-admin-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.system-admin-tabs button { min-height: 58px; border: 1px solid #d7e2ee; border-radius: 14px; background: #fff; color: #334155; font-size: 17px; font-weight: 900; }
+.system-admin-tabs button.active { border-color: #0f172a; background: #0f172a; color: #fff; }
+.system-admin-message { margin-bottom: 16px; padding: 14px 18px; border: 1px solid #a7f3d0; border-radius: 12px; background: #ecfdf5; color: #166534; font-weight: 800; }
+.system-town-table { overflow-x: auto; }
+.system-town-row { min-width: 920px; display: grid; grid-template-columns: minmax(230px, 1.5fr) .55fr .65fr .55fr minmax(300px, 1.5fr); align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
+.system-town-row.head { border-radius: 12px; background: #eff6ff; color: #334155; font-weight: 900; }
+.system-town-row strong, .system-town-row small { display: block; }
+.system-town-row small { margin-top: 4px; color: #64748b; }
+.system-town-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+.system-town-actions button, .system-town-actions a { padding: 9px 12px; border: 1px solid #bfdbfe; border-radius: 9px; background: #eff6ff; color: #1d4ed8; font-weight: 900; text-decoration: none; }
+.system-town-actions .danger { border-color: #fecaca; background: #fff1f2; color: #dc2626; }
+.system-town-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(15, 23, 42, .58); }
+.system-town-modal > section { position: relative; width: min(560px, 100%); padding: 30px; border-radius: 18px; background: #fff; box-shadow: 0 25px 70px rgba(0, 0, 0, .25); }
+.system-town-modal .close { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; border: 0; border-radius: 50%; font-size: 25px; }
+.system-town-modal dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 22px 0; }
+.system-town-modal dl div { padding: 14px; border-radius: 12px; background: #f8fafc; }
+.system-town-modal dt { color: #64748b; font-weight: 700; }
+.system-town-modal dd { margin: 5px 0 0; font-size: 20px; font-weight: 900; }
+
+@media (max-width: 720px) {
+  .system-admin-tabs { grid-template-columns: 1fr; }
+  .system-admin-hero-actions { width: 100%; }
+  .system-admin-hero-actions button { flex: 1; }
+  .system-town-modal dl { grid-template-columns: 1fr; }
+}
+
 .system-admin-hero {
   display: flex;
   align-items: center;
