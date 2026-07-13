@@ -8,7 +8,9 @@ ALTER TABLE public.resident_rosters
   ADD COLUMN IF NOT EXISTS address_line2 TEXT,
   ADD COLUMN IF NOT EXISTS address_line3 TEXT,
   ADD COLUMN IF NOT EXISTS family_name_1 TEXT,
+  ADD COLUMN IF NOT EXISTS family_kana_name_1 TEXT,
   ADD COLUMN IF NOT EXISTS family_name_2 TEXT,
+  ADD COLUMN IF NOT EXISTS family_kana_name_2 TEXT,
   ADD COLUMN IF NOT EXISTS family_user_auth_id_1 TEXT,
   ADD COLUMN IF NOT EXISTS family_user_auth_id_2 TEXT,
   ADD COLUMN IF NOT EXISTS withdrawal_status TEXT DEFAULT 'active',
@@ -24,6 +26,8 @@ COMMENT ON COLUMN public.resident_rosters.postal_code IS '会員住所の郵便�
 COMMENT ON COLUMN public.resident_rosters.address_line2 IS '住所２。';
 COMMENT ON COLUMN public.resident_rosters.address_line3 IS '住所３。';
 COMMENT ON COLUMN public.resident_rosters.family_name_1 IS '同一世帯の家族1名目。';
+COMMENT ON COLUMN public.resident_rosters.family_kana_name_1 IS '同一世帯の家族1名目のカタカナ氏名。LINE連携時の照合情報。';
 COMMENT ON COLUMN public.resident_rosters.family_name_2 IS '同一世帯の家族2名目。';
+COMMENT ON COLUMN public.resident_rosters.family_kana_name_2 IS '同一世帯の家族2名目のカタカナ氏名。LINE連携時の照合情報。';
 COMMENT ON COLUMN public.resident_rosters.withdrawal_status IS 'active/requested/withdrawn等の退会状態。withdrawnは同じ町内会・自治会でel-town利用不可。';
 COMMENT ON COLUMN public.resident_rosters.withdrawal_reply_message IS '退会承認または復活時に会員へ返信する文面。';

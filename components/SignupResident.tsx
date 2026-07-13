@@ -15,6 +15,7 @@ const normalizePostalCode = (value?: string | null) => normalizeText(value).repl
 const LINE_EMAIL_SUFFIX = "@line.eltown.local";
 
 const rosterPrimaryName = (roster: any) => roster.full_name || `${roster.last_name || ""}${roster.first_name || ""}`;
+const rosterPrimaryKana = (roster: any) => roster.kana_name || roster.full_name_kana || roster.kana || "";
 const rosterPostalCode = (roster: any) => roster.postal_code || "";
 const rosterAddressLine2 = (roster: any) => roster.address_line2 || roster.address2 || roster.address || "";
 const rosterAddressLine3 = (roster: any) => roster.address_line3 || roster.address3 || "";
@@ -30,6 +31,7 @@ const withoutLineColumns = (payload: Record<string, any>) => {
 
 export default function SignupResident({ sessionUser, onComplete, onCancel }: SignupResidentProps) {
   const [fullName, setFullName] = useState(sessionUser?.user_metadata?.name || "");
+  const [kanaName, setKanaName] = useState("");
   const [townName, setTownName] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
@@ -45,8 +47,8 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       setError("ログイン情報を確認できません。LINEログイン後にもう一度お試しください。");
       return;
     }
-    if (!fullName.trim() || !townName.trim() || !postalCode.trim() || !addressLine2.trim()) {
-      setError("町内会名、郵便番号、住所２、お名前を入力してください。");
+    if (!fullName.trim() || !kanaName.trim() || !townName.trim() || !postalCode.trim() || !addressLine2.trim()) {
+      setError("町内会名、郵便番号、住所２、お名前、カナ氏名を入力してください。");
       return;
     }
 
@@ -67,10 +69,12 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       if (!town) throw new Error("町内会名に一致する町内会が見つかりません。名称を確認してください。");
 
       const normalizedInputName = normalizeName(fullName);
+      const normalizedInputKana = normalizeName(kanaName);
       const lineUserId = lineUserIdFromAuthUser(sessionUser);
       const rpcResult = await supabase.rpc("link_resident_roster_by_identity", {
         p_neighborhood_id: town.id,
         p_full_name: fullName,
+        p_kana_name: kanaName,
         p_postal_code: postalCode,
         p_address2: addressLine2,
         p_address3: addressLine3,
@@ -92,13 +96,13 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       if (rosterLookupError) throw rosterLookupError;
 
       const matchedRoster = existingRosters?.find((roster: any) => {
-        const nameMatched = [
-          rosterPrimaryName(roster),
-          roster.family_name_1,
-          roster.family_name_2,
-        ].some((name) => normalizeName(name) === normalizedInputName);
+        const nameAndKanaMatched = [
+          [rosterPrimaryName(roster), rosterPrimaryKana(roster)],
+          [roster.family_name_1, roster.family_kana_name_1],
+          [roster.family_name_2, roster.family_kana_name_2],
+        ].some(([name, kana]) => normalizeName(name) === normalizedInputName && normalizeName(kana) === normalizedInputKana);
 
-        if (!nameMatched) return false;
+        if (!nameAndKanaMatched) return false;
         if (normalizePostalCode(rosterPostalCode(roster)) !== normalizedPostalCode) return false;
         if (normalizeText(rosterAddressLine2(roster)) !== normalizedAddressLine2) return false;
         const normalizedRosterAddressLine3 = normalizeText(rosterAddressLine3(roster));
@@ -112,9 +116,9 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           throw new Error("この会員名簿は退会済みのため連携できません。役員へ確認してください。");
         }
 
-        const primaryNameMatched = normalizeName(rosterPrimaryName(matchedRoster)) === normalizedInputName;
-        const family1Matched = normalizeName(matchedRoster.family_name_1) === normalizedInputName;
-        const family2Matched = normalizeName(matchedRoster.family_name_2) === normalizedInputName;
+        const primaryNameMatched = normalizeName(rosterPrimaryName(matchedRoster)) === normalizedInputName && normalizeName(rosterPrimaryKana(matchedRoster)) === normalizedInputKana;
+        const family1Matched = normalizeName(matchedRoster.family_name_1) === normalizedInputName && normalizeName(matchedRoster.family_kana_name_1) === normalizedInputKana;
+        const family2Matched = normalizeName(matchedRoster.family_name_2) === normalizedInputName && normalizeName(matchedRoster.family_kana_name_2) === normalizedInputKana;
         let updatePayload: Record<string, any> | null = null;
 
         if (primaryNameMatched) {
@@ -168,7 +172,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         return;
       }
 
-      throw new Error("入力内容に一致する会員名簿が見つかりません。町内会名、郵便番号、住所２、住所３、お名前を確認してください。");
+      throw new Error("入力内容に一致する会員名簿が見つかりません。町内会名、郵便番号、住所２、住所３、お名前、カナ氏名を確認してください。");
     } catch (err: any) {
       setError(err.message || "会員登録に失敗しました。");
     } finally {
@@ -210,6 +214,11 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           <label>
             <span>お名前</span>
             <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="例：山田 花子" required />
+          </label>
+
+          <label>
+            <span>カナ氏名</span>
+            <input value={kanaName} onChange={(e) => setKanaName(e.target.value)} placeholder="例：ヤマダ ハナコ" required />
           </label>
 
           <button type="submit" className="el-primary-action" disabled={submitting}>

@@ -42,7 +42,9 @@ type MemberDraft = {
   addressLine2: string;
   addressLine3: string;
   familyName1: string;
+  familyKanaName1: string;
   familyName2: string;
+  familyKanaName2: string;
 };
 
 type FeeDraft = {
@@ -363,12 +365,14 @@ const defaultMemberDraft: MemberDraft = {
   addressLine2: "",
   addressLine3: "",
   familyName1: "",
+  familyKanaName1: "",
   familyName2: "",
+  familyKanaName2: "",
 };
 
-const memberCsvHeaders = ["氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族２"];
+const memberCsvHeaders = ["氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族１カタカナ", "家族２", "家族２カタカナ"];
 const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所３"]);
-const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_name_2", "withdrawal_status", "withdrawal_reply_message"];
+const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message"];
 const adminDetailColumns = ["admin_role", "admin_invite_token", "invite_token", "invited_at", "retired_at"];
 const feeDetailColumns = [
   "neighborhood_id",
@@ -469,7 +473,12 @@ const getMemberKana = (member: any) => member.kana_name || member.full_name_kana
 const getMemberPostalCode = (member: any) => member.postal_code || "";
 const getMemberAddressLine2 = (member: any) => member.address_line2 || member.address2 || member.address || "";
 const getMemberAddressLine3 = (member: any) => member.address_line3 || member.address3 || "";
-const getMemberFamilyNames = (member: any) => [member.family_name_1, member.family_name_2].filter(Boolean);
+const getMemberFamilyNames = (member: any) => [
+  [member.family_name_1, member.family_kana_name_1],
+  [member.family_name_2, member.family_kana_name_2],
+]
+  .filter(([name]) => Boolean(name))
+  .map(([name, kana]) => kana ? `${name}（${kana}）` : name);
 const isLineLinkedMember = (member: any) => Boolean(member.user_auth_id || member.family_user_auth_id_1 || member.family_user_auth_id_2);
 const isWithdrawnMember = (member: any) => member.withdrawal_status === "withdrawn" || member.status === "withdrawn";
 const getMemberLinkedAccountCount = (member: any) => {
@@ -2330,6 +2339,13 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const buildRosterPayloads = (draft: MemberDraft) => {
     const fullName = draft.fullName.trim();
     if (!fullName) throw new Error("氏名を入力してください。");
+    if (!draft.kanaName.trim()) throw new Error("氏名カタカナを入力してください。");
+    if (Boolean(draft.familyName1.trim()) !== Boolean(draft.familyKanaName1.trim())) {
+      throw new Error("家族１は氏名とカタカナを両方入力してください。");
+    }
+    if (Boolean(draft.familyName2.trim()) !== Boolean(draft.familyKanaName2.trim())) {
+      throw new Error("家族２は氏名とカタカナを両方入力してください。");
+    }
 
     const normalizedDraft: MemberDraft = {
       fullName,
@@ -2338,7 +2354,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       addressLine2: draft.addressLine2.trim(),
       addressLine3: draft.addressLine3.trim(),
       familyName1: draft.familyName1.trim(),
+      familyKanaName1: draft.familyKanaName1.trim(),
       familyName2: draft.familyName2.trim(),
+      familyKanaName2: draft.familyKanaName2.trim(),
     };
 
     const basePayload = {
@@ -2353,7 +2371,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       address2: normalizedDraft.addressLine2 || null,
       address3: normalizedDraft.addressLine3 || null,
       family_name_1: normalizedDraft.familyName1 || null,
+      family_kana_name_1: normalizedDraft.familyKanaName1 || null,
       family_name_2: normalizedDraft.familyName2 || null,
+      family_kana_name_2: normalizedDraft.familyKanaName2 || null,
       withdrawal_status: "active",
     };
 
@@ -2429,7 +2449,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       addressLine2: getMemberAddressLine2(member),
       addressLine3: getMemberAddressLine3(member),
       familyName1: member.family_name_1 || "",
+      familyKanaName1: member.family_kana_name_1 || "",
       familyName2: member.family_name_2 || "",
+      familyKanaName2: member.family_kana_name_2 || "",
     });
     setMemberMessage("会員情報を編集中です。変更後に保存してください。");
     setMemberReply("");
@@ -2478,7 +2500,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     addressLine2: record["住所２"] || record["住所2"] || record["address_line2"] || "",
     addressLine3: record["住所３"] || record["住所3"] || record["address_line3"] || "",
     familyName1: record["家族１"] || record["家族1"] || record["family_name_1"] || "",
+    familyKanaName1: record["家族１カタカナ"] || record["家族1カタカナ"] || record["family_kana_name_1"] || "",
     familyName2: record["家族２"] || record["家族2"] || record["family_name_2"] || "",
+    familyKanaName2: record["家族２カタカナ"] || record["家族2カタカナ"] || record["family_kana_name_2"] || "",
   });
 
   const handleMemberCsvImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -2528,7 +2552,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         getMemberAddressLine2(member),
         getMemberAddressLine3(member),
         member.family_name_1 || "",
+        member.family_kana_name_1 || "",
         member.family_name_2 || "",
+        member.family_kana_name_2 || "",
       ]),
     ];
     const csv = `\uFEFF${rows.map((row, rowIndex) => row.map((cell, cellIndex) => {
@@ -3599,7 +3625,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               </label>
               <label>
                 <span>氏名カタカナ</span>
-                <input value={memberDraft.kanaName} onChange={(event) => handleMemberDraftChange("kanaName", event.target.value)} placeholder="例: ヤマダ タロウ" />
+                <input value={memberDraft.kanaName} onChange={(event) => handleMemberDraftChange("kanaName", event.target.value)} placeholder="例: ヤマダ タロウ" required />
               </label>
               <label>
                 <span>郵便番号</span>
@@ -3618,8 +3644,16 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <input value={memberDraft.familyName1} onChange={(event) => handleMemberDraftChange("familyName1", event.target.value)} placeholder="任意" />
               </label>
               <label>
+                <span>家族１カタカナ</span>
+                <input value={memberDraft.familyKanaName1} onChange={(event) => handleMemberDraftChange("familyKanaName1", event.target.value)} placeholder="例: ヤマダ ハナコ" />
+              </label>
+              <label>
                 <span>家族２</span>
                 <input value={memberDraft.familyName2} onChange={(event) => handleMemberDraftChange("familyName2", event.target.value)} placeholder="任意" />
+              </label>
+              <label>
+                <span>家族２カタカナ</span>
+                <input value={memberDraft.familyKanaName2} onChange={(event) => handleMemberDraftChange("familyKanaName2", event.target.value)} placeholder="例: ヤマダ ジロウ" />
               </label>
               <button type="submit" disabled={memberBusy}>
                 {memberBusy ? <i className="fas fa-spinner fa-spin" /> : <i className={editingMemberId !== null ? "fas fa-floppy-disk" : "fas fa-user-plus"} />}
