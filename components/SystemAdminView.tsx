@@ -21,6 +21,10 @@ const monthInfo = (value: string) => {
   return { label: `${year}年${month}月`, start: start.toISOString(), end: end.toISOString(), invoice: `${year}年${month + 1}月1日` };
 };
 const linkedCount = (row: any) => row.withdrawal_status === "withdrawn" ? 0 : [row.user_auth_id, row.family_user_auth_id_1, row.family_user_auth_id_2].filter(Boolean).length;
+const isMissingRelationError = (error: any) => {
+  const message = String(error?.message || "").toLowerCase();
+  return error?.code === "PGRST205" || message.includes("schema cache") || message.includes("does not exist");
+};
 
 export default function SystemAdminView() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
@@ -139,12 +143,12 @@ export default function SystemAdminView() {
       if (circularIds.length) {
         for (const table of ["event_applications", "read_receipts"]) {
           const result = await supabase.from(table).delete().in("circular_id", circularIds);
-          if (result.error && !result.error.message.includes("does not exist")) throw result.error;
+          if (result.error && !isMissingRelationError(result.error)) throw result.error;
         }
       }
       for (const table of ["system_usage_billings", "system_settings", "resident_rosters", "neighborhood_admins", "circulars"]) {
         const result = await supabase.from(table).delete().eq("neighborhood_id", town.id);
-        if (result.error && !result.error.message.includes("does not exist")) throw result.error;
+        if (result.error && !isMissingRelationError(result.error)) throw result.error;
       }
       const result = await supabase.from("neighborhoods").delete().eq("id", town.id);
       if (result.error) throw result.error;
