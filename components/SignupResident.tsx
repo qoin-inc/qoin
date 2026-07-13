@@ -96,11 +96,9 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       if (rosterLookupError) throw rosterLookupError;
 
       const matchedRoster = existingRosters?.find((roster: any) => {
-        const nameAndKanaMatched = [
-          [rosterPrimaryName(roster), rosterPrimaryKana(roster)],
-          [roster.family_name_1, roster.family_kana_name_1],
-          [roster.family_name_2, roster.family_kana_name_2],
-        ].some(([name, kana]) => normalizeName(name) === normalizedInputName && normalizeName(kana) === normalizedInputKana);
+        // 名簿照合は世帯主本人だけを対象にする。家族は世帯主発行の招待URLから連携する。
+        const nameAndKanaMatched = normalizeName(rosterPrimaryName(roster)) === normalizedInputName
+          && normalizeName(rosterPrimaryKana(roster)) === normalizedInputKana;
 
         if (!nameAndKanaMatched) return false;
         if (normalizePostalCode(rosterPostalCode(roster)) !== normalizedPostalCode) return false;
@@ -117,8 +115,6 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         }
 
         const primaryNameMatched = normalizeName(rosterPrimaryName(matchedRoster)) === normalizedInputName && normalizeName(rosterPrimaryKana(matchedRoster)) === normalizedInputKana;
-        const family1Matched = normalizeName(matchedRoster.family_name_1) === normalizedInputName && normalizeName(matchedRoster.family_kana_name_1) === normalizedInputKana;
-        const family2Matched = normalizeName(matchedRoster.family_name_2) === normalizedInputName && normalizeName(matchedRoster.family_kana_name_2) === normalizedInputKana;
         let updatePayload: Record<string, any> | null = null;
 
         if (primaryNameMatched) {
@@ -129,24 +125,6 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
             user_auth_id: sessionUser.id,
             line_user_id: lineUserId || null,
             line_display_name: sessionUser?.user_metadata?.name || null,
-            status: "active",
-          };
-        } else if (family1Matched) {
-          if (matchedRoster.family_user_auth_id_1 && matchedRoster.family_user_auth_id_1 !== sessionUser.id) {
-            throw new Error("この家族名はすでに別のLINEアカウントと連携済みです。");
-          }
-          updatePayload = {
-            family_user_auth_id_1: sessionUser.id,
-            family_line_user_id_1: lineUserId || null,
-            status: "active",
-          };
-        } else if (family2Matched) {
-          if (matchedRoster.family_user_auth_id_2 && matchedRoster.family_user_auth_id_2 !== sessionUser.id) {
-            throw new Error("この家族名はすでに別のLINEアカウントと連携済みです。");
-          }
-          updatePayload = {
-            family_user_auth_id_2: sessionUser.id,
-            family_line_user_id_2: lineUserId || null,
             status: "active",
           };
         }
@@ -172,7 +150,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         return;
       }
 
-      throw new Error("入力内容に一致する会員名簿が見つかりません。町内会名、郵便番号、住所２、住所３、お名前、カナ氏名を確認してください。");
+      throw new Error("入力内容に一致する世帯主の会員名簿が見つかりません。家族の方は、世帯主から届いた家族招待URLを開いてください。");
     } catch (err: any) {
       setError(err.message || "会員登録に失敗しました。");
     } finally {

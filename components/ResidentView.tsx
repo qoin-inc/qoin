@@ -9,6 +9,7 @@ type ResidentViewProps = {
   townName?: string;
   residentName?: string;
   userId?: string;
+  roster?: any;
   openTargetId?: string | null;
   initialTab?: string | null;
 };
@@ -298,7 +299,7 @@ const createReplyDraft = (name = "", circular?: Circular | null): ReplyDraft => 
   proxyText: circular?.proxy_template_text || defaultProxyText(circular?.title),
 });
 
-export default function ResidentView({ townId, townName, residentName, userId, openTargetId, initialTab }: ResidentViewProps) {
+export default function ResidentView({ townId, townName, residentName, userId, roster, openTargetId, initialTab }: ResidentViewProps) {
   const [activeTab, setActiveTab] = useState<ResidentTab>(() => normalizeResidentTab(initialTab, openTargetId));
   const [bottomNavMode, setBottomNavMode] = useState<BottomNavMode>(() => (initialTab || openTargetId ? "sub" : "main"));
   const [bottomNavHidden, setBottomNavHidden] = useState(false);
@@ -336,6 +337,9 @@ export default function ResidentView({ townId, townName, residentName, userId, o
   const [liveViewMode, setLiveViewMode] = useState<ViewMode>("calendar");
   const [withdrawalBusy, setWithdrawalBusy] = useState(false);
   const [withdrawalMessage, setWithdrawalMessage] = useState("");
+  const [familyNames, setFamilyNames] = useState({ 1: roster?.family_name_1 || "", 2: roster?.family_name_2 || "" });
+  const [familyMessage, setFamilyMessage] = useState("");
+  const [familyBusy, setFamilyBusy] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -974,15 +978,17 @@ export default function ResidentView({ townId, townName, residentName, userId, o
       return;
     }
 
-    const confirmed = window.confirm("退会申請を送信します。役員が承認すると、この町内会・自治会ではel-townを利用できなくなります。よろしいですか？");
+    const familySlot = roster?.family_user_auth_id_1 === userId ? 1 : roster?.family_user_auth_id_2 === userId ? 2 : 0;
+    const confirmed = window.confirm(`${familySlot ? "家族本人のみの" : "世帯全体の"}退会申請を送信します。役員の承認後はこの町内会・自治会でel-townを利用できなくなります。よろしいですか？`);
     if (!confirmed) return;
 
     setWithdrawalBusy(true);
     try {
+      const statusColumn = familySlot ? `family_withdrawal_status_${familySlot}` : "withdrawal_status";
       let result = await supabase
         .from("resident_rosters")
         .update({
-          withdrawal_status: "requested",
+          [statusColumn]: "requested",
           withdrawal_reply_message: `${displayName}さんから退会申請が送信されました。`,
         })
         .eq("id", residentRosterId);
@@ -990,7 +996,7 @@ export default function ResidentView({ townId, townName, residentName, userId, o
       if (result.error && String(result.error.message || "").includes("withdrawal_reply_message")) {
         result = await supabase
           .from("resident_rosters")
-          .update({ withdrawal_status: "requested" })
+          .update({ [statusColumn]: "requested" })
           .eq("id", residentRosterId);
       }
 
@@ -1001,6 +1007,22 @@ export default function ResidentView({ townId, townName, residentName, userId, o
     } finally {
       setWithdrawalBusy(false);
     }
+  };
+
+  const handleFamilyInvite = async (slot: 1 | 2) => {
+    if (!roster?.id || roster.user_auth_id !== userId) return;
+    const name = familyNames[slot].trim();
+    if (!name) { setFamilyMessage("家族の氏名を入力してください。"); return; }
+    setFamilyBusy(true); setFamilyMessage("");
+    try {
+      const result = await supabase.rpc("create_resident_family_invite", { p_roster_id: roster.id, p_slot: slot, p_family_name: name });
+      if (result.error) throw result.error;
+      const url = `${window.location.origin}/resident?family_invite=${encodeURIComponent(result.data)}`;
+      await navigator.clipboard.writeText(url);
+      setFamilyMessage(`家族${slot}の招待URLをコピーしました。LINEで本人へ送ってください。`);
+    } catch (error: any) {
+      setFamilyMessage(error?.message || "家族招待URLを作成できませんでした。");
+    } finally { setFamilyBusy(false); }
   };
 
   const handleEventReply = async () => {
@@ -1497,6 +1519,22 @@ export default function ResidentView({ townId, townName, residentName, userId, o
               <h2>{displayName}</h2>
               <p>{placeName} に連携済みです。</p>
             </div>
+
+            {roster?.user_auth_id === userId && (
+              <div className="el-status-card accent">
+                <p className="el-kicker">家族アカウント</p>
+                <h2>家族を追加する（2名まで）</h2>
+                <p>家族は名簿照合を行いません。氏名を入力して招待URLを本人のLINEへ送ってください。連携後は1アカウントとして利用料の対象になります。</p>
+                {([1, 2] as const).map((slot) => {
+                  const linked = Boolean(roster[`family_user_auth_id_${slot}`]);
+                  return <div key={slot} className="signup-form">
+                    <label><span>家族{slot}</span><input value={familyNames[slot]} onChange={(event) => setFamilyNames((current) => ({ ...current, [slot]: event.target.value }))} disabled={linked} placeholder="氏名" /></label>
+                    <button type="button" className="el-secondary-action" onClick={() => handleFamilyInvite(slot)} disabled={familyBusy || linked}>{linked ? "連携済み" : "招待URLを作成・コピー"}</button>
+                  </div>;
+                })}
+                {familyMessage && <div className="form-alert success">{familyMessage}</div>}
+              </div>
+            )}
 
             <div className="el-status-card danger">
               <p className="el-kicker">退会申請</p>

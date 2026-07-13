@@ -20,7 +20,11 @@ const monthInfo = (value: string) => {
   const end = new Date(year, month, 1);
   return { label: `${year}年${month}月`, start: start.toISOString(), end: end.toISOString(), invoice: `${year}年${month + 1}月1日` };
 };
-const linkedCount = (row: any) => row.withdrawal_status === "withdrawn" ? 0 : [row.user_auth_id, row.family_user_auth_id_1, row.family_user_auth_id_2].filter(Boolean).length;
+const linkedCount = (row: any) => row.withdrawal_status === "withdrawn" ? 0 : [
+  row.user_auth_id,
+  row.family_withdrawal_status_1 === "withdrawn" ? null : row.family_user_auth_id_1,
+  row.family_withdrawal_status_2 === "withdrawn" ? null : row.family_user_auth_id_2,
+].filter(Boolean).length;
 const isMissingRelationError = (error: any) => {
   const message = String(error?.message || "").toLowerCase();
   return error?.code === "PGRST205" || message.includes("schema cache") || message.includes("does not exist");
@@ -72,7 +76,7 @@ export default function SystemAdminView() {
     setMessage("");
     const results = await Promise.all([
       supabase.from("neighborhoods").select("id,name,created_at").order("id", { ascending: false }).limit(1000),
-      supabase.from("resident_rosters").select("id,neighborhood_id,withdrawal_status,user_auth_id,family_user_auth_id_1,family_user_auth_id_2").limit(20000),
+      supabase.from("resident_rosters").select("id,neighborhood_id,withdrawal_status,user_auth_id,family_user_auth_id_1,family_user_auth_id_2,family_withdrawal_status_1,family_withdrawal_status_2").limit(20000),
       supabase.from("neighborhood_admins").select("id,neighborhood_id,status,admin_email").limit(5000),
       supabase.from("circulars").select("id,neighborhood_id,created_at,is_pushed").eq("is_pushed", true).gte("created_at", month.start).lt("created_at", month.end).limit(20000),
       supabase.from("system_settings").select("*").limit(1000),

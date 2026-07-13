@@ -372,7 +372,7 @@ const defaultMemberDraft: MemberDraft = {
 
 const memberCsvHeaders = ["氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族１カタカナ", "家族２", "家族２カタカナ"];
 const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所３"]);
-const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message"];
+const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message", "family_withdrawal_status_1", "family_withdrawal_status_2"];
 const adminDetailColumns = ["admin_role", "admin_invite_token", "invite_token", "invited_at", "retired_at"];
 const feeDetailColumns = [
   "neighborhood_id",
@@ -483,12 +483,20 @@ const isLineLinkedMember = (member: any) => Boolean(member.user_auth_id || membe
 const isWithdrawnMember = (member: any) => member.withdrawal_status === "withdrawn" || member.status === "withdrawn";
 const getMemberLinkedAccountCount = (member: any) => {
   if (isWithdrawnMember(member)) return 0;
-  return [member.user_auth_id, member.family_user_auth_id_1, member.family_user_auth_id_2].filter(Boolean).length;
+  return [
+    member.user_auth_id,
+    member.family_withdrawal_status_1 === "withdrawn" ? null : member.family_user_auth_id_1,
+    member.family_withdrawal_status_2 === "withdrawn" ? null : member.family_user_auth_id_2,
+  ].filter(Boolean).length;
 };
-const isWithdrawalRequestedMember = (member: any) => ["requested", "pending", "withdrawal_requested"].includes(member.withdrawal_status || member.status);
+const withdrawalRequested = (value: any) => ["requested", "pending", "withdrawal_requested"].includes(value);
+const getFamilyWithdrawalRequestSlots = (member: any) => ([1, 2] as const).filter((slot) => withdrawalRequested(member[`family_withdrawal_status_${slot}`]));
+const isWithdrawalRequestedMember = (member: any) => withdrawalRequested(member.withdrawal_status || member.status) || getFamilyWithdrawalRequestSlots(member).length > 0;
 const getMemberStatusLabel = (member: any) => {
   if (isWithdrawnMember(member)) return "退会済み";
-  if (isWithdrawalRequestedMember(member)) return "退会申請中";
+  const familyRequests = getFamilyWithdrawalRequestSlots(member);
+  if (withdrawalRequested(member.withdrawal_status || member.status)) return "世帯退会申請中";
+  if (familyRequests.length) return `家族${familyRequests.join("・")}退会申請中`;
   return "利用中";
 };
 const getAdminStatusLabel = (admin: any) => {
@@ -2632,6 +2640,27 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     }
   };
 
+  const handleFamilyWithdrawal = async (member: any, slot: 1 | 2) => {
+    const familyName = member[`family_name_${slot}`] || `家族${slot}`;
+    const payload = {
+      [`family_withdrawal_status_${slot}`]: "withdrawn",
+      [`family_user_auth_id_${slot}`]: null,
+      [`family_line_user_id_${slot}`]: null,
+      [`family_invite_token_${slot}`]: null,
+    };
+    setMemberBusy(true); setMemberMessage("");
+    try {
+      const saved = await updateRowWithFallback("resident_rosters", member.id, payload, "家族の退会承認に失敗しました。");
+      const updated = { ...member, ...payload, ...saved };
+      setBasicData((current) => ({ ...current, members: current.members.map((item) => item.id === member.id ? updated : item) }));
+      const linkedDelta = getMemberLinkedAccountCount(updated) - getMemberLinkedAccountCount(member);
+      if (linkedDelta) setSummary((current) => ({ ...current, linkedMembers: Math.max(current.linkedMembers + linkedDelta, 0) }));
+      setMemberMessage(`${familyName}様の退会を承認し、本人のLINE連携だけを解除しました。世帯主とほかの家族は継続利用できます。`);
+    } catch (error: any) {
+      setMemberMessage(error?.message || "家族の退会承認に失敗しました。");
+    } finally { setMemberBusy(false); }
+  };
+
   const buildAdminInviteUrl = (token: string) => {
     if (typeof window === "undefined") return `/admin?mode=invite&token=${encodeURIComponent(token)}`;
     return `${window.location.origin}/admin?mode=invite&token=${encodeURIComponent(token)}`;
@@ -3059,7 +3088,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const linkedPreviewMembers = activeMembers.reduce((sum, member) => sum + getMemberLinkedAccountCount(member), 0);
   const linkedPreviewHouseholds = activeMembers.filter(isLineLinkedMember).length;
   const unlinkedPreviewMembers = activeMembers.filter((member) => !isLineLinkedMember(member)).length;
-  const withdrawalRequestMembers = basicData.members.filter(isWithdrawalRequestedMember);
+  const withdrawalRequestMembers = basicData.members.reduce((sum, member) => sum + (withdrawalRequested(member.withdrawal_status || member.status) ? 1 : 0) + getFamilyWithdrawalRequestSlots(member).length, 0);
   const withdrawnMembers = basicData.members.filter(isWithdrawnMember);
   const unpaidFees = summaryFeeRecords.filter((fee) => getFeePaidAmount(fee) < getFeeBillingAmount(fee));
   const rawStripeAccountId = basicData.town?.stripe_account_id || "";
@@ -3696,7 +3725,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <h3>会員一覧</h3>
                 <p>退会承認時にすべてのLINE連携を解除します。退会済み状態は通常操作では元に戻せません。</p>
               </div>
-              <span className="admin-member-count">退会申請 {withdrawalRequestMembers.length.toLocaleString()}件 / 退会済み {withdrawnMembers.length.toLocaleString()}件</span>
+              <span className="admin-member-count">退会申請 {withdrawalRequestMembers.toLocaleString()}件 / 退会済み {withdrawnMembers.length.toLocaleString()}件</span>
             </div>
 
             <div className="admin-member-table">
@@ -3713,6 +3742,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 const billingTargetCount = getMemberLinkedAccountCount(member);
                 const withdrawn = isWithdrawnMember(member);
                 const requested = isWithdrawalRequestedMember(member);
+                const familyRequestSlots = getFamilyWithdrawalRequestSlots(member);
                 const familyNames = getMemberFamilyNames(member);
                 return (
                   <div key={member.id || index} className={`admin-member-row ${withdrawn ? "withdrawn" : requested ? "requested" : ""}`}>
@@ -3733,8 +3763,10 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                       <button type="button" className="edit" onClick={() => handleMemberEditStart(member)} disabled={memberBusy || member.id === "empty"}>編集</button>
                       {withdrawn ? (
                         <span className="admin-member-no-action">退会確定</span>
-                      ) : requested ? (
+                      ) : withdrawalRequested(member.withdrawal_status || member.status) ? (
                         <button type="button" onClick={() => handleMemberWithdrawal(member)} disabled={memberBusy || member.id === "empty"}>退会承認</button>
+                      ) : familyRequestSlots.length ? (
+                        <>{familyRequestSlots.map((slot) => <button key={slot} type="button" onClick={() => handleFamilyWithdrawal(member, slot)} disabled={memberBusy || member.id === "empty"}>家族{slot}退会承認</button>)}</>
                       ) : (
                         <span className="admin-member-no-action">申請なし</span>
                       )}

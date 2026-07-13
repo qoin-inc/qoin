@@ -50,6 +50,7 @@ function ResidentPageContent() {
   const router = useRouter();
   const mode = searchParams?.get('mode');
   const openTargetId = searchParams?.get('open');
+  const familyInviteToken = searchParams?.get('family_invite');
 
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -224,6 +225,14 @@ function ResidentPageContent() {
 
     setLoading(true);
     try {
+      if (familyInviteToken) {
+        const claim = await supabase.rpc('claim_resident_family_invite', {
+          p_token: familyInviteToken,
+          p_line_user_id: lineUserId || null,
+        });
+        if (claim.error && !/すでに使用済み/.test(String(claim.error.message || ''))) throw claim.error;
+        if (!claim.error && typeof window !== 'undefined') window.history.replaceState({}, '', '/resident');
+      }
       const { data: rosters, error: rosterError } = await supabase
         .from('resident_rosters')
         .select('*')
@@ -236,7 +245,9 @@ function ResidentPageContent() {
       if (rosters && rosters.length > 0) {
         const rosterData = rosters.find((item: any) => item.withdrawal_status !== 'withdrawn' && item.status !== 'withdrawn') || rosters[0];
         await syncRosterLineUserId(rosterData, userId, lineUserId);
-        if (rosterData.withdrawal_status === 'withdrawn') {
+        const family1Withdrawn = rosterData.family_user_auth_id_1 === userId && rosterData.family_withdrawal_status_1 === 'withdrawn';
+        const family2Withdrawn = rosterData.family_user_auth_id_2 === userId && rosterData.family_withdrawal_status_2 === 'withdrawn';
+        if (rosterData.withdrawal_status === 'withdrawn' || family1Withdrawn || family2Withdrawn) {
           setLoginError('このアカウントはすでに退会済みのため、ご利用いただけません。');
           await handleLogout();
           setRoster(null);
@@ -405,14 +416,18 @@ function ResidentPageContent() {
     return null;
   }
 
-  const residentName = roster.full_name || `${roster.last_name || ''} ${roster.first_name || ''}`.trim() || '名称未設定';
+  const residentName = roster.family_user_auth_id_1 === session.user.id
+    ? (roster.family_name_1 || '家族1')
+    : roster.family_user_auth_id_2 === session.user.id
+      ? (roster.family_name_2 || '家族2')
+      : roster.full_name || `${roster.last_name || ''} ${roster.first_name || ''}`.trim() || '名称未設定';
 
   // ログイン後画面 (ResidentView)
   return (
     <div className="bg-[#e4e4e4] fixed inset-0 md:relative md:min-h-screen font-sans flex flex-col md:h-auto">
       <div className="flex-1 flex justify-center items-start pt-0 md:pt-10 pb-0 md:pb-10 relative h-full w-full">
         <div className="w-full h-full md:w-[390px] md:h-[844px] md:rounded-[3rem] overflow-hidden md:border-[12px] md:border-gray-800 md:shadow-2xl relative bg-white flex flex-col">
-          <ResidentView townId={town.id} townName={town.name} residentName={residentName} userId={session.user.id} openTargetId={openTargetId} initialTab={searchParams?.get('tab')} />
+          <ResidentView townId={town.id} townName={town.name} residentName={residentName} userId={session.user.id} roster={roster} openTargetId={openTargetId} initialTab={searchParams?.get('tab')} />
         </div>
       </div>
     </div>
