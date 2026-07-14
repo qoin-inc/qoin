@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type AdminViewProps = {
@@ -817,7 +817,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [systemBillingMessage, setSystemBillingMessage] = useState("");
   const [systemBillingBusy, setSystemBillingBusy] = useState(false);
   const [stripeBusy, setStripeBusy] = useState(false);
+  const [stripeSyncing, setStripeSyncing] = useState(false);
   const [stripeMessage, setStripeMessage] = useState("");
+  const stripeSyncAttemptRef = useRef("");
   const [publishDraft, setPublishDraft] = useState<PublishDraft>(defaultPublishDraft);
   const proxyTemplateTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [publishAttachment, setPublishAttachment] = useState<File | null>(null);
@@ -3237,13 +3239,73 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     }
   };
 
+  const getAdminAccessToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error("管理者ログインを確認できません。再ログインしてください。");
+    return session.access_token;
+  };
+
+  const syncStripeStatus = useCallback(async (showSuccessMessage = true) => {
+    setStripeSyncing(true);
+    setStripeMessage("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("管理者ログインを確認できません。再ログインしてください。");
+
+      const response = await fetch("/api/admin/stripe/sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ townId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.town) throw new Error(data.error || "Stripe連携状態を同期できませんでした。");
+
+      setBasicData((current) => ({
+        ...current,
+        town: { ...(current.town || {}), ...data.town },
+      }));
+      if (showSuccessMessage) {
+        setStripeMessage(
+          data.status === "active"
+            ? "Stripe連携状態を更新しました。決済受付と入金・振込が有効です。"
+            : data.status === "reviewing"
+              ? "Stripe登録情報は提出済みです。現在、Stripe審査中です。"
+              : "Stripe連携状態を更新しました。Stripe画面で追加情報をご確認ください。",
+        );
+      }
+      return data;
+    } catch (error: any) {
+      setStripeMessage(error?.message || "Stripe連携状態の同期に失敗しました。");
+      throw error;
+    } finally {
+      setStripeSyncing(false);
+    }
+  }, [townId]);
+
+  useEffect(() => {
+    if (activeBasicFeature !== "Stripe連携" || !townId) return;
+    const syncKey = String(townId);
+    if (stripeSyncAttemptRef.current === syncKey) return;
+    stripeSyncAttemptRef.current = syncKey;
+    void syncStripeStatus(false).catch(() => {
+      stripeSyncAttemptRef.current = "";
+    });
+  }, [activeBasicFeature, syncStripeStatus, townId]);
+
   const handleStripeOnboardingStart = async () => {
     setStripeBusy(true);
     setStripeMessage("");
     try {
+      const accessToken = await getAdminAccessToken();
       const response = await fetch("/api/admin/stripe/create-account-link", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ townId }),
       });
       const data = await response.json();
@@ -4128,9 +4190,13 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <span><i className="fas fa-building-columns" /> 入金先口座</span>
             <span><i className="fas fa-envelope" /> 代表者メール</span>
           </div>
-          <button type="button" className="admin-stripe-primary" onClick={handleStripeOnboardingStart} disabled={stripeBusy}>
+          <button type="button" className="admin-stripe-primary" onClick={handleStripeOnboardingStart} disabled={stripeBusy || stripeSyncing}>
             <i className={`fas ${stripeBusy ? "fa-spinner fa-spin" : "fa-arrow-up-right-from-square"}`} />
             <span>{stripeBusy ? "Stripe画面を準備中" : rawStripeAccountId ? "本番登録を再開・確認" : "本番Stripe登録を開始"}</span>
+          </button>
+          <button type="button" className="admin-stripe-sync" onClick={() => void syncStripeStatus(true)} disabled={stripeBusy || stripeSyncing}>
+            <i className={`fas ${stripeSyncing ? "fa-spinner fa-spin" : "fa-rotate"}`} />
+            <span>{stripeSyncing ? "Stripe状態を確認中" : "Stripe状態を更新"}</span>
           </button>
           {stripeMessage && (
             <div className={`admin-basic-message ${stripeMessage.includes("失敗") || stripeMessage.includes("できません") ? "error" : "success"}`}>

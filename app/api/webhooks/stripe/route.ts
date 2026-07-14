@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { SupabaseClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { createWebhookSupabaseClient } from '@/lib/stripeConnectServer';
 
 const missingColumnFromError = (error: any) => {
   const message = String(error?.message || '');
@@ -10,11 +11,12 @@ const missingColumnFromError = (error: any) => {
   return plain?.[1] || '';
 };
 
-const updateFeeRecordWithFallback = async (feeRecordId: string, payload: Record<string, any>) => {
+const updateFeeRecordWithFallback = async (supabase: SupabaseClient, feeRecordId: string, payload: Record<string, any>) => {
   let nextPayload = { ...payload };
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    const result = await supabase.from('fee_records').update(nextPayload).eq('id', feeRecordId);
-    if (!result.error) return;
+    const result = await supabase.from('fee_records').update(nextPayload).eq('id', feeRecordId).select('id').maybeSingle();
+    if (!result.error && result.data) return;
+    if (!result.error && !result.data) throw new Error(`Fee record ${feeRecordId} was not updated.`);
 
     const missingColumn = missingColumnFromError(result.error);
     if (missingColumn && Object.prototype.hasOwnProperty.call(nextPayload, missingColumn)) {
@@ -25,11 +27,12 @@ const updateFeeRecordWithFallback = async (feeRecordId: string, payload: Record<
   }
 };
 
-const updateNeighborhoodStripeWithFallback = async (stripeAccountId: string, payload: Record<string, any>) => {
+const updateNeighborhoodStripeWithFallback = async (supabase: SupabaseClient, stripeAccountId: string, payload: Record<string, any>) => {
   let nextPayload = { ...payload };
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    const result = await supabase.from('neighborhoods').update(nextPayload).eq('stripe_account_id', stripeAccountId);
-    if (!result.error) return;
+    const result = await supabase.from('neighborhoods').update(nextPayload).eq('stripe_account_id', stripeAccountId).select('id').maybeSingle();
+    if (!result.error && result.data) return;
+    if (!result.error && !result.data) throw new Error(`Stripe account ${stripeAccountId} is not linked to a neighborhood.`);
 
     const missingColumn = missingColumnFromError(result.error);
     if (missingColumn && Object.prototype.hasOwnProperty.call(nextPayload, missingColumn)) {
@@ -40,11 +43,12 @@ const updateNeighborhoodStripeWithFallback = async (stripeAccountId: string, pay
   }
 };
 
-const updateSystemUsageBillingWithFallback = async (billingId: string, payload: Record<string, any>) => {
+const updateSystemUsageBillingWithFallback = async (supabase: SupabaseClient, billingId: string, payload: Record<string, any>) => {
   let nextPayload = { ...payload };
   for (let attempt = 0; attempt < 12; attempt += 1) {
-    const result = await supabase.from('system_usage_billings').update(nextPayload).eq('id', billingId);
-    if (!result.error) return;
+    const result = await supabase.from('system_usage_billings').update(nextPayload).eq('id', billingId).select('id').maybeSingle();
+    if (!result.error && result.data) return;
+    if (!result.error && !result.data) throw new Error(`System usage billing ${billingId} was not updated.`);
 
     const missingColumn = missingColumnFromError(result.error);
     if (missingColumn && Object.prototype.hasOwnProperty.call(nextPayload, missingColumn)) {
@@ -66,22 +70,30 @@ export async function POST(req: Request) {
   });
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET is not configured.');
+    return NextResponse.json({ error: 'Webhook is not configured.' }, { status: 500 });
+  }
 
   const payload = await req.text();
   const signature = req.headers.get('stripe-signature');
+  if (!signature) return NextResponse.json({ error: 'Stripe signature is missing.' }, { status: 400 });
 
   let event: Stripe.Event;
 
   try {
-    if (!signature || !webhookSecret) {
-      // 開発中などシークレットがない場合はそのままパース
-      event = JSON.parse(payload) as Stripe.Event;
-    } else {
-      event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-    }
+    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (err: any) {
     console.error(`Webhook Error: ${err.message}`);
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
+
+  let supabase: SupabaseClient;
+  try {
+    supabase = createWebhookSupabaseClient();
+  } catch (err: any) {
+    console.error(`Webhook database configuration error: ${err.message}`);
+    return NextResponse.json({ error: 'Webhook database is not configured.' }, { status: 500 });
   }
 
   // account.updated イベントを受け取る
@@ -90,7 +102,7 @@ export async function POST(req: Request) {
     const active = Boolean(account.charges_enabled && account.payouts_enabled);
     const mode = event.livemode ? 'live' : 'test';
 
-    await updateNeighborhoodStripeWithFallback(account.id, {
+    await updateNeighborhoodStripeWithFallback(supabase, account.id, {
       stripe_account_mode: mode,
       stripe_onboarding_status: active ? 'active' : account.details_submitted ? 'reviewing' : 'pending',
       stripe_charges_enabled: account.charges_enabled,
@@ -123,7 +135,7 @@ export async function POST(req: Request) {
       const billingMonth = session.metadata?.billing_month || currentBilling?.billing_month || '';
       const receiptNumber = currentBilling?.receipt_number || `RCPT-${String(billingMonth).replace('-', '')}-${systemUsageBillingId}`;
 
-      await updateSystemUsageBillingWithFallback(systemUsageBillingId, {
+      await updateSystemUsageBillingWithFallback(supabase, systemUsageBillingId, {
         status: 'paid',
         paid_amount: session.amount_total || currentBilling?.total_amount || 0,
         payment_method: 'stripe',
@@ -150,7 +162,7 @@ export async function POST(req: Request) {
       const totalPaid = cashPaid + stripePaid;
       const billingAmount = Number(currentFee?.expected_amount || currentFee?.billing_amount || currentFee?.amount || amountPaid);
 
-      await updateFeeRecordWithFallback(feeRecordId, {
+      await updateFeeRecordWithFallback(supabase, feeRecordId, {
         paid_amount_cash: cashPaid,
         paid_amount_stripe: stripePaid,
         paid_amount: totalPaid,

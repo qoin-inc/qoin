@@ -12,6 +12,14 @@
 - el-town運営・開発環境では、Stripeテストモードを使って会費請求、Webhook、領収書反映を検証する。
 - el-town本番環境では、Stripe本番キーと本番Webhookのみを使う。
 
+## 本番環境の秘密情報
+
+- `STRIPE_SECRET_KEY`: Stripe本番APIキー。Netlifyではsecret値としてFunctions/Runtimeへ設定する。
+- `STRIPE_WEBHOOK_SECRET`: `/api/webhooks/stripe` に登録した本番Webhookエンドポイントの署名シークレット。Stripe APIキーとは別に管理する。
+- `SUPABASE_SERVICE_ROLE_KEY`: Stripe署名検証後のWebhookだけがDBへ状態・入金結果を保存するためのサーバー専用キー。ブラウザへ公開せず、`NEXT_PUBLIC_` を付けない。
+- 管理画面からのStripe操作はSupabase管理者セッションを検証し、対象町内会・自治会の有効な役員だけに許可する。
+- Webhookは署名がない、または署名検証に失敗したリクエストを受け付けない。
+
 ## 会費請求を許可する条件
 
 - 町内会・自治会のStripe Connectアカウントが登録済みであること。

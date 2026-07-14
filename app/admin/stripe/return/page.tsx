@@ -1,16 +1,53 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function StripeReturnPage() {
   const [canClose, setCanClose] = useState(false);
   const [closeFailed, setCloseFailed] = useState(false);
+  const [syncState, setSyncState] = useState<'syncing' | 'success' | 'error'>('syncing');
+  const [syncMessage, setSyncMessage] = useState('Stripeの登録状態をel-townへ反映しています。');
+  const syncStartedRef = useRef(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setCanClose(true);
-    }
+    if (typeof window === 'undefined' || syncStartedRef.current) return;
+    syncStartedRef.current = true;
+    setCanClose(true);
+
+    const syncStatus = async () => {
+      try {
+        const townId = new URLSearchParams(window.location.search).get('townId');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!townId || !session?.access_token) throw new Error('管理者セッションを確認できません。管理画面へ戻って状態を更新してください。');
+
+        const response = await fetch('/api/admin/stripe/sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ townId }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Stripe連携状態を反映できませんでした。');
+
+        setSyncState('success');
+        setSyncMessage(
+          data.status === 'active'
+            ? 'Stripe連携が有効になりました。決済受付と入金・振込を利用できます。'
+            : data.status === 'reviewing'
+              ? '登録情報を反映しました。現在、Stripeによる審査中です。'
+              : '登録状態を反映しました。追加情報が必要な場合は管理画面から再開できます。',
+        );
+      } catch (error: any) {
+        setSyncState('error');
+        setSyncMessage(error?.message || 'Stripe連携状態を反映できませんでした。');
+      }
+    };
+
+    void syncStatus();
   }, []);
 
   const handleClose = () => {
@@ -38,13 +75,24 @@ export default function StripeReturnPage() {
           </div>
           
           <h3 className="text-lg font-bold text-gray-800 mb-2">
-            Stripe本番連携手続きが完了しました
+            Stripe本番登録を受け付けました
           </h3>
           
           <p className="text-xs md:text-sm text-gray-600 mb-8 leading-relaxed">
-            町内会・自治会の本番アカウント登録・接続手続きが正常に完了しました。<br/>
-            Stripeによるアカウント審査が自動的に開始されます。
+            町内会・自治会の登録情報をStripeが受け付けました。<br/>
+            審査状況によっては追加情報の提出が必要です。
           </p>
+
+          <div className={`mb-6 rounded-xl border p-4 text-left text-xs font-bold leading-relaxed ${
+            syncState === 'success'
+              ? 'border-green-200 bg-green-50 text-green-800'
+              : syncState === 'error'
+                ? 'border-red-200 bg-red-50 text-red-800'
+                : 'border-indigo-200 bg-indigo-50 text-indigo-800'
+          }`}>
+            <i className={`fas mr-2 ${syncState === 'syncing' ? 'fa-spinner fa-spin' : syncState === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}`}></i>
+            {syncMessage}
+          </div>
 
           <div className="space-y-3">
             {canClose && (
@@ -82,7 +130,7 @@ export default function StripeReturnPage() {
           </div>
 
           <p className="mt-6 text-[10px] text-gray-400 leading-normal">
-            ※「このタブを閉じる」を押した後は、元の管理画面タブに戻ってページを再読み込みすることで、連携状況が反映されていることをご確認いただけます。
+            ※管理画面の「Stripe状態を更新」ボタンでも、最新の審査・決済受付状態を再取得できます。
           </p>
         </div>
       </div>
