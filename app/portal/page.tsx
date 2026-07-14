@@ -118,7 +118,7 @@ export default function PortalPage() {
       supabase
         .from('public_posts')
         .select('*, neighborhoods(name, lat, lng)')
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: true }),
       supabase
         .from('neighborhoods')
         .select('id, name, lat, lng')
@@ -131,13 +131,11 @@ export default function PortalPage() {
       
       const latestPostMap = new Map();
       postsData.forEach(post => {
-        if (!latestPostMap.has(post.neighborhood_id)) {
-          latestPostMap.set(post.neighborhood_id, {
-            category: post.category,
-            title: post.title,
-            nickname: post.nickname,
-          });
-        }
+        latestPostMap.set(post.neighborhood_id, {
+          category: post.category,
+          title: post.title,
+          nickname: post.nickname,
+        });
       });
       setTowns((neighborhoodsData || []).map((item: any) => ({
         ...item,
@@ -384,7 +382,7 @@ const renderPostCard = (post: any) => {
             <div className="portal-town-posts-header">
               <div>
                 <h3>{towns.find(t => t.id === selectedTownId)?.name || '町内会'} の投稿</h3>
-                <p>新しい順に表示</p>
+                <p>新しい投稿は下に表示</p>
               </div>
               <div className="portal-town-posts-controls">
                 <button type="button" className="toggle" onClick={() => setAreTownPostsOpen((current) => !current)}>
