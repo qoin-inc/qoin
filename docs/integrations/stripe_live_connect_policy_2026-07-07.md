@@ -16,7 +16,7 @@
 
 - `STRIPE_SECRET_KEY`: Stripe本番APIキー。Netlifyではsecret値としてFunctions/Runtimeへ設定する。
 - `STRIPE_WEBHOOK_SECRET`: `/api/webhooks/stripe` に登録した本番Webhookエンドポイントの署名シークレット。Stripe APIキーとは別に管理する。
-- `SUPABASE_SERVICE_ROLE_KEY`: Stripe署名検証後のWebhookだけがDBへ状態・入金結果を保存するためのサーバー専用キー。ブラウザへ公開せず、`NEXT_PUBLIC_` を付けない。
+- `SUPABASE_SECRET_KEY`: Stripe署名検証後のWebhookだけがDBへ状態・入金結果を保存するためのサーバー専用 `sb_secret_...` キー。ブラウザへ公開せず、`NEXT_PUBLIC_` を付けない。旧プロジェクトでは `SUPABASE_SERVICE_ROLE_KEY` も互換利用できる。
 - 管理画面からのStripe操作はSupabase管理者セッションを検証し、対象町内会・自治会の有効な役員だけに許可する。
 - Webhookは署名がない、または署名検証に失敗したリクエストを受け付けない。
 

@@ -53,16 +53,16 @@ export const requireNeighborhoodAdmin = async (req: Request, townId: string | nu
 
   if (adminError || !admin) throw new Error('この町内会・自治会のStripe連携を操作する権限がありません。');
 
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  const writeClient = serviceRoleKey ? createSupabaseClient(serviceRoleKey) : client;
+  const serverSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const writeClient = serverSecretKey ? createSupabaseClient(serverSecretKey) : client;
   return { client, writeClient, user: userData.user };
 };
 
 export const createWebhookSupabaseClient = () => {
   if (!supabaseUrl) throw new Error('Supabase is not configured.');
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  if (!serviceRoleKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured.');
-  return createSupabaseClient(serviceRoleKey);
+  const serverSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!serverSecretKey) throw new Error('SUPABASE_SECRET_KEY is not configured.');
+  return createSupabaseClient(serverSecretKey);
 };
 
 export const updateNeighborhoodStripe = async (
