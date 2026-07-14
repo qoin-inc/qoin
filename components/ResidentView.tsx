@@ -236,6 +236,98 @@ const dateKey = (value?: string | null) => {
 
 const todayKey = () => dateKey(new Date().toISOString());
 
+const nthWeekdayOfMonth = (year: number, month: number, weekday: number, nth: number) => {
+  const firstWeekday = new Date(year, month, 1).getDay();
+  return 1 + ((7 + weekday - firstWeekday) % 7) + ((nth - 1) * 7);
+};
+
+const equinoxDay = (year: number, season: "spring" | "autumn") => {
+  const base = season === "spring" ? 20.8431 : 23.2488;
+  return Math.floor(base + (0.242194 * (year - 1980)) - Math.floor((year - 1980) / 4));
+};
+
+const japaneseHolidayCache = new Map<number, Map<string, string>>();
+
+const japaneseHolidaysForYear = (year: number) => {
+  const cached = japaneseHolidayCache.get(year);
+  if (cached) return cached;
+
+  const holidays = new Map<string, string>();
+  const add = (month: number, day: number, name: string) => {
+    holidays.set(`${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`, name);
+  };
+
+  add(1, 1, "元日");
+  add(1, nthWeekdayOfMonth(year, 0, 1, 2), "成人の日");
+  add(2, 11, "建国記念の日");
+  add(2, 23, "天皇誕生日");
+  add(3, equinoxDay(year, "spring"), "春分の日");
+  add(4, 29, "昭和の日");
+  add(5, 3, "憲法記念日");
+  add(5, 4, "みどりの日");
+  add(5, 5, "こどもの日");
+
+  if (year === 2020) {
+    add(7, 23, "海の日");
+    add(7, 24, "スポーツの日");
+    add(8, 10, "山の日");
+  } else if (year === 2021) {
+    add(7, 22, "海の日");
+    add(7, 23, "スポーツの日");
+    add(8, 8, "山の日");
+  } else {
+    add(7, nthWeekdayOfMonth(year, 6, 1, 3), "海の日");
+    add(8, 11, "山の日");
+    add(10, nthWeekdayOfMonth(year, 9, 1, 2), "スポーツの日");
+  }
+
+  add(9, nthWeekdayOfMonth(year, 8, 1, 3), "敬老の日");
+  add(9, equinoxDay(year, "autumn"), "秋分の日");
+  add(11, 3, "文化の日");
+  add(11, 23, "勤労感謝の日");
+
+  const originalHolidays = Array.from(holidays.entries());
+  originalHolidays.forEach(([key, name]) => {
+    const date = new Date(`${key}T00:00:00`);
+    if (date.getDay() !== 0) return;
+    const substitute = new Date(date);
+    do {
+      substitute.setDate(substitute.getDate() + 1);
+    } while (holidays.has(dateKey(substitute.toISOString())));
+    holidays.set(dateKey(substitute.toISOString()), `${name} 振替休日`);
+  });
+
+  for (let month = 0; month < 12; month += 1) {
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    for (let day = 2; day < lastDay; day += 1) {
+      const date = new Date(year, month, day);
+      const key = dateKey(date.toISOString());
+      if (date.getDay() === 0 || holidays.has(key)) continue;
+      const previous = new Date(date);
+      const next = new Date(date);
+      previous.setDate(day - 1);
+      next.setDate(day + 1);
+      if (holidays.has(dateKey(previous.toISOString())) && holidays.has(dateKey(next.toISOString()))) {
+        holidays.set(key, "国民の休日");
+      }
+    }
+  }
+
+  japaneseHolidayCache.set(year, holidays);
+  return holidays;
+};
+
+const japaneseHolidayName = (date: Date) => japaneseHolidaysForYear(date.getFullYear()).get(dateKey(date.toISOString())) || "";
+
+const calendarDayClassName = (date: Date, inMonth: boolean, hasEntries: boolean) => [
+  !inMonth ? "muted" : "",
+  date.getDay() === 0 ? "sunday" : "",
+  date.getDay() === 6 ? "saturday" : "",
+  japaneseHolidayName(date) ? "holiday" : "",
+  hasEntries ? "has-entries" : "",
+  dateKey(date.toISOString()) === todayKey() ? "today" : "",
+].filter(Boolean).join(" ");
+
 const splitSettingList = (value?: string[] | string | null) => {
   if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
   if (!value) return [];
@@ -548,6 +640,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         key,
         date,
         inMonth: date.getMonth() === calendarMonth.getMonth(),
+        holidayName: japaneseHolidayName(date),
         events: eventItems.filter((item) => dateKey(item.event_date || item.published_at || item.created_at) === key),
       };
     });
@@ -614,6 +707,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         key,
         date,
         inMonth: date.getMonth() === calendarMonth.getMonth(),
+        holidayName: japaneseHolidayName(date),
         entries: [...liveEntries, ...facilityEntries],
       };
     });
@@ -1253,17 +1347,21 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                   <button type="button" onClick={() => shiftCalendarMonth(1)} aria-label="翌月"><i className="fas fa-chevron-right" /></button>
                 </div>
                 <div className="el-calendar-weekdays">
-                  {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
+                  {["日", "月", "火", "水", "木", "金", "土"].map((day, index) => <span key={day} className={index === 0 ? "sunday" : index === 6 ? "saturday" : ""}>{day}</span>)}
                 </div>
                 <div className="el-calendar-grid">
                   {calendarDays.map((day) => (
-                    <div key={day.key} className={day.inMonth ? "" : "muted"}>
-                      <span>{day.date.getDate()}</span>
+                    <div key={day.key} className={calendarDayClassName(day.date, day.inMonth, day.events.length > 0)} title={day.holidayName || undefined}>
+                      <div className="el-calendar-date-row">
+                        <span className="el-calendar-date-number">{day.date.getDate()}</span>
+                        {day.events.length > 0 && <span className="el-calendar-count" aria-label={`${day.events.length}件の予定`}>{day.events.length}</span>}
+                      </div>
                       {day.events.slice(0, 2).map((item) => (
                         <button key={item.id} type="button" onClick={() => openCircular(item)}>
                           {item.event_time ? `${item.event_time} ` : ""}{item.title}
                         </button>
                       ))}
+                      {day.events.length > 2 && <span className="el-calendar-more">ほか{day.events.length - 2}件</span>}
                     </div>
                   ))}
                 </div>
@@ -1315,17 +1413,21 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                   <button type="button" onClick={() => shiftCalendarMonth(1)} aria-label="翌月"><i className="fas fa-chevron-right" /></button>
                 </div>
                 <div className="el-calendar-weekdays">
-                  {["日", "月", "火", "水", "木", "金", "土"].map((day) => <span key={day}>{day}</span>)}
+                  {["日", "月", "火", "水", "木", "金", "土"].map((day, index) => <span key={day} className={index === 0 ? "sunday" : index === 6 ? "saturday" : ""}>{day}</span>)}
                 </div>
                 <div className="el-calendar-grid live">
                   {liveCalendarDays.map((day) => (
-                    <div key={day.key} className={day.inMonth ? "" : "muted"}>
-                      <span>{day.date.getDate()}</span>
+                    <div key={day.key} className={calendarDayClassName(day.date, day.inMonth, day.entries.length > 0)} title={day.holidayName || undefined}>
+                      <div className="el-calendar-date-row">
+                        <span className="el-calendar-date-number">{day.date.getDate()}</span>
+                        {day.entries.length > 0 && <span className="el-calendar-count" aria-label={`${day.entries.length}件の予定`}>{day.entries.length}</span>}
+                      </div>
                       {day.entries.slice(0, 3).map((entry) => (
                         <button key={entry.id} type="button" className={entry.kind} onClick={entry.onSelect}>
                           {entry.label}
                         </button>
                       ))}
+                      {day.entries.length > 3 && <span className="el-calendar-more">ほか{day.entries.length - 3}件</span>}
                     </div>
                   ))}
                 </div>
