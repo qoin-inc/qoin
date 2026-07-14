@@ -44,10 +44,27 @@ export default function PortalPage() {
 
   const contentRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const townPostsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     checkSessionAndFetchData();
   }, []);
+
+  useEffect(() => {
+    if (loading || (activeTab !== 'food' && activeTab !== 'sight')) return;
+    const frame = window.requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ block: 'end' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, loading, posts]);
+
+  useEffect(() => {
+    if (loading || activeTab !== 'map' || !selectedTownId || !areTownPostsOpen) return;
+    const frame = window.requestAnimationFrame(() => {
+      townPostsEndRef.current?.scrollIntoView({ block: 'end' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, areTownPostsOpen, loading, posts, selectedTownId]);
 
   const checkSessionAndFetchData = async () => {
     let { data: { session } } = await supabase.auth.getSession();
@@ -399,6 +416,7 @@ const renderPostCard = (post: any) => {
               ) : (
                 posts.filter(p => p.neighborhood_id === selectedTownId).map(post => renderPostCard(post))
               )}
+              <div ref={townPostsEndRef} className="h-1" />
             </div>}
           </aside>
         )}
