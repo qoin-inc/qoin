@@ -3296,6 +3296,12 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   }, [activeBasicFeature, syncStripeStatus, townId]);
 
   const handleStripeOnboardingStart = async () => {
+    const stripeWindow = window.open("", "_blank");
+    if (!stripeWindow) {
+      setStripeMessage("Stripeを開くには、ブラウザでポップアップを許可してください。");
+      return;
+    }
+    stripeWindow.opener = null;
     setStripeBusy(true);
     setStripeMessage("");
     try {
@@ -3310,8 +3316,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       });
       const data = await response.json();
       if (!response.ok || !data.url) throw new Error(data.error || "Stripe本番登録画面を作成できませんでした。");
-      window.location.href = data.url;
+      stripeWindow.location.href = data.url;
     } catch (error: any) {
+      stripeWindow.close();
       setStripeMessage(error?.message || "Stripe本番登録の開始に失敗しました。");
     } finally {
       setStripeBusy(false);
