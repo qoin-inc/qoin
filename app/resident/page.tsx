@@ -102,6 +102,7 @@ function ResidentPageContent() {
   const shouldStartAutoLineLogin = () => {
     if (typeof window === 'undefined') return false;
     if (searchParams?.get('test_bypass') === '1') return false;
+    if (searchParams?.get('line_error')) return false;
     if (window.location.hash.includes('error_description')) return false;
     if (hasLiffResponseParams()) return false;
 
@@ -142,6 +143,10 @@ function ResidentPageContent() {
     if (hash && hash.includes('error_description')) {
       const params = new URLSearchParams(hash.substring(1));
       setLoginError(`認証エラー: ${params.get('error_description')}`);
+    }
+
+    if (searchParams?.get('line_error') === 'profile_unavailable') {
+      setLoginError('LINEの認証情報を取得できませんでした。下の「LINEでログインする」からもう一度お試しください。');
     }
 
     const errorParam = searchParams?.get('error');

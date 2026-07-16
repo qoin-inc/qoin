@@ -89,7 +89,21 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       if (initialRedirectTarget) {
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         if (!existingSession && !lineProfile?.userId) {
-          revealInitialMenu();
+          // Never leave a LIFF callback on the permanent loading screen.
+          // Move to the resident login screen without starting another
+          // automatic LIFF round-trip, so the user can retry explicitly.
+          if (initialRedirectTarget === "admin") {
+            router.replace("/admin/");
+            return;
+          }
+
+          const fallbackParams = new URLSearchParams({ line_error: "profile_unavailable" });
+          if (initialRedirectTarget === "portal") {
+            fallbackParams.set("redirect_after", "portal");
+          } else if (initialRedirectTarget !== "resident") {
+            fallbackParams.set("open", initialRedirectTarget);
+          }
+          window.location.replace(`/resident/?${fallbackParams.toString()}`);
           return;
         }
 

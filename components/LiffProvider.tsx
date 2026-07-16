@@ -53,7 +53,20 @@ export const useLiff = () => {
         await liff.init({ liffId });
         if (liff.isLoggedIn()) {
           const lineProfile = await liff.getProfile().catch(() => null);
-          if (!cancelled && lineProfile) setProfile(lineProfile);
+          if (!cancelled && lineProfile) {
+            setProfile(lineProfile);
+          } else {
+            // The profile scope can be unavailable even when LIFF login itself
+            // succeeded. The ID token still contains the stable LINE user ID.
+            const idToken = liff.getDecodedIDToken();
+            if (!cancelled && idToken?.sub) {
+              setProfile({
+                userId: idToken.sub,
+                displayName: idToken.name || '',
+                pictureUrl: idToken.picture || '',
+              });
+            }
+          }
         }
       } catch {
         // LIFF init failed – continue without it.
