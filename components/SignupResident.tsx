@@ -30,8 +30,10 @@ const withoutLineColumns = (payload: Record<string, any>) => {
 };
 
 export default function SignupResident({ sessionUser, onComplete, onCancel }: SignupResidentProps) {
-  const [fullName, setFullName] = useState(sessionUser?.user_metadata?.name || "");
+  const [fullName, setFullName] = useState("");
   const [kanaName, setKanaName] = useState("");
+  const [memberName, setMemberName] = useState(sessionUser?.user_metadata?.name || "");
+  const [memberKanaName, setMemberKanaName] = useState("");
   const [townName, setTownName] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
@@ -47,8 +49,8 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       setError("ログイン情報を確認できません。LINEログイン後にもう一度お試しください。");
       return;
     }
-    if (!fullName.trim() || !kanaName.trim() || !townName.trim() || !postalCode.trim() || !addressLine2.trim()) {
-      setError("町内会名、郵便番号、住所２、お名前、カナ氏名を入力してください。");
+    if (!fullName.trim() || !kanaName.trim() || !memberName.trim() || !memberKanaName.trim() || !townName.trim() || !postalCode.trim() || !addressLine2.trim()) {
+      setError("町内会名、住所、世帯主の氏名・カナ、登録する方の氏名・カナを入力してください。");
       return;
     }
 
@@ -80,6 +82,8 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         p_address3: addressLine3,
         p_line_user_id: lineUserId || null,
         p_line_display_name: sessionUser?.user_metadata?.name || null,
+        p_member_name: memberName,
+        p_member_kana_name: memberKanaName,
       });
       if (!rpcResult.error) {
         onComplete?.();
@@ -96,7 +100,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       if (rosterLookupError) throw rosterLookupError;
 
       const matchedRoster = existingRosters?.find((roster: any) => {
-        // 名簿照合は世帯主本人だけを対象にする。家族は世帯主発行の招待URLから連携する。
+        // 世帯主情報で世帯を特定する。登録する本人の氏名・カナは別項目として保存する。
         const nameAndKanaMatched = normalizeName(rosterPrimaryName(roster)) === normalizedInputName
           && normalizeName(rosterPrimaryKana(roster)) === normalizedInputKana;
 
@@ -125,10 +129,9 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
             if (!familySlot) {
               throw new Error("この世帯は家族2名まで連携済みです。世帯主へ確認してください。");
             }
-            const displayName = String(sessionUser?.user_metadata?.name || "").trim();
             updatePayload = {
-              [`family_name_${familySlot}`]: displayName || matchedRoster[`family_name_${familySlot}`] || `家族${familySlot}`,
-              [`family_kana_name_${familySlot}`]: null,
+              [`family_name_${familySlot}`]: memberName.trim(),
+              [`family_kana_name_${familySlot}`]: memberKanaName.trim(),
               [`family_user_auth_id_${familySlot}`]: sessionUser.id,
               [`family_line_user_id_${familySlot}`]: lineUserId || null,
               [`family_invite_token_${familySlot}`]: null,
@@ -206,13 +209,28 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
           </label>
 
           <label>
-            <span>お名前</span>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="例：山田 花子" required />
+            <span>世帯主のお名前</span>
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="例：山田 太郎" required />
           </label>
 
           <label>
-            <span>カナ氏名</span>
-            <input value={kanaName} onChange={(e) => setKanaName(e.target.value)} placeholder="例：ヤマダ ハナコ" required />
+            <span>世帯主のカナ氏名</span>
+            <input value={kanaName} onChange={(e) => setKanaName(e.target.value)} placeholder="例：ヤマダ タロウ" required />
+          </label>
+
+          <div className="signup-form-section-note">
+            <strong>登録する方の本人情報</strong>
+            <small>LINEの表示名ではなく、会員名簿に登録する正式な氏名を入力してください。</small>
+          </div>
+
+          <label>
+            <span>登録する方のお名前</span>
+            <input value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="例：山田 花子" required />
+          </label>
+
+          <label>
+            <span>登録する方のカナ氏名</span>
+            <input value={memberKanaName} onChange={(e) => setMemberKanaName(e.target.value)} placeholder="例：ヤマダ ハナコ" required />
           </label>
 
           <button type="submit" className="el-primary-action" disabled={submitting}>

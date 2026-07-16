@@ -91,13 +91,16 @@ GRANT EXECUTE ON FUNCTION public.claim_resident_family_invite(TEXT, TEXT) TO aut
 COMMENT ON COLUMN public.resident_rosters.family_withdrawal_status_1 IS '家族1固有の退会状態。世帯主の状態とは独立。';
 COMMENT ON COLUMN public.resident_rosters.family_withdrawal_status_2 IS '家族2固有の退会状態。世帯主の状態とは独立。';
 
+DROP FUNCTION IF EXISTS public.link_resident_roster_by_identity(BIGINT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT);
+
 -- 世帯主本人は本人枠へ連携する。
 -- 世帯主情報で照合した別のLINEアカウントは、空いている家族枠へ本人の判断で連携できる。
 -- 招待URLが発行済みの家族枠は、招待された本人のために予約して自動割当しない。
 CREATE OR REPLACE FUNCTION public.link_resident_roster_by_identity(
   p_neighborhood_id BIGINT, p_full_name TEXT, p_kana_name TEXT, p_postal_code TEXT,
   p_address2 TEXT, p_address3 TEXT DEFAULT '', p_line_user_id TEXT DEFAULT NULL,
-  p_line_display_name TEXT DEFAULT NULL
+  p_line_display_name TEXT DEFAULT NULL,
+  p_member_name TEXT DEFAULT NULL, p_member_kana_name TEXT DEFAULT NULL
 ) RETURNS JSONB
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
@@ -126,7 +129,12 @@ BEGIN
   END IF;
 
   IF target.family_user_auth_id_1::TEXT = auth.uid()::TEXT THEN
+    IF NULLIF(BTRIM(p_member_name), '') IS NULL OR NULLIF(BTRIM(p_member_kana_name), '') IS NULL THEN
+      RAISE EXCEPTION '登録する家族本人の氏名とカナ氏名を入力してください。';
+    END IF;
     UPDATE public.resident_rosters SET
+      family_name_1 = BTRIM(p_member_name),
+      family_kana_name_1 = BTRIM(p_member_kana_name),
       family_line_user_id_1 = COALESCE(p_line_user_id, family_line_user_id_1),
       family_withdrawal_status_1 = 'active'
     WHERE id = target.id;
@@ -134,17 +142,26 @@ BEGIN
   END IF;
 
   IF target.family_user_auth_id_2::TEXT = auth.uid()::TEXT THEN
+    IF NULLIF(BTRIM(p_member_name), '') IS NULL OR NULLIF(BTRIM(p_member_kana_name), '') IS NULL THEN
+      RAISE EXCEPTION '登録する家族本人の氏名とカナ氏名を入力してください。';
+    END IF;
     UPDATE public.resident_rosters SET
+      family_name_2 = BTRIM(p_member_name),
+      family_kana_name_2 = BTRIM(p_member_kana_name),
       family_line_user_id_2 = COALESCE(p_line_user_id, family_line_user_id_2),
       family_withdrawal_status_2 = 'active'
     WHERE id = target.id;
     RETURN jsonb_build_object('roster_id', target.id, 'role', 'family2');
   END IF;
 
+  IF NULLIF(BTRIM(p_member_name), '') IS NULL OR NULLIF(BTRIM(p_member_kana_name), '') IS NULL THEN
+    RAISE EXCEPTION '登録する家族本人の氏名とカナ氏名を入力してください。';
+  END IF;
+
   IF target.family_user_auth_id_1 IS NULL AND target.family_invite_token_1 IS NULL THEN
     UPDATE public.resident_rosters SET
-      family_name_1 = COALESCE(NULLIF(BTRIM(p_line_display_name), ''), NULLIF(BTRIM(family_name_1), ''), '家族1'),
-      family_kana_name_1 = NULL,
+      family_name_1 = BTRIM(p_member_name),
+      family_kana_name_1 = BTRIM(p_member_kana_name),
       family_user_auth_id_1 = auth.uid()::TEXT,
       family_line_user_id_1 = COALESCE(p_line_user_id, family_line_user_id_1),
       family_invite_token_1 = NULL,
@@ -156,8 +173,8 @@ BEGIN
 
   IF target.family_user_auth_id_2 IS NULL AND target.family_invite_token_2 IS NULL THEN
     UPDATE public.resident_rosters SET
-      family_name_2 = COALESCE(NULLIF(BTRIM(p_line_display_name), ''), NULLIF(BTRIM(family_name_2), ''), '家族2'),
-      family_kana_name_2 = NULL,
+      family_name_2 = BTRIM(p_member_name),
+      family_kana_name_2 = BTRIM(p_member_kana_name),
       family_user_auth_id_2 = auth.uid()::TEXT,
       family_line_user_id_2 = COALESCE(p_line_user_id, family_line_user_id_2),
       family_invite_token_2 = NULL,
@@ -170,3 +187,6 @@ BEGIN
   RAISE EXCEPTION 'この世帯は家族2名まで連携済みです。世帯主へ確認してください。';
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.link_resident_roster_by_identity(BIGINT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.link_resident_roster_by_identity(BIGINT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO authenticated;

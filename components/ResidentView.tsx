@@ -425,6 +425,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     endTime: "",
   });
   const [liveMessage, setLiveMessage] = useState("");
+  const [liveLoadMessage, setLiveLoadMessage] = useState("");
   const [activeLiveScreen, setActiveLiveScreen] = useState<LiveScreen>("live");
   const [liveViewMode, setLiveViewMode] = useState<ViewMode>("calendar");
   const [withdrawalBusy, setWithdrawalBusy] = useState(false);
@@ -477,13 +478,30 @@ export default function ResidentView({ townId, townName, residentName, userId, r
       }
       setLoading(false);
 
-      const [liveResult, facilityResult, reservationResult] = await Promise.all([
-        supabase
+      let liveResult = await supabase
+        .from("live_sessions")
+        .select("*")
+        .eq("neighborhood_id", townId)
+        .order("event_date", { ascending: true })
+        .limit(100);
+      if (liveResult.error && /event_date|column|schema cache/i.test(String(liveResult.error.message || ""))) {
+        liveResult = await supabase
           .from("live_sessions")
           .select("*")
           .eq("neighborhood_id", townId)
-          .order("event_date", { ascending: true })
-          .limit(100),
+          .order("starts_at", { ascending: true })
+          .limit(100);
+      }
+      if (liveResult.error && /starts_at|column|schema cache/i.test(String(liveResult.error.message || ""))) {
+        liveResult = await supabase
+          .from("live_sessions")
+          .select("*")
+          .eq("neighborhood_id", townId)
+          .order("created_at", { ascending: true })
+          .limit(100);
+      }
+
+      const [facilityResult, reservationResult] = await Promise.all([
         supabase
           .from("facilities")
           .select("*")
@@ -497,7 +515,13 @@ export default function ResidentView({ townId, townName, residentName, userId, r
           .limit(300),
       ]);
 
-      if (!liveResult.error && liveResult.data) setLiveSessions(liveResult.data as LiveSession[]);
+      if (!liveResult.error && liveResult.data) {
+        setLiveSessions(liveResult.data as LiveSession[]);
+        setLiveLoadMessage("");
+      } else {
+        setLiveSessions([]);
+        setLiveLoadMessage("LIVE予定を読み込めませんでした。時間をおいて再度開くか、役員へお知らせください。");
+      }
       if (!facilityResult.error && facilityResult.data) setFacilities((facilityResult.data as Facility[]).filter((facility) => facility.is_active !== false));
       if (!reservationResult.error && reservationResult.data) setFacilityReservations(reservationResult.data as FacilityReservation[]);
     };
@@ -1435,6 +1459,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
             )}
 
             {liveMessage && <div className={`form-alert ${liveMessage.includes("送信しました") ? "success" : ""}`}>{liveMessage}</div>}
+            {liveLoadMessage && <div className="form-alert">{liveLoadMessage}</div>}
 
             {activeLiveScreen === "live" && liveViewMode === "cards" && (
             <section className="el-reply-panel">

@@ -288,6 +288,26 @@ button { cursor: pointer; border: 0; }
   display: grid;
   gap: 14px;
 }
+.signup-form-section-note {
+  display: grid;
+  gap: 4px;
+  margin-top: 4px;
+  border-left: 4px solid var(--qoin-main);
+  border-radius: 6px;
+  background: #eff8fd;
+  padding: 10px 12px;
+}
+.signup-form-section-note strong {
+  color: #164e63;
+  font-size: 13px;
+  font-weight: 900;
+}
+.signup-form-section-note small {
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 700;
+}
 .signup-form label {
   display: grid;
   gap: 7px;
