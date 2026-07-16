@@ -119,14 +119,30 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
 
         if (primaryNameMatched) {
           if (matchedRoster.user_auth_id && matchedRoster.user_auth_id !== sessionUser.id) {
-            throw new Error("この会員名簿はすでに別のLINEアカウントと連携済みです。");
+            const existingFamilySlot = ([1, 2] as const).find((slot) => String(matchedRoster[`family_user_auth_id_${slot}`] || "") === String(sessionUser.id));
+            const availableFamilySlot = ([1, 2] as const).find((slot) => !matchedRoster[`family_user_auth_id_${slot}`] && !matchedRoster[`family_invite_token_${slot}`]);
+            const familySlot = existingFamilySlot || availableFamilySlot;
+            if (!familySlot) {
+              throw new Error("この世帯は家族2名まで連携済みです。世帯主へ確認してください。");
+            }
+            const displayName = String(sessionUser?.user_metadata?.name || "").trim();
+            updatePayload = {
+              [`family_name_${familySlot}`]: displayName || matchedRoster[`family_name_${familySlot}`] || `家族${familySlot}`,
+              [`family_kana_name_${familySlot}`]: null,
+              [`family_user_auth_id_${familySlot}`]: sessionUser.id,
+              [`family_line_user_id_${familySlot}`]: lineUserId || null,
+              [`family_invite_token_${familySlot}`]: null,
+              [`family_invited_at_${familySlot}`]: null,
+              [`family_withdrawal_status_${familySlot}`]: "active",
+            };
+          } else {
+            updatePayload = {
+              user_auth_id: sessionUser.id,
+              line_user_id: lineUserId || null,
+              line_display_name: sessionUser?.user_metadata?.name || null,
+              status: "active",
+            };
           }
-          updatePayload = {
-            user_auth_id: sessionUser.id,
-            line_user_id: lineUserId || null,
-            line_display_name: sessionUser?.user_metadata?.name || null,
-            status: "active",
-          };
         }
 
         if (!updatePayload) throw new Error("一致する会員名簿を確認できませんでした。");
@@ -150,7 +166,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         return;
       }
 
-      throw new Error("入力内容に一致する世帯主の会員名簿が見つかりません。家族の方は、世帯主から届いた家族招待URLを開いてください。");
+      throw new Error("入力内容に一致する世帯主の会員名簿が見つかりません。町内会名、住所、世帯主氏名・カナを確認してください。");
     } catch (err: any) {
       setError(err.message || "会員登録に失敗しました。");
     } finally {
