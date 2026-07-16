@@ -1063,7 +1063,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     setReplyBusy(true);
     setLiveMessage("");
     try {
-      const saved = await insertResidentRowWithFallback("facility_reservations", {
+      const reservationPayload = {
         facility_id: facility.id,
         facility_name: facility.name || "施設",
         neighborhood_id: townId,
@@ -1078,7 +1078,21 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         end_time: facilityReservationDraft.endTime,
         status: "pending",
         created_at: new Date().toISOString(),
-      }, "施設予約の申込を保存できませんでした。");
+      };
+      const rpcResult = await supabase.rpc("create_facility_reservation", {
+        p_facility_id: facility.id,
+        p_reservation_date: facilityReservationDraft.reservationDate,
+        p_start_time: facilityReservationDraft.startTime,
+        p_end_time: facilityReservationDraft.endTime,
+        p_participant_count: participantCount,
+        p_applicant_name: applicantName,
+      });
+      const rpcUnavailable = rpcResult.error?.code === "PGRST202"
+        || /create_facility_reservation|schema cache|function/i.test(String(rpcResult.error?.message || ""));
+      if (rpcResult.error && !rpcUnavailable) throw rpcResult.error;
+      const saved = rpcResult.error
+        ? await insertResidentRowWithFallback("facility_reservations", reservationPayload, "施設予約の申込を保存できませんでした。")
+        : { ...(rpcResult.data || {}), ...reservationPayload };
       setFacilityReservations((current) => [saved as FacilityReservation, ...current]);
       setFacilityReservationDraft((current) => ({ ...current, startTime: "", endTime: "" }));
       setLiveMessage("施設予約の申込を送信しました。役員の承認をお待ちください。");

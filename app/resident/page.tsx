@@ -277,7 +277,13 @@ function ResidentPageContent() {
   const performSupabaseLoginWithLiff = async () => {
     setIsSubmitting(true);
     try {
-      const profile = await liff?.getProfile();
+      const directProfile = await liff?.getProfile().catch(() => null);
+      const decodedIdToken = liff?.getDecodedIDToken?.();
+      const profile = directProfile || lineProfile || (decodedIdToken?.sub ? {
+        userId: decodedIdToken.sub,
+        displayName: decodedIdToken.name || '',
+        pictureUrl: decodedIdToken.picture || '',
+      } : null);
       if (!profile?.userId) throw new Error('LINE profile is unavailable.');
       const email = `${profile.userId}@line.eltown.local`;
       const password = `lineAuth_${profile.userId}_eltown`;
