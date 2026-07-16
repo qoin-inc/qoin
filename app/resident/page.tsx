@@ -129,6 +129,7 @@ function ResidentPageContent() {
             performSupabaseLoginWithLiff();
          } else if (existingSession) {
             window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+            setAutoLoginStarted(false);
          }
       });
     }
@@ -158,6 +159,7 @@ function ResidentPageContent() {
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+        setAutoLoginStarted(false);
         fetchRosterAndTown(session.user);
       } else if (shouldStartAutoLineLogin()) {
         openLiffLogin(true);
@@ -172,6 +174,7 @@ function ResidentPageContent() {
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+        setAutoLoginStarted(false);
         fetchRosterAndTown(session.user);
       } else {
         setRoster(null);
@@ -304,6 +307,7 @@ function ResidentPageContent() {
       // LIFFの特殊なブラウザ環境でreloadするとURLのパスが消えてトップメニューに戻る不具合があるため、
       // reloadはせずにSupabaseのonAuthStateChangeイベントに状態更新を任せる
       window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+      setAutoLoginStarted(false);
       setIsSubmitting(false);
     } catch (err: any) {
       console.error('LIFF Auth Error:', err);
