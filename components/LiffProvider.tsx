@@ -3,6 +3,22 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import liff from '@line/liff';
 
+const LIFF_INIT_TIMEOUT_MS = 8000;
+
+const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number) => new Promise<T>((resolve, reject) => {
+  const timeoutId = window.setTimeout(() => reject(new Error('LIFF initialization timed out.')), timeoutMs);
+  promise.then(
+    (value) => {
+      window.clearTimeout(timeoutId);
+      resolve(value);
+    },
+    (error) => {
+      window.clearTimeout(timeoutId);
+      reject(error);
+    },
+  );
+});
+
 const shouldAutoInitializeLiff = () => {
   if (typeof window === 'undefined') return false;
   const params = new URLSearchParams(window.location.search);
@@ -50,7 +66,7 @@ export const useLiff = () => {
 
     const initialize = async () => {
       try {
-        await liff.init({ liffId });
+        await withTimeout(liff.init({ liffId }), LIFF_INIT_TIMEOUT_MS);
         if (liff.isLoggedIn()) {
           const lineProfile = await liff.getProfile().catch(() => null);
           if (!cancelled && lineProfile) {
