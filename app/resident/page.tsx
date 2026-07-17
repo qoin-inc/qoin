@@ -11,6 +11,7 @@ import { useLiff } from '@/components/LiffProvider';
 
 const RESIDENT_AUTO_LOGIN_KEY = 'eltown.resident.autoLoginAt';
 const RESIDENT_AUTO_LOGIN_RETRY_MS = 2 * 60 * 1000;
+const RESIDENT_LOADING_WATCHDOG_MS = 15000;
 const LINE_EMAIL_SUFFIX = '@line.eltown.local';
 
 const lineUserIdFromAuthUser = (user: any) => {
@@ -100,6 +101,12 @@ function ResidentPageContent() {
         if (openTargetId) redirectUrl.searchParams.set('open', openTargetId);
         if (familyInviteToken) redirectUrl.searchParams.set('family_invite', familyInviteToken);
         liff.login({ redirectUri: redirectUrl.toString() });
+        window.setTimeout(() => {
+          setAutoLoginStarted(false);
+          setIsSubmitting(false);
+          setLoading(false);
+          setLoginError('LINE認証画面を開始できませんでした。LINEアプリ内からもう一度開いてください。');
+        }, 8000);
         return;
       } catch (error) {
         console.warn('LIFF login start failed; falling back to the LIFF URL.', error);
@@ -174,6 +181,10 @@ function ResidentPageContent() {
       setLoginError('LINE認証後の接続処理に失敗しました。「LINEでログインする」からもう一度お試しください。');
     }
 
+    if (searchParams?.get('line_error') === 'entry_timeout') {
+      setLoginError('LINEとの接続処理が時間内に完了しませんでした。「LINEでログインする」からもう一度お試しください。');
+    }
+
     const errorParam = searchParams?.get('error');
     if (errorParam === 'withdrawn') {
       setLoginError('このアカウントはすでに退会済みのため、ご利用いただけません。');
@@ -215,6 +226,17 @@ function ResidentPageContent() {
 
     return () => subscription.unsubscribe();
   }, [liffInitializedProvider]);
+
+  useEffect(() => {
+    const watchdog = window.setTimeout(() => {
+      setAutoLoginStarted(false);
+      setIsSubmitting(false);
+      setLoading(false);
+      setLoginError((current) => current || '接続処理が時間内に完了しませんでした。LINEからもう一度お試しください。');
+    }, RESIDENT_LOADING_WATCHDOG_MS);
+
+    return () => window.clearTimeout(watchdog);
+  }, []);
 
   useEffect(() => {
     if (session && roster && town) {

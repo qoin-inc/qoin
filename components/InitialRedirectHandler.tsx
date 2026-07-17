@@ -12,6 +12,7 @@ type InitialRedirectHandlerProps = {
 const LINE_EMAIL_SUFFIX = "@line.eltown.local";
 const LIFF_LOGIN_ATTEMPT_KEY = "eltown.liff.loginAttemptAt";
 const LIFF_LOGIN_RETRY_MS = 2 * 60 * 1000;
+const INITIAL_REDIRECT_WATCHDOG_MS = 12000;
 
 const withoutLineUserIdColumns = (payload: Record<string, any>) => {
   const { line_user_id, family_line_user_id_1, family_line_user_id_2, ...fallback } = payload;
@@ -41,6 +42,15 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       }
       window.location.replace(`/resident/?${fallbackParams.toString()}`);
     };
+
+    // LIFF and authentication run inside mobile WebViews where a pending SDK
+    // or network promise can occasionally never settle. Always provide an
+    // escape from the root loading screen.
+    const redirectWatchdog = initialRedirectTarget && initialRedirectTarget !== "admin"
+      ? window.setTimeout(() => {
+          if (window.location.pathname === "/") moveToResidentFallback("entry_timeout");
+        }, INITIAL_REDIRECT_WATCHDOG_MS)
+      : null;
 
     const ensureSupabaseSessionFromLineProfile = async () => {
       if (!lineProfile?.userId) return null;
@@ -196,6 +206,10 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
         revealInitialMenu();
       }
     });
+
+    return () => {
+      if (redirectWatchdog !== null) window.clearTimeout(redirectWatchdog);
+    };
   }, [isInitialized, lineProfile, initialRedirectTarget, router]);
 
   return null;
