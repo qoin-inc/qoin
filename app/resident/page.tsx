@@ -222,8 +222,9 @@ function ResidentPageContent() {
         return;
       } else if (safeIsLiffLoggedIn()) {
         // The LIFF-aware effect performs the Supabase login with the shared
-        // profile. Do not start another LIFF round-trip.
-        setLoading(false);
+        // profile. Keep the neutral loading screen visible until the session
+        // and roster are ready so the login form does not flash briefly.
+        return;
       } else if (shouldStartAutoLineLogin()) {
         openLiffLogin(true);
       } else {
@@ -390,6 +391,7 @@ function ResidentPageContent() {
       setLoginError('バックエンド認証中にエラーが発生しました。');
       setAutoLoginStarted(false);
       setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -428,7 +430,7 @@ function ResidentPageContent() {
     // to the new active roster.
   };
 
-  if (loading || autoLoginStarted || (!session && !liffInitializedProvider)) {
+  if (loading || autoLoginStarted || isSubmitting || (!session && !liffInitializedProvider)) {
     return <div className="w-full min-h-screen flex items-center justify-center bg-[#f0f2f5]"><i className="fas fa-spinner fa-spin text-3xl text-qoin-main"></i></div>;
   }
 
