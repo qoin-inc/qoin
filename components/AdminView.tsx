@@ -422,6 +422,32 @@ const isDuplicateKeyError = (error: any) => {
   return error?.code === "23505" || message.includes("duplicate key value violates unique constraint");
 };
 
+const publishFailureMessage = (error: any, phase: "attachment" | "save") => {
+  const message = String(error?.message || "");
+  const code = String(error?.code || error?.statusCode || error?.status || "");
+
+  if (phase === "attachment") {
+    if (code === "42501" || message.toLowerCase().includes("row-level security")) {
+      return "添付ファイルを保存する権限がありません。役員として再ログインしてから、もう一度お試しください。";
+    }
+    return `添付ファイルを保存できませんでした。通信状態とファイル形式を確認して、もう一度お試しください。${code ? `（エラーコード: ${code}）` : ""}`;
+  }
+
+  if (code === "23514" && (message.includes("circulars_category_check") || message.includes("category"))) {
+    return "発信種別のDB制約を更新してください。docs/sql/publish_feature_columns_2026-07-08.sql をSupabase SQL Editorで実行すると保存できます。";
+  }
+  if (code === "42501" || message.toLowerCase().includes("row-level security")) {
+    return "この町内会で発信内容を保存する権限を確認できませんでした。役員として再ログインしてから、もう一度お試しください。";
+  }
+  if (code === "23502") return "発信内容の必須項目が不足しています。入力内容を確認してください。";
+  if (code === "23503") return "町内会または関連データを確認できないため、発信内容を保存できませんでした。";
+  if (message.includes("schema cache") || message.includes("column")) {
+    return "発信機能のDB項目が本番環境へ反映されていません。管理者へDB更新を依頼してください。";
+  }
+
+  return `発信内容を保存できませんでした。時間をおいて再度お試しください。${code ? `（エラーコード: ${code}）` : ""}`;
+};
+
 const safeFileName = (name: string) => name.replace(/[^\w.\-]+/g, "_").replace(/^_+/, "") || "attachment";
 
 const defaultProxyTemplateText = (title?: string | null) => `私は、${title || "総会"}に出席できませんので、同総会における議決権を代理人に委任します。`;
@@ -1706,6 +1732,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
 
     setPublishBusy(true);
     setPublishMessage("");
+    let publishPhase: "attachment" | "save" = "attachment";
 
     try {
       const existingItem = editingPublishId ? workItems.find((item) => String(item.circularId) === String(editingPublishId)) : null;
@@ -1721,6 +1748,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           : category === "assembly"
             ? publishDraft.assemblyDate
             : null;
+      publishPhase = "save";
       const payload: Record<string, any> = {
         neighborhood_id: townId,
         title,
@@ -1794,12 +1822,8 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       setPublishAttachment(null);
       setPublishMessage(`${editingPublishId ? "発信内容を更新しました。" : "発信内容を保存しました。"}${lineNotice}`);
     } catch (error: any) {
-      const message = String(error?.message || "");
-      setPublishMessage(
-        message.includes("check constraint") || message.includes("violates")
-          ? "発信種別のDB制約を更新してください。docs/sql/publish_feature_columns_2026-07-08.sql をSupabase SQL Editorで実行すると保存できます。"
-          : error?.message || "発信内容の保存に失敗しました。",
-      );
+      console.error("Failed to publish admin content", { phase: publishPhase, code: error?.code, message: error?.message });
+      setPublishMessage(publishFailureMessage(error, publishPhase));
     } finally {
       setPublishBusy(false);
     }
