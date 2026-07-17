@@ -93,6 +93,19 @@ function ResidentPageContent() {
 
     if (auto) setAutoLoginStarted(true);
     setIsSubmitting(true);
+
+    if (liffInitializedProvider && !safeIsLiffLoggedIn()) {
+      try {
+        const redirectUrl = new URL('/resident/', window.location.origin);
+        if (openTargetId) redirectUrl.searchParams.set('open', openTargetId);
+        if (familyInviteToken) redirectUrl.searchParams.set('family_invite', familyInviteToken);
+        liff.login({ redirectUri: redirectUrl.toString() });
+        return;
+      } catch (error) {
+        console.warn('LIFF login start failed; falling back to the LIFF URL.', error);
+      }
+    }
+
     const liffTarget = openTargetId
       ? `?open=${encodeURIComponent(openTargetId)}`
       : "?redirect=resident";
@@ -125,7 +138,14 @@ function ResidentPageContent() {
 
     if (liffInitializedProvider && safeIsLiffLoggedIn()) {
       supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-         if (!existingSession && !isSubmitting) {
+         const sessionLineUserId = existingSession ? lineUserIdFromAuthUser(existingSession.user) : '';
+         const hasDifferentLineIdentity = Boolean(
+           existingSession && lineProfile?.userId && sessionLineUserId !== lineProfile.userId,
+         );
+
+         if (hasDifferentLineIdentity && !isSubmitting) {
+            supabase.auth.signOut().then(() => performSupabaseLoginWithLiff());
+         } else if (!existingSession && !isSubmitting) {
             performSupabaseLoginWithLiff();
          } else if (existingSession) {
             window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
@@ -165,6 +185,12 @@ function ResidentPageContent() {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
         setAutoLoginStarted(false);
         fetchRosterAndTown(session.user);
+      } else if (!liffInitializedProvider) {
+        return;
+      } else if (safeIsLiffLoggedIn()) {
+        // The LIFF-aware effect performs the Supabase login with the shared
+        // profile. Do not start another LIFF round-trip.
+        setLoading(false);
       } else if (shouldStartAutoLineLogin()) {
         openLiffLogin(true);
       } else {
@@ -188,7 +214,7 @@ function ResidentPageContent() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [liffInitializedProvider]);
 
   useEffect(() => {
     if (session && roster && town) {

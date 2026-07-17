@@ -9,6 +9,10 @@ type InitialRedirectHandlerProps = {
   initialRedirectTarget: string | null;
 };
 
+const LINE_EMAIL_SUFFIX = "@line.eltown.local";
+const LIFF_LOGIN_ATTEMPT_KEY = "eltown.liff.loginAttemptAt";
+const LIFF_LOGIN_RETRY_MS = 2 * 60 * 1000;
+
 const withoutLineUserIdColumns = (payload: Record<string, any>) => {
   const { line_user_id, family_line_user_id_1, family_line_user_id_2, ...fallback } = payload;
   return fallback;
@@ -16,7 +20,7 @@ const withoutLineUserIdColumns = (payload: Record<string, any>) => {
 
 export default function InitialRedirectHandler({ initialRedirectTarget }: InitialRedirectHandlerProps) {
   const router = useRouter();
-  const { isInitialized, lineProfile } = useLiff();
+  const { isInitialized, lineProfile, liff } = useLiff();
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -42,7 +46,17 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       if (!lineProfile?.userId) return null;
 
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) return session;
+      if (session) {
+        const email = String(session.user?.email || "");
+        const sessionLineUserId = email.endsWith(LINE_EMAIL_SUFFIX)
+          ? email.slice(0, -LINE_EMAIL_SUFFIX.length)
+          : "";
+        if (sessionLineUserId === lineProfile.userId) return session;
+
+        // A mobile browser can retain a previous resident/admin session. Never
+        // use it for a different LINE identity.
+        await supabase.auth.signOut();
+      }
 
       const email = `${lineProfile.userId}@line.eltown.local`;
       const password = `lineAuth_${lineProfile.userId}_eltown`;
@@ -99,6 +113,18 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       if (initialRedirectTarget) {
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         if (!existingSession && !lineProfile?.userId) {
+          if (initialRedirectTarget !== "admin") {
+            const lastAttemptAt = Number(window.sessionStorage.getItem(LIFF_LOGIN_ATTEMPT_KEY) || 0);
+            const canRetryLogin = !lastAttemptAt || Date.now() - lastAttemptAt >= LIFF_LOGIN_RETRY_MS;
+            if (!liff.isLoggedIn() && canRetryLogin) {
+              window.sessionStorage.setItem(LIFF_LOGIN_ATTEMPT_KEY, String(Date.now()));
+              // In an external mobile browser, opening the LIFF URL alone does
+              // not authenticate the user. The SDK login flow is required.
+              liff.login();
+              return;
+            }
+          }
+
           // Never leave a LIFF callback on the permanent loading screen.
           // Move to the resident login screen without starting another
           // automatic LIFF round-trip, so the user can retry explicitly.
@@ -113,12 +139,14 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
 
         if (initialRedirectTarget === "resident") {
           await ensureSupabaseSessionFromLineProfile();
+          window.sessionStorage.removeItem(LIFF_LOGIN_ATTEMPT_KEY);
           window.location.href = "/resident/";
           return;
         }
 
         if (initialRedirectTarget === "portal") {
           await ensureSupabaseSessionFromLineProfile();
+          window.sessionStorage.removeItem(LIFF_LOGIN_ATTEMPT_KEY);
           window.location.href = "/portal";
           return;
         }
