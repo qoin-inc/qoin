@@ -133,7 +133,7 @@ function ResidentPageContent() {
          }
       });
     }
-  }, [liffInitializedProvider]);
+  }, [liffInitializedProvider, lineProfile?.userId]);
 
   useEffect(() => {
     if (searchParams?.get('test_bypass') === '1') {
@@ -148,6 +148,10 @@ function ResidentPageContent() {
 
     if (searchParams?.get('line_error') === 'profile_unavailable') {
       setLoginError('LINEの認証情報を取得できませんでした。下の「LINEでログインする」からもう一度お試しください。');
+    }
+
+    if (searchParams?.get('line_error') === 'authentication_failed') {
+      setLoginError('LINE認証後の接続処理に失敗しました。「LINEでログインする」からもう一度お試しください。');
     }
 
     const errorParam = searchParams?.get('error');

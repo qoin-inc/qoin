@@ -1,9 +1,25 @@
 'use client';
-// Force rebuild after cache clear
-import React, { ReactNode, useEffect, useState } from 'react';
+
+import React, { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import liff from '@line/liff';
 
 const LIFF_INIT_TIMEOUT_MS = 8000;
+
+type LineProfile = {
+  userId: string;
+  displayName: string;
+  pictureUrl?: string;
+};
+
+type LiffContextValue = {
+  isReady: boolean;
+  isInitialized: boolean;
+  liff: typeof liff;
+  lineProfile: LineProfile | null;
+  initializationError: string | null;
+};
+
+const LiffContext = createContext<LiffContextValue | null>(null);
 
 const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number) => new Promise<T>((resolve, reject) => {
   const timeoutId = window.setTimeout(() => reject(new Error('LIFF initialization timed out.')), timeoutMs);
@@ -47,15 +63,17 @@ const shouldAutoInitializeLiff = () => {
   ].some((key) => hashParams.has(key));
 };
 
-/**
- * Hook to access LIFF SDK data.
- * Returns readiness flags, the liff instance, and the user profile when available.
- */
 export const useLiff = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const context = useContext(LiffContext);
+  if (!context) throw new Error('useLiff must be used within LiffProvider.');
+  return context;
+};
 
-  // Attempt to initialise LIFF – ignore any errors to avoid blocking UI.
+const LiffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [profile, setProfile] = useState<LineProfile | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
@@ -68,12 +86,10 @@ export const useLiff = () => {
       try {
         await withTimeout(liff.init({ liffId }), LIFF_INIT_TIMEOUT_MS);
         if (liff.isLoggedIn()) {
-          const lineProfile = await liff.getProfile().catch(() => null);
-          if (!cancelled && lineProfile) {
-            setProfile(lineProfile);
+          const directProfile = await liff.getProfile().catch(() => null);
+          if (!cancelled && directProfile) {
+            setProfile(directProfile);
           } else {
-            // The profile scope can be unavailable even when LIFF login itself
-            // succeeded. The ID token still contains the stable LINE user ID.
             const idToken = liff.getDecodedIDToken();
             if (!cancelled && idToken?.sub) {
               setProfile({
@@ -84,8 +100,10 @@ export const useLiff = () => {
             }
           }
         }
-      } catch {
-        // LIFF init failed – continue without it.
+      } catch (error) {
+        if (!cancelled) {
+          setInitializationError(error instanceof Error ? error.message : 'LIFF initialization failed.');
+        }
       } finally {
         if (!cancelled) setIsInitialized(true);
       }
@@ -97,20 +115,15 @@ export const useLiff = () => {
     };
   }, []);
 
-  return {
+  const value = useMemo<LiffContextValue>(() => ({
     isReady: true,
     isInitialized,
     liff,
     lineProfile: profile,
-  };
-};
+    initializationError,
+  }), [isInitialized, profile, initializationError]);
 
-/**
- * Simple provider that always renders its children.
- * The previous loading / error UI has been removed to ensure the app UI appears immediately.
- */
-const LiffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  return <>{children}</>;
+  return <LiffContext.Provider value={value}>{children}</LiffContext.Provider>;
 };
 
 export default LiffProvider;

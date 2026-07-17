@@ -28,6 +28,16 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       document.documentElement.dataset.initialMenuReady = "true";
     };
 
+    const moveToResidentFallback = (reason: string) => {
+      const fallbackParams = new URLSearchParams({ line_error: reason });
+      if (initialRedirectTarget === "portal") {
+        fallbackParams.set("redirect_after", "portal");
+      } else if (initialRedirectTarget && initialRedirectTarget !== "resident") {
+        fallbackParams.set("open", initialRedirectTarget);
+      }
+      window.location.replace(`/resident/?${fallbackParams.toString()}`);
+    };
+
     const ensureSupabaseSessionFromLineProfile = async () => {
       if (!lineProfile?.userId) return null;
 
@@ -97,13 +107,7 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
             return;
           }
 
-          const fallbackParams = new URLSearchParams({ line_error: "profile_unavailable" });
-          if (initialRedirectTarget === "portal") {
-            fallbackParams.set("redirect_after", "portal");
-          } else if (initialRedirectTarget !== "resident") {
-            fallbackParams.set("open", initialRedirectTarget);
-          }
-          window.location.replace(`/resident/?${fallbackParams.toString()}`);
+          moveToResidentFallback("profile_unavailable");
           return;
         }
 
@@ -154,7 +158,16 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       revealInitialMenu();
     };
 
-    checkExistingUser();
+    checkExistingUser().catch((error) => {
+      console.error("Initial LINE redirect failed:", error);
+      if (initialRedirectTarget === "admin") {
+        router.replace("/admin/");
+      } else if (initialRedirectTarget) {
+        moveToResidentFallback("authentication_failed");
+      } else {
+        revealInitialMenu();
+      }
+    });
   }, [isInitialized, lineProfile, initialRedirectTarget, router]);
 
   return null;
