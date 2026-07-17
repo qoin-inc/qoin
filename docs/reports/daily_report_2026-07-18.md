@@ -42,6 +42,12 @@
 - 委任状PDF・画像だけでなく、委任状本文、署名者、署名日が保存されている返信も委任状数へ含めます。
 - 発信直後や編集後に作成されるカードにも同じ集計表示を適用しました。
 - TypeScript型チェック、Git差分チェック、Next.js本番ビルド、Lint、静的ページ生成に成功しました。
+- 返信集計ビューの修正コミット `ad0b018` をGitHubへpushし、本番Netlifyへ反映しました。
+- 本番デプロイID: `6a5abbca77b97ffc9744172d`
+- デプロイ対象コミット: `ad0b0184c1acb8550c0c1892060f97a878e18080`
+- 計画時ビルドID: `NKWMVoE4Or7pGYXAwhRx2`
+- 本番ビルドID: `NYupxPn0wzOVDa3RWqaEG`
+- 公開URL疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
 - 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
 
 ## 次の確認
