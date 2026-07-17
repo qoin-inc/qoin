@@ -52,8 +52,29 @@ export default function SystemAdminView() {
 
   const month = useMemo(() => monthInfo(billingMonth), [billingMonth]);
 
+  const applySystemSupabaseSession = async (data: any) => {
+    if (!data?.accessToken || !data?.refreshToken) throw new Error("system管理者のDBセッションを確認できませんでした。");
+    const { error } = await supabase.auth.setSession({
+      access_token: data.accessToken,
+      refresh_token: data.refreshToken,
+    });
+    if (error) throw error;
+  };
+
   useEffect(() => {
-    fetch("/api/system/session").then((response) => response.json()).then((data) => setAuthenticated(Boolean(data.authenticated))).catch(() => setAuthenticated(false));
+    const restoreSession = async () => {
+      try {
+        const response = await fetch("/api/system/session");
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.authenticated) throw new Error(data.error || "system管理者セッションを確認できませんでした。");
+        await applySystemSupabaseSession(data);
+        setAuthenticated(true);
+      } catch (error: any) {
+        setLoginError(error?.message || "system管理者セッションを確認できませんでした。");
+        setAuthenticated(false);
+      }
+    };
+    restoreSession();
   }, []);
 
   const login = async (event: React.FormEvent) => {
@@ -62,11 +83,17 @@ export default function SystemAdminView() {
     const response = await fetch("/api/system/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ loginId, password }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return setLoginError(data.error || "ログインできませんでした。");
+    try {
+      await applySystemSupabaseSession(data);
+    } catch (error: any) {
+      return setLoginError(error?.message || "system管理者のDBセッションを作成できませんでした。");
+    }
     setAuthenticated(true);
     setPassword("");
   };
 
   const logout = async () => {
+    await supabase.auth.signOut();
     await fetch("/api/system/session", { method: "DELETE" });
     setAuthenticated(false);
   };
