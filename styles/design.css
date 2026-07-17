@@ -3406,6 +3406,43 @@ button { cursor: pointer; border: 0; }
   font-weight: 700;
 }
 
+.admin-reply-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.admin-reply-metrics > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 7px 9px;
+}
+
+.admin-reply-metrics small {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.admin-reply-metrics strong {
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.admin-reply-metrics em {
+  margin-left: 2px;
+  color: #64748b;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+}
+
 .admin-work-status {
   display: grid;
   justify-items: stretch;

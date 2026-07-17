@@ -100,6 +100,7 @@ type WorkItem = {
   attachmentCount?: number;
   replies?: any[];
   replySummary?: string;
+  replyMetrics?: Array<{ label: string; value: number; unit: string }>;
   source?: any;
 };
 
@@ -475,21 +476,45 @@ const isImageAttachment = (attachment: any) => {
 const firstImageAttachmentUrl = (attachments: any[], fallback?: string | null) =>
   fallback || attachments.find(isImageAttachment)?.url || "";
 
-const summarizeReplies = (type: WorkItem["type"], replies: any[]) => {
+const buildReplyMetrics = (type: WorkItem["type"], replies: any[]) => {
   if (type === "event") {
     const adultTotal = replies.reduce((sum, reply) => sum + Number(reply.adult_count ?? reply.adults ?? 0), 0);
     const childTotal = replies.reduce((sum, reply) => sum + Number(reply.child_count ?? reply.children ?? 0), 0);
-    return `申込 ${replies.length}件 / 大人 ${adultTotal}名・子供 ${childTotal}名`;
+    return [
+      { label: "大人", value: adultTotal, unit: "名" },
+      { label: "子供", value: childTotal, unit: "名" },
+      { label: "総人数", value: adultTotal + childTotal, unit: "名" },
+    ];
   }
 
   if (type === "assembly") {
-    const present = replies.filter((reply) => ["present", "attend", "出席"].includes(reply.reply_status || reply.response_status)).length;
-    const absent = replies.filter((reply) => ["absent", "proxy", "欠席"].includes(reply.reply_status || reply.response_status)).length;
-    const proxy = replies.filter((reply) => reply.proxy_file_url || reply.proxy_url || reply.attachment_url).length;
-    return `出席 ${present}件 / 欠席 ${absent}件 / 委任状 ${proxy}件`;
+    const statusOf = (reply: any) => String(reply.reply_status || reply.response_status || "").toLowerCase();
+    const present = replies.filter((reply) => ["present", "attend", "出席"].includes(statusOf(reply))).length;
+    const absent = replies.filter((reply) => ["absent", "proxy", "欠席"].includes(statusOf(reply))).length;
+    const proxy = replies.filter((reply) => Boolean(
+      statusOf(reply) === "proxy"
+      || reply.proxy_file_url
+      || reply.proxy_url
+      || reply.attachment_url
+      || reply.proxy_text
+      || reply.proxyText
+      || reply.proxy_signer_name
+      || reply.proxy_signed_date
+    )).length;
+    return [
+      { label: "出席者", value: present, unit: "名" },
+      { label: "欠席者", value: absent, unit: "名" },
+      { label: "委任状", value: proxy, unit: "件" },
+      { label: "返信総数", value: replies.length, unit: "名" },
+    ];
   }
 
-  return "";
+  return [];
+};
+
+const summarizeReplies = (type: WorkItem["type"], replies: any[]) => {
+  const metrics = buildReplyMetrics(type, replies);
+  return metrics.map((metric) => `${metric.label} ${metric.value}${metric.unit}`).join(" / ");
 };
 
 const compactAddress = (draft: MemberDraft) => [draft.postalCode, draft.addressLine2, draft.addressLine3].filter(Boolean).join(" ");
@@ -1039,6 +1064,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           const attachments = parseAttachmentList(row.attachments);
           const attachmentCount = attachments.length + (row.image_url ? 1 : 0) + (row.attachment_url || row.file_url || row.pdf_url ? 1 : 0);
           const replySummary = summarizeReplies(category, replies);
+          const replyMetrics = buildReplyMetrics(category, replies);
           return {
             id: `circular-${row.id}`,
             circularId: row.id,
@@ -1059,6 +1085,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             attachmentCount,
             replies,
             replySummary,
+            replyMetrics,
             source: row,
           };
         });
@@ -1330,6 +1357,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const attachments = parseAttachmentList(row.attachments);
     const attachmentCount = attachments.length + (row.image_url ? 1 : 0) + (row.attachment_url || row.file_url || row.pdf_url ? 1 : 0);
     const replySummary = summarizeReplies(workType, replies);
+    const replyMetrics = buildReplyMetrics(workType, replies);
     return {
       id: `circular-${row.id || Date.now()}`,
       circularId: row.id,
@@ -1350,6 +1378,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       attachmentCount,
       replies,
       replySummary,
+      replyMetrics,
       source: row,
     };
   };
@@ -3466,6 +3495,16 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         <div className="admin-work-main">
           <h3>{item.title}</h3>
           <p>{item.detail}</p>
+          {(item.replyMetrics?.length || 0) > 0 && (
+            <div className="admin-reply-metrics" aria-label={`${typeLabel[item.type]}の返信集計`}>
+              {item.replyMetrics?.map((metric) => (
+                <span key={metric.label}>
+                  <small>{metric.label}</small>
+                  <strong>{metric.value}<em>{metric.unit}</em></strong>
+                </span>
+              ))}
+            </div>
+          )}
           {(item.attachmentCount || 0) > 0 && <small><i className="fas fa-paperclip" /> 添付 {item.attachmentCount}件</small>}
         </div>
         <div className="admin-work-status">
