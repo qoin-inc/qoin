@@ -51,3 +51,9 @@
 - `/system` の専用Cookie認証だけではSupabaseの `auth.uid()` が設定されないため、systemログイン成功時に `admin@el-town.jp` のSupabaseセッションをサーバー側で安全に発行し、ブラウザのSupabaseクライアントへ設定するよう修正しました。
 - system管理者のパスワードはブラウザへ追加保存せず、既存のsystem認証Cookieとサーバー専用Supabase秘密キーを使用します。
 - 修正後のNext.js本番ビルド、Lint、型チェック、静的ページ生成に成功しました。
+- system管理者アクセスのアプリ修正コミット `f8bb5d9` をGitHubへpushし、本番Netlifyへ反映しました。
+- 本番デプロイID: `6a5ab7124d5001d2464f56bc`
+- デプロイ対象コミット: `f8bb5d9570b04c830cb4f8e0f1ec36346a783ee1`
+- 計画時ビルドID: `OzYox6XRDhi27WYDzPYod`
+- 本番ビルドID: `vHyI2a1_SOoMVc69rp6ln`
+- 公開URL疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
