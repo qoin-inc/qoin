@@ -422,13 +422,10 @@ function ResidentPageContent() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    try {
-      if (safeIsLiffLoggedIn()) {
-        liff?.logout();
-      }
-    } catch (e) {
-      console.error('LIFF logout error:', e);
-    }
+    // Do not call liff.logout() here. A resident may withdraw from one town
+    // and move to another while keeping the same LINE account. Logging out of
+    // LIFF would invalidate the shared LINE session and prevent reconnection
+    // to the new active roster.
   };
 
   if (loading || autoLoginStarted || (!session && !liffInitializedProvider)) {

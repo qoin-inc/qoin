@@ -95,22 +95,18 @@ export default function PortalPage() {
     }
     setUser(session.user);
 
-    const { data: rosterData } = await supabase
+    const { data: rosterRows } = await supabase
       .from('resident_rosters')
-      .select('neighborhood_id, withdrawal_status')
+      .select('id, neighborhood_id, withdrawal_status')
       .or(`user_auth_id.eq.${session.user.id},family_user_auth_id_1.eq.${session.user.id},family_user_auth_id_2.eq.${session.user.id}`)
-      .single();
+      .order('id', { ascending: false })
+      .limit(20);
+
+    const rosterData = rosterRows?.find((row: any) => row.withdrawal_status !== 'withdrawn') || rosterRows?.[0];
 
     if (rosterData) {
       if (rosterData.withdrawal_status === 'withdrawn') {
         await supabase.auth.signOut();
-        try {
-          if (typeof window !== 'undefined' && (window as any).liff && (window as any).liff.isLoggedIn()) {
-            (window as any).liff.logout();
-          }
-        } catch (e) {
-          console.error('Portal logout error:', e);
-        }
         router.push('/resident?error=withdrawn');
         return;
       }
