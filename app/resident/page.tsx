@@ -12,6 +12,8 @@ import { useLiff } from '@/components/LiffProvider';
 const RESIDENT_AUTO_LOGIN_KEY = 'eltown.resident.autoLoginAt';
 const RESIDENT_AUTO_LOGIN_RETRY_MS = 2 * 60 * 1000;
 const RESIDENT_LOADING_WATCHDOG_MS = 15000;
+const LIFF_IN_CLIENT_REENTRY_KEY = 'eltown.liff.inClientReentryAt';
+const LIFF_IN_CLIENT_REENTRY_RETRY_MS = 60 * 1000;
 const LINE_EMAIL_SUFFIX = '@line.eltown.local';
 
 const lineUserIdFromAuthUser = (user: any) => {
@@ -96,6 +98,24 @@ function ResidentPageContent() {
     setIsSubmitting(true);
 
     if (liffInitializedProvider && !safeIsLiffLoggedIn()) {
+      if (safeIsLiffInClient()) {
+        const lastReentryAt = Number(window.sessionStorage.getItem(LIFF_IN_CLIENT_REENTRY_KEY) || 0);
+        if (!lastReentryAt || Date.now() - lastReentryAt >= LIFF_IN_CLIENT_REENTRY_RETRY_MS) {
+          window.sessionStorage.setItem(LIFF_IN_CLIENT_REENTRY_KEY, String(Date.now()));
+          const reentryTarget = openTargetId
+            ? `?open=${encodeURIComponent(openTargetId)}`
+            : '?redirect=resident';
+          window.location.replace(`https://liff.line.me/${liffId}/${reentryTarget}`);
+          return;
+        }
+
+        setAutoLoginStarted(false);
+        setIsSubmitting(false);
+        setLoading(false);
+        setLoginError('LINEアプリ内の認証状態を更新できませんでした。LINEを完全に終了してから、もう一度開いてください。');
+        return;
+      }
+
       try {
         const redirectUrl = new URL('/resident/', window.location.origin);
         if (openTargetId) redirectUrl.searchParams.set('open', openTargetId);
@@ -156,6 +176,7 @@ function ResidentPageContent() {
             performSupabaseLoginWithLiff();
          } else if (existingSession) {
             window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+            window.sessionStorage.removeItem(LIFF_IN_CLIENT_REENTRY_KEY);
             setAutoLoginStarted(false);
          }
       });
@@ -194,6 +215,7 @@ function ResidentPageContent() {
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+        window.sessionStorage.removeItem(LIFF_IN_CLIENT_REENTRY_KEY);
         setAutoLoginStarted(false);
         fetchRosterAndTown(session.user);
       } else if (!liffInitializedProvider) {
@@ -215,6 +237,7 @@ function ResidentPageContent() {
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+        window.sessionStorage.removeItem(LIFF_IN_CLIENT_REENTRY_KEY);
         setAutoLoginStarted(false);
         fetchRosterAndTown(session.user);
       } else {
@@ -359,6 +382,7 @@ function ResidentPageContent() {
       // LIFFの特殊なブラウザ環境でreloadするとURLのパスが消えてトップメニューに戻る不具合があるため、
       // reloadはせずにSupabaseのonAuthStateChangeイベントに状態更新を任せる
       window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
+      window.sessionStorage.removeItem(LIFF_IN_CLIENT_REENTRY_KEY);
       setAutoLoginStarted(false);
       setIsSubmitting(false);
     } catch (err: any) {

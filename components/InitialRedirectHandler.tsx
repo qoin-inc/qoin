@@ -126,7 +126,7 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
           if (initialRedirectTarget !== "admin") {
             const lastAttemptAt = Number(window.sessionStorage.getItem(LIFF_LOGIN_ATTEMPT_KEY) || 0);
             const canRetryLogin = !lastAttemptAt || Date.now() - lastAttemptAt >= LIFF_LOGIN_RETRY_MS;
-            if (!liff.isLoggedIn() && canRetryLogin) {
+            if (!liff.isLoggedIn() && !liff.isInClient() && canRetryLogin) {
               window.sessionStorage.setItem(LIFF_LOGIN_ATTEMPT_KEY, String(Date.now()));
               // In an external mobile browser, opening the LIFF URL alone does
               // not authenticate the user. The SDK login flow is required.
