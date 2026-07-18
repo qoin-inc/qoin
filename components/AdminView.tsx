@@ -1151,6 +1151,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               { label: "参加申込", value: replies.length, unit: "件" },
               { label: "参加人数", value: participantTotal, unit: "名" },
             ],
+            source: row,
           };
         });
 
@@ -3562,6 +3563,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               <button type="button" onClick={() => startPublishEdit(item)} disabled={publishBusy}>編集</button>
               <button type="button" className="delete" onClick={() => handlePublishDelete(item)} disabled={publishBusy}>削除</button>
             </div>
+          ) : item.type === "live" && item.source ? (
+            <div className="admin-work-actions">
+              <button type="button" onClick={() => startLiveSessionEdit(item.source)} disabled={liveFacilityBusy}>編集</button>
+              <button type="button" className="delete" onClick={() => handleLiveSessionDelete(item.source)} disabled={liveFacilityBusy}>削除</button>
+            </div>
           ) : (
             <button type="button">{item.action}</button>
           )}
@@ -4412,40 +4418,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               </div>
             </form>
 
-            <section className="admin-basic-card">
-              <div className="admin-basic-card-heading">
-                <div>
-                  <h3>Web会議参加者</h3>
-                  <p>会員がLiveから申し込んだ参加返信を確認します。</p>
-                </div>
-              </div>
-              <div className="admin-compact-table">
-                {liveFacilityData.liveSessions.length === 0 && <div><span>Web会議予定はまだありません。</span><em>未登録</em></div>}
-                {liveFacilityData.liveSessions.map((session) => {
-                  const replies = liveFacilityData.liveApplications.filter((reply) => String(reply.live_session_id) === String(session.id));
-                  const participantTotal = replies.reduce(
-                    (sum, reply) => sum + Number(reply.participant_count ?? reply.people_count ?? 0),
-                    0,
-                  );
-                  return (
-                    <div key={session.id}>
-                      <span>
-                        <strong>{session.title || "Web会議"}</strong>
-                        <small>{session.provider === "youtube" ? "YouTube" : "LINE"} / {toDisplayDate(session.event_date || session.starts_at)} {session.event_time || ""}</small>
-                        {replies.slice(0, 5).map((reply) => (
-                          <small key={reply.id || `${session.id}-${reply.resident_name}`}>{reply.resident_name || reply.applicant_name || "会員"} / {reply.participant_count || reply.people_count || 1}名</small>
-                        ))}
-                      </span>
-                      <div className="admin-list-actions">
-                        <em>申込 {replies.length}件 / 合計 {participantTotal}名</em>
-                        <button type="button" onClick={() => startLiveSessionEdit(session)} disabled={liveFacilityBusy}>編集</button>
-                        <button type="button" className="delete" onClick={() => handleLiveSessionDelete(session)} disabled={liveFacilityBusy}>削除</button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
           </div>
         ) : (
           <div className="admin-live-single">

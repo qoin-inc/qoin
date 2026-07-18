@@ -102,6 +102,8 @@ type FacilityReservation = {
   facility_id?: number | string | null;
   facility_bigint_id?: number | string | null;
   facility_name?: string | null;
+  resident_roster_id?: number | string | null;
+  user_auth_id?: string | null;
   applicant_name?: string | null;
   resident_name?: string | null;
   participant_count?: number | string | null;
@@ -449,6 +451,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [selectedFacilityDate, setSelectedFacilityDate] = useState(todayKey());
   const [facilityListFilter, setFacilityListFilter] = useState("all");
   const [facilityBookingOpen, setFacilityBookingOpen] = useState(false);
+  const [editingFacilityReservationId, setEditingFacilityReservationId] = useState<number | string | null>(null);
   const [withdrawalBusy, setWithdrawalBusy] = useState(false);
   const [withdrawalMessage, setWithdrawalMessage] = useState("");
   const [familyNames, setFamilyNames] = useState({ 1: roster?.family_name_1 || "", 2: roster?.family_name_2 || "" });
@@ -753,6 +756,10 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const filteredFacilityReservations = facilityReservations.filter((reservation) => (
     facilityListFilter === "all" || String(facilityReservationFacilityId(reservation)) === facilityListFilter
   ));
+  const isOwnFacilityReservation = (reservation: FacilityReservation) => (
+    (residentRosterId !== null && String(reservation.resident_roster_id || "") === String(residentRosterId))
+    || (Boolean(userId) && String(reservation.user_auth_id || "") === String(userId))
+  );
   const liveApplicationBySessionId = new Map(liveApplications.map((application) => [String(application.live_session_id), application]));
   const openLiveSession = (session: LiveSession) => {
     setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }));
@@ -1023,13 +1030,58 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     return "";
   };
 
-  const hasActiveFacilityReservationConflict = (facilityId: string, reservationDate: string, startTime: string, endTime: string) => {
+  const hasActiveFacilityReservationConflict = (facilityId: string, reservationDate: string, startTime: string, endTime: string, excludedReservationId?: number | string | null) => {
     return facilityReservations.some((reservation) => (
+      String(reservation.id) !== String(excludedReservationId || "") &&
       ["pending", "approved"].includes(String(reservation.status || "pending")) &&
       String(facilityReservationFacilityId(reservation)) === String(facilityId) &&
       dateKey(reservation.reservation_date) === dateKey(reservationDate) &&
       timeRangesOverlap(startTime, endTime, reservation.start_time, reservation.end_time)
     ));
+  };
+
+  const startFacilityReservationEdit = (reservation: FacilityReservation) => {
+    if (!isOwnFacilityReservation(reservation)) return;
+    const reservationDate = dateKey(reservation.reservation_date) || todayKey();
+    setEditingFacilityReservationId(reservation.id);
+    setFacilityReservationDraft({
+      facilityId: String(facilityReservationFacilityId(reservation) || ""),
+      applicantName: reservation.applicant_name || reservation.resident_name || displayName,
+      participantCount: String(reservation.participant_count || reservation.people_count || 1),
+      reservationDate,
+      startTime: String(reservation.start_time || "").slice(0, 5),
+      endTime: String(reservation.end_time || "").slice(0, 5),
+      usagePurpose: reservation.usage_purpose || "",
+    });
+    setSelectedFacilityDate(reservationDate);
+    setFacilityBookingOpen(true);
+    setLiveMessage("修正内容を入力してください。保存すると承認状態は予約中へ戻ります。");
+    window.requestAnimationFrame(() => document.getElementById("facility-booking-form")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
+  const cancelFacilityReservationEdit = () => {
+    setEditingFacilityReservationId(null);
+    setFacilityBookingOpen(false);
+    setFacilityReservationDraft((current) => ({ ...current, startTime: "", endTime: "", usagePurpose: "" }));
+    setLiveMessage("");
+  };
+
+  const handleFacilityReservationDelete = async (reservation: FacilityReservation) => {
+    if (!isOwnFacilityReservation(reservation)) return;
+    if (!window.confirm(`${reservation.facility_name || facilityNameById(facilityReservationFacilityId(reservation))}の予約を削除します。よろしいですか？`)) return;
+    setReplyBusy(true);
+    setLiveMessage("");
+    try {
+      const { error } = await supabase.rpc("delete_own_facility_reservation", { p_reservation_id: reservation.id });
+      if (error) throw error;
+      setFacilityReservations((current) => current.filter((item) => String(item.id) !== String(reservation.id)));
+      if (String(editingFacilityReservationId || "") === String(reservation.id)) cancelFacilityReservationEdit();
+      setLiveMessage("施設予約を削除しました。");
+    } catch (error: any) {
+      setLiveMessage(error?.message || "施設予約を削除できませんでした。");
+    } finally {
+      setReplyBusy(false);
+    }
   };
 
   const handleLiveReply = async (event: React.FormEvent, selectedSession?: LiveSession) => {
@@ -1124,6 +1176,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
       facilityReservationDraft.reservationDate,
       facilityReservationDraft.startTime,
       facilityReservationDraft.endTime,
+      editingFacilityReservationId,
     )) {
       setLiveMessage("既に予約されている時間帯と重なるため、この時間帯は申込できません。");
       return;
@@ -1151,26 +1204,44 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         status: "pending",
         created_at: new Date().toISOString(),
       };
-      const rpcResult = await supabase.rpc("create_facility_reservation", {
-        p_facility_id: facility.id,
-        p_reservation_date: facilityReservationDraft.reservationDate,
-        p_start_time: facilityReservationDraft.startTime,
-        p_end_time: facilityReservationDraft.endTime,
-        p_participant_count: participantCount,
-        p_applicant_name: applicantName,
-        p_usage_purpose: usagePurpose,
-      });
-      const rpcUnavailable = rpcResult.error?.code === "PGRST202"
-        || /create_facility_reservation|schema cache|function/i.test(String(rpcResult.error?.message || ""));
+      const rpcResult = editingFacilityReservationId
+        ? await supabase.rpc("update_own_facility_reservation", {
+            p_reservation_id: editingFacilityReservationId,
+            p_facility_id: facility.id,
+            p_reservation_date: facilityReservationDraft.reservationDate,
+            p_start_time: facilityReservationDraft.startTime,
+            p_end_time: facilityReservationDraft.endTime,
+            p_participant_count: participantCount,
+            p_applicant_name: applicantName,
+            p_usage_purpose: usagePurpose,
+          })
+        : await supabase.rpc("create_facility_reservation", {
+            p_facility_id: facility.id,
+            p_reservation_date: facilityReservationDraft.reservationDate,
+            p_start_time: facilityReservationDraft.startTime,
+            p_end_time: facilityReservationDraft.endTime,
+            p_participant_count: participantCount,
+            p_applicant_name: applicantName,
+            p_usage_purpose: usagePurpose,
+          });
+      const rpcUnavailable = !editingFacilityReservationId && (
+        rpcResult.error?.code === "PGRST202"
+        || /create_facility_reservation|schema cache|function/i.test(String(rpcResult.error?.message || ""))
+      );
       if (rpcResult.error && !rpcUnavailable) throw rpcResult.error;
       const saved = rpcResult.error
         ? await insertResidentRowWithFallback("facility_reservations", reservationPayload, "施設予約の申込を保存できませんでした。")
         : { ...reservationPayload, ...(rpcResult.data || {}) };
-      setFacilityReservations((current) => [saved as FacilityReservation, ...current]);
+      setFacilityReservations((current) => editingFacilityReservationId
+        ? current.map((item) => String(item.id) === String(editingFacilityReservationId) ? saved as FacilityReservation : item)
+        : [saved as FacilityReservation, ...current]);
       setSelectedFacilityDate(facilityReservationDraft.reservationDate);
       setFacilityReservationDraft((current) => ({ ...current, startTime: "", endTime: "", usagePurpose: "" }));
       setFacilityBookingOpen(false);
-      setLiveMessage("施設予約の申込を送信しました。役員の承認をお待ちください。");
+      setLiveMessage(editingFacilityReservationId
+        ? "施設予約を修正しました。承認状態は予約中に戻りました。"
+        : "施設予約の申込を送信しました。役員の承認をお待ちください。");
+      setEditingFacilityReservationId(null);
     } catch (error: any) {
       setLiveMessage(error?.message || "施設予約の申込に失敗しました。");
     } finally {
@@ -1585,6 +1656,12 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                       <span>{selectedFacilityDate} / {reservation.start_time || "時間未設定"}{reservation.end_time ? `-${reservation.end_time}` : ""} / {reservation.participant_count || reservation.people_count || 1}名</span>
                       <span>使用用途: {reservation.usage_purpose || "未入力"}</span>
                       <em>{reservation.status === "approved" ? "承認" : reservation.status === "rejected" ? "否認" : "予約中"}</em>
+                      {isOwnFacilityReservation(reservation) && (
+                        <div className="el-reservation-card-actions">
+                          <button type="button" onClick={() => startFacilityReservationEdit(reservation)} disabled={replyBusy}>修正</button>
+                          <button type="button" className="delete" onClick={() => handleFacilityReservationDelete(reservation)} disabled={replyBusy}>削除</button>
+                        </div>
+                      )}
                     </article>
                   ))}
                   {selectedDateFacilityReservations.length === 0 && <div className="el-empty">この日の予約はありません。日付を選ぶと予約内容を確認できます。</div>}
@@ -1592,7 +1669,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
               </section>
             )}
 
-            {liveMessage && <div className={`form-alert ${liveMessage.includes("送信しました") ? "success" : ""}`}>{liveMessage}</div>}
+            {liveMessage && <div className={`form-alert ${/(送信|修正|削除)しました/.test(liveMessage) ? "success" : ""}`}>{liveMessage}</div>}
             {liveLoadMessage && <div className="form-alert">{liveLoadMessage}</div>}
 
             {activeLiveScreen === "live" && liveViewMode === "cards" && (
@@ -1665,6 +1742,12 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                           <span>{reservation.participant_count || reservation.people_count || 1}名</span>
                           <span>使用用途: {reservation.usage_purpose || "未入力"}</span>
                           <em>{reservation.status === "approved" ? "承認" : reservation.status === "rejected" ? "否認" : "予約中"}</em>
+                          {isOwnFacilityReservation(reservation) && (
+                            <div className="el-reservation-card-actions">
+                              <button type="button" onClick={() => startFacilityReservationEdit(reservation)} disabled={replyBusy}>修正</button>
+                              <button type="button" className="delete" onClick={() => handleFacilityReservationDelete(reservation)} disabled={replyBusy}>削除</button>
+                            </div>
+                          )}
                         </article>
                       ))}
                     {filteredFacilityReservations.length === 0 && <div className="el-empty">該当する予約はありません。</div>}
@@ -1679,14 +1762,14 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 aria-controls="facility-booking-form"
               >
                 <span><i className="fas fa-pen-to-square" /></span>
-                <span><strong>施設予約を入力</strong><small>施設・日付・時間・人数・使用用途を入力します。</small></span>
+                <span><strong>{editingFacilityReservationId ? "施設予約を修正" : "施設予約を入力"}</strong><small>施設・日付・時間・人数・使用用途を入力します。</small></span>
                 <i className={`fas fa-chevron-${facilityBookingOpen ? "up" : "down"}`} />
               </button>
               {facilityBookingOpen && (
               <form id="facility-booking-form" className="el-live-form el-facility-booking-card" onSubmit={handleFacilityReservationSubmit}>
                 <div className="el-facility-booking-heading">
                   <span><i className="fas fa-pen-to-square" /></span>
-                  <div><strong>施設予約を入力</strong><small>施設を選び、利用内容を1枚のカードで登録します。</small></div>
+                  <div><strong>{editingFacilityReservationId ? "施設予約を修正" : "施設予約を入力"}</strong><small>{editingFacilityReservationId ? "保存すると承認状態は予約中へ戻ります。" : "施設を選び、利用内容を1枚のカードで登録します。"}</small></div>
                 </div>
                 <div className="el-reply-grid">
                   <label>
@@ -1726,6 +1809,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 {selectedFacility && (
                   <div className="el-live-note">
                     <strong>{selectedFacility.name || "施設"}</strong>
+                    <span>場所: {selectedFacility.location || "未設定"}</span>
+                    <span>定員: {selectedFacility.capacity || selectedFacility.scale || "未設定"}</span>
                     <span>利用可能時間: {facilityAvailableLabel(selectedFacility)}</span>
                     <span>利用不可曜日: {splitSettingList(selectedFacility.unavailable_weekdays).join("、") || "なし"}</span>
                     <span>利用不可日: {splitSettingList(selectedFacility.unavailable_dates).join("、") || "なし"}</span>
@@ -1739,9 +1824,12 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                     ))}
                   </div>
                 )}
-                <button className="el-primary-action" disabled={replyBusy || facilities.length === 0}>
-                  <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-calendar-check"}`} /> 施設予約を申し込む
-                </button>
+                <div className="el-facility-booking-actions">
+                  {editingFacilityReservationId && <button type="button" className="el-secondary-action" onClick={cancelFacilityReservationEdit} disabled={replyBusy}>修正を中止</button>}
+                  <button className="el-primary-action" disabled={replyBusy || facilities.length === 0}>
+                    <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : editingFacilityReservationId ? "fa-floppy-disk" : "fa-calendar-check"}`} /> {editingFacilityReservationId ? "修正を保存" : "施設予約を申し込む"}
+                  </button>
+                </div>
               </form>
               )}
             </section>
