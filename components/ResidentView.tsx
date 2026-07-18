@@ -1389,17 +1389,35 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 </div>
                 <div className="el-calendar-grid">
                   {calendarDays.map((day) => (
-                    <div key={day.key} className={calendarDayClassName(day.date, day.inMonth, day.events.length > 0)} title={day.holidayName || undefined}>
-                      <div className="el-calendar-date-row">
-                        <span className="el-calendar-date-number">{day.date.getDate()}</span>
-                        {day.events.length > 0 && <span className="el-calendar-count" aria-label={`${day.events.length}件の予定`}>{day.events.length}</span>}
-                      </div>
-                      {day.events.slice(0, 2).map((item) => (
-                        <button key={item.id} type="button" onClick={() => openCircular(item)}>
-                          {item.event_time ? `${item.event_time} ` : ""}{item.title}
+                    <div
+                      key={day.key}
+                      className={`${calendarDayClassName(day.date, day.inMonth, day.events.length > 0)} ${day.events.length === 1 ? "is-tappable" : ""}`.trim()}
+                      title={day.holidayName || undefined}
+                    >
+                      {day.events.length === 1 ? (
+                        <button className="el-calendar-day-button" type="button" aria-label={`${day.date.getDate()}日 ${day.events[0].title}の詳細を開く`} onClick={() => openCircular(day.events[0])}>
+                          <span className="el-calendar-date-row">
+                            <span className="el-calendar-date-number">{day.date.getDate()}</span>
+                            <span className="el-calendar-count" aria-label="1件の予定">1</span>
+                          </span>
+                          <span className="el-calendar-event-label">
+                            {day.events[0].event_time ? `${day.events[0].event_time} ` : ""}{day.events[0].title}
+                          </span>
                         </button>
-                      ))}
-                      {day.events.length > 2 && <span className="el-calendar-more">ほか{day.events.length - 2}件</span>}
+                      ) : (
+                        <>
+                          <div className="el-calendar-date-row">
+                            <span className="el-calendar-date-number">{day.date.getDate()}</span>
+                            {day.events.length > 0 && <span className="el-calendar-count" aria-label={`${day.events.length}件の予定`}>{day.events.length}</span>}
+                          </div>
+                          {day.events.slice(0, 2).map((item) => (
+                            <button key={item.id} type="button" aria-label={`${item.title}の詳細を開く`} onClick={() => openCircular(item)}>
+                              {item.event_time ? `${item.event_time} ` : ""}{item.title}
+                            </button>
+                          ))}
+                          {day.events.length > 2 && <span className="el-calendar-more">ほか{day.events.length - 2}件</span>}
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>

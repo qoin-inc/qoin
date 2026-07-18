@@ -146,6 +146,7 @@ button { cursor: pointer; border: 0; }
 .el-calendar-grid > div.saturday { background: #f5f9ff; }
 .el-calendar-grid > div.today { box-shadow: inset 0 0 0 2px #0ea5e9; }
 .el-calendar-grid > div.has-entries { border: 2px solid #f59e0b; background: #fffbeb; box-shadow: 0 3px 10px rgba(245,158,11,.2); padding: 4px; }
+.el-calendar-grid > div.is-tappable { padding: 3px; }
 .el-calendar-grid.live > div.has-entries { border-color: #6366f1; background: #f5f3ff; box-shadow: 0 3px 10px rgba(99,102,241,.2); }
 .el-calendar-date-row { min-height: 18px; display: flex; align-items: center; justify-content: space-between; gap: 3px; margin-bottom: 3px; }
 .el-calendar-date-number { color: #111827; font-size: 12px; line-height: 1; font-weight: 900; }
@@ -153,7 +154,11 @@ button { cursor: pointer; border: 0; }
 .el-calendar-grid > div.saturday .el-calendar-date-number { color: #2563eb; }
 .el-calendar-count { min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: #f59e0b; color: #fff; font-size: 10px; line-height: 1; font-weight: 900; }
 .el-calendar-grid.live .el-calendar-count { background: #6366f1; }
-.el-calendar-grid button { width: 100%; margin-top: 3px; border-radius: 5px; background: #fff7ed; color: #c2410c; padding: 3px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 10px; font-weight: 900; }
+.el-calendar-grid button { position: relative; z-index: 1; width: 100%; min-height: 32px; margin-top: 3px; border-radius: 5px; background: #fff7ed; color: #c2410c; padding: 5px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 10px; font-weight: 900; touch-action: manipulation; }
+.el-calendar-grid button.el-calendar-day-button { height: 100%; min-height: 70px; margin-top: 0; display: block; }
+.el-calendar-day-button:active { background: #ffedd5; }
+.el-calendar-day-button:focus-visible { outline: 3px solid rgba(14,165,233,.38); outline-offset: 1px; }
+.el-calendar-event-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .el-calendar-grid.live button.live { background: #eef2ff; color: #4338ca; }
 .el-calendar-grid.live button.facility { background: #ecfdf5; color: #047857; }
 .el-calendar-more { margin-top: 3px; display: block; color: #92400e; text-align: right; font-size: 9px; line-height: 1.2; font-weight: 900; }
