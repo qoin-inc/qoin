@@ -108,6 +108,13 @@
 - 本番適用後、重複予約防止関数、Live本人閲覧ポリシー、施設予約本人閲覧ポリシーがすべて有効であることを確認しました。
 - `npm.cmd run build` に成功し、Lint、型チェック、静的ページ生成を確認しました。
 - 修正コミットをGitHubへpushした後、承認付きNetlify本番デプロイを必ず実施し、結果をこの履歴へ追記します。
+- 修正コミット `6085f5c` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5af3d83ab28b807152241d`
+- デプロイ対象コミット: `6085f5c6768244a3446c88c50f101f4b7e028ea1`
+- 計画時ビルドID: `vW5xUmF6muL_lAORUNakf`
+- 本番ビルドID: `gi94iCBlIwstKJTXE12LP`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+- 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
 
 ## Live参加申込の重複防止
 
