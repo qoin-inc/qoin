@@ -156,3 +156,10 @@
 - 将来の環境構築でも同じ閲覧不可が再発しないよう、既存のLive・施設用SQLにも役員閲覧ポリシーを追加しました。
 - `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
 - 運用手順として、修正コミットをGitHubへpushした後、承認付きNetlify本番デプロイを必ず実施し、デプロイ結果をこの履歴へ追記します。
+- 修正コミット `26d4c34` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5adb8299b78638b554c4aa`
+- デプロイ対象コミット: `26d4c34d3484c468d2761091ff7cf1355608940e`
+- 計画時ビルドID: `B9kjPZTY2jkvRhCrryQyC`
+- 本番ビルドID: `f5QJTE0tgncvy1hP7MPIT`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+- 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
