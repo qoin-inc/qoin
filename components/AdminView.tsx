@@ -4327,11 +4327,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   };
 
   const renderLiveFacilityPanel = () => {
-    const pendingReservations = liveFacilityData.reservations.filter((reservation) => reservation.status !== "approved" && reservation.status !== "rejected");
-    const approvedReservations = liveFacilityData.reservations.filter((reservation) => reservation.status === "approved");
-    const rejectedReservations = liveFacilityData.reservations.filter((reservation) => reservation.status === "rejected");
-    const facilityName = (reservation: any) => reservation.facility_name || liveFacilityData.facilities.find((facility) => String(facility.id) === String(facilityReservationFacilityId(reservation)))?.name || "施設";
-
     return (
       <section id="admin-live-facility-panel" className="admin-basic-panel admin-live-panel" aria-label="Web会議・施設予約">
         <div className="admin-basic-header">
@@ -4523,62 +4518,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 </div>
               </div>
             </form>
-
-            <section className="admin-basic-card">
-              <div className="admin-basic-card-heading">
-                <div>
-                  <h3>登録施設</h3>
-                  <p>施設条件の変更や、不要になった施設の削除を行います。</p>
-                </div>
-              </div>
-              <div className="admin-live-reservations">
-                {liveFacilityData.facilities.map((facility) => (
-                  <div key={facility.id} className={`admin-live-reservation ${facility.is_active === false ? "rejected" : "approved"}`}>
-                    <span>
-                      <strong>{facility.name || "施設"}</strong>
-                      <small>{facility.location || "場所未設定"} / {facility.capacity || facility.scale || "規模未設定"}</small>
-                      <small>利用可能 {facility.available_hours || `${facility.available_start_time || "未設定"}-${facility.available_end_time || "未設定"}`}</small>
-                      {Array.isArray(facility.unavailable_weekdays) && facility.unavailable_weekdays.length > 0 && <small>利用不可曜日: {facility.unavailable_weekdays.join("・")}</small>}
-                      {Array.isArray(facility.unavailable_dates) && facility.unavailable_dates.length > 0 && <small>利用不可日: {facility.unavailable_dates.join("、")}</small>}
-                    </span>
-                    <em>{facility.is_active === false ? "停止中" : "利用可"}</em>
-                    <div className="admin-list-actions">
-                      <button type="button" onClick={() => startFacilityEdit(facility)} disabled={liveFacilityBusy}>編集</button>
-                      <button type="button" className="delete" onClick={() => handleFacilityDelete(facility)} disabled={liveFacilityBusy}>削除</button>
-                    </div>
-                  </div>
-                ))}
-                {liveFacilityData.facilities.length === 0 && <div className="el-empty">登録施設はまだありません。</div>}
-              </div>
-            </section>
-
-            <section className="admin-basic-card">
-              <div className="admin-basic-card-heading">
-                <div>
-                  <h3>施設予約承認</h3>
-                  <p>承認済みの時間帯は会員側で申込不可になります。承認待ちへ戻すと再度予約可能です。</p>
-                </div>
-              </div>
-              <div className="admin-live-reservations">
-                {[...pendingReservations, ...approvedReservations, ...rejectedReservations].map((reservation) => (
-                  <div key={reservation.id} className={`admin-live-reservation ${reservation.status || "pending"}`}>
-                    <span>
-                      <strong>{facilityName(reservation)}</strong>
-                      <small>{toDisplayDate(reservation.reservation_date)} {reservation.start_time || ""}{reservation.end_time ? `-${reservation.end_time}` : ""}</small>
-                      <small>{reservation.applicant_name || reservation.resident_name || "申込者未設定"} / {reservation.participant_count || reservation.people_count || 1}名</small>
-                      <small>使用用途: {reservation.usage_purpose || "未入力"}</small>
-                    </span>
-                    <em>{reservation.status === "approved" ? "承認済" : reservation.status === "rejected" ? "否認" : "承認待ち"}</em>
-                    <div>
-                      <button type="button" onClick={() => handleReservationStatusChange(reservation, "approved")} disabled={liveFacilityBusy}>承認</button>
-                      <button type="button" onClick={() => handleReservationStatusChange(reservation, "rejected")} disabled={liveFacilityBusy}>否認</button>
-                      {reservation.status === "approved" && <button type="button" onClick={() => handleReservationStatusChange(reservation, "pending")} disabled={liveFacilityBusy}>承認解除</button>}
-                    </div>
-                  </div>
-                ))}
-                {liveFacilityData.reservations.length === 0 && <div className="el-empty">施設予約の申込はまだありません。</div>}
-              </div>
-            </section>
           </div>
         )}
       </section>
