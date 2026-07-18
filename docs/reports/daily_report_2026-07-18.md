@@ -40,6 +40,12 @@
 - 同日に複数イベントがある場合も、各イベントボタンの最小高さを32pxへ拡大し、タッチ操作を安定させました。
 - 詳細を開くボタンへ読み上げ用ラベルとフォーカス表示を追加しました。
 - `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
+- 修正コミット `6dae567` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5ac936569046d82c3f990b`
+- デプロイ対象コミット: `6dae56783a3ec32ed90d94018110d940f821b048`
+- 計画時ビルドID: `7vPgZjITDntSwAE8CleBT`
+- 本番ビルドID: `edpcCOnfuQSKs5IGiiyI9`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
 
 ## 総合ビューの種類フィルター・表題検索
 
