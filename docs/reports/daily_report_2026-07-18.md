@@ -107,6 +107,13 @@
 - 本番DBで使用用途カラムと7引数予約RPCが有効であることを確認しました。既存の重複予約防止も維持しています。
 - `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
 - 修正コミットをGitHubへpushした後、承認付きNetlify本番デプロイを必ず実施し、結果をこの履歴へ追記します。
+- 修正コミット `3201b0e` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5b40bf0de44826b3800a29`
+- デプロイ対象コミット: `3201b0ec78a058df6930ecb26f730c9195bd7c7c`
+- 計画時ビルドID: `MpKjA_GnfMXnnPxHFu-4C`
+- 本番ビルドID: `2dm0ZS_V9lrP_Bru_t0cK`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+- 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
 
 ## Live申込状態・施設予約フローの改善
 
