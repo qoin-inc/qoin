@@ -215,6 +215,13 @@ button { cursor: pointer; border: 0; }
 .el-reservation-card.approved em { color: #15803d; }
 .el-reservation-card.rejected { border-left-color: #ef4444; opacity: .78; }
 .el-reservation-card.rejected em { color: #b91c1c; }
+.el-facility-booking-toggle { width: 100%; min-height: 58px; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 10px; border: 1px solid #bae6fd; border-radius: 14px; background: linear-gradient(135deg, #fff, #f0f9ff); padding: 10px 13px; color: #0f172a; text-align: left; box-shadow: 0 6px 18px rgba(14, 165, 233, .08); }
+.el-facility-booking-toggle > span:first-child { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: #e0f2fe; color: #0369a1; }
+.el-facility-booking-toggle > span:nth-child(2) { display: grid; gap: 2px; }
+.el-facility-booking-toggle strong { font-size: 14px; font-weight: 900; }
+.el-facility-booking-toggle small { color: #64748b; font-size: 10px; font-weight: 800; }
+.el-facility-booking-toggle > i { color: #0284c7; font-size: 12px; }
+.el-facility-booking-toggle.open { border-color: #38bdf8; background: #f0f9ff; }
 .el-facility-booking-card { border: 1px solid #bae6fd; border-radius: 14px; background: linear-gradient(180deg, #fff, #f8fdff); padding: 14px; box-shadow: 0 8px 24px rgba(14, 165, 233, .08); }
 .el-facility-booking-heading { display: flex; align-items: center; gap: 10px; padding-bottom: 11px; border-bottom: 1px solid #e0f2fe; }
 .el-facility-booking-heading > span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: #e0f2fe; color: #0369a1; }

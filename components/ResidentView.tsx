@@ -448,6 +448,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [liveViewMode, setLiveViewMode] = useState<ViewMode>("calendar");
   const [selectedFacilityDate, setSelectedFacilityDate] = useState(todayKey());
   const [facilityListFilter, setFacilityListFilter] = useState("all");
+  const [facilityBookingOpen, setFacilityBookingOpen] = useState(false);
   const [withdrawalBusy, setWithdrawalBusy] = useState(false);
   const [withdrawalMessage, setWithdrawalMessage] = useState("");
   const [familyNames, setFamilyNames] = useState({ 1: roster?.family_name_1 || "", 2: roster?.family_name_2 || "" });
@@ -741,7 +742,10 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const approvedFacilityReservations = facilityReservations.filter((reservation) => reservation.status === "approved");
   const selectedFacility = facilities.find((facility) => String(facility.id) === String(facilityReservationDraft.facilityId));
   const selectedFacilityApprovedReservations = approvedFacilityReservations.filter(
-    (reservation) => String(facilityReservationFacilityId(reservation)) === String(facilityReservationDraft.facilityId),
+    (reservation) => (
+      String(facilityReservationFacilityId(reservation)) === String(facilityReservationDraft.facilityId)
+      && dateKey(reservation.reservation_date) === facilityReservationDraft.reservationDate
+    ),
   );
   const selectedDateFacilityReservations = facilityReservations.filter(
     (reservation) => dateKey(reservation.reservation_date) === selectedFacilityDate,
@@ -1165,6 +1169,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
       setFacilityReservations((current) => [saved as FacilityReservation, ...current]);
       setSelectedFacilityDate(facilityReservationDraft.reservationDate);
       setFacilityReservationDraft((current) => ({ ...current, startTime: "", endTime: "", usagePurpose: "" }));
+      setFacilityBookingOpen(false);
       setLiveMessage("施設予約の申込を送信しました。役員の承認をお待ちください。");
     } catch (error: any) {
       setLiveMessage(error?.message || "施設予約の申込に失敗しました。");
@@ -1666,7 +1671,19 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                   </div>
                 </div>
               )}
-              <form className="el-live-form el-facility-booking-card" onSubmit={handleFacilityReservationSubmit}>
+              <button
+                type="button"
+                className={`el-facility-booking-toggle ${facilityBookingOpen ? "open" : ""}`.trim()}
+                onClick={() => setFacilityBookingOpen((current) => !current)}
+                aria-expanded={facilityBookingOpen}
+                aria-controls="facility-booking-form"
+              >
+                <span><i className="fas fa-pen-to-square" /></span>
+                <span><strong>施設予約を入力</strong><small>施設・日付・時間・人数・使用用途を入力します。</small></span>
+                <i className={`fas fa-chevron-${facilityBookingOpen ? "up" : "down"}`} />
+              </button>
+              {facilityBookingOpen && (
+              <form id="facility-booking-form" className="el-live-form el-facility-booking-card" onSubmit={handleFacilityReservationSubmit}>
                 <div className="el-facility-booking-heading">
                   <span><i className="fas fa-pen-to-square" /></span>
                   <div><strong>施設予約を入力</strong><small>施設を選び、利用内容を1枚のカードで登録します。</small></div>
@@ -1716,7 +1733,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 )}
                 {selectedFacilityApprovedReservations.length > 0 && (
                   <div className="el-reservation-slots">
-                    <strong>承認済み予約</strong>
+                    <strong>選択日の承認済み予約</strong>
                     {selectedFacilityApprovedReservations.slice(0, 5).map((reservation) => (
                       <span key={reservation.id}>{dateKey(reservation.reservation_date)} {reservation.start_time || ""}{reservation.end_time ? `-${reservation.end_time}` : ""}</span>
                     ))}
@@ -1726,6 +1743,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                   <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-calendar-check"}`} /> 施設予約を申し込む
                 </button>
               </form>
+              )}
             </section>
             )}
 
