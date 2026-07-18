@@ -149,6 +149,10 @@ CREATE INDEX IF NOT EXISTS idx_live_sessions_neighborhood_date
 CREATE INDEX IF NOT EXISTS idx_live_session_applications_session
   ON public.live_session_applications(live_session_id, applied_at);
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_live_session_applications_unique_resident
+  ON public.live_session_applications(live_session_id, resident_roster_id)
+  WHERE live_session_id IS NOT NULL AND resident_roster_id IS NOT NULL;
+
 ALTER TABLE public.live_session_applications ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS live_session_applications_select_active_admins

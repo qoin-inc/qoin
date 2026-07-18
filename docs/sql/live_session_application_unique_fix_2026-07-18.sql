@@ -1,28 +1,5 @@
--- Keep the legacy BIGINT roster_id column for compatibility, while linking
--- Live applications to the UUID primary key used by resident_rosters.
-
-ALTER TABLE public.live_session_applications
-  ADD COLUMN IF NOT EXISTS resident_roster_id UUID;
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1
-    FROM pg_constraint
-    WHERE conrelid = 'public.live_session_applications'::regclass
-      AND conname = 'live_session_applications_resident_roster_id_fkey'
-  ) THEN
-    ALTER TABLE public.live_session_applications
-      ADD CONSTRAINT live_session_applications_resident_roster_id_fkey
-      FOREIGN KEY (resident_roster_id)
-      REFERENCES public.resident_rosters(id)
-      ON DELETE SET NULL;
-  END IF;
-END;
-$$;
-
-CREATE INDEX IF NOT EXISTS idx_live_session_applications_resident_roster
-  ON public.live_session_applications(resident_roster_id, applied_at);
+-- Make one Live application per meeting and resident. Re-applying updates the
+-- existing row instead of adding another participant entry.
 
 WITH ranked_applications AS (
   SELECT
@@ -123,6 +100,12 @@ GRANT EXECUTE ON FUNCTION public.create_live_session_application(BIGINT, INTEGER
 NOTIFY pgrst, 'reload schema';
 
 SELECT
-  (SELECT data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'resident_rosters' AND column_name = 'id') AS roster_id_type,
-  (SELECT data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'live_session_applications' AND column_name = 'resident_roster_id') AS application_roster_id_type,
-  to_regprocedure('public.create_live_session_application(bigint,integer,text)') IS NOT NULL AS rpc_ready;
+  (SELECT count(*) FROM public.live_session_applications) AS application_rows,
+  (SELECT count(*) FROM (
+    SELECT live_session_id, resident_roster_id
+    FROM public.live_session_applications
+    WHERE live_session_id IS NOT NULL AND resident_roster_id IS NOT NULL
+    GROUP BY live_session_id, resident_roster_id
+    HAVING count(*) > 1
+  ) duplicate_groups) AS duplicate_groups,
+  to_regclass('public.idx_live_session_applications_unique_resident') IS NOT NULL AS unique_index_ready;
