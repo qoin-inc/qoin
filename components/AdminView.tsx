@@ -1006,7 +1006,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           supabase.from("system_usage_billings").select("*").eq("neighborhood_id", townId).order("billing_month", { ascending: false }).limit(36),
           supabase.from("system_settings").select("*").eq("neighborhood_id", townId).maybeSingle(),
           supabase.from("circulars").select("*").eq("neighborhood_id", townId).order("created_at", { ascending: false }).limit(30),
-          supabase.from("facilities").select("*").eq("neighborhood_id", townId).limit(6),
+          supabase.from("facilities").select("*").eq("neighborhood_id", townId).order("name", { ascending: true }).limit(100),
           supabase.from("facility_reservations").select("*").eq("neighborhood_id", townId).order("reservation_date", { ascending: false }).limit(500),
           supabase.from("live_sessions").select("*").eq("neighborhood_id", townId).order("starts_at", { ascending: false }).limit(6),
           supabase.from("live_session_applications").select("*").eq("neighborhood_id", townId).order("applied_at", { ascending: false }).limit(200),
@@ -1487,6 +1487,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     });
     setActiveLiveFacilityScreen("facility");
     setLiveFacilityMessage("施設情報を編集中です。必要な項目を変更して更新してください。");
+    window.requestAnimationFrame(() => document.getElementById("admin-live-facility-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
 
   const toggleFacilityUnavailableWeekday = (weekday: string) => {
@@ -3426,6 +3427,10 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     if (integratedFacilityDate && reservationDate !== integratedFacilityDate) return false;
     return true;
   });
+  const integratedFacilityCards = liveFacilityData.facilities.filter((facility) => (
+    integratedFacilityFilter === "all" || String(facility.id) === integratedFacilityFilter
+  ));
+  const visibleIntegratedWorkItems = filteredIntegratedWorkItems.filter((item) => item.type !== "facility");
   const showIntegratedWorkView = activeDashboardMenu === "publish" || activeDashboardMenu === "live";
   const assemblyCategories = useMemo(
     () => sortAssemblyCategories(assemblyData.categories).filter(isActiveAssemblyCategory),
@@ -4328,7 +4333,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const facilityName = (reservation: any) => reservation.facility_name || liveFacilityData.facilities.find((facility) => String(facility.id) === String(facilityReservationFacilityId(reservation)))?.name || "施設";
 
     return (
-      <section className="admin-basic-panel admin-live-panel" aria-label="Web会議・施設予約">
+      <section id="admin-live-facility-panel" className="admin-basic-panel admin-live-panel" aria-label="Web会議・施設予約">
         <div className="admin-basic-header">
           <div>
             <p className="el-kicker">Web会議・施設予約</p>
@@ -4561,6 +4566,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                       <strong>{facilityName(reservation)}</strong>
                       <small>{toDisplayDate(reservation.reservation_date)} {reservation.start_time || ""}{reservation.end_time ? `-${reservation.end_time}` : ""}</small>
                       <small>{reservation.applicant_name || reservation.resident_name || "申込者未設定"} / {reservation.participant_count || reservation.people_count || 1}名</small>
+                      <small>使用用途: {reservation.usage_purpose || "未入力"}</small>
                     </span>
                     <em>{reservation.status === "approved" ? "承認済" : reservation.status === "rejected" ? "否認" : "承認待ち"}</em>
                     <div>
@@ -5320,8 +5326,8 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           {(integratedWorkFilter === "all" || integratedWorkFilter === "facility") && (
             <section className="admin-integrated-reservations" aria-label="施設予約管理">
               <div className="admin-basic-card-heading">
-                <div><h3>施設予約管理</h3><p>施設・月・日を指定して、承認、否認、解除を行えます。</p></div>
-                <span>{filteredIntegratedFacilityReservations.length}件</span>
+                <div><h3>施設・予約一元管理</h3><p>施設の下に予約をまとめ、施設情報の修正・削除と予約状態の変更を行えます。</p></div>
+                <span>{integratedFacilityCards.length}施設 / {filteredIntegratedFacilityReservations.length}予約</span>
               </div>
               <div className="admin-integrated-reservation-filters">
                 <label><span>施設</span><select value={integratedFacilityFilter} onChange={(event) => setIntegratedFacilityFilter(event.target.value)}><option value="all">すべての施設</option>{liveFacilityData.facilities.map((facility) => <option key={facility.id} value={String(facility.id)}>{facility.name || "施設"}</option>)}</select></label>
@@ -5329,28 +5335,49 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <label><span>日</span><input type="date" value={integratedFacilityDate} onChange={(event) => setIntegratedFacilityDate(event.target.value)} /></label>
                 <button type="button" onClick={() => { setIntegratedFacilityFilter("all"); setIntegratedFacilityMonth(""); setIntegratedFacilityDate(""); }}>条件を解除</button>
               </div>
-              <div className="admin-live-reservations">
-                {filteredIntegratedFacilityReservations.map((reservation) => (
-                  <article key={reservation.id} className={`admin-live-reservation ${reservation.status || "pending"}`}>
-                    <span>
-                      <strong>{reservation.facility_name || liveFacilityData.facilities.find((facility) => String(facility.id) === String(reservation.facility_bigint_id || reservation.facility_id))?.name || "施設"}</strong>
-                      <small>{toDisplayDate(reservation.reservation_date)} {reservation.start_time || ""}{reservation.end_time ? `-${reservation.end_time}` : ""}</small>
-                      <small>{reservation.applicant_name || reservation.resident_name || "申込者未設定"} / {reservation.participant_count || reservation.people_count || 1}名</small>
-                    </span>
-                    <em>{reservation.status === "approved" ? "確定" : reservation.status === "rejected" ? "却下" : "予約状態"}</em>
-                    <div>
-                      <button type="button" onClick={() => handleReservationStatusChange(reservation, "approved")} disabled={liveFacilityBusy || reservation.status === "approved"}>承認</button>
-                      <button type="button" onClick={() => handleReservationStatusChange(reservation, "rejected")} disabled={liveFacilityBusy || reservation.status === "rejected"}>否認</button>
-                      <button type="button" onClick={() => handleReservationStatusChange(reservation, "pending")} disabled={liveFacilityBusy || reservation.status === "pending"}>解除</button>
-                    </div>
-                  </article>
-                ))}
-                {filteredIntegratedFacilityReservations.length === 0 && <div className="el-empty">指定した条件の施設予約はありません。</div>}
+              <div className="admin-facility-groups">
+                {integratedFacilityCards.map((facility) => {
+                  const reservations = filteredIntegratedFacilityReservations.filter((reservation) => String(facilityReservationFacilityId(reservation)) === String(facility.id));
+                  return (
+                    <article key={facility.id} className="admin-facility-group">
+                      <header>
+                        <span>
+                          <strong>{facility.name || "施設"}</strong>
+                          <small>{facility.location || "場所未設定"} / {facility.capacity || facility.scale || "規模未設定"}</small>
+                          <small>利用可能 {facility.available_hours || `${facility.available_start_time || "未設定"}-${facility.available_end_time || "未設定"}`}</small>
+                        </span>
+                        <div>
+                          <button type="button" onClick={() => startFacilityEdit(facility)} disabled={liveFacilityBusy}>修正</button>
+                          <button type="button" className="delete" onClick={() => handleFacilityDelete(facility)} disabled={liveFacilityBusy}>削除</button>
+                        </div>
+                      </header>
+                      <div className="admin-facility-group-reservations">
+                        {reservations.map((reservation) => (
+                          <div key={reservation.id} className={`admin-live-reservation ${reservation.status || "pending"}`}>
+                            <span>
+                              <strong>{toDisplayDate(reservation.reservation_date)} {reservation.start_time || ""}{reservation.end_time ? `-${reservation.end_time}` : ""}</strong>
+                              <small>{reservation.applicant_name || reservation.resident_name || "申込者未設定"} / {reservation.participant_count || reservation.people_count || 1}名</small>
+                              <small>使用用途: {reservation.usage_purpose || "未入力"}</small>
+                            </span>
+                            <em>{reservation.status === "approved" ? "承認" : reservation.status === "rejected" ? "否認" : "予約中"}</em>
+                            <div>
+                              <button type="button" onClick={() => handleReservationStatusChange(reservation, "approved")} disabled={liveFacilityBusy || reservation.status === "approved"}>承認</button>
+                              <button type="button" onClick={() => handleReservationStatusChange(reservation, "rejected")} disabled={liveFacilityBusy || reservation.status === "rejected"}>否認</button>
+                              <button type="button" onClick={() => handleReservationStatusChange(reservation, "pending")} disabled={liveFacilityBusy || reservation.status === "pending"}>解除</button>
+                            </div>
+                          </div>
+                        ))}
+                        {reservations.length === 0 && <div className="el-empty">指定した期間の予約はありません。</div>}
+                      </div>
+                    </article>
+                  );
+                })}
+                {integratedFacilityCards.length === 0 && <div className="el-empty">登録施設はありません。</div>}
               </div>
             </section>
           )}
           <div className="admin-work-list">
-            {filteredIntegratedWorkItems.map(renderWorkItemCard)}
+            {visibleIntegratedWorkItems.map(renderWorkItemCard)}
             {!loading && integratedWorkItems.length === 0 && <div className="el-empty">発信機能とLive・施設予約の表示項目はまだありません。</div>}
             {!loading && integratedWorkItems.length > 0 && filteredIntegratedWorkItems.length === 0 && (
               <div className="el-empty">選択した種類・表題に一致する項目はありません。</div>
