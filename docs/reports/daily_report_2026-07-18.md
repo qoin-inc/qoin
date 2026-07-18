@@ -47,6 +47,19 @@
 - 本番ビルドID: `edpcCOnfuQSKs5IGiiyI9`
 - 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
 
+## Live参加申込の会員ID型不一致エラー対応
+
+- スマホのLive参加申込で、UUID形式の会員IDに対して `invalid input syntax for type bigint` が表示され、申込できない問題を調査しました。
+- 本番DBでは `resident_rosters.id` がUUIDである一方、後付けの `live_session_applications.roster_id` がBIGINTであり、アプリがUUIDをBIGINT列へ送信していたことを確認しました。
+- Live会議IDは `live_sessions.id` と申込側の参照列がともにBIGINTで一致しており、会員IDだけが不一致でした。
+- 既存申込と互換性を保つため旧 `roster_id` は削除・変換せず、新たにUUID型の `resident_roster_id` と外部キーを追加する非破壊移行にしました。
+- `docs/sql/live_session_application_id_type_fix_2026-07-18.sql` を作成して本番Supabaseへ適用し、ログイン中の利用者から町内会と会員をサーバー側で照合する `create_live_session_application` RPCを追加しました。
+- RPCをトランザクション内で実行し、BIGINT会議ID・UUID会員IDで申込行を正常作成できることを確認後、ロールバックしました。検証行が残っていないことも確認済みです。
+- 会員画面はRPCを優先して申込し、DB反映直後などRPCが未認識の場合のみUUID型の `resident_roster_id` を使う互換フォールバックを行うよう修正しました。
+- 将来の環境構築でも同じ型不一致が再発しないよう、既存のLive・施設用SQLにもUUID会員参照列を追加しました。
+- `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
+- 運用手順として、修正コミットをGitHubへpushした後に、承認付きNetlify本番デプロイを必ず実施します。デプロイ完了後、デプロイID・対象コミット・ビルドID・公開URL検証結果をこの履歴へ追記します。
+
 ## 総合ビューの種類フィルター・表題検索
 
 - 管理機能の総合ビューへ「すべて」「電子回覧板」「連絡」「イベント」「総会」「Live」「施設予約」の種類フィルターを追加しました。

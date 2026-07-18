@@ -987,11 +987,11 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     setReplyBusy(true);
     setLiveMessage("");
     try {
-      await insertResidentRowWithFallback("live_session_applications", {
+      const applicationPayload = {
         live_session_id: session.id,
         session_id: session.id,
         neighborhood_id: townId,
-        roster_id: residentRosterId,
+        resident_roster_id: residentRosterId,
         user_auth_id: userId || null,
         resident_name: displayName,
         applicant_name: displayName,
@@ -1001,7 +1001,22 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         response_status: "attend",
         status: "attend",
         applied_at: new Date().toISOString(),
-      }, "Web会議の参加申込を保存できませんでした。");
+      };
+      const rpcResult = await supabase.rpc("create_live_session_application", {
+        p_live_session_id: session.id,
+        p_participant_count: participantCount,
+        p_applicant_name: displayName,
+      });
+      const rpcUnavailable = rpcResult.error?.code === "PGRST202"
+        || /create_live_session_application|schema cache|function/i.test(String(rpcResult.error?.message || ""));
+      if (rpcResult.error && !rpcUnavailable) throw rpcResult.error;
+      if (rpcResult.error) {
+        await insertResidentRowWithFallback(
+          "live_session_applications",
+          applicationPayload,
+          "Web会議の参加申込を保存できませんでした。",
+        );
+      }
       setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }));
       setLiveMessage("Web会議の参加申込を送信しました。");
     } catch (error: any) {

@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS public.live_session_applications (
   live_session_id BIGINT REFERENCES public.live_sessions(id) ON DELETE CASCADE,
   session_id BIGINT,
   neighborhood_id BIGINT REFERENCES public.neighborhoods(id) ON DELETE CASCADE,
-  roster_id BIGINT,
+  roster_id BIGINT, -- Legacy compatibility only. resident_rosters.id is UUID.
+  resident_roster_id UUID REFERENCES public.resident_rosters(id) ON DELETE SET NULL,
   user_auth_id TEXT,
   resident_name TEXT,
   applicant_name TEXT,
@@ -62,6 +63,7 @@ ALTER TABLE public.live_session_applications
   ADD COLUMN IF NOT EXISTS session_id BIGINT,
   ADD COLUMN IF NOT EXISTS neighborhood_id BIGINT REFERENCES public.neighborhoods(id) ON DELETE CASCADE,
   ADD COLUMN IF NOT EXISTS roster_id BIGINT,
+  ADD COLUMN IF NOT EXISTS resident_roster_id UUID REFERENCES public.resident_rosters(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS user_auth_id TEXT,
   ADD COLUMN IF NOT EXISTS resident_name TEXT,
   ADD COLUMN IF NOT EXISTS applicant_name TEXT,
