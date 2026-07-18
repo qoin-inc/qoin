@@ -3397,7 +3397,7 @@ button { cursor: pointer; border: 0; }
 }
 
 .admin-integrated-reservations { display: grid; gap: 12px; margin: 0 0 16px; border: 1px solid #bfdbfe; border-radius: 14px; background: #f8fbff; padding: 14px; }
-.admin-integrated-reservation-filters { display: grid; grid-template-columns: minmax(160px, 1.4fr) minmax(130px, 1fr) minmax(130px, 1fr) auto; gap: 10px; align-items: end; }
+.admin-integrated-reservation-filters { display: grid; grid-template-columns: minmax(160px, 1.4fr) minmax(120px, .9fr) minmax(130px, 1fr) minmax(130px, 1fr) auto; gap: 10px; align-items: end; }
 .admin-integrated-reservation-filters label { display: grid; gap: 5px; color: #475569; font-size: 11px; font-weight: 900; }
 .admin-integrated-reservation-filters select, .admin-integrated-reservation-filters input { min-height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; padding: 7px 9px; color: #0f172a; }
 .admin-integrated-reservation-filters > button { min-height: 38px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #475569; padding: 7px 12px; font-weight: 900; }

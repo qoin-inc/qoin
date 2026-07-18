@@ -109,6 +109,7 @@ const facilityReservationFacilityId = (reservation: any) => (
 );
 
 type IntegratedWorkFilter = "all" | "circular" | "notice" | "event" | "assembly" | "live" | "facility";
+type FacilityReservationStatusFilter = "all" | "pending" | "approved" | "rejected";
 
 type PublishType = "circular" | "notice" | "event" | "assembly";
 type PublishFeatureLabel = "電子回覧板" | "連絡" | "イベント" | "総会案内";
@@ -859,6 +860,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [integratedWorkFilter, setIntegratedWorkFilter] = useState<IntegratedWorkFilter>("all");
   const [integratedTitleSearch, setIntegratedTitleSearch] = useState("");
   const [integratedFacilityFilter, setIntegratedFacilityFilter] = useState("all");
+  const [integratedFacilityStatus, setIntegratedFacilityStatus] = useState<FacilityReservationStatusFilter>("all");
   const [integratedFacilityMonth, setIntegratedFacilityMonth] = useState("");
   const [integratedFacilityDate, setIntegratedFacilityDate] = useState("");
   const [basicData, setBasicData] = useState<BasicData>({ town: null, members: [], fees: [], systemBillings: [], admins: [], setting: null });
@@ -3423,7 +3425,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const filteredIntegratedFacilityReservations = liveFacilityData.reservations.filter((reservation) => {
     const reservationFacilityId = String(reservation.facility_bigint_id || reservation.facility_id || "");
     const reservationDate = String(reservation.reservation_date || "").slice(0, 10);
+    const reservationStatus = String(reservation.status || "pending");
     if (integratedFacilityFilter !== "all" && reservationFacilityId !== integratedFacilityFilter) return false;
+    if (integratedFacilityStatus !== "all" && reservationStatus !== integratedFacilityStatus) return false;
     if (integratedFacilityMonth && !reservationDate.startsWith(integratedFacilityMonth)) return false;
     if (integratedFacilityDate && reservationDate !== integratedFacilityDate) return false;
     return true;
@@ -5242,9 +5246,10 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               </div>
               <div className="admin-integrated-reservation-filters">
                 <label><span>施設</span><select value={integratedFacilityFilter} onChange={(event) => setIntegratedFacilityFilter(event.target.value)}><option value="all">すべての施設</option>{liveFacilityData.facilities.map((facility) => <option key={facility.id} value={String(facility.id)}>{facility.name || "施設"}</option>)}</select></label>
+                <label><span>予約状態</span><select value={integratedFacilityStatus} onChange={(event) => setIntegratedFacilityStatus(event.target.value as FacilityReservationStatusFilter)}><option value="all">すべて</option><option value="pending">予約中</option><option value="approved">確定</option><option value="rejected">否認</option></select></label>
                 <label><span>月</span><input type="month" value={integratedFacilityMonth} onChange={(event) => setIntegratedFacilityMonth(event.target.value)} /></label>
                 <label><span>日</span><input type="date" value={integratedFacilityDate} onChange={(event) => setIntegratedFacilityDate(event.target.value)} /></label>
-                <button type="button" onClick={() => { setIntegratedFacilityFilter("all"); setIntegratedFacilityMonth(""); setIntegratedFacilityDate(""); }}>条件を解除</button>
+                <button type="button" onClick={() => { setIntegratedFacilityFilter("all"); setIntegratedFacilityStatus("all"); setIntegratedFacilityMonth(""); setIntegratedFacilityDate(""); }}>条件を解除</button>
               </div>
               <div className="admin-facility-groups">
                 {integratedFacilityCards.map((facility) => {
