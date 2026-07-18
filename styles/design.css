@@ -3332,6 +3332,64 @@ button { cursor: pointer; border: 0; }
   color: #075985;
 }
 
+.admin-integrated-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.admin-integrated-controls .admin-view-tabs {
+  justify-content: flex-start;
+}
+
+.admin-integrated-search {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-integrated-search > span {
+  color: #475569;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-integrated-search > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 10px;
+}
+
+.admin-integrated-search i {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.admin-integrated-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-integrated-count {
+  white-space: nowrap;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+  padding-bottom: 10px;
+}
+
 .admin-work-list {
   display: grid;
   gap: 10px;
@@ -4529,6 +4587,15 @@ button { cursor: pointer; border: 0; }
 
   .admin-work-item {
     grid-template-columns: 1fr;
+  }
+
+  .admin-integrated-controls {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .admin-integrated-count {
+    padding-bottom: 0;
   }
 
   .admin-work-status {
