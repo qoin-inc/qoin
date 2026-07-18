@@ -54,6 +54,12 @@ export async function POST(req: Request) {
         fee_record_id: feeRecordId,
         payment_source: "fee_records",
       },
+      payment_intent_data: {
+        metadata: {
+          fee_record_id: feeRecordId,
+          payment_source: "fee_records",
+        },
+      },
       success_url: `${origin}/resident?tab=payment&payment=success`,
       cancel_url: `${origin}/resident?tab=payment&payment=cancel`,
     },

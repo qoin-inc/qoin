@@ -325,7 +325,8 @@ const standardAssemblyCategories: Array<{ type: AssemblyCategoryType; name: stri
   { type: "expense", name: "集会所管理費", sortOrder: 150 },
   { type: "expense", name: "慶弔費", sortOrder: 160 },
   { type: "expense", name: "事業費", sortOrder: 170 },
-  { type: "expense", name: "予備費", sortOrder: 180 },
+  { type: "expense", name: "支払手数料", sortOrder: 180 },
+  { type: "expense", name: "予備費", sortOrder: 190 },
 ];
 
 const yen = (value: number) => `¥${Math.round(value || 0).toLocaleString()}`;
@@ -1019,12 +1020,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         const linkedAccountCount = billingMemberRows.reduce((sum: number, row: any) => sum + getMemberLinkedAccountCount(row), 0);
         const feeRows = feeRecords.data || [];
         const currentYear = currentFiscalYear(townInfo.data?.fiscal_start_month);
-        const withdrawnRosterIds = new Set(memberListRows.filter(isWithdrawnMember).map((member: any) => String(member.id)));
-        const summaryFeeRows = feeRows.filter((row: any) => {
-          const rosterId = getFeeRosterId(row);
-          const isWithdrawnFee = rosterId !== null && withdrawnRosterIds.has(String(rosterId));
-          return getFeeYear(row) === currentYear && (!isWithdrawnFee || getFeePaidAmount(row) > 0);
-        });
+        const summaryFeeRows = feeRows.filter((row: any) => getFeeYear(row) === currentYear);
         const annualFeeBilling = summaryFeeRows.reduce((sum: number, row: any) => {
           return sum + getFeeBillingAmount(row);
         }, 0);
@@ -2920,11 +2916,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       .toLowerCase()
       .includes(feeRosterQuery);
   });
-  const summaryFeeRecords = feeRecordsForYear.filter((fee) => {
-    const rosterId = getFeeRosterId(fee);
-    const member = rosterId === null ? null : memberById.get(String(rosterId));
-    return !member || !isWithdrawnMember(member) || getFeePaidAmount(fee) > 0;
-  });
+  const summaryFeeRecords = feeRecordsForYear;
   const feeBillingTotal = summaryFeeRecords.reduce((sum, fee) => sum + getFeeBillingAmount(fee), 0);
   const feePaidTotal = summaryFeeRecords.reduce((sum, fee) => sum + getFeePaidAmount(fee), 0);
   const feeCashPaidTotal = summaryFeeRecords.reduce((sum, fee) => sum + getFeeCashPaid(fee), 0);
@@ -3977,7 +3969,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会費請求設定</h3>
-                <p>会計年度ごとに全会員世帯、またはチェックした会員へ請求額を設定します。退会済み会員は新規請求対象から外し、入金がある年度分だけ集計に含めます。</p>
+                <p>会計年度ごとに全会員世帯、またはチェックした会員へ請求額を設定します。退会済み会員は新規請求対象から外しますが、作成済みの年度会費は退会後も集計に含めます。</p>
               </div>
               <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
             </div>
@@ -4075,7 +4067,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会費一覧</h3>
-                <p>退会済み会員の過去情報も年度ごとに残します。入金済みまたは一部入金の会費は年度集計に含めます。</p>
+                <p>退会済み会員の過去情報も年度ごとに残し、会計期内に作成された会費は入金状態にかかわらず年度集計に含めます。</p>
               </div>
             </div>
 
@@ -4093,13 +4085,12 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 const member = rosterId === null ? null : memberById.get(String(rosterId));
                 const name = fee.resident_name || fee.full_name || (member ? getMemberFullName(member) : `会費 #${fee.id || "-"}`);
                 const withdrawnFee = Boolean(member && isWithdrawnMember(member));
-                const includedInSummary = !withdrawnFee || getFeePaidAmount(fee) > 0;
                 return (
                   <div key={fee.id || index} className="admin-fee-row">
                     <span>
                       <strong>{name}</strong>
                       <small>{getFeeYear(fee)}年度</small>
-                      {withdrawnFee && <small>{includedInSummary ? "退会済み・集計対象" : "退会済み・集計対象外"}</small>}
+                      {withdrawnFee && <small>退会済み・集計対象</small>}
                     </span>
                     <span>{yen(getFeeBillingAmount(fee))}</span>
                     <span className="admin-fee-payment-cell">

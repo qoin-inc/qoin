@@ -59,6 +59,125 @@ const updateSystemUsageBillingWithFallback = async (supabase: SupabaseClient, bi
   }
 };
 
+const findOrCreateStripeFeeCategory = async (supabase: SupabaseClient, neighborhoodId: string | number) => {
+  const existing = await supabase
+    .from('assembly_categories')
+    .select('id')
+    .eq('neighborhood_id', neighborhoodId)
+    .eq('type', 'expense')
+    .eq('name', '支払手数料')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .limit(1);
+  if (existing.error) throw existing.error;
+  if (existing.data?.[0]?.id) return existing.data[0].id;
+
+  const created = await supabase
+    .from('assembly_categories')
+    .insert({
+      neighborhood_id: neighborhoodId,
+      type: 'expense',
+      name: '支払手数料',
+      parent_id: null,
+      sort_order: 180,
+      is_standard: true,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single();
+  if (created.error) throw created.error;
+  return created.data.id;
+};
+
+const insertStripeFeeSettlement = async (
+  supabase: SupabaseClient,
+  feeRecord: any,
+  paymentIntentId: string,
+  balanceTransactionId: string,
+  stripeFeeAmount: number,
+  paidAt: string,
+) => {
+  if (stripeFeeAmount <= 0 || !feeRecord?.neighborhood_id) return;
+
+  const sourceId = balanceTransactionId || paymentIntentId;
+  const description = `Stripe決済手数料 / ${feeRecord.resident_name || '会費'} / ${sourceId}`;
+  let existing = await supabase
+    .from('assembly_settlements')
+    .select('id')
+    .eq('neighborhood_id', feeRecord.neighborhood_id)
+    .eq('source_type', 'stripe_fee')
+    .eq('source_id', sourceId)
+    .limit(1);
+
+  if (existing.error && missingColumnFromError(existing.error)) {
+    existing = await supabase
+      .from('assembly_settlements')
+      .select('id')
+      .eq('neighborhood_id', feeRecord.neighborhood_id)
+      .eq('description', description)
+      .limit(1);
+  }
+  if (existing.error) throw existing.error;
+  if (existing.data?.length) return;
+
+  const categoryId = await findOrCreateStripeFeeCategory(supabase, feeRecord.neighborhood_id);
+  let settlementPayload: Record<string, any> = {
+    neighborhood_id: feeRecord.neighborhood_id,
+    fiscal_year: Number(feeRecord.fiscal_year || new Date(paidAt).getFullYear()),
+    category_id: categoryId,
+    type: 'expense',
+    amount: stripeFeeAmount,
+    paid_date: paidAt.slice(0, 10),
+    description,
+    receipt_url: null,
+    receipt_name: null,
+    source_type: 'stripe_fee',
+    source_id: sourceId,
+    created_at: paidAt,
+    updated_at: paidAt,
+  };
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const result = await supabase.from('assembly_settlements').insert(settlementPayload);
+    if (!result.error || result.error.code === '23505') return;
+    const missingColumn = missingColumnFromError(result.error);
+    if (missingColumn && Object.prototype.hasOwnProperty.call(settlementPayload, missingColumn)) {
+      delete settlementPayload[missingColumn];
+      continue;
+    }
+    throw result.error;
+  }
+};
+
+const getStripeFeeDetails = async (stripe: Stripe, event: Stripe.Event, paymentIntentId: string) => {
+  const options = event.account ? { stripeAccount: event.account } : undefined;
+  const paymentIntent = options
+    ? await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge.balance_transaction'] }, options)
+    : await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ['latest_charge.balance_transaction'] });
+  let charge = paymentIntent.latest_charge;
+  if (typeof charge === 'string') {
+    charge = options
+      ? await stripe.charges.retrieve(charge, { expand: ['balance_transaction'] }, options)
+      : await stripe.charges.retrieve(charge, { expand: ['balance_transaction'] });
+  }
+  if (!charge || typeof charge === 'string') return null;
+
+  let balanceTransaction = charge.balance_transaction;
+  if (typeof balanceTransaction === 'string') {
+    balanceTransaction = options
+      ? await stripe.balanceTransactions.retrieve(balanceTransaction, options)
+      : await stripe.balanceTransactions.retrieve(balanceTransaction);
+  }
+  if (!balanceTransaction || typeof balanceTransaction === 'string') return null;
+  return {
+    id: balanceTransaction.id,
+    fee: Number(balanceTransaction.fee || 0),
+    net: Number(balanceTransaction.net || 0),
+  };
+};
+
 export async function POST(req: Request) {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeKey) {
@@ -157,10 +276,13 @@ export async function POST(req: Request) {
         .eq('id', feeRecordId)
         .maybeSingle();
 
+      const paidAt = new Date().toISOString();
+      const alreadyRecorded = Boolean(paymentIntentId && currentFee?.stripe_payment_intent_id === paymentIntentId);
       const cashPaid = Number(currentFee?.paid_amount_cash || 0);
-      const stripePaid = Number(currentFee?.paid_amount_stripe || 0) + amountPaid;
+      const stripePaid = Number(currentFee?.paid_amount_stripe || 0) + (alreadyRecorded ? 0 : amountPaid);
       const totalPaid = cashPaid + stripePaid;
       const billingAmount = Number(currentFee?.expected_amount || currentFee?.billing_amount || currentFee?.amount || amountPaid);
+      const stripeFee = paymentIntentId ? await getStripeFeeDetails(stripe, event, paymentIntentId) : null;
 
       await updateFeeRecordWithFallback(supabase, feeRecordId, {
         paid_amount_cash: cashPaid,
@@ -170,8 +292,15 @@ export async function POST(req: Request) {
         last_payment_method: 'stripe',
         status: totalPaid >= billingAmount ? 'paid' : 'partial',
         stripe_payment_intent_id: paymentIntentId,
-        paid_at: new Date().toISOString(),
+        stripe_balance_transaction_id: stripeFee?.id || null,
+        stripe_fee_amount: stripeFee?.fee || 0,
+        stripe_net_amount: stripeFee?.net ?? amountPaid,
+        paid_at: currentFee?.paid_at || paidAt,
       });
+
+      if (stripeFee && paymentIntentId) {
+        await insertStripeFeeSettlement(supabase, currentFee, paymentIntentId, stripeFee.id, stripeFee.fee, paidAt);
+      }
     }
   }
 

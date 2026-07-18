@@ -26,7 +26,8 @@ VALUES
   ('expense', '集会所管理費', 150, TRUE),
   ('expense', '慶弔費', 160, TRUE),
   ('expense', '事業費', 170, TRUE),
-  ('expense', '予備費', 180, TRUE)
+  ('expense', '支払手数料', 180, TRUE),
+  ('expense', '予備費', 190, TRUE)
 ON CONFLICT (type, name) DO UPDATE
 SET sort_order = EXCLUDED.sort_order,
     is_active = TRUE,
