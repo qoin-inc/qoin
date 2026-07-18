@@ -103,3 +103,14 @@
 - 計画時ビルドID: `OzYox6XRDhi27WYDzPYod`
 - 本番ビルドID: `vHyI2a1_SOoMVc69rp6ln`
 - 公開URL疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+
+## 施設予約のID型不一致エラー対応
+
+- スマホの施設予約で `column "facility_id" is of type uuid but expression is of type bigint` が表示される問題を調査しました。
+- 本番DBでは、現行の `facilities.id` がBIGINTである一方、既存の `facility_reservations.facility_id` は旧UUID型のままであることを確認しました。
+- 会員名簿も `resident_rosters.id` がUUIDである一方、後付けの `facility_reservations.roster_id` はBIGINTであり、予約RPCに2か所の型不一致がありました。
+- 既存予約を削除・変換せず保持するため、`facility_bigint_id` を追加し、会員参照には既存の正しいUUID列 `resident_roster_id` を使用する非破壊移行を作成しました。
+- `docs/sql/facility_reservation_id_type_fix_2026-07-18.sql` を本番Supabaseへ適用し、現行施設ID列がBIGINT、旧施設ID列がUUIDのまま保持、予約RPCが有効であることを確認しました。
+- 予約RPCをトランザクション内で実行し、BIGINT施設ID・UUID会員IDで予約行を正常作成できることを確認後、ロールバックしました。検証行が残っていないことも確認済みです。
+- 会員画面と管理画面は `facility_bigint_id` を優先して施設を照合し、旧予約は従来の `facility_id` へフォールバックするよう修正しました。
+- `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。

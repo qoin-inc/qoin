@@ -100,6 +100,7 @@ type Facility = {
 type FacilityReservation = {
   id: number | string;
   facility_id?: number | string | null;
+  facility_bigint_id?: number | string | null;
   facility_name?: string | null;
   applicant_name?: string | null;
   resident_name?: string | null;
@@ -240,6 +241,10 @@ const nthWeekdayOfMonth = (year: number, month: number, weekday: number, nth: nu
   const firstWeekday = new Date(year, month, 1).getDay();
   return 1 + ((7 + weekday - firstWeekday) % 7) + ((nth - 1) * 7);
 };
+
+const facilityReservationFacilityId = (reservation: FacilityReservation) => (
+  reservation.facility_bigint_id ?? reservation.facility_id
+);
 
 const equinoxDay = (year: number, season: "spring" | "autumn") => {
   const base = season === "spring" ? 20.8431 : 23.2488;
@@ -697,7 +702,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const approvedFacilityReservations = facilityReservations.filter((reservation) => reservation.status === "approved");
   const selectedFacility = facilities.find((facility) => String(facility.id) === String(facilityReservationDraft.facilityId));
   const selectedFacilityApprovedReservations = approvedFacilityReservations.filter(
-    (reservation) => String(reservation.facility_id) === String(facilityReservationDraft.facilityId),
+    (reservation) => String(facilityReservationFacilityId(reservation)) === String(facilityReservationDraft.facilityId),
   );
   const liveCalendarDays = useMemo(() => {
     const first = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
@@ -720,10 +725,10 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         .map((reservation) => ({
           id: `facility-${reservation.id}`,
           kind: "facility",
-          label: `${reservation.start_time || ""}${reservation.end_time ? `-${reservation.end_time}` : ""} ${reservation.facility_name || facilityNameById(reservation.facility_id)}`,
+          label: `${reservation.start_time || ""}${reservation.end_time ? `-${reservation.end_time}` : ""} ${reservation.facility_name || facilityNameById(facilityReservationFacilityId(reservation))}`,
           onSelect: () => setFacilityReservationDraft((current) => ({
             ...current,
-            facilityId: String(reservation.facility_id || ""),
+            facilityId: String(facilityReservationFacilityId(reservation) || ""),
             reservationDate: key,
           })),
         })) : [];
@@ -959,7 +964,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
 
   const hasApprovedFacilityReservationConflict = (facilityId: string, reservationDate: string, startTime: string, endTime: string) => {
     return approvedFacilityReservations.some((reservation) => (
-      String(reservation.facility_id) === String(facilityId) &&
+      String(facilityReservationFacilityId(reservation)) === String(facilityId) &&
       dateKey(reservation.reservation_date) === dateKey(reservationDate) &&
       timeRangesOverlap(startTime, endTime, reservation.start_time, reservation.end_time)
     ));
@@ -1064,15 +1069,17 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     setLiveMessage("");
     try {
       const reservationPayload = {
-        facility_id: facility.id,
+        facility_bigint_id: facility.id,
         facility_name: facility.name || "施設",
+        title: facility.name || "施設",
         neighborhood_id: townId,
-        roster_id: residentRosterId,
+        resident_roster_id: residentRosterId,
         user_auth_id: userId || null,
         applicant_name: applicantName,
         resident_name: applicantName,
         participant_count: participantCount,
         people_count: participantCount,
+        num_people: participantCount,
         reservation_date: facilityReservationDraft.reservationDate,
         start_time: facilityReservationDraft.startTime,
         end_time: facilityReservationDraft.endTime,

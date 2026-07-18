@@ -1,17 +1,29 @@
--- システム管理者による施設管理と、会員による施設予約RPC。
--- Supabase SQL Editorで実行してください。
-
-DROP POLICY IF EXISTS facilities_system_admin_all ON public.facilities;
-CREATE POLICY facilities_system_admin_all
-ON public.facilities
-FOR ALL
-TO authenticated
-USING ((auth.jwt() ->> 'email') = 'admin@el-town.jp')
-WITH CHECK ((auth.jwt() ->> 'email') = 'admin@el-town.jp');
+-- Preserve the legacy UUID facility_id while linking new reservations to the
+-- current BIGINT facilities table.
 
 ALTER TABLE public.facility_reservations
-  ADD COLUMN IF NOT EXISTS facility_bigint_id BIGINT REFERENCES public.facilities(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS facility_bigint_id BIGINT,
   ADD COLUMN IF NOT EXISTS resident_roster_id UUID;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.facility_reservations'::regclass
+      AND conname = 'facility_reservations_facility_bigint_id_fkey'
+  ) THEN
+    ALTER TABLE public.facility_reservations
+      ADD CONSTRAINT facility_reservations_facility_bigint_id_fkey
+      FOREIGN KEY (facility_bigint_id)
+      REFERENCES public.facilities(id)
+      ON DELETE CASCADE;
+  END IF;
+END;
+$$;
+
+CREATE INDEX IF NOT EXISTS idx_facility_reservations_bigint_facility_date_status
+  ON public.facility_reservations(facility_bigint_id, reservation_date, status);
 
 CREATE OR REPLACE FUNCTION public.create_facility_reservation(
   p_facility_id BIGINT,
@@ -71,14 +83,16 @@ BEGIN
   END IF;
 
   INSERT INTO public.facility_reservations (
-    facility_bigint_id, facility_name, title, neighborhood_id, resident_roster_id, user_auth_id,
-    applicant_name, resident_name, participant_count, people_count, num_people,
+    facility_bigint_id, facility_name, title, neighborhood_id,
+    resident_roster_id, user_auth_id, applicant_name, resident_name,
+    participant_count, people_count, num_people,
     reservation_date, start_time, end_time, status, created_at, updated_at
   ) VALUES (
-    target_facility.id, COALESCE(target_facility.name, '施設'), COALESCE(target_facility.name, '施設'), target_facility.neighborhood_id,
-    target_roster.id, auth.uid()::TEXT, NULLIF(BTRIM(p_applicant_name), ''), NULLIF(BTRIM(p_applicant_name), ''),
-    p_participant_count, p_participant_count, p_participant_count, p_reservation_date, normalized_start, normalized_end,
-    'pending', NOW(), NOW()
+    target_facility.id, COALESCE(target_facility.name, '施設'), COALESCE(target_facility.name, '施設'),
+    target_facility.neighborhood_id, target_roster.id, auth.uid()::TEXT,
+    NULLIF(BTRIM(p_applicant_name), ''), NULLIF(BTRIM(p_applicant_name), ''),
+    p_participant_count, p_participant_count, p_participant_count,
+    p_reservation_date, normalized_start, normalized_end, 'pending', NOW(), NOW()
   ) RETURNING * INTO saved;
 
   RETURN to_jsonb(saved);
@@ -89,3 +103,9 @@ REVOKE ALL ON FUNCTION public.create_facility_reservation(BIGINT, DATE, TEXT, TE
 GRANT EXECUTE ON FUNCTION public.create_facility_reservation(BIGINT, DATE, TEXT, TEXT, INTEGER, TEXT) TO authenticated;
 
 NOTIFY pgrst, 'reload schema';
+
+SELECT
+  (SELECT data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'facilities' AND column_name = 'id') AS facilities_id_type,
+  (SELECT data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'facility_reservations' AND column_name = 'facility_id') AS legacy_facility_id_type,
+  (SELECT data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'facility_reservations' AND column_name = 'facility_bigint_id') AS current_facility_id_type,
+  to_regprocedure('public.create_facility_reservation(bigint,date,text,text,integer,text)') IS NOT NULL AS rpc_ready;

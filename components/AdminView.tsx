@@ -104,6 +104,10 @@ type WorkItem = {
   source?: any;
 };
 
+const facilityReservationFacilityId = (reservation: any) => (
+  reservation?.facility_bigint_id ?? reservation?.facility_id
+);
+
 type IntegratedWorkFilter = "all" | "circular" | "notice" | "event" | "assembly" | "live" | "facility";
 
 type PublishType = "circular" | "notice" | "event" | "assembly";
@@ -1715,7 +1719,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   };
 
   const handleFacilityDelete = async (facility: any) => {
-    const reservationCount = liveFacilityData.reservations.filter((reservation) => String(reservation.facility_id) === String(facility.id)).length;
+    const reservationCount = liveFacilityData.reservations.filter((reservation) => String(facilityReservationFacilityId(reservation)) === String(facility.id)).length;
     const confirmed = typeof window === "undefined" || window.confirm(`「${facility.name || "施設"}」を削除します。${reservationCount ? `予約申込 ${reservationCount}件も削除される可能性があります。` : ""}よろしいですか？`);
     if (!confirmed) return;
 
@@ -1737,9 +1741,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       setLiveFacilityData((current) => ({
         ...current,
         facilities: current.facilities.filter((item) => String(item.id) !== String(facility.id)),
-        reservations: current.reservations.filter((reservation) => String(reservation.facility_id) !== String(facility.id)),
+        reservations: current.reservations.filter((reservation) => String(facilityReservationFacilityId(reservation)) !== String(facility.id)),
       }));
-      setWorkItems((current) => current.filter((item) => item.id !== `facility-${facility.id}` && !item.replies?.some((reply) => String(reply.facility_id) === String(facility.id))));
+      setWorkItems((current) => current.filter((item) => item.id !== `facility-${facility.id}` && !item.replies?.some((reply) => String(facilityReservationFacilityId(reply)) === String(facility.id))));
       if (String(editingFacilityId) === String(facility.id)) cancelFacilityEdit();
       setLiveFacilityMessage("施設を削除しました。");
     } catch (error: any) {
@@ -4302,7 +4306,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const pendingReservations = liveFacilityData.reservations.filter((reservation) => reservation.status !== "approved" && reservation.status !== "rejected");
     const approvedReservations = liveFacilityData.reservations.filter((reservation) => reservation.status === "approved");
     const rejectedReservations = liveFacilityData.reservations.filter((reservation) => reservation.status === "rejected");
-    const facilityName = (reservation: any) => reservation.facility_name || liveFacilityData.facilities.find((facility) => String(facility.id) === String(reservation.facility_id))?.name || "施設";
+    const facilityName = (reservation: any) => reservation.facility_name || liveFacilityData.facilities.find((facility) => String(facility.id) === String(facilityReservationFacilityId(reservation)))?.name || "施設";
 
     return (
       <section className="admin-basic-panel admin-live-panel" aria-label="Web会議・施設予約">
