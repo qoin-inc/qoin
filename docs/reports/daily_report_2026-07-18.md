@@ -114,3 +114,9 @@
 - 予約RPCをトランザクション内で実行し、BIGINT施設ID・UUID会員IDで予約行を正常作成できることを確認後、ロールバックしました。検証行が残っていないことも確認済みです。
 - 会員画面と管理画面は `facility_bigint_id` を優先して施設を照合し、旧予約は従来の `facility_id` へフォールバックするよう修正しました。
 - `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
+- 修正コミット `6e8ba24` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5acfd5ea4c7f4170e1a780`
+- デプロイ対象コミット: `6e8ba24699a95caf3786b6df597a09c531359533`
+- 計画時ビルドID: `4wfhd-CkHL10HhPw74UtN`
+- 本番ビルドID: `2NnpvGA4xaR2gpKLEk5tl`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
