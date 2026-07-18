@@ -104,6 +104,13 @@
 - ロールバック後の本番データは申込1件、検証行0件、重複0件であることを確認しました。
 - `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
 - この修正もGitHubへpush後、承認付きNetlify本番デプロイを必ず実施し、結果を履歴へ追記します。
+- Live申込一意化の修正コミット `b86298d` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5ae581a625a72f96ec45e2`
+- デプロイ対象コミット: `b86298da4d134216c31f84606eb7e609fa4f9d03`
+- 計画時ビルドID: `gNaqWfuzOeZaiIf7xto97`
+- 本番ビルドID: `Y1IZbb_aCRrtWu-MMiDjh`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+- 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
 
 ## 次の確認
 
