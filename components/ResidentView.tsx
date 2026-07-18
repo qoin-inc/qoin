@@ -1762,15 +1762,14 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 aria-controls="facility-booking-form"
               >
                 <span><i className="fas fa-pen-to-square" /></span>
-                <span><strong>{editingFacilityReservationId ? "施設予約を修正" : "施設予約を入力"}</strong><small>施設・日付・時間・人数・使用用途を入力します。</small></span>
+                <span>
+                  <strong>{editingFacilityReservationId ? "施設予約を修正" : "施設予約を入力"}</strong>
+                  <small>{editingFacilityReservationId ? "保存すると承認状態は予約中へ戻ります。" : "施設・日付・時間・人数・使用用途を入力します。"}</small>
+                </span>
                 <i className={`fas fa-chevron-${facilityBookingOpen ? "up" : "down"}`} />
               </button>
               {facilityBookingOpen && (
               <form id="facility-booking-form" className="el-live-form el-facility-booking-card" onSubmit={handleFacilityReservationSubmit}>
-                <div className="el-facility-booking-heading">
-                  <span><i className="fas fa-pen-to-square" /></span>
-                  <div><strong>{editingFacilityReservationId ? "施設予約を修正" : "施設予約を入力"}</strong><small>{editingFacilityReservationId ? "保存すると承認状態は予約中へ戻ります。" : "施設を選び、利用内容を1枚のカードで登録します。"}</small></div>
-                </div>
                 <div className="el-reply-grid">
                   <label>
                     <span>施設</span>
