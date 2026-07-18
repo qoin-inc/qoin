@@ -146,6 +146,13 @@
 - 本人以外の予約はRPC側でも拒否し、修正後の時間重複チェックと承認状態の予約中への戻しをDB側で保証します。
 - `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
 - 修正コミットをGitHubへpushした後、承認付きNetlify本番デプロイを必ず実施し、結果をこの履歴へ追記します。
+- 修正コミット `598933a` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5b4e7680a466843ab22bb3`
+- デプロイ対象コミット: `598933a3ebdfb5a7a972ee19cacc12dabf73ee94`
+- 計画時ビルドID: `ulZbW5t4PZzO-AfGLmaeZ`
+- 本番ビルドID: `m9qeJDwE-bOpY1lfiV04n`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+- 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
 
 ## Live申込状態・施設予約フローの改善
 
