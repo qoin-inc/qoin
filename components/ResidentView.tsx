@@ -704,6 +704,14 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const selectedFacilityApprovedReservations = approvedFacilityReservations.filter(
     (reservation) => String(facilityReservationFacilityId(reservation)) === String(facilityReservationDraft.facilityId),
   );
+  const openLiveSession = (session: LiveSession) => {
+    setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }));
+    setLiveMessage("");
+    setLiveViewMode("cards");
+    window.requestAnimationFrame(() => {
+      document.getElementById(`live-session-${session.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
   const liveCalendarDays = useMemo(() => {
     const first = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
     const start = new Date(first);
@@ -718,7 +726,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
           id: `live-${session.id}`,
           kind: "live",
           label: `${session.event_time ? `${session.event_time} ` : ""}${session.title || "Web会議"}`,
-          onSelect: () => setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) })),
+          onSelect: () => openLiveSession(session),
         })) : [];
       const facilityEntries: LiveCalendarEntry[] = activeLiveScreen === "facility" ? approvedFacilityReservations
         .filter((reservation) => dateKey(reservation.reservation_date) === key)
@@ -1522,7 +1530,11 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 {liveSessions.map((session) => {
                   const url = liveSessionUrl(session);
                   return (
-                    <article key={session.id} className="el-live-card">
+                    <article
+                      key={session.id}
+                      id={`live-session-${session.id}`}
+                      className={`el-live-card ${String(liveReplyDraft.sessionId) === String(session.id) ? "selected" : ""}`.trim()}
+                    >
                       <div>
                         <span className="el-date">{liveSessionDateKey(session) || "日付未設定"}</span>
                         <strong>{session.title || "Web会議"}</strong>
@@ -1530,7 +1542,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                         <p>{session.content || session.description || "内容はまだ登録されていません。"}</p>
                       </div>
                       {url && <a href={url} target="_blank" rel="noreferrer"><i className="fas fa-arrow-up-right-from-square" /> 開催URLを開く</a>}
-                      <button type="button" className="el-secondary-action compact" onClick={() => setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }))}>
+                      <button type="button" className="el-secondary-action compact" onClick={() => openLiveSession(session)}>
                         この会議を選択
                       </button>
                     </article>

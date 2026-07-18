@@ -1130,16 +1130,24 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
 
         const liveItems: WorkItem[] = (liveSessions.data || []).map((row: any) => {
           const replies = liveRepliesBySessionId.get(String(row.id)) || [];
+          const participantTotal = replies.reduce(
+            (sum: number, reply: any) => sum + Number(reply.participant_count ?? reply.people_count ?? 0),
+            0,
+          );
           return {
             id: `live-${row.id}`,
             type: "live",
             title: row.title || "Web会議",
             date: toDisplayDate(row.event_date || row.starts_at || row.created_at),
-            detail: `${row.provider === "youtube" ? "YouTube" : "LINE"}案内 / 申込 ${replies.length}件`,
+            detail: `${row.provider === "youtube" ? "YouTube" : "LINE"}案内 / 申込 ${replies.length}件 / 参加 ${participantTotal}名`,
             status: row.status || "予定",
             action: "参加者",
             tone: "live",
             replies,
+            replyMetrics: [
+              { label: "参加申込", value: replies.length, unit: "件" },
+              { label: "参加人数", value: participantTotal, unit: "名" },
+            ],
           };
         });
 
@@ -4404,6 +4412,10 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 {liveFacilityData.liveSessions.length === 0 && <div><span>Web会議予定はまだありません。</span><em>未登録</em></div>}
                 {liveFacilityData.liveSessions.map((session) => {
                   const replies = liveFacilityData.liveApplications.filter((reply) => String(reply.live_session_id) === String(session.id));
+                  const participantTotal = replies.reduce(
+                    (sum, reply) => sum + Number(reply.participant_count ?? reply.people_count ?? 0),
+                    0,
+                  );
                   return (
                     <div key={session.id}>
                       <span>
@@ -4414,7 +4426,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                         ))}
                       </span>
                       <div className="admin-list-actions">
-                        <em>参加 {replies.length}件</em>
+                        <em>申込 {replies.length}件 / 合計 {participantTotal}名</em>
                         <button type="button" onClick={() => startLiveSessionEdit(session)} disabled={liveFacilityBusy}>編集</button>
                         <button type="button" className="delete" onClick={() => handleLiveSessionDelete(session)} disabled={liveFacilityBusy}>削除</button>
                       </div>

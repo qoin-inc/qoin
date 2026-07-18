@@ -149,6 +149,24 @@ CREATE INDEX IF NOT EXISTS idx_live_sessions_neighborhood_date
 CREATE INDEX IF NOT EXISTS idx_live_session_applications_session
   ON public.live_session_applications(live_session_id, applied_at);
 
+ALTER TABLE public.live_session_applications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS live_session_applications_select_active_admins
+ON public.live_session_applications;
+
+CREATE POLICY live_session_applications_select_active_admins
+ON public.live_session_applications
+FOR SELECT
+TO authenticated
+USING (
+  neighborhood_id IN (
+    SELECT admins.neighborhood_id
+    FROM public.neighborhood_admins admins
+    WHERE admins.admin_auth_id = auth.uid()
+      AND admins.status = 'active'
+  )
+);
+
 CREATE INDEX IF NOT EXISTS idx_facilities_neighborhood
   ON public.facilities(neighborhood_id, is_active);
 
