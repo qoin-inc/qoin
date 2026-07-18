@@ -133,3 +133,13 @@
 - 計画時ビルドID: `4wfhd-CkHL10HhPw74UtN`
 - 本番ビルドID: `2NnpvGA4xaR2gpKLEk5tl`
 - 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+
+## Live参加申込修正のGitHub・本番反映
+
+- 修正コミット `72bb7d5` をGitHubの `deploy-ui-restore` ブランチへpushしました。
+- Netlify本番デプロイID: `6a5ad74a7e21772c0da5a411`
+- デプロイ対象コミット: `72bb7d524b6c8fa3c999e32029f535cd57b76262`
+- 計画時ビルドID: `hLH-OYnHW7koSQ3-Xx72_`
+- 本番ビルドID: `m1qB0gX6qE0VK7b_Y5deL`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+- 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
