@@ -194,3 +194,10 @@
 - 半透明背景、控えめな影、濃紺の選択状態により、画面を遮りにくい軽量なデザインへ整えました。
 - `npx.cmd tsc --noEmit --incremental false` と `npm.cmd run build` に成功しました。
 - 修正コミットをGitHubへpushした後、承認付きNetlify本番デプロイを必ず実施し、結果をこの履歴へ追記します。
+- UI修正コミット `77f2773` をGitHubの `deploy-ui-restore` ブランチへpushし、Netlify本番へ反映しました。
+- Netlify本番デプロイID: `6a5aea8f6657f1697ab5de81`
+- デプロイ対象コミット: `77f2773ddb6efe8a2137099d7ef8243864dabd4d`
+- 計画時ビルドID: `RqK44_224YDWWKiFYD5m1`
+- 本番ビルドID: `tDCj1xl2p5zbf8utyv0D9`
+- 公開URL `https://el-town.jp` の疎通、コミット不変、ビルドID一致、デプロイID取得を確認し、本番デプロイは検証済みです。
+- 承認付きデプロイ履歴は `.deploy/deployments.jsonl` にも `verified` として記録されています。
