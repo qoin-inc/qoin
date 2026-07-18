@@ -121,7 +121,6 @@ type LiveCalendarEntry = {
 
 type LiveReplyDraft = {
   sessionId: string;
-  participantCount: string;
 };
 
 type FacilityReservationDraft = {
@@ -420,7 +419,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [replyBusy, setReplyBusy] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
   const [boardViewMode, setBoardViewMode] = useState<ViewMode>("cards");
-  const [liveReplyDraft, setLiveReplyDraft] = useState<LiveReplyDraft>({ sessionId: "", participantCount: "1" });
+  const [liveReplyDraft, setLiveReplyDraft] = useState<LiveReplyDraft>({ sessionId: "" });
+  const [liveParticipantCounts, setLiveParticipantCounts] = useState<Record<string, string>>({});
   const [facilityReservationDraft, setFacilityReservationDraft] = useState<FacilityReservationDraft>({
     facilityId: "",
     applicantName: residentName || "",
@@ -978,11 +978,11 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     ));
   };
 
-  const handleLiveReply = async (event: React.FormEvent) => {
+  const handleLiveReply = async (event: React.FormEvent, selectedSession?: LiveSession) => {
     event.preventDefault();
-    const sessionId = liveReplyDraft.sessionId || String(liveSessions[0]?.id || "");
-    const session = liveSessions.find((item) => String(item.id) === String(sessionId));
-    const participantCount = Math.max(Number(liveReplyDraft.participantCount || 0), 0);
+    const sessionId = String(selectedSession?.id ?? liveReplyDraft.sessionId ?? "");
+    const session = selectedSession || liveSessions.find((item) => String(item.id) === sessionId);
+    const participantCount = Math.max(Number(liveParticipantCounts[sessionId] ?? 1), 0);
     if (!session) {
       setLiveMessage("参加するWeb会議を選択してください。");
       return;
@@ -1002,6 +1002,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
       });
       if (rpcResult.error) throw rpcResult.error;
       setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }));
+      setLiveParticipantCounts((current) => ({ ...current, [String(session.id)]: String(participantCount) }));
       setLiveMessage("Web会議の参加申込を保存しました。再申込時は参加人数を更新します。");
     } catch (error: any) {
       setLiveMessage(error?.message || "Web会議の参加申込に失敗しました。");
@@ -1518,35 +1519,27 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                         <p>{session.content || session.description || "内容はまだ登録されていません。"}</p>
                       </div>
                       {url && <a href={url} target="_blank" rel="noreferrer"><i className="fas fa-arrow-up-right-from-square" /> 開催URLを開く</a>}
-                      <button type="button" className="el-secondary-action compact" onClick={() => openLiveSession(session)}>
-                        この会議を選択
-                      </button>
+                      <form className="el-live-card-reply" onSubmit={(event) => handleLiveReply(event, session)}>
+                        <label>
+                          <span>参加人数</span>
+                          <input
+                            value={liveParticipantCounts[String(session.id)] ?? "1"}
+                            onChange={(event) => setLiveParticipantCounts((current) => ({ ...current, [String(session.id)]: event.target.value }))}
+                            inputMode="numeric"
+                            min="1"
+                            type="number"
+                            aria-label={`${session.title || "Web会議"}の参加人数`}
+                          />
+                        </label>
+                        <button type="submit" className="el-primary-action compact" disabled={replyBusy}>
+                          <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-floppy-disk"}`} /> 参加申込を保存
+                        </button>
+                      </form>
                     </article>
                   );
                 })}
                 {!loading && liveSessions.length === 0 && <div className="el-empty">Web会議の案内はまだありません。</div>}
               </div>
-
-              <form className="el-live-form" onSubmit={handleLiveReply}>
-                <div className="el-reply-grid">
-                  <label>
-                    <span>参加するWeb会議</span>
-                    <select value={liveReplyDraft.sessionId} onChange={(event) => setLiveReplyDraft((current) => ({ ...current, sessionId: event.target.value }))}>
-                      <option value="">選択してください</option>
-                      {liveSessions.map((session) => (
-                        <option key={session.id} value={String(session.id)}>{session.title || "Web会議"}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    <span>参加人数</span>
-                    <input value={liveReplyDraft.participantCount} onChange={(event) => setLiveReplyDraft((current) => ({ ...current, participantCount: event.target.value }))} inputMode="numeric" />
-                  </label>
-                </div>
-                <button className="el-primary-action" disabled={replyBusy || liveSessions.length === 0}>
-                  <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-video"}`} /> Web会議に申し込む
-                </button>
-              </form>
             </section>
             )}
 

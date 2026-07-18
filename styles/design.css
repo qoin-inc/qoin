@@ -184,6 +184,11 @@ button { cursor: pointer; border: 0; }
 .el-live-card strong { display: block; margin: 6px 0 3px; color: #111827; font-size: 15px; font-weight: 900; }
 .el-live-card small, .el-live-card p { display: block; margin: 0; color: #64748b; font-size: 12px; line-height: 1.6; font-weight: 800; }
 .el-live-card a { width: fit-content; display: inline-flex; align-items: center; gap: 7px; color: #1d4ed8; font-size: 12px; font-weight: 900; }
+.el-live-card-reply { display: grid; grid-template-columns: minmax(110px, .6fr) minmax(150px, 1fr); gap: 10px; align-items: end; padding-top: 10px; border-top: 1px solid #e0e7ff; }
+.el-live-card-reply label { display: grid; gap: 5px; color: #475569; font-size: 11px; font-weight: 900; }
+.el-live-card-reply input { width: 100%; min-height: 42px; border: 1px solid #c7d2fe; border-radius: 8px; background: #f8fafc; color: #111827; padding: 8px 11px; font-size: 15px; font-weight: 900; }
+.el-live-card-reply .el-primary-action { min-height: 42px; margin: 0; }
+@media (max-width: 420px) { .el-live-card-reply { grid-template-columns: 1fr; } }
 .el-secondary-action.compact { min-height: 42px; margin-top: 0; }
 .el-facility-list { display: grid; gap: 10px; }
 .el-facility-card { width: 100%; display: grid; gap: 4px; text-align: left; border: 1px solid #dbeafe; border-left: 6px solid #059669; border-radius: 8px; background: #fff; padding: 13px 14px; }
@@ -200,10 +205,11 @@ button { cursor: pointer; border: 0; }
 .form-alert.success { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
 .el-danger-action { width: 100%; min-height: 50px; margin-top: 16px; border: 1px solid #fecaca; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #dc2626; color: #fff; font-weight: 900; box-shadow: 0 8px 18px rgba(220,38,38,.18); }
 .el-danger-action:disabled { opacity: .6; cursor: not-allowed; }
-.el-floating-view-switch { position: absolute; left: 50%; bottom: 116px; z-index: 6; width: min(318px, calc(100% - 32px)); transform: translateX(-50%); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 8px; border: 1px solid #fed7aa; border-radius: 8px; background: rgba(255, 247, 237, .96); box-shadow: 0 12px 24px rgba(17,24,39,.18); }
-.el-floating-view-switch button { min-height: 54px; border: 1px solid #fdba74; border-radius: 8px; background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%); color: #9a3412; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 900; box-shadow: inset 0 -3px 0 rgba(194,65,12,.12), 0 4px 10px rgba(194,65,12,.1); }
-.el-floating-view-switch button.active { background: linear-gradient(180deg, #fb923c 0%, #ea580c 100%); border-color: #ea580c; color: #fff; box-shadow: inset 0 -4px 0 rgba(124,45,18,.25), 0 8px 16px rgba(234,88,12,.24); transform: translateY(-1px); }
-.el-floating-view-switch button:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(124,45,18,.22); }
+.el-floating-view-switch { position: absolute; left: 50%; bottom: 110px; z-index: 6; width: min(238px, calc(100% - 48px)); transform: translateX(-50%); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 3px; border: 1px solid rgba(148,163,184,.55); border-radius: 999px; background: rgba(255,255,255,.92); box-shadow: 0 8px 22px rgba(15,23,42,.14); backdrop-filter: blur(12px); }
+.el-floating-view-switch button { min-height: 34px; border: 0; border-radius: 999px; background: transparent; color: #64748b; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 12px; font-size: 11px; line-height: 1; font-weight: 900; box-shadow: none; transition: color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease; }
+.el-floating-view-switch button i { font-size: 12px; }
+.el-floating-view-switch button.active { background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: #fff; box-shadow: 0 4px 10px rgba(15,23,42,.24); transform: none; }
+.el-floating-view-switch button:active { transform: scale(.98); }
 .el-bottom-nav { order: 1; flex: 0 0 auto; height: 96px; padding: 9px 8px 10px; background: #fff; border-top: 1px solid var(--border); display: grid; gap: 6px; box-shadow: 0 -8px 18px rgba(17,24,39,.06); }
 .el-bottom-nav-toggle { order: 2; position: relative; z-index: 8; width: 100%; min-height: 32px; flex: 0 0 32px; padding: 3px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-top: 1px solid #cbd5e1; background: #f8fafc; color: #475569; font-size: 11px; line-height: 1; font-weight: 900; box-shadow: 0 -2px 7px rgba(17,24,39,.06); }
 .el-bottom-nav-toggle.is-hidden { color: var(--qoin-main-dark); background: #fff; }
