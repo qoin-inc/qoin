@@ -24,6 +24,7 @@ type BasicData = {
   members: any[];
   fees: any[];
   systemBillings: any[];
+  systemPaymentProfile: any | null;
   admins: any[];
   setting: any | null;
 };
@@ -864,7 +865,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [integratedFacilityStatus, setIntegratedFacilityStatus] = useState<FacilityReservationStatusFilter>("all");
   const [integratedFacilityMonth, setIntegratedFacilityMonth] = useState("");
   const [integratedFacilityDate, setIntegratedFacilityDate] = useState("");
-  const [basicData, setBasicData] = useState<BasicData>({ town: null, members: [], fees: [], systemBillings: [], admins: [], setting: null });
+  const [basicData, setBasicData] = useState<BasicData>({ town: null, members: [], fees: [], systemBillings: [], systemPaymentProfile: null, admins: [], setting: null });
   const [liveFacilityData, setLiveFacilityData] = useState<LiveFacilityData>({ liveSessions: [], liveApplications: [], facilities: [], reservations: [] });
   const [activeAdminScreen, setActiveAdminScreen] = useState<AdminScreenMode>("dashboard");
   const [activeDashboardMenu, setActiveDashboardMenu] = useState<DashboardMenu>("basic");
@@ -989,7 +990,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const fetchDashboard = async () => {
       setLoading(true);
       try {
-        const [townInfo, billingRows, memberRows, adminRows, pushes, feeRecords, systemUsageBillings, settings, circulars, facilities, reservations, liveSessions, liveApplications] = await Promise.all([
+        const [townInfo, billingRows, memberRows, adminRows, pushes, feeRecords, systemUsageBillings, systemPaymentProfile, settings, circulars, facilities, reservations, liveSessions, liveApplications] = await Promise.all([
           supabase.from("neighborhoods").select("*").eq("id", townId).maybeSingle(),
           supabase
             .from("resident_rosters")
@@ -1007,6 +1008,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             .lt("created_at", month.end),
           supabase.from("fee_records").select("*").eq("neighborhood_id", townId),
           supabase.from("system_usage_billings").select("*").eq("neighborhood_id", townId).order("billing_month", { ascending: false }).limit(36),
+          supabase.from("system_usage_payment_profiles").select("*").eq("neighborhood_id", townId).maybeSingle(),
           supabase.from("system_settings").select("*").eq("neighborhood_id", townId).maybeSingle(),
           supabase.from("circulars").select("*").eq("neighborhood_id", townId).order("created_at", { ascending: false }).limit(30),
           supabase.from("facilities").select("*").eq("neighborhood_id", townId).order("name", { ascending: true }).limit(100),
@@ -1050,6 +1052,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           members: memberListRows,
           fees: feeRows,
           systemBillings: systemUsageBillings.data || [],
+          systemPaymentProfile: systemPaymentProfile.data || null,
           admins: adminRows.data || [],
           setting: setting || null,
         });
@@ -3202,12 +3205,30 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     ["プッシュ超過単価", yen(systemPushUnitPrice)],
     ["消費税率", `${systemTaxRate}%`],
   ];
+  const systemPaymentProfile = basicData.systemPaymentProfile;
+  const systemPaymentMethod = systemPaymentProfile?.payment_method || "";
+  const systemPaymentMethodLabel = systemPaymentMethod === "card"
+    ? "クレジットカード自動決済"
+    : systemPaymentMethod === "bank_transfer"
+      ? "Stripe銀行振込"
+      : "未選択";
+  const systemCardReady = systemPaymentProfile?.card_setup_status === "ready" && Boolean(systemPaymentProfile?.stripe_default_payment_method_id);
+  const systemCardLabel = systemCardReady
+    ? `${String(systemPaymentProfile?.card_brand || "カード").toUpperCase()} 下4桁 ${systemPaymentProfile?.card_last4 || "----"}`
+    : "カード未登録";
   const systemBillings = basicData.systemBillings || [];
   const selectedSystemBilling = systemBillings.find((billing) => billing.billing_month === systemBillingMonth) || systemBillings[0] || null;
   const systemBillingStatusLabel = (billing: any) => {
     if (!billing) return "未確定";
     if (billing.status === "paid" || billing.paid_at) return "入金済み";
     if (billing.status === "cancelled") return "取消";
+    if (billing.status === "draft") return "16日実績確定";
+    if (billing.status === "payment_method_required") return "決済方法未選択";
+    if (billing.status === "card_setup_required") return "カード登録待ち";
+    if (billing.status === "payment_failed") return "カード決済失敗";
+    if (billing.status === "payment_action_required") return "カード認証待ち";
+    if (billing.status === "invoice_failed") return "請求書発行失敗";
+    if (billing.status === "open") return "請求中";
     return "未入金";
   };
   const systemBillingPdfHtml = (billing: any, type: "invoice" | "receipt") => {
@@ -3297,11 +3318,13 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     setSystemBillingBusy(true);
     setSystemBillingMessage("");
     try {
+      const accessToken = await getAdminAccessToken();
       const response = await fetch("/api/system-usage/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({
           billingId: billing.id,
+          townId,
           amount,
           townName,
           billingMonth: billing.billing_month,
@@ -3321,6 +3344,56 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) throw new Error("管理者ログインを確認できません。再ログインしてください。");
     return session.access_token;
+  };
+
+  const selectSystemUsagePaymentMethod = async (paymentMethod: "card" | "bank_transfer") => {
+    setSystemBillingBusy(true);
+    setSystemBillingMessage("");
+    try {
+      const accessToken = await getAdminAccessToken();
+      const response = await fetch("/api/system-usage/payment-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ townId, paymentMethod }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.profile) throw new Error(data.error || "決済方法を保存できませんでした。");
+      setBasicData((current) => ({ ...current, systemPaymentProfile: data.profile }));
+      setSystemBillingMessage(paymentMethod === "card"
+        ? "カード自動決済を選択しました。続けてカードを登録してください。"
+        : "Stripe銀行振込を選択しました。請求書に団体専用の振込口座が表示されます。");
+    } catch (error: any) {
+      setSystemBillingMessage(error?.message || "決済方法を保存できませんでした。");
+    } finally {
+      setSystemBillingBusy(false);
+    }
+  };
+
+  const startSystemUsageCardSetup = async () => {
+    const stripeWindow = window.open("", "_blank");
+    if (!stripeWindow) {
+      setSystemBillingMessage("カード登録画面を開くには、ポップアップを許可してください。");
+      return;
+    }
+    stripeWindow.opener = null;
+    setSystemBillingBusy(true);
+    setSystemBillingMessage("");
+    try {
+      const accessToken = await getAdminAccessToken();
+      const response = await fetch("/api/system-usage/create-setup-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ townId }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url) throw new Error(data.error || "カード登録画面を作成できませんでした。");
+      stripeWindow.location.href = data.url;
+    } catch (error: any) {
+      stripeWindow.close();
+      setSystemBillingMessage(error?.message || "カード登録を開始できませんでした。");
+    } finally {
+      setSystemBillingBusy(false);
+    }
   };
 
   const syncStripeStatus = useCallback(async (showSuccessMessage = true) => {
@@ -4125,6 +4198,46 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     if (activeBasicFeature === "システム利用料") {
       return (
         <div className="admin-system-billing-screen">
+          <section className="admin-basic-card admin-system-payment-card">
+            <div className="admin-basic-card-heading">
+              <div>
+                <h3>システム利用料の決済方法</h3>
+                <p>団体ごとにカード自動決済またはStripe銀行振込を選択します。</p>
+              </div>
+              <span className="admin-member-count">{systemPaymentMethodLabel}</span>
+            </div>
+            <div className="admin-system-payment-options">
+              <button
+                type="button"
+                className={systemPaymentMethod === "card" ? "active" : ""}
+                onClick={() => void selectSystemUsagePaymentMethod("card")}
+                disabled={systemBillingBusy}
+              >
+                <i className="fas fa-credit-card" />
+                <span><strong>クレジットカード自動決済</strong><small>初回だけカードを登録し、毎月1日に自動決済します。</small></span>
+              </button>
+              <button
+                type="button"
+                className={systemPaymentMethod === "bank_transfer" ? "active" : ""}
+                onClick={() => void selectSystemUsagePaymentMethod("bank_transfer")}
+                disabled={systemBillingBusy}
+              >
+                <i className="fas fa-building-columns" />
+                <span><strong>Stripe銀行振込</strong><small>請求書に団体専用の仮想口座を表示し、入金を自動消し込みします。</small></span>
+              </button>
+            </div>
+            {systemPaymentMethod === "card" && (
+              <div className="admin-system-payment-detail">
+                <div><strong>{systemCardLabel}</strong><small>{systemCardReady ? "毎月1日の自動決済に使用します。" : "自動決済を開始するにはカード登録が必要です。"}</small></div>
+                <button type="button" onClick={() => void startSystemUsageCardSetup()} disabled={systemBillingBusy}>
+                  {systemBillingBusy ? "準備中" : systemCardReady ? "カードを変更" : "カードを登録"}
+                </button>
+              </div>
+            )}
+            {systemPaymentMethod === "bank_transfer" && (
+              <p className="admin-basic-note">団体専用口座は毎月1日に発行されるStripe請求書と決済ページに表示されます。振込後はStripeが自動で消し込みます。</p>
+            )}
+          </section>
           <section className="admin-basic-card">
             <h3>システム利用料</h3>
             <dl className="admin-definition-list">
@@ -4149,9 +4262,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <button type="button" onClick={() => openSystemBillingPdf(selectedSystemBilling, "invoice")}>請求書PDF</button>
                 {(selectedSystemBilling.status === "paid" || selectedSystemBilling.paid_at) ? (
                   <button type="button" onClick={() => openSystemBillingPdf(selectedSystemBilling, "receipt")}>領収書PDF</button>
+                ) : selectedSystemBilling.stripe_hosted_invoice_url ? (
+                  <button type="button" onClick={() => window.open(selectedSystemBilling.stripe_hosted_invoice_url, "_blank", "noopener,noreferrer")}>Stripe請求書を開く</button>
                 ) : (
-                  <button type="button" onClick={() => handleSystemUsagePayment(selectedSystemBilling)} disabled={systemBillingBusy}>
-                    {systemBillingBusy ? "支払い準備中" : "Stripeで支払う"}
+                  <button type="button" onClick={() => handleSystemUsagePayment(selectedSystemBilling)} disabled={systemBillingBusy || Boolean(systemPaymentMethod)}>
+                    {systemBillingBusy ? "支払い準備中" : systemPaymentMethod ? "請求書発行待ち" : "Stripeで支払う"}
                   </button>
                 )}
               </div>
@@ -4186,6 +4301,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                   <span className="admin-system-billing-actions inline">
                     {billing.id !== "empty" && <button type="button" onClick={() => setSystemBillingMonth(billing.billing_month)}>選択</button>}
                     {billing.id !== "empty" && <button type="button" onClick={() => openSystemBillingPdf(billing, "invoice")}>請求書</button>}
+                    {billing.id !== "empty" && billing.stripe_hosted_invoice_url && <button type="button" onClick={() => window.open(billing.stripe_hosted_invoice_url, "_blank", "noopener,noreferrer")}>Stripe</button>}
                     {billing.id !== "empty" && (billing.status === "paid" || billing.paid_at) && <button type="button" onClick={() => openSystemBillingPdf(billing, "receipt")}>領収書</button>}
                   </span>
                 </div>

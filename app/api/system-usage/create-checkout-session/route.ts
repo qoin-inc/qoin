@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { supabase } from "@/lib/supabaseClient";
+import { requireNeighborhoodAdmin } from "@/lib/stripeConnectServer";
 
 const missingColumnFromError = (error: any) => {
   const message = String(error?.message || "");
@@ -35,9 +36,17 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const billingId = String(body.billingId || "");
+  const townId = String(body.townId || "");
 
-  if (!billingId) {
-    return NextResponse.json({ error: "System usage billing ID is missing." }, { status: 400 });
+  if (!billingId || !townId) {
+    return NextResponse.json({ error: "System usage billing ID or town ID is missing." }, { status: 400 });
+  }
+
+  try {
+    await requireNeighborhoodAdmin(req, townId);
+  } catch (error: any) {
+    const message = String(error?.message || "管理者権限を確認できませんでした。");
+    return NextResponse.json({ error: message }, { status: message.includes("権限") ? 403 : 401 });
   }
 
   const { data: billing, error } = await supabase
@@ -52,6 +61,10 @@ export async function POST(req: Request) {
 
   if (!billing) {
     return NextResponse.json({ error: "System usage billing was not found." }, { status: 404 });
+  }
+
+  if (String(billing.neighborhood_id) !== townId) {
+    return NextResponse.json({ error: "この請求を操作する権限がありません。" }, { status: 403 });
   }
 
   if (billing.status === "paid" || billing.paid_at) {

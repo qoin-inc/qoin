@@ -2690,6 +2690,106 @@ button { cursor: pointer; border: 0; }
   grid-column: 1 / -1;
 }
 
+.admin-system-payment-card {
+  grid-column: 1 / -1;
+}
+
+.admin-system-payment-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.admin-system-payment-options > button {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  padding: 14px;
+  text-align: left;
+}
+
+.admin-system-payment-options > button.active {
+  border-color: #38bdf8;
+  background: #f0f9ff;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, .12);
+}
+
+.admin-system-payment-options > button:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.admin-system-payment-options i {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 18px;
+}
+
+.admin-system-payment-options span,
+.admin-system-payment-options strong,
+.admin-system-payment-options small {
+  display: block;
+}
+
+.admin-system-payment-options strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.admin-system-payment-options small {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.admin-system-payment-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+  padding: 12px 14px;
+}
+
+.admin-system-payment-detail strong,
+.admin-system-payment-detail small {
+  display: block;
+}
+
+.admin-system-payment-detail small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.admin-system-payment-detail button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #0284c7;
+  color: #fff;
+  padding: 0 16px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
 .admin-system-billing-actions {
   display: flex;
   flex-wrap: wrap;
@@ -4487,6 +4587,34 @@ button { cursor: pointer; border: 0; }
   font-weight: 900;
 }
 
+.system-admin-billing-commands {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.system-admin-billing-commands button {
+  min-height: 44px;
+  border: 1px solid #bae6fd;
+  border-radius: 9px;
+  background: #fff;
+  color: #0369a1;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.system-admin-billing-commands button.primary {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: #fff;
+}
+
+.system-admin-billing-commands button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
 .system-admin-primary {
   width: 100%;
 }
@@ -4576,6 +4704,10 @@ button { cursor: pointer; border: 0; }
   }
 
   .admin-system-billing-screen {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-system-payment-options {
     grid-template-columns: 1fr;
   }
 
@@ -4780,6 +4912,10 @@ button { cursor: pointer; border: 0; }
   }
 
   .system-admin-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .system-admin-billing-commands {
     grid-template-columns: 1fr;
   }
 }

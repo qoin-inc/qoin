@@ -59,6 +59,97 @@ const updateSystemUsageBillingWithFallback = async (supabase: SupabaseClient, bi
   }
 };
 
+const updateSystemUsagePaymentProfileWithFallback = async (supabase: SupabaseClient, neighborhoodId: string, payload: Record<string, any>) => {
+  let nextPayload = { ...payload };
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const result = await supabase
+      .from('system_usage_payment_profiles')
+      .update(nextPayload)
+      .eq('neighborhood_id', neighborhoodId)
+      .select('id')
+      .maybeSingle();
+    if (!result.error && result.data) return;
+    if (!result.error && !result.data) throw new Error(`System usage payment profile ${neighborhoodId} was not updated.`);
+    const missingColumn = missingColumnFromError(result.error);
+    if (missingColumn && Object.prototype.hasOwnProperty.call(nextPayload, missingColumn)) {
+      delete nextPayload[missingColumn];
+      continue;
+    }
+    throw result.error;
+  }
+};
+
+const saveSystemUsageCard = async (
+  stripe: Stripe,
+  supabase: SupabaseClient,
+  setupIntentId: string,
+  neighborhoodId: string,
+) => {
+  const setupIntent = await stripe.setupIntents.retrieve(setupIntentId, { expand: ['payment_method'] });
+  const paymentMethod = setupIntent.payment_method;
+  if (!paymentMethod || typeof paymentMethod === 'string') throw new Error('Registered card details were not returned by Stripe.');
+  const customerId = typeof setupIntent.customer === 'string' ? setupIntent.customer : setupIntent.customer?.id;
+  if (!customerId) throw new Error('Stripe Customer was not found for the registered card.');
+  await stripe.customers.update(customerId, {
+    preferred_locales: ['ja'],
+    invoice_settings: { default_payment_method: paymentMethod.id },
+  });
+  await updateSystemUsagePaymentProfileWithFallback(supabase, neighborhoodId, {
+    payment_method: 'card',
+    stripe_customer_id: customerId,
+    stripe_default_payment_method_id: paymentMethod.id,
+    card_setup_status: 'ready',
+    card_brand: paymentMethod.card?.brand || null,
+    card_last4: paymentMethod.card?.last4 || null,
+    card_exp_month: paymentMethod.card?.exp_month || null,
+    card_exp_year: paymentMethod.card?.exp_year || null,
+    updated_at: new Date().toISOString(),
+  });
+};
+
+const syncSystemUsageInvoice = async (supabase: SupabaseClient, invoice: Stripe.Invoice, eventType: string) => {
+  const billingId = invoice.metadata?.system_usage_billing_id;
+  if (!billingId || invoice.metadata?.payment_source !== 'system_usage_billings') return;
+  const invoiceAny = invoice as any;
+  const paidAtUnix = invoice.status_transitions?.paid_at;
+  const paidAt = paidAtUnix ? new Date(paidAtUnix * 1000).toISOString() : null;
+  const paymentIntentId = typeof invoiceAny.payment_intent === 'string'
+    ? invoiceAny.payment_intent
+    : invoiceAny.payment_intent?.id || null;
+  const billingMonth = invoice.metadata?.billing_month || '';
+  const status = eventType === 'invoice.paid'
+    ? 'paid'
+    : eventType === 'invoice.payment_failed'
+      ? 'payment_failed'
+      : eventType === 'invoice.payment_action_required'
+        ? 'payment_action_required'
+        : eventType === 'invoice.voided'
+          ? 'cancelled'
+          : invoice.status || 'open';
+  const payload: Record<string, any> = {
+    status,
+    invoice_number: invoice.number || null,
+    stripe_customer_id: typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id || null,
+    stripe_invoice_id: invoice.id,
+    stripe_payment_intent_id: paymentIntentId,
+    stripe_hosted_invoice_url: invoice.hosted_invoice_url,
+    stripe_invoice_pdf_url: invoice.invoice_pdf,
+    paid_amount: invoice.amount_paid || 0,
+    updated_at: new Date().toISOString(),
+  };
+  if (eventType === 'invoice.finalized') payload.invoice_issued_at = new Date().toISOString();
+  if (eventType === 'invoice.paid') {
+    payload.paid_at = paidAt || new Date().toISOString();
+    payload.receipt_number = `RCPT-${String(billingMonth).replace('-', '')}-${billingId}`;
+  }
+  if (eventType === 'invoice.payment_failed' || eventType === 'invoice.payment_action_required') {
+    payload.stripe_last_error = eventType === 'invoice.payment_failed'
+      ? 'Stripeカードの自動決済に失敗しました。'
+      : 'カード決済に追加認証が必要です。';
+  }
+  await updateSystemUsageBillingWithFallback(supabase, billingId, payload);
+};
+
 const findOrCreateStripeFeeCategory = async (supabase: SupabaseClient, neighborhoodId: string | number) => {
   const existing = await supabase
     .from('assembly_categories')
@@ -188,8 +279,11 @@ export async function POST(req: Request) {
     apiVersion: '2025-02-24.acacia' as any,
   });
 
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-  if (!webhookSecret) {
+  const webhookSecrets = [
+    process.env.STRIPE_WEBHOOK_SECRET || '',
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET || '',
+  ].filter((value, index, values) => Boolean(value) && values.indexOf(value) === index);
+  if (!webhookSecrets.length) {
     console.error('STRIPE_WEBHOOK_SECRET is not configured.');
     return NextResponse.json({ error: 'Webhook is not configured.' }, { status: 500 });
   }
@@ -198,13 +292,20 @@ export async function POST(req: Request) {
   const signature = req.headers.get('stripe-signature');
   if (!signature) return NextResponse.json({ error: 'Stripe signature is missing.' }, { status: 400 });
 
-  let event: Stripe.Event;
+  let event: Stripe.Event | null = null;
 
-  try {
-    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-  } catch (err: any) {
-    console.error(`Webhook Error: ${err.message}`);
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  let signatureError = '';
+  for (const webhookSecret of webhookSecrets) {
+    try {
+      event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+      break;
+    } catch (err: any) {
+      signatureError = err.message;
+    }
+  }
+  if (!event) {
+    console.error(`Webhook Error: ${signatureError}`);
+    return NextResponse.json({ error: `Webhook Error: ${signatureError}` }, { status: 400 });
   }
 
   let supabase: SupabaseClient;
@@ -243,6 +344,14 @@ export async function POST(req: Request) {
     const paymentSource = session.metadata?.payment_source;
     const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id || null;
     const systemUsageBillingId = session.metadata?.system_usage_billing_id;
+
+    if (paymentSource === 'system_usage_card_setup') {
+      const neighborhoodId = session.metadata?.neighborhood_id || '';
+      const setupIntentId = typeof session.setup_intent === 'string' ? session.setup_intent : session.setup_intent?.id || '';
+      if (neighborhoodId && setupIntentId) {
+        await saveSystemUsageCard(stripe, supabase, setupIntentId, neighborhoodId);
+      }
+    }
 
     if (paymentSource === 'system_usage_billings' && systemUsageBillingId) {
       const paidAt = new Date().toISOString();
@@ -302,6 +411,23 @@ export async function POST(req: Request) {
         await insertStripeFeeSettlement(supabase, currentFee, paymentIntentId, stripeFee.id, stripeFee.fee, paidAt);
       }
     }
+  }
+
+  if (event.type === 'setup_intent.succeeded') {
+    const setupIntent = event.data.object as Stripe.SetupIntent;
+    if (setupIntent.metadata?.payment_source === 'system_usage_card_setup' && setupIntent.metadata?.neighborhood_id) {
+      await saveSystemUsageCard(stripe, supabase, setupIntent.id, setupIntent.metadata.neighborhood_id);
+    }
+  }
+
+  if ([
+    'invoice.finalized',
+    'invoice.paid',
+    'invoice.payment_failed',
+    'invoice.payment_action_required',
+    'invoice.voided',
+  ].includes(event.type)) {
+    await syncSystemUsageInvoice(supabase, event.data.object as Stripe.Invoice, event.type);
   }
 
   return NextResponse.json({ received: true });
