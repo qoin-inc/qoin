@@ -5,6 +5,7 @@ import {
   setSystemUsagePaymentMethod,
   type SystemUsagePaymentMethod,
 } from "@/lib/systemUsageBillingServer";
+import { isSystemBillingEnabled } from "@/lib/systemAdminServer";
 
 const statusForError = (message: string) => message.includes("ログイン") ? 401 : message.includes("権限") ? 403 : 500;
 
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
     if (!townId) return NextResponse.json({ error: "townId is required" }, { status: 400 });
     const { writeClient } = await requireNeighborhoodAdmin(req, townId);
     const profile = await getSystemUsagePaymentProfile(writeClient, townId);
-    return NextResponse.json({ profile });
+    return NextResponse.json({ profile, billingEnabled: isSystemBillingEnabled() });
   } catch (error: any) {
     const message = String(error?.message || "決済方法を確認できませんでした。");
     return NextResponse.json({ error: message }, { status: statusForError(message) });
@@ -31,6 +32,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "決済方法が正しくありません。" }, { status: 400 });
     }
     const { writeClient } = await requireNeighborhoodAdmin(req, townId);
+    if (!isSystemBillingEnabled()) {
+      return NextResponse.json({ error: "システム利用料の決済方法変更は本番運用開始まで停止中です。" }, { status: 503 });
+    }
     const profile = await setSystemUsagePaymentMethod(writeClient, townId, paymentMethod);
     return NextResponse.json({ profile });
   } catch (error: any) {

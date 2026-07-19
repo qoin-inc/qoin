@@ -70,7 +70,37 @@ COMMENT ON COLUMN public.system_usage_billings.stripe_payment_intent_id IS 'Stri
 
 ALTER TABLE public.system_usage_billings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Enable read access for all users" ON public.system_usage_billings FOR SELECT USING (true);
-CREATE POLICY "Enable insert for all users" ON public.system_usage_billings FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable update for all users" ON public.system_usage_billings FOR UPDATE USING (true);
-CREATE POLICY "Enable delete for all users" ON public.system_usage_billings FOR DELETE USING (true);
+DROP POLICY IF EXISTS "Enable read access for all users" ON public.system_usage_billings;
+DROP POLICY IF EXISTS "Enable insert for all users" ON public.system_usage_billings;
+DROP POLICY IF EXISTS "Enable update for all users" ON public.system_usage_billings;
+DROP POLICY IF EXISTS "Enable delete for all users" ON public.system_usage_billings;
+DROP POLICY IF EXISTS system_usage_billings_select_active_admins ON public.system_usage_billings;
+DROP POLICY IF EXISTS system_usage_billings_delete_active_admins ON public.system_usage_billings;
+
+CREATE POLICY system_usage_billings_select_active_admins
+  ON public.system_usage_billings
+  FOR SELECT
+  TO authenticated
+  USING (
+    neighborhood_id IN (
+      SELECT admins.neighborhood_id
+      FROM public.neighborhood_admins AS admins
+      WHERE admins.admin_auth_id = auth.uid()
+        AND admins.status = 'active'
+    )
+  );
+
+CREATE POLICY system_usage_billings_delete_active_admins
+  ON public.system_usage_billings
+  FOR DELETE
+  TO authenticated
+  USING (
+    neighborhood_id IN (
+      SELECT admins.neighborhood_id
+      FROM public.neighborhood_admins AS admins
+      WHERE admins.admin_auth_id = auth.uid()
+        AND admins.status = 'active'
+    )
+  );
+
+-- 作成・更新はSUPABASE_SECRET_KEYを使用するサーバーAPIだけが行う。

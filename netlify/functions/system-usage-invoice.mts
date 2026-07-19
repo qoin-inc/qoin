@@ -1,4 +1,8 @@
 export default async () => {
+  if (String(process.env.SYSTEM_BILLING_ENABLED || "").trim().toLowerCase() !== "true") {
+    console.log("System usage invoice skipped: billing is disabled.");
+    return;
+  }
   const baseUrl = process.env.URL || process.env.DEPLOY_PRIME_URL;
   const secret = process.env.SYSTEM_BILLING_CRON_SECRET;
   if (!baseUrl || !secret) throw new Error("URL or SYSTEM_BILLING_CRON_SECRET is not configured.");

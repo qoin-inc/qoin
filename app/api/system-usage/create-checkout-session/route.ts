@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { supabase } from "@/lib/supabaseClient";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireNeighborhoodAdmin } from "@/lib/stripeConnectServer";
+import { isSystemBillingEnabled } from "@/lib/systemAdminServer";
 
 const missingColumnFromError = (error: any) => {
   const message = String(error?.message || "");
@@ -11,11 +12,11 @@ const missingColumnFromError = (error: any) => {
   return plain?.[1] || "";
 };
 
-const updateSystemUsageBillingWithFallback = async (billingId: string, payload: Record<string, any>) => {
+const updateSystemUsageBillingWithFallback = async (client: SupabaseClient, billingId: string, payload: Record<string, any>) => {
   let nextPayload = { ...payload };
 
   for (let attempt = 0; attempt < 10; attempt += 1) {
-    const result = await supabase.from("system_usage_billings").update(nextPayload).eq("id", billingId);
+    const result = await client.from("system_usage_billings").update(nextPayload).eq("id", billingId);
     if (!result.error) return;
 
     const missingColumn = missingColumnFromError(result.error);
@@ -29,6 +30,9 @@ const updateSystemUsageBillingWithFallback = async (billingId: string, payload: 
 };
 
 export async function POST(req: Request) {
+  if (!isSystemBillingEnabled()) {
+    return NextResponse.json({ error: "システム利用料の決済は本番運用開始まで停止中です。" }, { status: 503 });
+  }
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeKey) {
     return NextResponse.json({ error: "Stripe API key is not configured." }, { status: 500 });
@@ -43,29 +47,42 @@ export async function POST(req: Request) {
   }
 
   try {
-    await requireNeighborhoodAdmin(req, townId);
+    const { writeClient } = await requireNeighborhoodAdmin(req, townId);
+
+    const { data: billing, error } = await writeClient
+      .from("system_usage_billings")
+      .select("*")
+      .eq("id", billingId)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!billing) {
+      return NextResponse.json({ error: "System usage billing was not found." }, { status: 404 });
+    }
+
+    if (String(billing.neighborhood_id) !== townId) {
+      return NextResponse.json({ error: "この請求を操作する権限がありません。" }, { status: 403 });
+    }
+
+    return await createCheckoutResponse(req, body, billingId, townId, billing, writeClient, stripeKey);
   } catch (error: any) {
     const message = String(error?.message || "管理者権限を確認できませんでした。");
     return NextResponse.json({ error: message }, { status: message.includes("権限") ? 403 : 401 });
   }
+}
 
-  const { data: billing, error } = await supabase
-    .from("system_usage_billings")
-    .select("*")
-    .eq("id", billingId)
-    .maybeSingle();
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  if (!billing) {
-    return NextResponse.json({ error: "System usage billing was not found." }, { status: 404 });
-  }
-
-  if (String(billing.neighborhood_id) !== townId) {
-    return NextResponse.json({ error: "この請求を操作する権限がありません。" }, { status: 403 });
-  }
+const createCheckoutResponse = async (
+  req: Request,
+  body: any,
+  billingId: string,
+  townId: string,
+  billing: any,
+  writeClient: SupabaseClient,
+  stripeKey: string,
+) => {
 
   if (billing.status === "paid" || billing.paid_at) {
     return NextResponse.json({ error: "This system usage billing is already paid." }, { status: 400 });
@@ -110,10 +127,10 @@ export async function POST(req: Request) {
     cancel_url: `${origin}/admin?payment=system_usage_cancel`,
   });
 
-  await updateSystemUsageBillingWithFallback(billingId, {
+  await updateSystemUsageBillingWithFallback(writeClient, billingId, {
     stripe_checkout_session_id: session.id,
     updated_at: new Date().toISOString(),
   });
 
   return NextResponse.json({ url: session.url });
-}
+};

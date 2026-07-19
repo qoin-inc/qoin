@@ -66,7 +66,18 @@ COMMENT ON COLUMN public.system_usage_billings.stripe_invoice_id IS 'Stripe Invo
 ALTER TABLE public.system_usage_payment_profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Enable read access for system usage payment profiles" ON public.system_usage_payment_profiles;
-CREATE POLICY "Enable read access for system usage payment profiles"
-  ON public.system_usage_payment_profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS system_usage_payment_profiles_select_active_admins ON public.system_usage_payment_profiles;
+CREATE POLICY system_usage_payment_profiles_select_active_admins
+  ON public.system_usage_payment_profiles
+  FOR SELECT
+  TO authenticated
+  USING (
+    neighborhood_id IN (
+      SELECT admins.neighborhood_id
+      FROM public.neighborhood_admins AS admins
+      WHERE admins.admin_auth_id = auth.uid()
+        AND admins.status = 'active'
+    )
+  );
 
 -- 登録・更新はSUPABASE_SECRET_KEYを使用するサーバーAPIだけが行う。

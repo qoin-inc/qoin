@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isSystemAdminRequest, isSystemBillingCronRequest } from "@/lib/systemAdminServer";
+import { isSystemAdminRequest, isSystemBillingCronRequest, isSystemBillingEnabled } from "@/lib/systemAdminServer";
 import {
   defaultSystemUsageBillingMonth,
   issueSystemUsageInvoices,
@@ -8,9 +8,19 @@ import {
 
 export const maxDuration = 30;
 
+export async function GET(req: Request) {
+  if (!isSystemAdminRequest(req)) {
+    return NextResponse.json({ error: "システム管理者権限を確認できませんでした。" }, { status: 401 });
+  }
+  return NextResponse.json({ enabled: isSystemBillingEnabled() });
+}
+
 export async function POST(req: Request) {
   if (!isSystemAdminRequest(req) && !isSystemBillingCronRequest(req)) {
     return NextResponse.json({ error: "システム管理者権限を確認できません。" }, { status: 401 });
+  }
+  if (!isSystemBillingEnabled()) {
+    return NextResponse.json({ error: "システム利用料の請求処理は本番運用開始まで停止中です。" }, { status: 503 });
   }
   try {
     const body = await req.json().catch(() => ({}));

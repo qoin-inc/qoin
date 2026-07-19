@@ -11,9 +11,10 @@
 
 ## 本番適用
 
-1. Supabase SQL Editorで `docs/sql/system_usage_stripe_billing_2026-07-19.sql` を実行する。
+1. Supabase SQL Editorで `docs/sql/system_usage_billing_columns_2026-07-07.sql`、続けて `docs/sql/system_usage_stripe_billing_2026-07-19.sql` を実行する。両方とも請求テーブルは担当団体の認証済み管理者だけが参照でき、作成・更新はサーバーAPIだけが行う。
 2. Netlifyへ推測困難なランダム値を `SYSTEM_BILLING_CRON_SECRET` として登録する。
-3. Stripe本番Webhook `https://el-town.jp/api/webhooks/stripe` へ「el-townアカウントのイベント」を送る宛先を作成し、次のイベントを有効にする。
+3. 本番運用開始まではNetlifyの `SYSTEM_BILLING_ENABLED=false` とする。未設定時も停止として扱い、開始日に限り `true` へ変更する。
+4. Stripe本番Webhook `https://el-town.jp/api/webhooks/stripe` へ「el-townアカウントのイベント」を送る宛先を作成し、次のイベントを有効にする。
    - `checkout.session.completed`
    - `setup_intent.succeeded`
    - `invoice.finalized`
@@ -21,9 +22,9 @@
    - `invoice.payment_failed`
    - `invoice.payment_action_required`
    - `invoice.voided`
-4. 上記Webhookの署名シークレットをNetlifyの `STRIPE_WEBHOOK_SECRET` に登録する。
-5. Connect接続先イベント用の宛先を同じURLで別途使用している場合は、`account.updated` と会費決済イベントを有効にし、その署名シークレットを `STRIPE_CONNECT_WEBHOOK_SECRET` に登録する。アプリは両方の署名を検証できる。
-6. 本番デプロイ後、Netlify Functionsで次の2関数が `Scheduled` と表示されることを確認する。
+5. 上記Webhookの署名シークレットをNetlifyの `STRIPE_WEBHOOK_SECRET` に登録する。
+6. Connect接続先イベント用の宛先を同じURLで別途使用している場合は、`account.updated` と会費決済イベントを有効にし、その署名シークレットを `STRIPE_CONNECT_WEBHOOK_SECRET` に登録する。アプリは両方の署名を検証できる。
+7. 本番デプロイ後、Netlify Functionsで次の2関数が `Scheduled` と表示されることを確認する。
    - `system-usage-snapshot`: `0 0 16 * *`（16日00:00 UTC = 16日09:00 JST）
    - `system-usage-invoice`: `0 0 1 * *`（1日00:00 UTC = 1日09:00 JST）
 

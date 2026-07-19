@@ -30,6 +30,11 @@ export const isSystemBillingCronRequest = (request: Request) => {
   return Boolean(configured && received && sameSystemSecret(received, configured));
 };
 
+// Fail closed: billing mutations remain disabled unless production is explicitly enabled.
+export const isSystemBillingEnabled = () => (
+  String(process.env.SYSTEM_BILLING_ENABLED || "").trim().toLowerCase() === "true"
+);
+
 export const systemLoginCredentialsMatch = (inputLoginId: string, inputPassword: string) => (
   sameSystemSecret(inputLoginId, loginId()) && sameSystemSecret(inputPassword, loginPassword())
 );
