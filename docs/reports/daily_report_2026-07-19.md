@@ -36,3 +36,14 @@
 2. Netlifyへ `SYSTEM_BILLING_CRON_SECRET` を登録する。
 3. Stripe Webhookのイベントと `STRIPE_WEBHOOK_SECRET`、必要に応じて `STRIPE_CONNECT_WEBHOOK_SECRET` を確認する。
 4. 本番デプロイ後、Scheduled Functionsの次回実行日時を確認する。
+
+## Stripe請求ランブック
+
+- システム使用料と団体会費について、el-town側・Stripe側・団体側の設定、本番開始手順、停止方法、未実装の銀行振込・PayPay、会計処理、問い合わせ時の回答基準を `docs/reports/stripe_billing_production_runbook_2026-07-19.md` に集約した。
+- 今後Stripe関連の実装・設定・審査状況を変更した場合は、同ランブックも更新する。
+
+## システム構成・災害復旧手順書
+
+- 2026-07-19時点の開発環境、Git/GitHub、Supabase、Netlify、言語・フレームワーク、認証、フォルダー、画面・API、UIデザイン、外部連携、環境変数、バックアップ、復旧手順、復旧後検証を `docs/reports/system_architecture_recovery_2026-07-19.md` に記録した。
+- 今後は構成変更のたびに `system_architecture_recovery_YYYY-MM-DD.md` を新規作成し、過去版を上書きしない。
+- 現在の重大な復旧リスクとして、`.env.local` のGit追跡、完全なDB baseline/backup不足、Storage実体backup不足、GitHub Actionsの現行構成との不一致、認証の既定値・予測可能な会員認証方式を記録した。
