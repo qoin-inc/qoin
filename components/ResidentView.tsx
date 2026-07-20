@@ -765,10 +765,25 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }));
     setLiveMessage("");
     setLiveViewMode("cards");
-    window.requestAnimationFrame(() => {
-      document.getElementById(`live-session-${session.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   };
+  useEffect(() => {
+    if (activeTab !== "live" || activeLiveScreen !== "live" || liveViewMode !== "cards" || !liveReplyDraft.sessionId) return;
+
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        document.getElementById(`live-session-${liveReplyDraft.sessionId}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [activeLiveScreen, activeTab, liveReplyDraft.sessionId, liveViewMode]);
   const liveCalendarDays = useMemo(() => {
     const first = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
     const start = new Date(first);
