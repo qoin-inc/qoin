@@ -762,6 +762,11 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     || (Boolean(userId) && String(reservation.user_auth_id || "") === String(userId))
   );
   const liveApplicationBySessionId = new Map(liveApplications.map((application) => [String(application.live_session_id), application]));
+  const openCircular = (item: Circular) => {
+    setSelectedCircular(item);
+    setReplyDraft(createReplyDraft(displayName, item));
+    setReplyMessage("");
+  };
   const openLiveSession = (session: LiveSession) => {
     setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }));
     setLiveMessage("");
@@ -783,6 +788,14 @@ export default function ResidentView({ townId, townName, residentName, userId, r
           label: `${session.event_time ? `${session.event_time} ` : ""}${session.title || "Web会議"}`,
           onSelect: () => openLiveSession(session),
         })) : [];
+      const assemblyEntries: LiveCalendarEntry[] = activeLiveScreen === "live" ? assemblyItems
+        .filter((item) => dateKey(item.event_date || item.published_at || item.created_at) === key)
+        .map((item) => ({
+          id: `assembly-${item.id}`,
+          kind: "live",
+          label: `${item.event_time ? `${item.event_time} ` : ""}総会 ${item.title}`,
+          onSelect: () => openCircular(item),
+        })) : [];
       const facilityEntries: LiveCalendarEntry[] = activeLiveScreen === "facility" ? facilityReservations
         .filter((reservation) => dateKey(reservation.reservation_date) === key)
         .map((reservation) => ({
@@ -803,10 +816,10 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         date,
         inMonth: date.getMonth() === calendarMonth.getMonth(),
         holidayName: japaneseHolidayName(date),
-        entries: [...liveEntries, ...facilityEntries],
+        entries: [...liveEntries, ...assemblyEntries, ...facilityEntries],
       };
     });
-  }, [activeLiveScreen, calendarMonth, facilities, facilityReservations, liveSessions]);
+  }, [activeLiveScreen, assemblyItems, calendarMonth, facilities, facilityReservations, liveSessions]);
 
   const handleOnlinePayment = async (fee: FeeRecord) => {
     setFeeMessage("");
@@ -839,12 +852,6 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     } catch (error: any) {
       setFeeMessage(error?.message || "オンライン支払いを開始できませんでした。");
     }
-  };
-
-  const openCircular = (item: Circular) => {
-    setSelectedCircular(item);
-    setReplyDraft(createReplyDraft(displayName, item));
-    setReplyMessage("");
   };
 
   const toggleBottomNav = () => {
