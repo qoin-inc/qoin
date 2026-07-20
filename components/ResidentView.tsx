@@ -415,6 +415,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [readCircularIds, setReadCircularIds] = useState<Set<string>>(() => new Set());
   const [circulars, setCirculars] = useState<Circular[]>([]);
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
+  const [selectedLiveSession, setSelectedLiveSession] = useState<LiveSession | null>(null);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [facilityReservations, setFacilityReservations] = useState<FacilityReservation[]>([]);
   const [liveApplications, setLiveApplications] = useState<LiveApplication[]>([]);
@@ -764,26 +765,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const openLiveSession = (session: LiveSession) => {
     setLiveReplyDraft((current) => ({ ...current, sessionId: String(session.id) }));
     setLiveMessage("");
-    setLiveViewMode("cards");
+    setSelectedLiveSession(session);
   };
-  useEffect(() => {
-    if (activeTab !== "live" || activeLiveScreen !== "live" || liveViewMode !== "cards" || !liveReplyDraft.sessionId) return;
-
-    let secondFrame = 0;
-    const firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        document.getElementById(`live-session-${liveReplyDraft.sessionId}`)?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      });
-    });
-
-    return () => {
-      window.cancelAnimationFrame(firstFrame);
-      if (secondFrame) window.cancelAnimationFrame(secondFrame);
-    };
-  }, [activeLiveScreen, activeTab, liveReplyDraft.sessionId, liveViewMode]);
   const liveCalendarDays = useMemo(() => {
     const first = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
     const start = new Date(first);
@@ -1420,6 +1403,62 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     }
   };
 
+  if (selectedLiveSession) {
+    const sessionId = String(selectedLiveSession.id);
+    const url = liveSessionUrl(selectedLiveSession);
+    const application = liveApplicationBySessionId.get(sessionId);
+    return (
+      <div className="el-phone-screen">
+        <header className="el-mobile-header compact">
+          <button className="el-icon-button" onClick={() => setSelectedLiveSession(null)} aria-label="戻る">
+            <i className="fas fa-arrow-left" />
+          </button>
+          <div>
+            <p className="el-kicker">Live</p>
+            <h1>{selectedLiveSession.title || "Web会議"}</h1>
+          </div>
+        </header>
+        <main className="el-scroll-area el-detail">
+          <span className="el-pill">{liveProviderLabel(selectedLiveSession.provider)}</span>
+          <div className="el-event-schedule">
+            <i className="fas fa-calendar-alt" />
+            <strong>開催日時</strong>
+            <span>{liveSessionDateKey(selectedLiveSession) || "日付未設定"}{selectedLiveSession.event_time ? ` ${selectedLiveSession.event_time}` : ""}</span>
+          </div>
+          <h2>{selectedLiveSession.title || "Web会議"}</h2>
+          <article className="el-message-box">{selectedLiveSession.content || selectedLiveSession.description || "内容はまだ登録されていません。"}</article>
+          {url && (
+            <a href={url} target="_blank" rel="noreferrer" className="el-secondary-action">
+              <i className="fas fa-arrow-up-right-from-square" /> 開催URLを開く
+            </a>
+          )}
+          <div className={`el-live-application-status ${application ? "applied" : "not-applied"}`}>
+            <i className={`fas ${application ? "fa-circle-check" : "fa-circle"}`} />
+            {application ? `申込済み・${application.participant_count || 1}名` : "未申込"}
+          </div>
+          <form className="el-reply-panel" onSubmit={(event) => handleLiveReply(event, selectedLiveSession)}>
+            <h3>参加申込</h3>
+            <label>
+              <span>参加人数</span>
+              <input
+                value={liveParticipantCounts[sessionId] ?? "1"}
+                onChange={(event) => setLiveParticipantCounts((current) => ({ ...current, [sessionId]: event.target.value }))}
+                inputMode="numeric"
+                min="1"
+                type="number"
+                aria-label={`${selectedLiveSession.title || "Web会議"}の参加人数`}
+              />
+            </label>
+            <button type="submit" className="el-primary-action" disabled={replyBusy}>
+              <i className={`fas ${replyBusy ? "fa-spinner fa-spin" : "fa-floppy-disk"}`} /> 参加申込を保存
+            </button>
+          </form>
+          {liveMessage && <div className={`form-alert ${liveMessage.includes("保存しました") ? "success" : ""}`}>{liveMessage}</div>}
+        </main>
+      </div>
+    );
+  }
+
   if (selectedCircular) {
     const isEvent = selectedCircular.category === "event";
     const isAssembly = selectedCircular.category === "assembly";
@@ -1634,27 +1673,39 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 </div>
                 <div className="el-calendar-grid live">
                   {liveCalendarDays.map((day) => (
-                    <div key={day.key} className={`${calendarDayClassName(day.date, day.inMonth, day.entries.length > 0)} ${activeLiveScreen === "facility" && selectedFacilityDate === day.key ? "selected" : ""}`.trim()} title={day.holidayName || undefined}>
-                      <button
-                        type="button"
-                        className="el-calendar-date-row el-calendar-date-select"
-                        onClick={() => {
-                          if (activeLiveScreen !== "facility") return;
-                          setSelectedFacilityDate(day.key);
-                          setFacilityReservationDraft((current) => ({ ...current, reservationDate: day.key }));
-                        }}
-                        disabled={activeLiveScreen !== "facility"}
-                        aria-label={activeLiveScreen === "facility" ? `${day.key}の予約を表示` : undefined}
-                      >
-                        <span className="el-calendar-date-number">{day.date.getDate()}</span>
-                        {day.entries.length > 0 && <span className="el-calendar-count" aria-label={`${day.entries.length}件の予定`}>{day.entries.length}</span>}
-                      </button>
-                      {day.entries.slice(0, 3).map((entry) => (
-                        <button key={entry.id} type="button" className={entry.kind} onClick={entry.onSelect}>
-                          {entry.label}
+                    <div key={day.key} className={`${calendarDayClassName(day.date, day.inMonth, day.entries.length > 0)} ${activeLiveScreen === "facility" && selectedFacilityDate === day.key ? "selected" : ""} ${activeLiveScreen === "live" && day.entries.length === 1 ? "is-tappable" : ""}`.trim()} title={day.holidayName || undefined}>
+                      {activeLiveScreen === "live" && day.entries.length === 1 ? (
+                        <button className="el-calendar-day-button live" type="button" aria-label={`${day.date.getDate()}日 ${day.entries[0].label}の詳細を開く`} onClick={day.entries[0].onSelect}>
+                          <span className="el-calendar-date-row">
+                            <span className="el-calendar-date-number">{day.date.getDate()}</span>
+                            <span className="el-calendar-count" aria-label="1件の予定">1</span>
+                          </span>
+                          <span className="el-calendar-event-label">{day.entries[0].label}</span>
                         </button>
-                      ))}
-                      {day.entries.length > 3 && <span className="el-calendar-more">ほか{day.entries.length - 3}件</span>}
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="el-calendar-date-row el-calendar-date-select"
+                            onClick={() => {
+                              if (activeLiveScreen !== "facility") return;
+                              setSelectedFacilityDate(day.key);
+                              setFacilityReservationDraft((current) => ({ ...current, reservationDate: day.key }));
+                            }}
+                            disabled={activeLiveScreen !== "facility"}
+                            aria-label={activeLiveScreen === "facility" ? `${day.key}の予約を表示` : undefined}
+                          >
+                            <span className="el-calendar-date-number">{day.date.getDate()}</span>
+                            {day.entries.length > 0 && <span className="el-calendar-count" aria-label={`${day.entries.length}件の予定`}>{day.entries.length}</span>}
+                          </button>
+                          {day.entries.slice(0, 3).map((entry) => (
+                            <button key={entry.id} type="button" className={entry.kind} onClick={entry.onSelect}>
+                              {entry.label}
+                            </button>
+                          ))}
+                          {day.entries.length > 3 && <span className="el-calendar-more">ほか{day.entries.length - 3}件</span>}
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
