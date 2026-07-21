@@ -449,6 +449,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [liveLoadMessage, setLiveLoadMessage] = useState("");
   const [activeLiveScreen, setActiveLiveScreen] = useState<LiveScreen>("live");
   const [liveViewMode, setLiveViewMode] = useState<ViewMode>("calendar");
+  const [selectedEventDate, setSelectedEventDate] = useState("");
+  const [selectedLiveCalendarDate, setSelectedLiveCalendarDate] = useState("");
   const [selectedFacilityDate, setSelectedFacilityDate] = useState(todayKey());
   const [facilityListFilter, setFacilityListFilter] = useState("all");
   const [facilityBookingOpen, setFacilityBookingOpen] = useState(false);
@@ -463,6 +465,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const boardFeedEndRef = useRef<HTMLDivElement | null>(null);
+  const calendarSelectionRef = useRef<HTMLElement | null>(null);
   const readStorageKey = `eltown.circularReads.${townId || "town"}.${userId || residentName || "resident"}`;
 
   useEffect(() => {
@@ -718,6 +721,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
       };
     });
   }, [calendarMonth, eventItems]);
+  const selectedEventDay = calendarDays.find((day) => day.key === selectedEventDate);
 
   const formatDate = (item: Circular) => {
     const raw = item.event_date || item.published_at || item.created_at;
@@ -820,6 +824,12 @@ export default function ResidentView({ townId, townName, residentName, userId, r
       };
     });
   }, [activeLiveScreen, assemblyItems, calendarMonth, facilities, facilityReservations, liveSessions]);
+  const selectedLiveCalendarDay = liveCalendarDays.find((day) => day.key === selectedLiveCalendarDate);
+
+  useEffect(() => {
+    if (!selectedEventDate && !selectedLiveCalendarDate) return;
+    calendarSelectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedEventDate, selectedLiveCalendarDate]);
 
   const handleOnlinePayment = async (fee: FeeRecord) => {
     setFeeMessage("");
@@ -865,6 +875,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   };
 
   const shiftCalendarMonth = (amount: number) => {
+    setSelectedEventDate("");
+    setSelectedLiveCalendarDate("");
     setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1));
   };
 
@@ -1598,36 +1610,45 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                   {calendarDays.map((day) => (
                     <div
                       key={day.key}
-                      className={`${calendarDayClassName(day.date, day.inMonth, day.events.length > 0)} ${day.events.length === 1 ? "is-tappable" : ""}`.trim()}
+                      className={`${calendarDayClassName(day.date, day.inMonth, day.events.length > 0)} ${day.events.length > 0 ? "is-tappable" : ""} ${selectedEventDate === day.key ? "selected" : ""}`.trim()}
                       title={day.holidayName || undefined}
                     >
-                      {day.events.length === 1 ? (
-                        <button className="el-calendar-day-button" type="button" aria-label={`${day.date.getDate()}日 ${day.events[0].title}の詳細を開く`} onClick={() => openCircular(day.events[0])}>
+                      {day.events.length > 0 ? (
+                        <button className="el-calendar-day-button" type="button" aria-label={`${day.date.getDate()}日の予定${day.events.length}件を表示`} onClick={() => setSelectedEventDate(day.key)}>
                           <span className="el-calendar-date-row">
                             <span className="el-calendar-date-number">{day.date.getDate()}</span>
-                            <span className="el-calendar-count" aria-label="1件の予定">1</span>
+                            <span className="el-calendar-count" aria-label={`${day.events.length}件の予定`}>{day.events.length}</span>
                           </span>
                           <span className="el-calendar-event-label">
                             {day.events[0].event_time ? `${day.events[0].event_time} ` : ""}{day.events[0].title}
                           </span>
+                          {day.events.length > 1 && <span className="el-calendar-more">ほか{day.events.length - 1}件</span>}
                         </button>
                       ) : (
-                        <>
-                          <div className="el-calendar-date-row">
-                            <span className="el-calendar-date-number">{day.date.getDate()}</span>
-                            {day.events.length > 0 && <span className="el-calendar-count" aria-label={`${day.events.length}件の予定`}>{day.events.length}</span>}
-                          </div>
-                          {day.events.slice(0, 2).map((item) => (
-                            <button key={item.id} type="button" aria-label={`${item.title}の詳細を開く`} onClick={() => openCircular(item)}>
-                              {item.event_time ? `${item.event_time} ` : ""}{item.title}
-                            </button>
-                          ))}
-                          {day.events.length > 2 && <span className="el-calendar-more">ほか{day.events.length - 2}件</span>}
-                        </>
+                        <div className="el-calendar-date-row">
+                          <span className="el-calendar-date-number">{day.date.getDate()}</span>
+                        </div>
                       )}
                     </div>
                   ))}
                 </div>
+                {selectedEventDay && selectedEventDay.events.length > 0 && (
+                  <section ref={calendarSelectionRef} className="el-calendar-selection" aria-live="polite">
+                    <div className="el-calendar-selection-heading">
+                      <strong>{selectedEventDay.key} の予定</strong>
+                      <span>{selectedEventDay.events.length}件</span>
+                    </div>
+                    <div className="el-list">
+                      {selectedEventDay.events.map((item) => (
+                        <button key={item.id} type="button" className="el-list-item event" onClick={() => openCircular(item)}>
+                          <span className="el-date">{item.event_time || "時間未設定"}</span>
+                          <strong>{item.title}</strong>
+                          <small>{bodyText(item)}</small>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             ) : (
               <div className="el-board-feed">
@@ -1680,14 +1701,15 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 </div>
                 <div className="el-calendar-grid live">
                   {liveCalendarDays.map((day) => (
-                    <div key={day.key} className={`${calendarDayClassName(day.date, day.inMonth, day.entries.length > 0)} ${activeLiveScreen === "facility" && selectedFacilityDate === day.key ? "selected" : ""} ${activeLiveScreen === "live" && day.entries.length === 1 ? "is-tappable" : ""}`.trim()} title={day.holidayName || undefined}>
-                      {activeLiveScreen === "live" && day.entries.length === 1 ? (
-                        <button className="el-calendar-day-button live" type="button" aria-label={`${day.date.getDate()}日 ${day.entries[0].label}の詳細を開く`} onClick={day.entries[0].onSelect}>
+                    <div key={day.key} className={`${calendarDayClassName(day.date, day.inMonth, day.entries.length > 0)} ${activeLiveScreen === "facility" && selectedFacilityDate === day.key ? "selected" : ""} ${activeLiveScreen === "live" && selectedLiveCalendarDate === day.key ? "selected" : ""} ${activeLiveScreen === "live" && day.entries.length > 0 ? "is-tappable" : ""}`.trim()} title={day.holidayName || undefined}>
+                      {activeLiveScreen === "live" && day.entries.length > 0 ? (
+                        <button className="el-calendar-day-button live" type="button" aria-label={`${day.date.getDate()}日の予定${day.entries.length}件を表示`} onClick={() => setSelectedLiveCalendarDate(day.key)}>
                           <span className="el-calendar-date-row">
                             <span className="el-calendar-date-number">{day.date.getDate()}</span>
-                            <span className="el-calendar-count" aria-label="1件の予定">1</span>
+                            <span className="el-calendar-count" aria-label={`${day.entries.length}件の予定`}>{day.entries.length}</span>
                           </span>
                           <span className="el-calendar-event-label">{day.entries[0].label}</span>
+                          {day.entries.length > 1 && <span className="el-calendar-more">ほか{day.entries.length - 1}件</span>}
                         </button>
                       ) : (
                         <>
@@ -1716,6 +1738,22 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                     </div>
                   ))}
                 </div>
+                {activeLiveScreen === "live" && selectedLiveCalendarDay && selectedLiveCalendarDay.entries.length > 0 && (
+                  <section ref={calendarSelectionRef} className="el-calendar-selection" aria-live="polite">
+                    <div className="el-calendar-selection-heading">
+                      <strong>{selectedLiveCalendarDay.key} の予定</strong>
+                      <span>{selectedLiveCalendarDay.entries.length}件</span>
+                    </div>
+                    <div className="el-list">
+                      {selectedLiveCalendarDay.entries.map((entry) => (
+                        <button key={entry.id} type="button" className="el-list-item live" onClick={entry.onSelect}>
+                          <strong>{entry.label}</strong>
+                          <small>タップして詳細を開く</small>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             )}
 
