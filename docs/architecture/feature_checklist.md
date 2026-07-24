@@ -70,7 +70,7 @@
 | LINEログイン | 一部実装 | `app/resident/page.tsx` | LIFFログイン後、疑似メールでSupabase Authログイン/登録。 |
 | 会員名簿検索 | 実装済み | `app/resident/page.tsx` | `resident_rosters` の本人・家族IDを検索。 |
 | 退会済みブロック | 一部実装 | `app/resident/page.tsx`, `app/portal/page.tsx` | `withdrawal_status === withdrawn` を確認。対象画面全体での一貫性は要確認。 |
-| 名簿照合による会員連携 | 実装済み | `components/SignupResident.tsx`, `components/ResidentView.tsx` | 世帯主は氏名・カナ・住所で本人枠へ連携。別のLINEアカウントが同じ世帯主情報で照合した場合は空いている家族枠へ連携でき、招待URLからの追加にも対応する。家族の退会状態は各人で独立。 |
+| 名簿照合による会員連携 | 実装済み | `components/SignupResident.tsx`, `components/ResidentView.tsx` | 世帯主は氏名・カナ・住所で本人枠へ連携。別のLINEアカウントが同じ世帯主情報で照合した場合は空いている家族枠へ連携できる。世帯主による家族登録・招待URL発行は廃止。家族の退会状態は各人で独立。 |
 | 会員ホーム | 実装済み | `components/ResidentView.tsx` | 未読数、新着回覧、下部タブを表示。 |
 | 回覧一覧・詳細 | 一部実装 | `components/ResidentView.tsx` | `circulars` 一覧・詳細は表示。確認ボタンは状態更新なし。 |
 | 既読管理 | 不足 | `components/ResidentView.tsx` | `is_read` を表示計算に使うが、既読更新先や履歴テーブルは未確認。 |

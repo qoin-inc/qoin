@@ -280,6 +280,7 @@ Stripeの必要情報は国、事業形態、要求する決済機能により�
 
 ### 団体会費・Connect
 
+- `docs/admin/membership_fee_standard_spec_2026-07-24.md`
 - `docs/integrations/stripe_live_connect_policy_2026-07-07.md`
 - `lib/stripeConnectServer.ts`
 - `app/api/admin/stripe/create-account-link/route.ts`

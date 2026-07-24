@@ -457,9 +457,6 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [editingFacilityReservationId, setEditingFacilityReservationId] = useState<number | string | null>(null);
   const [withdrawalBusy, setWithdrawalBusy] = useState(false);
   const [withdrawalMessage, setWithdrawalMessage] = useState("");
-  const [familyNames, setFamilyNames] = useState({ 1: roster?.family_name_1 || "", 2: roster?.family_name_2 || "" });
-  const [familyMessage, setFamilyMessage] = useState("");
-  const [familyBusy, setFamilyBusy] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -563,14 +560,17 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   }, [activeTab, boardFilter, boardViewMode, loading, openTargetId]);
 
   useEffect(() => {
-    const fetchFees = async () => {
+    let active = true;
+    const fetchFees = async (showLoading = true) => {
       if (!townId) {
-        setFeeLoading(false);
+        if (active) setFeeLoading(false);
         return;
       }
 
-      setFeeLoading(true);
-      setFeeMessage("");
+      if (showLoading) {
+        setFeeLoading(true);
+        setFeeMessage("");
+      }
 
       let townResult = await supabase
         .from("neighborhoods")
@@ -586,11 +586,13 @@ export default function ResidentView({ townId, townName, residentName, userId, r
           .maybeSingle();
       }
       const townData = townResult.data as any;
-      setStripeAccountId(townData?.stripe_account_id || "");
-      setStripeReady(Boolean(
-        townData?.stripe_account_id &&
-        (townData?.stripe_onboarding_status === "active" || (townData?.stripe_charges_enabled === true && townData?.stripe_payouts_enabled === true)),
-      ));
+      if (active) {
+        setStripeAccountId(townData?.stripe_account_id || "");
+        setStripeReady(Boolean(
+          townData?.stripe_account_id &&
+          (townData?.stripe_onboarding_status === "active" || (townData?.stripe_charges_enabled === true && townData?.stripe_payouts_enabled === true)),
+        ));
+      }
 
       let rosterId: number | string | null = null;
       if (userId) {
@@ -602,7 +604,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
           .maybeSingle();
         rosterId = roster?.id || null;
       }
-      setResidentRosterId(rosterId);
+      if (active) setResidentRosterId(rosterId);
 
       let records: FeeRecord[] = [];
       if (rosterId !== null) {
@@ -626,11 +628,24 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         records = (data || []) as FeeRecord[];
       }
 
-      setFeeRecords(records);
-      setFeeLoading(false);
+      if (active) {
+        setFeeRecords(records);
+        setFeeLoading(false);
+      }
     };
 
     fetchFees();
+    const refreshFees = () => fetchFees(false);
+    window.addEventListener("focus", refreshFees);
+    const refreshTimers = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("payment") === "success"
+      ? [1500, 4000, 8000].map((delay) => window.setTimeout(refreshFees, delay))
+      : [];
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", refreshFees);
+      refreshTimers.forEach((timer) => window.clearTimeout(timer));
+    };
   }, [residentName, townId, userId]);
 
   useEffect(() => {
@@ -1304,22 +1319,6 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     }
   };
 
-  const handleFamilyInvite = async (slot: 1 | 2) => {
-    if (!roster?.id || roster.user_auth_id !== userId) return;
-    const name = familyNames[slot].trim();
-    if (!name) { setFamilyMessage("家族の氏名を入力してください。"); return; }
-    setFamilyBusy(true); setFamilyMessage("");
-    try {
-      const result = await supabase.rpc("create_resident_family_invite", { p_roster_id: roster.id, p_slot: slot, p_family_name: name });
-      if (result.error) throw result.error;
-      const url = `${window.location.origin}/resident?family_invite=${encodeURIComponent(result.data)}`;
-      await navigator.clipboard.writeText(url);
-      setFamilyMessage(`家族${slot}の招待URLをコピーしました。LINEで本人へ送ってください。`);
-    } catch (error: any) {
-      setFamilyMessage(error?.message || "家族招待URLを作成できませんでした。");
-    } finally { setFamilyBusy(false); }
-  };
-
   const handleEventReply = async () => {
     if (!selectedCircular) return;
     const adults = Math.max(Number(replyDraft.adults || 0), 0);
@@ -1971,6 +1970,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
               <div className="el-status-card accent">
                 <p className="el-kicker">会費</p>
                 <h2>{getFeeYear(latestFee)}年度</h2>
+                <p>この会費は世帯共通です。世帯主または家族が支払うと、同じ世帯の全員に入金状況が反映されます。</p>
                 <div className="el-fee-summary">
                   <span><small>請求額</small><strong>{yen(getFeeBillingAmount(latestFee))}</strong></span>
                   <span><small>入金額</small><strong>{yen(getFeePaidAmount(latestFee))}</strong></span>
@@ -2014,22 +2014,6 @@ export default function ResidentView({ townId, townName, residentName, userId, r
               <h2>{displayName}</h2>
               <p>{placeName} に連携済みです。</p>
             </div>
-
-            {roster?.user_auth_id === userId && (
-              <div className="el-status-card accent">
-                <p className="el-kicker">家族アカウント</p>
-                <h2>家族を追加する（2名まで）</h2>
-                <p>家族は名簿照合を行いません。氏名を入力して招待URLを本人のLINEへ送ってください。連携後は1アカウントとして利用料の対象になります。</p>
-                {([1, 2] as const).map((slot) => {
-                  const linked = Boolean(roster[`family_user_auth_id_${slot}`]);
-                  return <div key={slot} className="signup-form">
-                    <label><span>家族{slot}</span><input value={familyNames[slot]} onChange={(event) => setFamilyNames((current) => ({ ...current, [slot]: event.target.value }))} disabled={linked} placeholder="氏名" /></label>
-                    <button type="button" className="el-secondary-action" onClick={() => handleFamilyInvite(slot)} disabled={familyBusy || linked}>{linked ? "連携済み" : "招待URLを作成・コピー"}</button>
-                  </div>;
-                })}
-                {familyMessage && <div className="form-alert success">{familyMessage}</div>}
-              </div>
-            )}
 
             <div className="el-status-card danger">
               <p className="el-kicker">退会申請</p>

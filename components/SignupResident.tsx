@@ -124,7 +124,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
         if (primaryNameMatched) {
           if (matchedRoster.user_auth_id && matchedRoster.user_auth_id !== sessionUser.id) {
             const existingFamilySlot = ([1, 2] as const).find((slot) => String(matchedRoster[`family_user_auth_id_${slot}`] || "") === String(sessionUser.id));
-            const availableFamilySlot = ([1, 2] as const).find((slot) => !matchedRoster[`family_user_auth_id_${slot}`] && !matchedRoster[`family_invite_token_${slot}`]);
+            const availableFamilySlot = ([1, 2] as const).find((slot) => !matchedRoster[`family_user_auth_id_${slot}`]);
             const familySlot = existingFamilySlot || availableFamilySlot;
             if (!familySlot) {
               throw new Error("この世帯は家族2名まで連携済みです。世帯主へ確認してください。");

@@ -53,7 +53,6 @@ function ResidentPageContent() {
   const router = useRouter();
   const mode = searchParams?.get('mode');
   const openTargetId = searchParams?.get('open');
-  const familyInviteToken = searchParams?.get('family_invite');
 
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -119,7 +118,6 @@ function ResidentPageContent() {
       try {
         const redirectUrl = new URL('/resident/', window.location.origin);
         if (openTargetId) redirectUrl.searchParams.set('open', openTargetId);
-        if (familyInviteToken) redirectUrl.searchParams.set('family_invite', familyInviteToken);
         liff.login({ redirectUri: redirectUrl.toString() });
         window.setTimeout(() => {
           setAutoLoginStarted(false);
@@ -309,14 +307,6 @@ function ResidentPageContent() {
 
     setLoading(true);
     try {
-      if (familyInviteToken) {
-        const claim = await supabase.rpc('claim_resident_family_invite', {
-          p_token: familyInviteToken,
-          p_line_user_id: lineUserId || null,
-        });
-        if (claim.error && !/すでに使用済み/.test(String(claim.error.message || ''))) throw claim.error;
-        if (!claim.error && typeof window !== 'undefined') window.history.replaceState({}, '', '/resident');
-      }
       const { data: rosters, error: rosterError } = await supabase
         .from('resident_rosters')
         .select('*')

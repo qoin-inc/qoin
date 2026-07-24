@@ -14,6 +14,7 @@
   - システム構成、機能別設計、機能チェックリスト。
 - `admin/`
   - 管理画面の構成・画面設計資料。
+  - 会費標準設定の確定仕様は `admin/membership_fee_standard_spec_2026-07-24.md`。
 - `integrations/`
   - Stripe、LINE、外部サービス連携に関する方針やメモ。
 
