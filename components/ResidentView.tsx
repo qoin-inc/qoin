@@ -2026,12 +2026,6 @@ export default function ResidentView({ townId, townName, residentName, userId, r
               {withdrawalMessage && <div className={`form-alert ${withdrawalMessage.includes("送信しました") ? "success" : ""}`}>{withdrawalMessage}</div>}
             </div>
 
-            <div className="el-status-card">
-              <p className="el-kicker">ナビゲーション</p>
-              <h2>トップメニュー</h2>
-              <p>役員画面や操作説明を開く場合はこちらから戻れます。</p>
-              <Link href="/" className="el-secondary-action">トップへ戻る</Link>
-            </div>
           </section>
         )}
       </main>
