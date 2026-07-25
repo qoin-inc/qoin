@@ -1,0 +1,290 @@
+.page {
+  min-height: 100vh;
+  background: #f5f8fb;
+  color: #17324d;
+  font-family: "Noto Sans JP", system-ui, sans-serif;
+}
+
+.hero {
+  padding: 28px 24px 72px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 84% 18%, rgba(97, 218, 196, 0.34), transparent 27%),
+    linear-gradient(135deg, #073b5c 0%, #075b78 55%, #0c7c78 100%);
+}
+
+.heroInner,
+.notice,
+.content,
+.flow,
+.footer {
+  width: min(960px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  color: #075b78;
+  background: #fff;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.badge {
+  width: fit-content;
+  margin-top: 48px;
+  padding: 7px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.eyebrow {
+  margin: 26px 0 8px;
+  color: #bceee6;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.hero h1 {
+  max-width: 780px;
+  margin: 0;
+  font-size: clamp(32px, 7vw, 58px);
+  line-height: 1.18;
+  letter-spacing: -0.045em;
+}
+
+.lead {
+  max-width: 690px;
+  margin: 22px 0 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 16px;
+  line-height: 1.9;
+}
+
+.notice {
+  box-sizing: border-box;
+  margin-top: -32px;
+  padding: 22px 24px;
+  border: 1px solid #f5c2b7;
+  border-radius: 18px;
+  background: #fff7f3;
+  box-shadow: 0 16px 40px rgba(14, 55, 79, 0.1);
+}
+
+.notice strong {
+  color: #a63c24;
+  font-size: 17px;
+}
+
+.notice p {
+  margin: 8px 0 0;
+  color: #68463e;
+  line-height: 1.75;
+}
+
+.content {
+  box-sizing: border-box;
+  margin-top: 34px;
+  padding: 34px;
+  border: 1px solid #dce7ef;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(14, 55, 79, 0.07);
+}
+
+.heading {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 5px 20px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #17324d;
+}
+
+.heading p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #16837c;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.heading h2 {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 32px);
+}
+
+.heading span {
+  color: #708394;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.table {
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.32fr) minmax(0, 1fr);
+  gap: 26px;
+  padding: 22px 4px;
+  border-bottom: 1px solid #e4ebf0;
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row dt {
+  color: #597185;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.row dd {
+  margin: 0;
+}
+
+.row dd strong,
+.row dd small {
+  display: block;
+}
+
+.row dd strong {
+  color: #17324d;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.row dd small {
+  margin-top: 7px;
+  color: #718393;
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.flow {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 0.7fr 1.3fr;
+  gap: 48px;
+  margin-top: 34px;
+  padding: 36px;
+  border-radius: 24px;
+  color: #fff;
+  background: #17324d;
+}
+
+.flow h2 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.45;
+}
+
+.flow ol {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.flow li {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  gap: 12px;
+  color: #dcebf2;
+  font-size: 13px;
+}
+
+.flow li span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  color: #073b5c;
+  background: #bceee6;
+  font-weight: 900;
+}
+
+.footer {
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 36px 4px 52px;
+  color: #63788a;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.footer p {
+  max-width: 650px;
+  margin: 0;
+}
+
+.footer a {
+  color: #08756f;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .hero {
+    padding-inline: 0;
+  }
+
+  .heroInner,
+  .notice,
+  .content,
+  .flow,
+  .footer {
+    width: min(100% - 28px, 960px);
+  }
+
+  .content,
+  .flow {
+    padding: 24px 20px;
+  }
+
+  .heading,
+  .row,
+  .flow {
+    grid-template-columns: 1fr;
+  }
+
+  .heading span {
+    margin-top: 5px;
+  }
+
+  .row {
+    gap: 7px;
+  }
+
+  .footer {
+    display: grid;
+  }
+}
