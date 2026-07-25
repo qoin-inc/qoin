@@ -1,0 +1,169 @@
+.page {
+  min-height: 100vh;
+  color: #153853;
+  background: #f5f9fc;
+}
+
+.header {
+  display: flex;
+  width: min(calc(100% - 40px), 1080px);
+  margin: 0 auto;
+  padding: 22px 0;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 800;
+}
+
+.brand img {
+  width: auto;
+  height: 40px;
+  object-fit: contain;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.4fr .8fr;
+  width: min(calc(100% - 40px), 1080px);
+  margin: 24px auto 0;
+  padding: clamp(28px, 6vw, 70px);
+  gap: 36px;
+  align-items: center;
+  border-radius: 30px;
+  color: white;
+  background: linear-gradient(135deg, #062f50, #0785b7);
+}
+
+.hero p {
+  line-height: 1.8;
+}
+
+.hero > div > p:first-child {
+  margin: 0 0 10px;
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .16em;
+  opacity: .72;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 56px);
+}
+
+.hero h2 {
+  margin: 14px 0;
+  font-size: clamp(20px, 3vw, 30px);
+}
+
+.feeCard {
+  display: flex;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 22px;
+  align-items: center;
+  flex-direction: column;
+  background: rgba(255, 255, 255, .12);
+  backdrop-filter: blur(10px);
+}
+
+.feeCard img {
+  border-radius: 22px;
+}
+
+.feeCard small {
+  margin-top: 14px;
+}
+
+.feeCard strong {
+  margin: 4px 0;
+  font-size: clamp(32px, 5vw, 52px);
+}
+
+.feeCard span {
+  font-weight: 800;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: min(calc(100% - 40px), 1080px);
+  margin: 24px auto;
+  gap: 20px;
+}
+
+.content article {
+  padding: 28px;
+  border: 1px solid #dce8ef;
+  border-radius: 20px;
+  background: white;
+}
+
+.content h2 {
+  margin-top: 0;
+}
+
+.content p {
+  line-height: 1.8;
+}
+
+.note {
+  color: #61788b;
+  font-size: .92rem;
+}
+
+.action {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  color: white;
+  background: #0879ad;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.footer {
+  display: flex;
+  width: min(calc(100% - 40px), 1080px);
+  margin: 0 auto;
+  padding: 32px 0 48px;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #dce8ef;
+}
+
+.footer p {
+  font-weight: 900;
+}
+
+.footer nav {
+  display: flex;
+  gap: 18px;
+}
+
+.footer a {
+  color: #0879ad;
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .header,
+  .footer {
+    align-items: flex-start;
+    gap: 14px;
+    flex-direction: column;
+  }
+
+  .hero,
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: 28px;
+  }
+
+  .footer nav {
+    flex-direction: column;
+  }
+}

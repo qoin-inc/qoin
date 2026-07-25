@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import PayPayApplicationPanel from "@/components/PayPayApplicationPanel";
 
 type AdminViewProps = {
   townId: number;
@@ -62,14 +63,11 @@ type FeeSettingsDraft = {
   cashEnabled: boolean;
   stripeCardEnabled: boolean;
   bankTransferEnabled: boolean;
-  paypayEnabled: boolean;
   bankName: string;
   bankBranchName: string;
   bankAccountType: "ordinary" | "checking";
   bankAccountNumber: string;
   bankAccountHolder: string;
-  paypayDisplayName: string;
-  paypayPaymentUrl: string;
   paymentInstructions: string;
 };
 
@@ -452,14 +450,11 @@ const defaultFeeSettingsDraft: FeeSettingsDraft = {
   cashEnabled: true,
   stripeCardEnabled: true,
   bankTransferEnabled: false,
-  paypayEnabled: false,
   bankName: "",
   bankBranchName: "",
   bankAccountType: "ordinary",
   bankAccountNumber: "",
   bankAccountHolder: "",
-  paypayDisplayName: "",
-  paypayPaymentUrl: "",
   paymentInstructions: "",
 };
 
@@ -1389,14 +1384,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       cashEnabled: setting?.cash_enabled !== false,
       stripeCardEnabled: setting?.stripe_card_enabled !== false,
       bankTransferEnabled: Boolean(setting?.bank_transfer_enabled),
-      paypayEnabled: Boolean(setting?.paypay_enabled),
       bankName: String(setting?.bank_name || ""),
       bankBranchName: String(setting?.bank_branch_name || ""),
       bankAccountType: setting?.bank_account_type === "checking" ? "checking" : "ordinary",
       bankAccountNumber: String(setting?.bank_account_number || ""),
       bankAccountHolder: String(setting?.bank_account_holder || ""),
-      paypayDisplayName: String(setting?.paypay_display_name || ""),
-      paypayPaymentUrl: String(setting?.paypay_payment_url || ""),
       paymentInstructions: String(setting?.payment_instructions || ""),
     });
   }, [basicData.feeSetting, basicData.setting?.annual_fee_amount, basicData.town?.fiscal_start_month]);
@@ -3166,7 +3158,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       feeSettingsDraft.cashEnabled,
       feeSettingsDraft.stripeCardEnabled,
       feeSettingsDraft.bankTransferEnabled,
-      feeSettingsDraft.paypayEnabled,
+      Boolean(basicData.feeSetting?.stripe_paypay_enabled),
     ].filter(Boolean).length;
 
     if (!feeName) return setFeeSettingsMessage("会費名称を入力してください。");
@@ -3184,17 +3176,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       return setFeeSettingsMessage("口座振込を利用する場合は、銀行名・支店名・口座番号・口座名義を入力してください。");
     }
 
-    const paypayPaymentUrl = feeSettingsDraft.paypayPaymentUrl.trim();
-    if (feeSettingsDraft.paypayEnabled) {
-      if (!feeSettingsDraft.paypayDisplayName.trim()) return setFeeSettingsMessage("PayPayの表示名を入力してください。");
-      try {
-        const parsedUrl = new URL(paypayPaymentUrl);
-        if (parsedUrl.protocol !== "https:") throw new Error("invalid protocol");
-      } catch {
-        return setFeeSettingsMessage("PayPay決済案内URLを https:// から正しく入力してください。");
-      }
-    }
-
     const overriddenFields = {
       ...(basicData.feeSetting?.overridden_fields || {}),
       fee_name: true,
@@ -3203,7 +3184,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       cash_enabled: true,
       stripe_card_enabled: true,
       bank_transfer_enabled: true,
-      paypay_enabled: true,
     };
     const payload = {
       neighborhood_id: townId,
@@ -3216,14 +3196,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       cash_enabled: feeSettingsDraft.cashEnabled,
       stripe_card_enabled: feeSettingsDraft.stripeCardEnabled,
       bank_transfer_enabled: feeSettingsDraft.bankTransferEnabled,
-      paypay_enabled: feeSettingsDraft.paypayEnabled,
       bank_name: feeSettingsDraft.bankTransferEnabled ? bankName : null,
       bank_branch_name: feeSettingsDraft.bankTransferEnabled ? bankBranchName : null,
       bank_account_type: feeSettingsDraft.bankTransferEnabled ? feeSettingsDraft.bankAccountType : null,
       bank_account_number: feeSettingsDraft.bankTransferEnabled ? bankAccountNumber : null,
       bank_account_holder: feeSettingsDraft.bankTransferEnabled ? bankAccountHolder : null,
-      paypay_display_name: feeSettingsDraft.paypayEnabled ? feeSettingsDraft.paypayDisplayName.trim() : null,
-      paypay_payment_url: feeSettingsDraft.paypayEnabled ? paypayPaymentUrl : null,
       payment_instructions: feeSettingsDraft.paymentInstructions.trim() || null,
       revenue_category: basicData.feeSetting?.revenue_category || "会費",
       overridden_fields: overriddenFields,
@@ -4400,11 +4377,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <i className="fas fa-building-columns" />
                 <span><strong>口座振込</strong><small>団体が管理する会費受取口座を案内します。</small></span>
               </label>
-              <label className={feeSettingsDraft.paypayEnabled ? "selected" : ""}>
-                <input type="checkbox" checked={feeSettingsDraft.paypayEnabled} onChange={(event) => handleFeeSettingsDraftChange("paypayEnabled", event.target.checked)} />
-                <i className="fas fa-mobile-screen-button" />
-                <span><strong>PayPay</strong><small>団体の決済案内URLを会員へ案内します。</small></span>
-              </label>
             </div>
 
             {feeSettingsDraft.bankTransferEnabled && (
@@ -4422,16 +4394,6 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                   </label>
                   <label><span>口座番号</span><input value={feeSettingsDraft.bankAccountNumber} onChange={(event) => handleFeeSettingsDraftChange("bankAccountNumber", event.target.value)} inputMode="numeric" /></label>
                   <label className="admin-basic-wide"><span>口座名義</span><input value={feeSettingsDraft.bankAccountHolder} onChange={(event) => handleFeeSettingsDraftChange("bankAccountHolder", event.target.value)} placeholder="例：ミドリクチョウナイカイ" /></label>
-                </div>
-              </div>
-            )}
-
-            {feeSettingsDraft.paypayEnabled && (
-              <div className="admin-fee-method-details">
-                <h4><i className="fas fa-mobile-screen-button" /> PayPayの案内情報</h4>
-                <div className="admin-basic-form">
-                  <label><span>会員に表示する名称</span><input value={feeSettingsDraft.paypayDisplayName} onChange={(event) => handleFeeSettingsDraftChange("paypayDisplayName", event.target.value)} placeholder="例：緑区町内会 会費" /></label>
-                  <label className="admin-basic-wide"><span>PayPay決済案内URL</span><input type="url" value={feeSettingsDraft.paypayPaymentUrl} onChange={(event) => handleFeeSettingsDraftChange("paypayPaymentUrl", event.target.value)} placeholder="https://" /></label>
                 </div>
               </div>
             )}
@@ -4903,6 +4865,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             </div>
           )}
         </section>
+        <PayPayApplicationPanel
+          townId={townId}
+          townName={basicData.town?.name || townName}
+          stripeConnected={Boolean(rawStripeAccountId && stripeChargesEnabled)}
+        />
       </div>
     );
   };

@@ -3,8 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminView from "@/components/AdminView";
+import PayPayApprovalPanel from "@/components/PayPayApprovalPanel";
 
-type Tab = "towns" | "feeStandards" | "billing";
+type Tab = "towns" | "feeStandards" | "billing" | "paypay";
 type Town = { id: string | number; name: string; created_at?: string | null };
 type Draft = { monthlyHouseholdPrice: string; freePushLimit: string; pushUnitPrice: string; taxRate: string };
 type FeeStandardDraft = {
@@ -349,8 +350,8 @@ export default function SystemAdminView() {
 
   return (
     <main className="system-admin-screen">
-      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : tab === "feeStandards" ? "会費標準設定" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録団体の状況確認、管理画面の照査、完全削除を行います。" : tab === "feeStandards" ? "町内会・自治会が会員世帯へ請求する会費の初期値を版管理します。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
-      <nav className="system-admin-tabs"><button className={tab === "towns" ? "active" : ""} onClick={() => setTab("towns")}>町内会・自治会管理</button><button className={tab === "feeStandards" ? "active" : ""} onClick={() => setTab("feeStandards")}>会費標準設定</button><button className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>システム利用料設定</button></nav>
+      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : tab === "feeStandards" ? "会費標準設定" : tab === "paypay" ? "PayPay申請承認" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録団体の状況確認、管理画面の照査、完全削除を行います。" : tab === "feeStandards" ? "町内会・自治会が会員世帯へ請求する会費の初期値を版管理します。" : tab === "paypay" ? "団体から届いたPayPay利用・変更・停止申請を確認します。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
+      <nav className="system-admin-tabs"><button className={tab === "towns" ? "active" : ""} onClick={() => setTab("towns")}>町内会・自治会管理</button><button className={tab === "feeStandards" ? "active" : ""} onClick={() => setTab("feeStandards")}>会費標準設定</button><button className={tab === "paypay" ? "active" : ""} onClick={() => setTab("paypay")}>PayPay申請</button><button className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>システム利用料設定</button></nav>
       {message && <div className="system-admin-message">{message}</div>}
 
       {tab === "towns" && <>
@@ -402,6 +403,8 @@ export default function SystemAdminView() {
           </div>
         </section>
       </>}
+
+      {tab === "paypay" && <PayPayApprovalPanel />}
 
       {tab === "billing" && <>
         <section className="system-admin-grid"><section className="system-admin-card"><h2>料金単価</h2><div className="system-admin-form"><label><span>請求対象月</span><input type="month" value={billingMonth} onChange={(e) => setBillingMonth(e.target.value)} /></label><label><span>接続数1件あたり単価</span><input value={draft.monthlyHouseholdPrice} onChange={(e) => setDraft({ ...draft, monthlyHouseholdPrice: e.target.value })} /></label><label><span>無料プッシュ件数</span><input value={draft.freePushLimit} onChange={(e) => setDraft({ ...draft, freePushLimit: e.target.value })} /></label><label><span>プッシュ超過単価</span><input value={draft.pushUnitPrice} onChange={(e) => setDraft({ ...draft, pushUnitPrice: e.target.value })} /></label><label><span>消費税率</span><input value={draft.taxRate} onChange={(e) => setDraft({ ...draft, taxRate: e.target.value })} /></label></div><div className="system-admin-actions"><button onClick={saveSettings} disabled={busy}>全町内会へ反映</button></div></section>

@@ -39,3 +39,83 @@ body {
 /* スクロールバー非表示（デザイン目的） */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.paypay-application {
+  border-top: 4px solid #ff3158;
+}
+
+.paypay-application h4 {
+  margin: 24px 0 8px;
+  color: #173b5d;
+  font-size: 1.05rem;
+}
+
+.paypay-workflow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid #d9e8f1;
+  border-radius: 14px;
+  color: #173b5d;
+  background: #f5faff;
+  font-size: .9rem;
+  font-weight: 800;
+}
+
+.paypay-workflow i {
+  color: #7795ab;
+  font-style: normal;
+}
+
+.paypay-form textarea {
+  resize: vertical;
+}
+
+.paypay-public-link {
+  margin: 18px 0 0;
+}
+
+.paypay-public-link a {
+  color: #0879ad;
+  font-weight: 800;
+}
+
+.admin-stripe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.paypay-review-list {
+  display: grid;
+  gap: 18px;
+}
+
+.paypay-review-card {
+  border-left: 5px solid #ff3158;
+}
+
+.paypay-review-card .admin-definition-list {
+  margin-top: 18px;
+}
+
+.system-admin-message.error {
+  border-color: #fac0c8;
+  color: #9e2334;
+  background: #fff1f3;
+}
+
+@media (max-width: 720px) {
+  .paypay-workflow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .paypay-workflow i {
+    transform: rotate(90deg);
+    text-align: center;
+  }
+}

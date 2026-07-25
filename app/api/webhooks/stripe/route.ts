@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { createWebhookSupabaseClient } from '@/lib/stripeConnectServer';
+import { payPayCapabilityStatus } from '@/lib/paypayServer';
 
 const missingColumnFromError = (error: any) => {
   const message = String(error?.message || '');
@@ -15,7 +16,7 @@ const updateFeeRecordWithFallback = async (supabase: SupabaseClient, feeRecordId
   let nextPayload = { ...payload };
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const result = await supabase.from('fee_records').update(nextPayload).eq('id', feeRecordId).select('id').maybeSingle();
-    if (!result.error && result.data) return;
+    if (!result.error && result.data) return result.data;
     if (!result.error && !result.data) throw new Error(`Fee record ${feeRecordId} was not updated.`);
 
     const missingColumn = missingColumnFromError(result.error);
@@ -31,7 +32,7 @@ const updateNeighborhoodStripeWithFallback = async (supabase: SupabaseClient, st
   let nextPayload = { ...payload };
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const result = await supabase.from('neighborhoods').update(nextPayload).eq('stripe_account_id', stripeAccountId).select('id').maybeSingle();
-    if (!result.error && result.data) return;
+    if (!result.error && result.data) return result.data;
     if (!result.error && !result.data) throw new Error(`Stripe account ${stripeAccountId} is not linked to a neighborhood.`);
 
     const missingColumn = missingColumnFromError(result.error);
@@ -322,14 +323,35 @@ export async function POST(req: Request) {
     const active = Boolean(account.charges_enabled && account.payouts_enabled);
     const mode = event.livemode ? 'live' : 'test';
 
-    await updateNeighborhoodStripeWithFallback(supabase, account.id, {
+    const capabilityStatus = payPayCapabilityStatus(account);
+    const neighborhood = await updateNeighborhoodStripeWithFallback(supabase, account.id, {
       stripe_account_mode: mode,
       stripe_onboarding_status: active ? 'active' : account.details_submitted ? 'reviewing' : 'pending',
       stripe_charges_enabled: account.charges_enabled,
       stripe_payouts_enabled: account.payouts_enabled,
       stripe_details_submitted: account.details_submitted,
       stripe_account_updated_at: new Date().toISOString(),
+      stripe_paypay_status: capabilityStatus,
+      stripe_paypay_last_error: null,
+      stripe_paypay_updated_at: new Date().toISOString(),
     });
+    if (neighborhood?.id) {
+      const { data: disclosure } = await supabase
+        .from('neighborhood_commercial_disclosures')
+        .select('publication_status')
+        .eq('neighborhood_id', neighborhood.id)
+        .maybeSingle();
+      const paypayEnabled = capabilityStatus === 'active' && disclosure?.publication_status === 'published';
+      if (capabilityStatus === 'active' && !paypayEnabled) {
+        await supabase.from('neighborhoods').update({
+          stripe_paypay_status: 'inactive',
+          stripe_paypay_updated_at: new Date().toISOString(),
+        }).eq('id', neighborhood.id);
+      }
+      await supabase.from('neighborhood_fee_settings').update({
+        stripe_paypay_enabled: paypayEnabled,
+      }).eq('neighborhood_id', neighborhood.id);
+    }
     
     // details_submitted が true になれば登録完了
     if (account.details_submitted) {

@@ -867,15 +867,16 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("会員ログインを確認できません。もう一度ログインしてください。");
       const response = await fetch("/api/fees/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           feeRecordId: fee.id,
-          amount,
-          stripeAccountId,
-          residentName: displayName,
-          townName: placeName,
         }),
       });
       const data = await response.json();
@@ -2003,21 +2004,26 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                         </span>
                       </div>
                     )}
-                    {feeSetting?.paypay_enabled && feeSetting?.paypay_payment_url && (
-                      <a className="el-fee-payment-method action" href={feeSetting.paypay_payment_url} target="_blank" rel="noopener noreferrer">
-                        <i className="fas fa-mobile-screen-button" />
-                        <span><strong>{feeSetting.paypay_display_name || "PayPayで支払う"}</strong><small>PayPayの決済案内を開きます。</small></span>
-                      </a>
-                    )}
-                    {feeSetting?.stripe_card_enabled !== false && ((latestFee.billing_channel === "stripe" || stripeAccountId) && stripeReady ? (
+                    {(feeSetting?.stripe_card_enabled !== false || feeSetting?.stripe_paypay_enabled) && ((latestFee.billing_channel === "stripe" || stripeAccountId) && stripeReady ? (
                       <button className="el-primary-action" onClick={() => handleOnlinePayment(latestFee)}>
-                        <i className="fas fa-credit-card" /> Stripeカードで支払う
+                        <i className="fas fa-credit-card" />
+                        {feeSetting?.stripe_paypay_enabled && feeSetting?.stripe_card_enabled !== false
+                          ? "オンラインで支払う（カード・PayPay）"
+                          : feeSetting?.stripe_paypay_enabled ? "オンラインで支払う（PayPay）" : "オンラインで支払う（カード）"}
                       </button>
                     ) : latestFee.billing_channel === "stripe" || stripeAccountId ? (
                       <div className="el-empty">Stripe本番連携の確認中です。役員からの案内をお待ちください。</div>
                     ) : null)}
-                    {(feeSetting?.bank_transfer_enabled || feeSetting?.paypay_enabled) && (
-                      <p className="el-fee-payment-caution">振込・PayPayの着金確認後、役員が入金状況を反映します。</p>
+                    {feeSetting?.stripe_paypay_enabled && (
+                      <>
+                        <p className="el-fee-payment-caution">PayPayはStripeの安全な決済画面で選択できます。</p>
+                        <Link href={`/legal/commercial-transactions/${townId}`} target="_blank" className="el-secondary-action">
+                          お支払い条件・特定商取引法に基づく表記
+                        </Link>
+                      </>
+                    )}
+                    {feeSetting?.bank_transfer_enabled && (
+                      <p className="el-fee-payment-caution">口座振込の着金確認後、役員が入金状況を反映します。</p>
                     )}
                   </div>
                 ) : (
