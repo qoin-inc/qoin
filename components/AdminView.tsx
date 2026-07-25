@@ -93,6 +93,16 @@ type StripeOnboardingDraft = {
   bankAccountReady: boolean;
 };
 
+type StripePayoutAccount = {
+  id: string;
+  bankName: string;
+  last4: string;
+  currency: string;
+  country: string;
+  defaultForCurrency: boolean;
+  status: string;
+};
+
 type LiveSessionDraft = {
   provider: "line" | "youtube";
   title: string;
@@ -991,6 +1001,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [stripeOnboardingDraft, setStripeOnboardingDraft] = useState<StripeOnboardingDraft>(defaultStripeOnboardingDraft);
   const [stripeProfileLoaded, setStripeProfileLoaded] = useState(false);
   const [stripeRequiredFields, setStripeRequiredFields] = useState<string[]>([]);
+  const [stripePayoutAccounts, setStripePayoutAccounts] = useState<StripePayoutAccount[]>([]);
   const stripeSyncAttemptRef = useRef("");
   const [publishDraft, setPublishDraft] = useState<PublishDraft>(defaultPublishDraft);
   const proxyTemplateTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -3656,13 +3667,14 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         setStripeOnboardingDraft((current) => ({
           ...current,
           businessType: data.onboardingProfile.businessType || current.businessType,
-          organizationName: data.onboardingProfile.organizationName || current.organizationName,
+          organizationName: data.onboardingProfile.organizationName || basicData.town?.name || townName || current.organizationName,
           supportEmail: data.onboardingProfile.supportEmail || current.supportEmail,
           supportPhone: data.onboardingProfile.supportPhone || current.supportPhone,
           website: data.onboardingProfile.website || current.website,
           productDescription: data.onboardingProfile.productDescription || current.productDescription,
         }));
       }
+      setStripePayoutAccounts(Array.isArray(data.payoutAccounts) ? data.payoutAccounts : []);
       setStripeRequiredFields(Array.from(new Set([
         ...(data.requirements?.pastDue || []),
         ...(data.requirements?.currentlyDue || []),
@@ -3684,10 +3696,10 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     } finally {
       setStripeSyncing(false);
     }
-  }, [townId]);
+  }, [basicData.town?.name, townId, townName]);
 
   useEffect(() => {
-    if (activeBasicFeature !== "Stripe連携" || !townId) return;
+    if (!["Stripe連携", "会費管理"].includes(activeBasicFeature) || !townId) return;
     const syncKey = String(townId);
     if (stripeSyncAttemptRef.current === syncKey) return;
     stripeSyncAttemptRef.current = syncKey;
@@ -4332,6 +4344,25 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               <span className="admin-member-count">団体別設定</span>
             </div>
 
+            {rawStripeAccountId && (
+              <div className="admin-fee-stripe-payout">
+                <div>
+                  <strong><i className="fas fa-building-columns" /> Stripe入金先口座</strong>
+                  <small>Stripeが決済売上を町内会・自治会へ振り込む口座です。会員へ案内する直接振込先とは別です。</small>
+                </div>
+                <div className="admin-fee-stripe-payout-accounts">
+                  {stripePayoutAccounts.length > 0 ? stripePayoutAccounts.map((account) => (
+                    <span key={account.id}>
+                      {account.bankName}（末尾 {account.last4 || "----"}）
+                      {account.defaultForCurrency ? "・既定" : ""}
+                    </span>
+                  )) : (
+                    <span>{stripeProfileLoaded ? "Stripeで登録済み口座を確認できませんでした" : "Stripeの登録内容を確認中"}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="admin-basic-form admin-fee-settings-form">
               <label>
                 <span>会費名称</span>
@@ -4790,6 +4821,15 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           <dl className="admin-definition-list">
             <div><dt>登録モード</dt><dd>{stripeAccountMode === "test" ? "テストモード（el-town検証用）" : "本番モード"}</dd></div>
             <div><dt>Connectアカウント</dt><dd>{stripeAccountId}</dd></div>
+            <div><dt>Stripe登録名</dt><dd>{stripeOnboardingDraft.organizationName || basicData.town?.name || townName}</dd></div>
+            <div>
+              <dt>入金先口座</dt>
+              <dd>
+                {stripePayoutAccounts.length > 0
+                  ? stripePayoutAccounts.map((account) => `${account.bankName}（末尾 ${account.last4 || "----"}）`).join("、")
+                  : rawStripeAccountId && stripeProfileLoaded ? "Stripeで登録済み口座を確認できませんでした" : "未確認"}
+              </dd>
+            </div>
             <div><dt>決済受付</dt><dd>{stripeChargesEnabled ? "有効" : "未確認"}</dd></div>
             <div><dt>入金/振込</dt><dd>{stripePayoutsEnabled ? "有効" : "未確認"}</dd></div>
             <div><dt>契約主体</dt><dd>町内会・自治会とStripe</dd></div>
@@ -4813,7 +4853,8 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             </label>
             <label>
               <span>Stripeへ登録する団体名</span>
-              <input value={stripeOnboardingDraft.organizationName} onChange={(event) => handleStripeOnboardingDraftChange("organizationName", event.target.value)} />
+              <input value={stripeOnboardingDraft.organizationName} readOnly />
+              <small>「基本情報」の町内会・自治会名をStripeへ同期します。</small>
             </label>
             <label>
               <span>Stripe連絡先メール</span>

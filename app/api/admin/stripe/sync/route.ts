@@ -55,6 +55,45 @@ export async function POST(req: Request) {
       });
     }
 
+    const neighborhoodName = String(town.name || '').trim();
+    if (neighborhoodName && String(account.business_profile?.name || '').trim() !== neighborhoodName) {
+      account = await stripe.accounts.update(account.id, {
+        business_profile: {
+          name: neighborhoodName,
+        },
+        metadata: { el_town_neighborhood_id: String(townId) },
+      });
+    }
+
+    let payoutAccounts: Array<{
+      id: string;
+      bankName: string;
+      last4: string;
+      currency: string;
+      country: string;
+      defaultForCurrency: boolean;
+      status: string;
+    }> = [];
+    try {
+      const externalAccounts = await stripe.accounts.listExternalAccounts(account.id, {
+        object: 'bank_account',
+        limit: 10,
+      });
+      payoutAccounts = externalAccounts.data
+        .filter((externalAccount): externalAccount is Stripe.BankAccount => externalAccount.object === 'bank_account')
+        .map((bankAccount) => ({
+          id: bankAccount.id,
+          bankName: bankAccount.bank_name || '登録済み銀行',
+          last4: bankAccount.last4 || '',
+          currency: String(bankAccount.currency || '').toUpperCase(),
+          country: bankAccount.country || '',
+          defaultForCurrency: Boolean(bankAccount.default_for_currency),
+          status: bankAccount.status || '',
+        }));
+    } catch (externalAccountError) {
+      console.warn('Stripe payout account lookup failed:', externalAccountError);
+    }
+
     const statusPayload = stripeAccountStatusPayload(account, stripeMode);
     await updateNeighborhoodStripe(writeClient, townId, statusPayload);
 
@@ -63,12 +102,13 @@ export async function POST(req: Request) {
       status: statusPayload.stripe_onboarding_status,
       onboardingProfile: {
         businessType: account.business_type || 'non_profit',
-        organizationName: account.business_profile?.name || town.name || '',
+        organizationName: neighborhoodName,
         supportEmail: account.business_profile?.support_email || account.email || adminData?.admin_email || '',
         supportPhone: account.business_profile?.support_phone || '',
         website: account.business_profile?.url || '',
         productDescription: account.business_profile?.product_description || '',
       },
+      payoutAccounts,
       requirements: {
         currentlyDue: account.requirements?.currently_due || [],
         pastDue: account.requirements?.past_due || [],

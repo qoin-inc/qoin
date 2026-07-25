@@ -79,7 +79,9 @@ export async function POST(req: Request) {
     }
 
     const requestedBusinessType = String(onboarding.businessType || stripeAccount?.business_type || 'non_profit');
-    const organizationName = String(onboarding.organizationName || stripeAccount?.business_profile?.name || town.name || '').trim();
+    // The neighborhood record is the tenant identity. Do not allow a stale value
+    // from a previously linked Stripe account (for example "el-town") to replace it.
+    const organizationName = String(town.name || '').trim();
     const supportEmail = String(onboarding.supportEmail || stripeAccount?.business_profile?.support_email || stripeAccount?.email || adminData?.admin_email || '').trim();
     const supportPhone = String(onboarding.supportPhone || stripeAccount?.business_profile?.support_phone || '').trim();
     const website = String(onboarding.website || stripeAccount?.business_profile?.url || baseUrl).trim();
