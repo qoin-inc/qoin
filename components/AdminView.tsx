@@ -415,6 +415,7 @@ const feeDetailColumns = [
   "paid_at",
   "stripe_payment_intent_id",
 ];
+const requiredFeeIdentityColumns = new Set(["neighborhood_id", "roster_id", "resident_name", "fiscal_year"]);
 
 const memberScaleToHouseholds = (scale: string) => {
   if (scale === "500世帯未満") return 499;
@@ -1337,6 +1338,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
 
       const missingColumn = missingColumnFromError(result.error);
       if (missingColumn && Object.prototype.hasOwnProperty.call(nextPayload, missingColumn)) {
+        if (requiredFeeIdentityColumns.has(missingColumn)) {
+          throw new Error(`会費データの必須項目 ${missingColumn} をDBへ保存できません。会費DBの更新状況を確認してください。`);
+        }
         delete nextPayload[missingColumn];
         continue;
       }

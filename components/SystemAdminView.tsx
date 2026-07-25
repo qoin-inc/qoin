@@ -314,7 +314,7 @@ export default function SystemAdminView() {
           if (result.error && !isMissingRelationError(result.error)) throw result.error;
         }
       }
-      for (const table of ["system_usage_billings", "system_settings", "resident_rosters", "neighborhood_admins", "circulars"]) {
+      for (const table of ["system_usage_billings", "system_settings", "fee_records", "resident_rosters", "neighborhood_admins", "circulars"]) {
         const result = await supabase.from(table).delete().eq("neighborhood_id", town.id);
         if (result.error && !isMissingRelationError(result.error)) throw result.error;
       }
