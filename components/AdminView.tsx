@@ -23,6 +23,7 @@ type BasicData = {
   town: any | null;
   members: any[];
   fees: any[];
+  feeSetting: any | null;
   systemBillings: any[];
   systemPaymentProfile: any | null;
   admins: any[];
@@ -58,6 +59,20 @@ type AdminInviteDraft = {
   name: string;
   email: string;
   role: string;
+};
+
+type StripeBusinessType = "non_profit" | "company" | "individual" | "government_entity";
+
+type StripeOnboardingDraft = {
+  businessType: StripeBusinessType;
+  organizationName: string;
+  supportEmail: string;
+  supportPhone: string;
+  website: string;
+  productDescription: string;
+  legalDetailsReady: boolean;
+  identityDocumentReady: boolean;
+  bankAccountReady: boolean;
 };
 
 type LiveSessionDraft = {
@@ -388,6 +403,44 @@ const defaultMemberDraft: MemberDraft = {
   familyKanaName1: "",
   familyName2: "",
   familyKanaName2: "",
+};
+
+const defaultStripeOnboardingDraft: StripeOnboardingDraft = {
+  businessType: "non_profit",
+  organizationName: "",
+  supportEmail: "",
+  supportPhone: "",
+  website: "https://el-town.jp",
+  productDescription: "町内会・自治会の会員世帯から、年度ごとの会費を受け付けます。",
+  legalDetailsReady: false,
+  identityDocumentReady: false,
+  bankAccountReady: false,
+};
+
+const stripeRequirementLabels: Record<string, string> = {
+  business_type: "団体区分",
+  "business_profile.name": "団体名",
+  "business_profile.url": "Webサイト",
+  "business_profile.product_description": "サービス内容",
+  "business_profile.support_email": "問い合わせメール",
+  "business_profile.support_phone": "問い合わせ電話番号",
+  "company.name": "登記・規約上の団体名",
+  "company.address.city": "団体所在地（市区町村）",
+  "company.address.line1": "団体所在地（町名・番地）",
+  "company.address.postal_code": "団体所在地（郵便番号）",
+  "company.address.state": "団体所在地（都道府県）",
+  "company.phone": "団体電話番号",
+  "company.tax_id": "法人番号・税務情報",
+  external_account: "入金先銀行口座",
+  "tos_acceptance.date": "Stripe利用規約への同意",
+  "tos_acceptance.ip": "Stripe利用規約への同意確認",
+};
+
+const stripeRequirementLabel = (requirement: string) => {
+  if (stripeRequirementLabels[requirement]) return stripeRequirementLabels[requirement];
+  if (requirement.startsWith("person_") || requirement.includes("representative")) return `代表者・本人確認（${requirement}）`;
+  if (requirement.includes("verification.document")) return `本人確認書類（${requirement}）`;
+  return requirement;
 };
 
 const memberCsvHeaders = ["氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族１カタカナ", "家族２", "家族２カタカナ"];
@@ -866,7 +919,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [integratedFacilityStatus, setIntegratedFacilityStatus] = useState<FacilityReservationStatusFilter>("all");
   const [integratedFacilityMonth, setIntegratedFacilityMonth] = useState("");
   const [integratedFacilityDate, setIntegratedFacilityDate] = useState("");
-  const [basicData, setBasicData] = useState<BasicData>({ town: null, members: [], fees: [], systemBillings: [], systemPaymentProfile: null, admins: [], setting: null });
+  const [basicData, setBasicData] = useState<BasicData>({ town: null, members: [], fees: [], feeSetting: null, systemBillings: [], systemPaymentProfile: null, admins: [], setting: null });
   const [liveFacilityData, setLiveFacilityData] = useState<LiveFacilityData>({ liveSessions: [], liveApplications: [], facilities: [], reservations: [] });
   const [activeAdminScreen, setActiveAdminScreen] = useState<AdminScreenMode>("dashboard");
   const [activeDashboardMenu, setActiveDashboardMenu] = useState<DashboardMenu>("basic");
@@ -896,6 +949,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [stripeBusy, setStripeBusy] = useState(false);
   const [stripeSyncing, setStripeSyncing] = useState(false);
   const [stripeMessage, setStripeMessage] = useState("");
+  const [stripeOnboardingDraft, setStripeOnboardingDraft] = useState<StripeOnboardingDraft>(defaultStripeOnboardingDraft);
+  const [stripeProfileLoaded, setStripeProfileLoaded] = useState(false);
+  const [stripeRequiredFields, setStripeRequiredFields] = useState<string[]>([]);
   const stripeSyncAttemptRef = useRef("");
   const [publishDraft, setPublishDraft] = useState<PublishDraft>(defaultPublishDraft);
   const proxyTemplateTextareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -991,7 +1047,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const fetchDashboard = async () => {
       setLoading(true);
       try {
-        const [townInfo, billingRows, memberRows, adminRows, pushes, feeRecords, systemUsageBillings, systemPaymentProfile, settings, circulars, facilities, reservations, liveSessions, liveApplications] = await Promise.all([
+        const [townInfo, billingRows, memberRows, adminRows, pushes, feeRecords, feeSetting, systemUsageBillings, systemPaymentProfile, settings, circulars, facilities, reservations, liveSessions, liveApplications] = await Promise.all([
           supabase.from("neighborhoods").select("*").eq("id", townId).maybeSingle(),
           supabase
             .from("resident_rosters")
@@ -1008,6 +1064,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             .gte("created_at", month.start)
             .lt("created_at", month.end),
           supabase.from("fee_records").select("*").eq("neighborhood_id", townId),
+          supabase.from("neighborhood_fee_settings").select("*").eq("neighborhood_id", townId).maybeSingle(),
           supabase.from("system_usage_billings").select("*").eq("neighborhood_id", townId).order("billing_month", { ascending: false }).limit(36),
           supabase.from("system_usage_payment_profiles").select("*").eq("neighborhood_id", townId).maybeSingle(),
           supabase.from("system_settings").select("*").eq("neighborhood_id", townId).maybeSingle(),
@@ -1052,6 +1109,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           town: townInfo.data || null,
           members: memberListRows,
           fees: feeRows,
+          feeSetting: feeSetting.data || null,
           systemBillings: systemUsageBillings.data || [],
           systemPaymentProfile: systemPaymentProfile.data || null,
           admins: adminRows.data || [],
@@ -1252,14 +1310,25 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   }, [basicData.town, townName]);
 
   useEffect(() => {
+    const town = basicData.town;
+    const adminEmail = town?.admin_email || basicData.admins[0]?.admin_email || "";
+    setStripeOnboardingDraft((current) => ({
+      ...current,
+      organizationName: current.organizationName || town?.name || townName || "",
+      supportEmail: current.supportEmail || adminEmail,
+    }));
+    if (town && !town.stripe_account_id) setStripeProfileLoaded(true);
+  }, [basicData.admins, basicData.town, townName]);
+
+  useEffect(() => {
     const year = currentFiscalYear(basicData.town?.fiscal_start_month);
-    const defaultAmount = basicData.setting?.annual_fee_amount || 3000;
+    const defaultAmount = basicData.feeSetting?.amount ?? basicData.setting?.annual_fee_amount ?? 5000;
     setFeeDraft((current) => ({
       fiscalYear: current.fiscalYear || String(year),
       amount: current.amount || String(defaultAmount),
       targetMode: current.targetMode,
     }));
-  }, [basicData.setting?.annual_fee_amount, basicData.town?.fiscal_start_month]);
+  }, [basicData.feeSetting?.amount, basicData.setting?.annual_fee_amount, basicData.town?.fiscal_start_month]);
 
   const handlePublishDraftChange = <K extends keyof PublishDraft>(field: K, value: PublishDraft[K]) => {
     setPublishDraft((current) => ({ ...current, [field]: value }));
@@ -3422,6 +3491,22 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         ...current,
         town: { ...(current.town || {}), ...data.town },
       }));
+      if (data.onboardingProfile) {
+        setStripeOnboardingDraft((current) => ({
+          ...current,
+          businessType: data.onboardingProfile.businessType || current.businessType,
+          organizationName: data.onboardingProfile.organizationName || current.organizationName,
+          supportEmail: data.onboardingProfile.supportEmail || current.supportEmail,
+          supportPhone: data.onboardingProfile.supportPhone || current.supportPhone,
+          website: data.onboardingProfile.website || current.website,
+          productDescription: data.onboardingProfile.productDescription || current.productDescription,
+        }));
+      }
+      setStripeRequiredFields(Array.from(new Set([
+        ...(data.requirements?.pastDue || []),
+        ...(data.requirements?.currentlyDue || []),
+      ])));
+      setStripeProfileLoaded(true);
       if (showSuccessMessage) {
         setStripeMessage(
           data.status === "active"
@@ -3450,7 +3535,32 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     });
   }, [activeBasicFeature, syncStripeStatus, townId]);
 
+  const handleStripeOnboardingDraftChange = <K extends keyof StripeOnboardingDraft>(field: K, value: StripeOnboardingDraft[K]) => {
+    setStripeOnboardingDraft((current) => ({ ...current, [field]: value }));
+    setStripeMessage("");
+  };
+
   const handleStripeOnboardingStart = async () => {
+    const organizationName = stripeOnboardingDraft.organizationName.trim();
+    const supportEmail = stripeOnboardingDraft.supportEmail.trim();
+    const supportPhone = stripeOnboardingDraft.supportPhone.trim();
+    const website = stripeOnboardingDraft.website.trim();
+    const productDescription = stripeOnboardingDraft.productDescription.trim();
+
+    if (!organizationName) return setStripeMessage("Stripeへ登録する団体名を入力してください。");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) return setStripeMessage("Stripe連絡先メールアドレスを正しく入力してください。");
+    if (supportPhone && !/^[0-9+() -]{8,20}$/.test(supportPhone)) return setStripeMessage("電話番号を正しく入力してください。");
+    try {
+      const parsedWebsite = new URL(website);
+      if (!["http:", "https:"].includes(parsedWebsite.protocol)) throw new Error("invalid protocol");
+    } catch {
+      return setStripeMessage("WebサイトURLを https:// から入力してください。");
+    }
+    if (productDescription.length < 10) return setStripeMessage("サービス内容を10文字以上で入力してください。");
+    if (!stripeOnboardingDraft.legalDetailsReady || !stripeOnboardingDraft.identityDocumentReady || !stripeOnboardingDraft.bankAccountReady) {
+      return setStripeMessage("Stripe登録に必要な規約・本人確認書類・入金先口座の準備確認にチェックしてください。");
+    }
+
     const stripeWindow = window.open("", "_blank");
     if (!stripeWindow) {
       setStripeMessage("Stripeを開くには、ブラウザでポップアップを許可してください。");
@@ -3467,7 +3577,17 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ townId }),
+        body: JSON.stringify({
+          townId,
+          onboarding: {
+            businessType: stripeOnboardingDraft.businessType,
+            organizationName,
+            supportEmail,
+            supportPhone,
+            website,
+            productDescription,
+          },
+        }),
       });
       const data = await response.json();
       if (!response.ok || !data.url) throw new Error(data.error || "Stripe本番登録画面を作成できませんでした。");
@@ -4423,32 +4543,66 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         </section>
         <section className="admin-basic-card accent admin-stripe-onboarding">
           <h3>{rawStripeAccountId ? "本番登録を再開・確認" : "本番Stripe登録を開始"}</h3>
-          <p className="admin-basic-note">el-townで確定できる団体名、代表者メール、Webサイト、サービス説明はStripeへ事前入力します。次の内容を確認してから登録画面を開いてください。</p>
-          <dl className="admin-definition-list">
-            <div><dt>団体名</dt><dd>{townName}</dd></div>
-            <div><dt>サービス内容</dt><dd>町内会・自治会の会員世帯から受け付ける年度会費</dd></div>
-            <div><dt>Webサイト</dt><dd>el-town.jp</dd></div>
-            <div><dt>決済方法</dt><dd>Stripeカード決済</dd></div>
-            <div><dt>入金先</dt><dd>団体名義または団体が管理する銀行口座を入力</dd></div>
-            <div><dt>事業形態</dt><dd>規約・登記上の実態に合う区分を選択</dd></div>
-          </dl>
+          <p className="admin-basic-note">Stripeへ移る前に、el-townで団体情報を確認・入力します。既にStripeへ登録済みの内容は取得して表示し、空欄で上書きしません。</p>
+          {rawStripeAccountId && !stripeProfileLoaded && <div className="admin-basic-message">Stripeに登録済みの入力内容を読み込んでいます。</div>}
+          <div className="admin-basic-form">
+            <label>
+              <span>団体区分</span>
+              <select value={stripeOnboardingDraft.businessType} onChange={(event) => handleStripeOnboardingDraftChange("businessType", event.target.value as StripeBusinessType)} disabled={Boolean(rawStripeAccountId)}>
+                <option value="non_profit">非営利団体（町内会・自治会・任意団体）</option>
+                <option value="company">法人（株式会社・一般社団法人など）</option>
+                <option value="individual">個人</option>
+                <option value="government_entity">行政機関</option>
+              </select>
+              {rawStripeAccountId && <small>登録済みアカウントの団体区分はStripe画面で確認します。</small>}
+            </label>
+            <label>
+              <span>Stripeへ登録する団体名</span>
+              <input value={stripeOnboardingDraft.organizationName} onChange={(event) => handleStripeOnboardingDraftChange("organizationName", event.target.value)} />
+            </label>
+            <label>
+              <span>Stripe連絡先メール</span>
+              <input type="email" value={stripeOnboardingDraft.supportEmail} onChange={(event) => handleStripeOnboardingDraftChange("supportEmail", event.target.value)} />
+            </label>
+            <label>
+              <span>問い合わせ電話番号（任意）</span>
+              <input inputMode="tel" value={stripeOnboardingDraft.supportPhone} onChange={(event) => handleStripeOnboardingDraftChange("supportPhone", event.target.value)} placeholder="例：03-1234-5678" />
+            </label>
+            <label className="admin-basic-wide">
+              <span>Webサイト</span>
+              <input type="url" value={stripeOnboardingDraft.website} onChange={(event) => handleStripeOnboardingDraftChange("website", event.target.value)} />
+            </label>
+            <label className="admin-basic-wide">
+              <span>サービス内容</span>
+              <textarea value={stripeOnboardingDraft.productDescription} onChange={(event) => handleStripeOnboardingDraftChange("productDescription", event.target.value)} rows={3} />
+            </label>
+          </div>
+          {rawStripeAccountId && stripeProfileLoaded && (
+            <div className="admin-stripe-requirements">
+              <strong>{stripeRequiredFields.length ? "Stripeで追加入力が必要な項目" : "Stripeで現在不足している項目はありません"}</strong>
+              {stripeRequiredFields.length > 0 && (
+                <ul>
+                  {stripeRequiredFields.map((requirement) => <li key={requirement}>{stripeRequirementLabel(requirement)}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
           <p className="admin-basic-note">法人区分、代表者本人情報、本人確認書類、銀行口座はStripeの本人確認項目のため自動入力できません。画面の案内に従い、実態と一致する内容を入力してください。</p>
           <div className="admin-stripe-checklist">
-            <span><i className="fas fa-id-card" /> 本人確認書類</span>
-            <span><i className="fas fa-building-columns" /> 入金先口座</span>
-            <span><i className="fas fa-envelope" /> 代表者メール</span>
-            <span><i className="fas fa-file-lines" /> 規約・登記情報</span>
+            <label><input type="checkbox" checked={stripeOnboardingDraft.legalDetailsReady} onChange={(event) => handleStripeOnboardingDraftChange("legalDetailsReady", event.target.checked)} /> <i className="fas fa-file-lines" /> 規約・登記上の団体区分を確認しました</label>
+            <label><input type="checkbox" checked={stripeOnboardingDraft.identityDocumentReady} onChange={(event) => handleStripeOnboardingDraftChange("identityDocumentReady", event.target.checked)} /> <i className="fas fa-id-card" /> 代表者の本人確認書類を準備しました</label>
+            <label><input type="checkbox" checked={stripeOnboardingDraft.bankAccountReady} onChange={(event) => handleStripeOnboardingDraftChange("bankAccountReady", event.target.checked)} /> <i className="fas fa-building-columns" /> 団体が管理する入金先口座を準備しました</label>
           </div>
-          <button type="button" className="admin-stripe-primary" onClick={handleStripeOnboardingStart} disabled={stripeBusy || stripeSyncing}>
+          <button type="button" className="admin-stripe-primary" onClick={handleStripeOnboardingStart} disabled={stripeBusy || stripeSyncing || (Boolean(rawStripeAccountId) && !stripeProfileLoaded)}>
             <i className={`fas ${stripeBusy ? "fa-spinner fa-spin" : "fa-arrow-up-right-from-square"}`} />
-            <span>{stripeBusy ? "Stripe画面を準備中" : rawStripeAccountId ? "本番登録を再開・確認" : "本番Stripe登録を開始"}</span>
+            <span>{stripeBusy ? "Stripe画面を準備中" : rawStripeAccountId ? "入力内容を反映して本番登録を再開" : "入力内容を確認して本番Stripe登録を開始"}</span>
           </button>
           <button type="button" className="admin-stripe-sync" onClick={() => void syncStripeStatus(true)} disabled={stripeBusy || stripeSyncing}>
             <i className={`fas ${stripeSyncing ? "fa-spinner fa-spin" : "fa-rotate"}`} />
             <span>{stripeSyncing ? "Stripe状態を確認中" : "Stripe状態を更新"}</span>
           </button>
           {stripeMessage && (
-            <div className={`admin-basic-message ${stripeMessage.includes("失敗") || stripeMessage.includes("できません") ? "error" : "success"}`}>
+            <div className={`admin-basic-message ${stripeMessage.includes("失敗") || stripeMessage.includes("できません") || stripeMessage.includes("入力") || stripeMessage.includes("選択") || stripeMessage.includes("チェック") ? "error" : "success"}`}>
               {stripeMessage}
             </div>
           )}

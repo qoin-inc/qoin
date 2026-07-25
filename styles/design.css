@@ -2623,7 +2623,8 @@ button { cursor: pointer; border: 0; }
   margin: 14px 0;
 }
 
-.admin-stripe-checklist span {
+.admin-stripe-checklist span,
+.admin-stripe-checklist label {
   min-height: 38px;
   display: flex;
   align-items: center;
@@ -2673,6 +2674,32 @@ button { cursor: pointer; border: 0; }
   padding: 0 14px;
   font-size: 13px;
   font-weight: 900;
+}
+
+.admin-stripe-checklist label {
+  cursor: pointer;
+}
+
+.admin-stripe-checklist input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--qoin-main);
+}
+
+.admin-stripe-requirements {
+  margin-top: 14px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412;
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.admin-stripe-requirements ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  line-height: 1.7;
 }
 
 .admin-stripe-sync:disabled {

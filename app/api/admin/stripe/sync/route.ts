@@ -61,6 +61,20 @@ export async function POST(req: Request) {
     return NextResponse.json({
       town: statusPayload,
       status: statusPayload.stripe_onboarding_status,
+      onboardingProfile: {
+        businessType: account.business_type || 'non_profit',
+        organizationName: account.business_profile?.name || town.name || '',
+        supportEmail: account.business_profile?.support_email || account.email || adminData?.admin_email || '',
+        supportPhone: account.business_profile?.support_phone || '',
+        website: account.business_profile?.url || '',
+        productDescription: account.business_profile?.product_description || '',
+      },
+      requirements: {
+        currentlyDue: account.requirements?.currently_due || [],
+        pastDue: account.requirements?.past_due || [],
+        eventuallyDue: account.requirements?.eventually_due || [],
+        disabledReason: account.requirements?.disabled_reason || '',
+      },
     });
   } catch (err: any) {
     console.error('Stripe sync error:', err);

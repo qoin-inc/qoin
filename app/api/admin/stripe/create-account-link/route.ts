@@ -18,7 +18,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '本番環境ではStripe本番キーでの登録のみ許可されています。' }, { status: 500 });
     }
 
-    const { townId } = await req.json();
+    const requestBody = await req.json();
+    const { townId } = requestBody;
+    const onboarding = requestBody?.onboarding || {};
+    const allowedBusinessTypes = new Set(['non_profit', 'company', 'individual', 'government_entity']);
 
     if (!townId) {
       return NextResponse.json({ error: 'townId is required' }, { status: 400 });
@@ -46,6 +49,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     let stripeAccountId = town.stripe_account_id;
+    let stripeAccount: Stripe.Account | null = null;
     const shouldReplaceStoredAccount = town.stripe_account_mode && town.stripe_account_mode !== stripeMode;
     if (shouldReplaceStoredAccount) {
       stripeAccountId = '';
@@ -53,8 +57,8 @@ export async function POST(req: Request) {
 
     if (stripeAccountId) {
       try {
-        const account = await stripe.accounts.retrieve(stripeAccountId);
-        await updateNeighborhoodStripe(writeClient, townId, stripeAccountStatusPayload(account, stripeMode));
+        stripeAccount = await stripe.accounts.retrieve(stripeAccountId);
+        await updateNeighborhoodStripe(writeClient, townId, stripeAccountStatusPayload(stripeAccount, stripeMode));
       } catch (error: any) {
         if (error?.code !== 'resource_missing') throw error;
         stripeAccountId = '';
@@ -65,12 +69,42 @@ export async function POST(req: Request) {
     if (!stripeAccountId) {
       const recoveredAccount = await findRecoverableStripeAccount(stripe, town, adminData?.admin_email);
       if (recoveredAccount) {
+        stripeAccount = recoveredAccount;
         stripeAccountId = recoveredAccount.id;
         await stripe.accounts.update(stripeAccountId, {
           metadata: { el_town_neighborhood_id: String(townId) },
         });
         await updateNeighborhoodStripe(writeClient, townId, stripeAccountStatusPayload(recoveredAccount, stripeMode));
       }
+    }
+
+    const requestedBusinessType = String(onboarding.businessType || stripeAccount?.business_type || 'non_profit');
+    const organizationName = String(onboarding.organizationName || stripeAccount?.business_profile?.name || town.name || '').trim();
+    const supportEmail = String(onboarding.supportEmail || stripeAccount?.business_profile?.support_email || stripeAccount?.email || adminData?.admin_email || '').trim();
+    const supportPhone = String(onboarding.supportPhone || stripeAccount?.business_profile?.support_phone || '').trim();
+    const website = String(onboarding.website || stripeAccount?.business_profile?.url || baseUrl).trim();
+    const productDescription = String(onboarding.productDescription || stripeAccount?.business_profile?.product_description || '町内会・自治会の会員世帯から、年度ごとの会費を受け付けます。').trim();
+
+    if (!allowedBusinessTypes.has(requestedBusinessType)) {
+      return NextResponse.json({ error: '団体区分の選択が正しくありません。' }, { status: 400 });
+    }
+    if (!organizationName) {
+      return NextResponse.json({ error: 'Stripeへ登録する団体名を入力してください。' }, { status: 400 });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
+      return NextResponse.json({ error: 'Stripe連絡先メールアドレスを正しく入力してください。' }, { status: 400 });
+    }
+    if (supportPhone && !/^[0-9+() -]{8,20}$/.test(supportPhone)) {
+      return NextResponse.json({ error: '電話番号を正しく入力してください。' }, { status: 400 });
+    }
+    try {
+      const parsedWebsite = new URL(website);
+      if (!['http:', 'https:'].includes(parsedWebsite.protocol)) throw new Error('invalid protocol');
+    } catch {
+      return NextResponse.json({ error: 'WebサイトURLを正しく入力してください。' }, { status: 400 });
+    }
+    if (productDescription.length < 10 || productDescription.length > 500) {
+      return NextResponse.json({ error: 'サービス内容は10〜500文字で入力してください。' }, { status: 400 });
     }
 
     // 4. 復旧対象がない場合だけExpressアカウントを新規作成
@@ -82,26 +116,23 @@ export async function POST(req: Request) {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
-        business_type: 'non_profit',
+        business_type: requestedBusinessType as Stripe.AccountCreateParams.BusinessType,
         business_profile: {
-          name: town.name,
-          url: baseUrl,
-          product_description: '町内会・自治会の会員世帯から、年度ごとの会費を受け付けます。',
+          name: organizationName,
+          url: website,
+          product_description: productDescription,
+          support_email: supportEmail,
+          ...(supportPhone ? { support_phone: supportPhone } : {}),
         },
         metadata: {
           el_town_neighborhood_id: String(townId),
         },
       };
 
-      if (adminData?.admin_email) {
-        accountParams.email = adminData.admin_email;
-        accountParams.business_profile = {
-          ...accountParams.business_profile,
-          support_email: adminData.admin_email,
-        };
-      }
+      accountParams.email = supportEmail;
 
       const account = await stripe.accounts.create(accountParams);
+      stripeAccount = account;
       stripeAccountId = account.id;
 
       // DBに保存
@@ -116,10 +147,11 @@ export async function POST(req: Request) {
     // 5. el-townで確定できる団体情報を事前入力する。
     await stripe.accounts.update(stripeAccountId, {
       business_profile: {
-        name: town.name,
-        url: baseUrl,
-        product_description: '町内会・自治会の会員世帯から、年度ごとの会費を受け付けます。',
-        ...(adminData?.admin_email ? { support_email: adminData.admin_email } : {}),
+        name: organizationName,
+        url: website,
+        product_description: productDescription,
+        support_email: supportEmail,
+        ...(supportPhone ? { support_phone: supportPhone } : {}),
       },
       metadata: {
         el_town_neighborhood_id: String(townId),
