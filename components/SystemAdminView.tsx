@@ -4,9 +4,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminView from "@/components/AdminView";
 
-type Tab = "towns" | "billing";
+type Tab = "towns" | "feeStandards" | "billing";
 type Town = { id: string | number; name: string; created_at?: string | null };
 type Draft = { monthlyHouseholdPrice: string; freePushLimit: string; pushUnitPrice: string; taxRate: string };
+type FeeStandardDraft = {
+  feeName: string;
+  amount: string;
+  fiscalYearStartMonth: string;
+  cashEnabled: boolean;
+  stripeCardEnabled: boolean;
+  revenueCategory: string;
+  changeReason: string;
+};
 
 const yen = (value: number) => `¥${Math.round(value || 0).toLocaleString()}`;
 const previousMonth = () => {
@@ -43,9 +52,20 @@ export default function SystemAdminView() {
   const [settings, setSettings] = useState<any[]>([]);
   const [billings, setBillings] = useState<any[]>([]);
   const [paymentProfiles, setPaymentProfiles] = useState<any[]>([]);
+  const [feeStandards, setFeeStandards] = useState<any[]>([]);
+  const [feeSettings, setFeeSettings] = useState<any[]>([]);
   const [billingEnabled, setBillingEnabled] = useState(false);
   const [billingMonth, setBillingMonth] = useState(previousMonth());
   const [draft, setDraft] = useState<Draft>({ monthlyHouseholdPrice: "0", freePushLimit: "0", pushUnitPrice: "0", taxRate: "10" });
+  const [feeStandardDraft, setFeeStandardDraft] = useState<FeeStandardDraft>({
+    feeName: "年会費",
+    amount: "3000",
+    fiscalYearStartMonth: "4",
+    cashEnabled: true,
+    stripeCardEnabled: true,
+    revenueCategory: "会費",
+    changeReason: "",
+  });
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -111,6 +131,8 @@ export default function SystemAdminView() {
       supabase.from("system_settings").select("*").limit(1000),
       supabase.from("system_usage_billings").select("*").eq("billing_month", billingMonth).limit(1000),
       supabase.from("system_usage_payment_profiles").select("*").limit(1000),
+      supabase.from("membership_fee_standard_versions").select("*").order("version_number", { ascending: false }).limit(100),
+      supabase.from("neighborhood_fee_settings").select("*").limit(1000),
     ]);
     const fatal = results[0].error || results[1].error;
     if (fatal) setMessage(fatal.message);
@@ -121,6 +143,8 @@ export default function SystemAdminView() {
     setSettings(results[4].data || []);
     setBillings(results[5].data || []);
     setPaymentProfiles(results[6].data || []);
+    setFeeStandards(results[7].data || []);
+    setFeeSettings(results[8].data || []);
     const base = results[4].data?.[0] || {};
     setDraft({
       monthlyHouseholdPrice: String(base.monthly_household_price ?? 0),
@@ -128,6 +152,18 @@ export default function SystemAdminView() {
       pushUnitPrice: String(base.push_unit_price ?? 0),
       taxRate: String(base.tax_rate ?? base.consumption_tax_rate ?? 10),
     });
+    const publishedStandard = (results[7].data || []).find((item: any) => item.status === "published");
+    if (publishedStandard) {
+      setFeeStandardDraft({
+        feeName: String(publishedStandard.fee_name || "年会費"),
+        amount: String(publishedStandard.default_amount ?? 3000),
+        fiscalYearStartMonth: String(publishedStandard.fiscal_year_start_month ?? 4),
+        cashEnabled: publishedStandard.cash_enabled !== false,
+        stripeCardEnabled: publishedStandard.stripe_card_enabled !== false,
+        revenueCategory: String(publishedStandard.revenue_category || "会費"),
+        changeReason: "",
+      });
+    }
     setLoading(false);
   };
 
@@ -173,6 +209,56 @@ export default function SystemAdminView() {
   }), [townRows, settings, draft, pushes, billings, paymentProfiles]);
 
   const totals = billingRows.reduce((sum, row) => ({ linked: sum.linked + row.linked, pushes: sum.pushes + row.pushCount, subtotal: sum.subtotal + row.subtotal, tax: sum.tax + row.tax, total: sum.total + row.total }), { linked: 0, pushes: 0, subtotal: 0, tax: 0, total: 0 });
+  const publishedFeeStandard = feeStandards.find((item) => item.status === "published");
+  const feeConfiguredTownCount = feeSettings.length;
+
+  const publishFeeStandard = async () => {
+    const amount = Number(feeStandardDraft.amount);
+    const fiscalYearStartMonth = Number(feeStandardDraft.fiscalYearStartMonth);
+    if (!feeStandardDraft.feeName.trim()) return setMessage("会費名称を入力してください。");
+    if (!Number.isInteger(amount) || amount < 0) return setMessage("標準会費額は0円以上の整数で入力してください。");
+    if (!Number.isInteger(fiscalYearStartMonth) || fiscalYearStartMonth < 1 || fiscalYearStartMonth > 12) return setMessage("会計年度開始月は1〜12で入力してください。");
+    if (!feeStandardDraft.revenueCategory.trim()) return setMessage("会費収入科目を入力してください。");
+    if (!feeStandardDraft.changeReason.trim()) return setMessage("変更理由を入力してください。");
+
+    const summary = `${feeStandardDraft.feeName} ${yen(amount)}／${fiscalYearStartMonth}月開始／年1回`;
+    if (!window.confirm(`${summary} を新しい標準設定として公開します。既存の請求・入金実績は変更しません。よろしいですか？`)) return;
+
+    setBusy(true);
+    setMessage("");
+    try {
+      const nextVersion = Math.max(0, ...feeStandards.map((item) => Number(item.version_number) || 0)) + 1;
+      const insertResult = await supabase
+        .from("membership_fee_standard_versions")
+        .insert({
+          version_number: nextVersion,
+          status: "draft",
+          fee_name: feeStandardDraft.feeName.trim(),
+          default_amount: amount,
+          fiscal_year_start_month: fiscalYearStartMonth,
+          billing_frequency: "annual",
+          billing_target: "active_households",
+          cash_enabled: feeStandardDraft.cashEnabled,
+          stripe_card_enabled: feeStandardDraft.stripeCardEnabled,
+          revenue_category: feeStandardDraft.revenueCategory.trim(),
+          change_reason: feeStandardDraft.changeReason.trim(),
+        })
+        .select("id")
+        .single();
+      if (insertResult.error) throw insertResult.error;
+
+      const publishResult = await supabase.rpc("publish_membership_fee_standard", { p_version_id: insertResult.data.id });
+      if (publishResult.error) throw publishResult.error;
+
+      setMessage(`会費標準設定 v${nextVersion} を公開しました。新規団体には登録時に自動適用されます。`);
+      setFeeStandardDraft((current) => ({ ...current, changeReason: "" }));
+      await load();
+    } catch (error: any) {
+      setMessage(error?.message || "会費標準設定を公開できませんでした。");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const saveSettings = async () => {
     setBusy(true); setMessage("");
@@ -263,16 +349,61 @@ export default function SystemAdminView() {
 
   return (
     <main className="system-admin-screen">
-      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録団体の状況確認、管理画面の照査、完全削除を行います。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
-      <nav className="system-admin-tabs"><button className={tab === "towns" ? "active" : ""} onClick={() => setTab("towns")}>町内会・自治会管理</button><button className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>システム利用料設定</button></nav>
+      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : tab === "feeStandards" ? "会費標準設定" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録団体の状況確認、管理画面の照査、完全削除を行います。" : tab === "feeStandards" ? "町内会・自治会が会員世帯へ請求する会費の初期値を版管理します。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
+      <nav className="system-admin-tabs"><button className={tab === "towns" ? "active" : ""} onClick={() => setTab("towns")}>町内会・自治会管理</button><button className={tab === "feeStandards" ? "active" : ""} onClick={() => setTab("feeStandards")}>会費標準設定</button><button className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>システム利用料設定</button></nav>
       {message && <div className="system-admin-message">{message}</div>}
 
-      {tab === "towns" ? <>
+      {tab === "towns" && <>
         <section className="system-admin-card"><div className="system-admin-heading"><div><h2>登録団体一覧</h2><p>「照査」で登録状況を確認し、「管理画面」で各団体の管理画面を開けます。</p></div><span>{townRows.length}件</span></div>
           <div className="system-town-table"><div className="system-town-row head"><span>町内会・自治会</span><span>名簿</span><span>LINE連携</span><span>役員</span><span>操作</span></div>{townRows.map((row) => <div className="system-town-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.rosterCount}名</span><span>{row.linked}件</span><span>{row.adminCount}名</span><span className="system-town-actions"><button onClick={() => setSelectedTown(row.town)}>照査</button><button onClick={() => setManagingTown(row.town)}>管理画面</button><button className="danger" onClick={() => deleteTown(row.town)} disabled={busy}>完全削除</button></span></div>)}</div>
         </section>
         {selectedTown && <div className="system-town-modal" role="dialog" aria-modal="true"><section><button className="close" onClick={() => setSelectedTown(null)}>×</button><p className="el-kicker">登録内容の照査</p><h2>{selectedTown.name}</h2><dl><div><dt>団体ID</dt><dd>{selectedTown.id}</dd></div><div><dt>名簿登録</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.rosterCount || 0}名</dd></div><div><dt>LINE連携</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.linked || 0}件</dd></div><div><dt>役員</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.adminCount || 0}名</dd></div></dl><button className="system-admin-primary" onClick={() => { setManagingTown(selectedTown); setSelectedTown(null); }}>管理画面を開く</button></section></div>}
-      </> : <>
+      </>}
+
+      {tab === "feeStandards" && <>
+        <section className="system-admin-grid">
+          <section className="system-admin-card accent">
+            <p className="el-kicker">現在の公開設定</p>
+            <h2>{publishedFeeStandard ? `v${publishedFeeStandard.version_number} ${publishedFeeStandard.fee_name}` : "DB設定を確認してください"}</h2>
+            {publishedFeeStandard ? <>
+              <div className="system-admin-metrics">
+                <span><strong>{yen(Number(publishedFeeStandard.default_amount))}</strong>1世帯・年額</span>
+                <span><strong>{publishedFeeStandard.fiscal_year_start_month}月</strong>会計年度開始</span>
+                <span><strong>{publishedFeeStandard.cash_enabled ? "利用可" : "利用不可"}</strong>手集金</span>
+                <span><strong>{publishedFeeStandard.stripe_card_enabled ? "利用可" : "利用不可"}</strong>Stripeカード</span>
+              </div>
+              <p>{feeConfiguredTownCount} / {towns.length}団体に会費設定があります。公開済み設定は既存の請求・入金実績を変更しません。</p>
+            </> : <p>会費標準設定SQLを本番DBへ適用すると、初期標準設定が表示されます。</p>}
+          </section>
+
+          <section className="system-admin-card">
+            <h2>新しい標準版を公開</h2>
+            <p>公開すると今後の新規団体へ自動コピーされます。既存団体への一括上書きは行いません。</p>
+            <div className="system-admin-form">
+              <label><span>会費名称</span><input value={feeStandardDraft.feeName} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, feeName: e.target.value })} /></label>
+              <label><span>標準会費額（円／世帯）</span><input type="number" min="0" step="1" value={feeStandardDraft.amount} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, amount: e.target.value })} /></label>
+              <label><span>会計年度開始月</span><input type="number" min="1" max="12" step="1" value={feeStandardDraft.fiscalYearStartMonth} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, fiscalYearStartMonth: e.target.value })} /></label>
+              <label><span>請求頻度</span><input value="年1回" readOnly /></label>
+              <label><span>請求対象</span><input value="請求作成時点の有効な全会員世帯" readOnly /></label>
+              <label><span>会費収入科目</span><input value={feeStandardDraft.revenueCategory} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, revenueCategory: e.target.value })} /></label>
+              <label><span>変更理由</span><input value={feeStandardDraft.changeReason} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, changeReason: e.target.value })} placeholder="例：2027年度の標準額改定" /></label>
+              <label><span><input type="checkbox" checked={feeStandardDraft.cashEnabled} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, cashEnabled: e.target.checked })} /> 手集金を利用可能にする</span></label>
+              <label><span><input type="checkbox" checked={feeStandardDraft.stripeCardEnabled} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, stripeCardEnabled: e.target.checked })} /> Stripeカード決済を利用可能にする</span></label>
+            </div>
+            <div className="system-admin-actions"><button onClick={publishFeeStandard} disabled={busy || !publishedFeeStandard}>新しい標準版として公開</button></div>
+          </section>
+        </section>
+
+        <section className="system-admin-card">
+          <div className="system-admin-heading"><div><h2>標準設定の履歴</h2><p>公開済み版は上書きせず、新しい版として保存します。</p></div><span>{feeStandards.length}版</span></div>
+          <div className="system-admin-table">
+            <div className="system-admin-row system-admin-head"><span>版</span><span>状態</span><span>名称</span><span>金額</span><span>年度開始</span><span>手集金</span><span>Stripe</span><span>変更理由</span></div>
+            {feeStandards.map((item) => <div className="system-admin-row" key={item.id}><span><strong>v{item.version_number}</strong></span><span>{item.status === "published" ? "公開中" : item.status === "retired" ? "廃止" : "下書き"}</span><span>{item.fee_name}</span><span>{yen(Number(item.default_amount))}</span><span>{item.fiscal_year_start_month}月</span><span>{item.cash_enabled ? "可" : "不可"}</span><span>{item.stripe_card_enabled ? "可" : "不可"}</span><span>{item.change_reason}</span></div>)}
+          </div>
+        </section>
+      </>}
+
+      {tab === "billing" && <>
         <section className="system-admin-grid"><section className="system-admin-card"><h2>料金単価</h2><div className="system-admin-form"><label><span>請求対象月</span><input type="month" value={billingMonth} onChange={(e) => setBillingMonth(e.target.value)} /></label><label><span>接続数1件あたり単価</span><input value={draft.monthlyHouseholdPrice} onChange={(e) => setDraft({ ...draft, monthlyHouseholdPrice: e.target.value })} /></label><label><span>無料プッシュ件数</span><input value={draft.freePushLimit} onChange={(e) => setDraft({ ...draft, freePushLimit: e.target.value })} /></label><label><span>プッシュ超過単価</span><input value={draft.pushUnitPrice} onChange={(e) => setDraft({ ...draft, pushUnitPrice: e.target.value })} /></label><label><span>消費税率</span><input value={draft.taxRate} onChange={(e) => setDraft({ ...draft, taxRate: e.target.value })} /></label></div><div className="system-admin-actions"><button onClick={saveSettings} disabled={busy}>全町内会へ反映</button></div></section>
         <section className="system-admin-card accent"><h2>{month.label} 利用分</h2><p>毎月16日9時に接続数を固定し、{month.invoice} 9時にStripe請求書を発行します。</p>{!billingEnabled && <p className="system-admin-message">本番運用開始前のため、実績確定・請求書発行・自動決済は停止中です。</p>}<div className="system-admin-metrics"><span><strong>{totals.linked}</strong>接続数</span><span><strong>{totals.pushes}</strong>プッシュ件数</span><span><strong>{yen(totals.subtotal)}</strong>税抜</span><span><strong>{yen(totals.tax)}</strong>消費税</span><span><strong>{yen(totals.total)}</strong>税込請求額</span></div><div className="system-admin-billing-commands"><button onClick={() => void runSystemUsageBilling("snapshot")} disabled={busy || !billingEnabled}>16日実績を手動確定</button><button className="primary" onClick={() => void runSystemUsageBilling("invoice")} disabled={busy || !billingEnabled}>Stripe請求書を発行・再処理</button></div></section></section>
         <section className="system-admin-card"><div className="system-admin-heading"><div><h2>町内会・自治会別 請求計算</h2><p>団体ごとの接続数とプッシュ件数から請求額を計算します。</p></div><span>{billingRows.length}件</span></div><div className="system-admin-table"><div className="system-admin-row system-admin-head"><span>町内会・自治会</span><span>接続数</span><span>プッシュ</span><span>超過</span><span>税抜</span><span>消費税</span><span>税込</span><span>状態</span></div>{billingRows.map((row) => <div className="system-admin-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.billing?.linked_account_count ?? row.linked}</span><span>{row.billing?.push_count ?? row.pushCount}</span><span>{row.billing?.push_overage_count ?? row.overage}</span><span>{yen(Number(row.billing?.subtotal_amount ?? row.subtotal))}</span><span>{yen(Number(row.billing?.tax_amount ?? row.tax))}</span><span><strong>{yen(Number(row.billing?.total_amount ?? row.total))}</strong></span><span><strong>{row.billing ? row.billing.status === "paid" ? "入金済み" : row.billing.stripe_invoice_id ? "Stripe請求済み" : row.billing.status === "draft" ? "16日実績確定" : "処理待ち" : "未確定"}</strong><small>{row.paymentProfile?.payment_method === "card" ? `カード${row.paymentProfile.card_setup_status === "ready" ? "登録済み" : "登録待ち"}` : row.paymentProfile?.payment_method === "bank_transfer" ? "銀行振込" : "決済方法未選択"}</small></span></div>)}</div></section>

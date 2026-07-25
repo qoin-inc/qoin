@@ -4419,11 +4419,21 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         </section>
         <section className="admin-basic-card accent admin-stripe-onboarding">
           <h3>{rawStripeAccountId ? "本番登録を再開・確認" : "本番Stripe登録を開始"}</h3>
-          <p className="admin-basic-note">テストモード登録は不要です。代表者情報、本人確認書類、入金先口座をStripe画面で入力してください。登録・審査が完了すると、会員へのStripe請求を利用できます。</p>
+          <p className="admin-basic-note">el-townで確定できる団体名、代表者メール、Webサイト、サービス説明はStripeへ事前入力します。次の内容を確認してから登録画面を開いてください。</p>
+          <dl className="admin-definition-list">
+            <div><dt>団体名</dt><dd>{townName}</dd></div>
+            <div><dt>サービス内容</dt><dd>町内会・自治会の会員世帯から受け付ける年度会費</dd></div>
+            <div><dt>Webサイト</dt><dd>el-town.jp</dd></div>
+            <div><dt>決済方法</dt><dd>Stripeカード決済</dd></div>
+            <div><dt>入金先</dt><dd>団体名義または団体が管理する銀行口座を入力</dd></div>
+            <div><dt>事業形態</dt><dd>規約・登記上の実態に合う区分を選択</dd></div>
+          </dl>
+          <p className="admin-basic-note">法人区分、代表者本人情報、本人確認書類、銀行口座はStripeの本人確認項目のため自動入力できません。画面の案内に従い、実態と一致する内容を入力してください。</p>
           <div className="admin-stripe-checklist">
             <span><i className="fas fa-id-card" /> 本人確認書類</span>
             <span><i className="fas fa-building-columns" /> 入金先口座</span>
             <span><i className="fas fa-envelope" /> 代表者メール</span>
+            <span><i className="fas fa-file-lines" /> 規約・登記情報</span>
           </div>
           <button type="button" className="admin-stripe-primary" onClick={handleStripeOnboardingStart} disabled={stripeBusy || stripeSyncing}>
             <i className={`fas ${stripeBusy ? "fa-spinner fa-spin" : "fa-arrow-up-right-from-square"}`} />

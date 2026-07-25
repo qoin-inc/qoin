@@ -84,7 +84,9 @@ export async function POST(req: Request) {
         },
         business_type: 'non_profit',
         business_profile: {
-          name: town.name, // プリフィル: 町内会名
+          name: town.name,
+          url: baseUrl,
+          product_description: '町内会・自治会の会員世帯から、年度ごとの会費を受け付けます。',
         },
         metadata: {
           el_town_neighborhood_id: String(townId),
@@ -92,7 +94,11 @@ export async function POST(req: Request) {
       };
 
       if (adminData?.admin_email) {
-        accountParams.email = adminData.admin_email; // プリフィル: 代表者メール
+        accountParams.email = adminData.admin_email;
+        accountParams.business_profile = {
+          ...accountParams.business_profile,
+          support_email: adminData.admin_email,
+        };
       }
 
       const account = await stripe.accounts.create(accountParams);
@@ -107,13 +113,36 @@ export async function POST(req: Request) {
       }
     }
 
-    // 5. Account Link (Hosted Onboarding URL) を発行
-    const accountLink = await stripe.accountLinks.create({
+    // 5. el-townで確定できる団体情報を事前入力する。
+    await stripe.accounts.update(stripeAccountId, {
+      business_profile: {
+        name: town.name,
+        url: baseUrl,
+        product_description: '町内会・自治会の会員世帯から、年度ごとの会費を受け付けます。',
+        ...(adminData?.admin_email ? { support_email: adminData.admin_email } : {}),
+      },
+      metadata: {
+        el_town_neighborhood_id: String(townId),
+      },
+    });
+
+    // 6. Account Link (Hosted Onboarding URL) を発行
+    const accountLinkParams: Stripe.AccountLinkCreateParams & {
+      collection_options: {
+        fields: 'eventually_due';
+        future_requirements: 'include';
+      };
+    } = {
       account: stripeAccountId,
       refresh_url: `${baseUrl}/admin/stripe/refresh?townId=${townId}`,
       return_url: `${baseUrl}/admin/stripe/return?townId=${townId}`,
       type: 'account_onboarding',
-    });
+      collection_options: {
+        fields: 'eventually_due',
+        future_requirements: 'include',
+      },
+    };
+    const accountLink = await stripe.accountLinks.create(accountLinkParams);
 
     return NextResponse.json({ url: accountLink.url, accountId: stripeAccountId });
   } catch (err: any) {
