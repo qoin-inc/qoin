@@ -55,6 +55,24 @@ type FeeDraft = {
   targetMode: "all" | "selected";
 };
 
+type FeeSettingsDraft = {
+  feeName: string;
+  amount: string;
+  fiscalYearStartMonth: string;
+  cashEnabled: boolean;
+  stripeCardEnabled: boolean;
+  bankTransferEnabled: boolean;
+  paypayEnabled: boolean;
+  bankName: string;
+  bankBranchName: string;
+  bankAccountType: "ordinary" | "checking";
+  bankAccountNumber: string;
+  bankAccountHolder: string;
+  paypayDisplayName: string;
+  paypayPaymentUrl: string;
+  paymentInstructions: string;
+};
+
 type AdminInviteDraft = {
   name: string;
   email: string;
@@ -226,7 +244,7 @@ const functionGroups: Array<{ key: DashboardMenu; title: string; icon: string; d
 const basicFeatures: Array<{ key: BasicFeature; icon: string; desc: string }> = [
   { key: "基本情報", icon: "fa-house-flag", desc: "名称、決算月、会員数規模、郵便番号、代表者表示" },
   { key: "会員管理", icon: "fa-users", desc: "連携済み会員、未連携名簿、退会状態、家族アカウント" },
-  { key: "会費管理", icon: "fa-yen-sign", desc: "年間請求額、納入額、未納状況、領収書管理" },
+  { key: "会費管理", icon: "fa-yen-sign", desc: "団体別の会費・決済方法、年間請求額、納入額、領収書管理" },
   { key: "システム利用料", icon: "fa-file-invoice-dollar", desc: "月額世帯単価、無料プッシュ枠、超過単価、請求額" },
   { key: "役員管理", icon: "fa-user-shield", desc: "役員招待、権限、承認待ち、停止状態" },
   { key: "Stripe連携", icon: "fa-credit-card", desc: "Connectアカウント、オンボーディング、決済受付状態" },
@@ -415,6 +433,24 @@ const defaultStripeOnboardingDraft: StripeOnboardingDraft = {
   legalDetailsReady: false,
   identityDocumentReady: false,
   bankAccountReady: false,
+};
+
+const defaultFeeSettingsDraft: FeeSettingsDraft = {
+  feeName: "年会費",
+  amount: "5000",
+  fiscalYearStartMonth: "4",
+  cashEnabled: true,
+  stripeCardEnabled: true,
+  bankTransferEnabled: false,
+  paypayEnabled: false,
+  bankName: "",
+  bankBranchName: "",
+  bankAccountType: "ordinary",
+  bankAccountNumber: "",
+  bankAccountHolder: "",
+  paypayDisplayName: "",
+  paypayPaymentUrl: "",
+  paymentInstructions: "",
 };
 
 const stripeRequirementLabels: Record<string, string> = {
@@ -939,6 +975,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [feeCashDrafts, setFeeCashDrafts] = useState<Record<string, string>>({});
   const [feeBusy, setFeeBusy] = useState(false);
   const [feeMessage, setFeeMessage] = useState("");
+  const [feeSettingsDraft, setFeeSettingsDraft] = useState<FeeSettingsDraft>(defaultFeeSettingsDraft);
+  const [feeSettingsSaving, setFeeSettingsSaving] = useState(false);
+  const [feeSettingsMessage, setFeeSettingsMessage] = useState("");
   const [adminInviteDraft, setAdminInviteDraft] = useState<AdminInviteDraft>({ name: "", email: "", role: "" });
   const [adminInviteUrl, setAdminInviteUrl] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
@@ -1329,6 +1368,27 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       targetMode: current.targetMode,
     }));
   }, [basicData.feeSetting?.amount, basicData.setting?.annual_fee_amount, basicData.town?.fiscal_start_month]);
+
+  useEffect(() => {
+    const setting = basicData.feeSetting;
+    setFeeSettingsDraft({
+      feeName: String(setting?.fee_name || "年会費"),
+      amount: String(setting?.amount ?? basicData.setting?.annual_fee_amount ?? 5000),
+      fiscalYearStartMonth: String(setting?.fiscal_year_start_month ?? basicData.town?.fiscal_start_month ?? 4),
+      cashEnabled: setting?.cash_enabled !== false,
+      stripeCardEnabled: setting?.stripe_card_enabled !== false,
+      bankTransferEnabled: Boolean(setting?.bank_transfer_enabled),
+      paypayEnabled: Boolean(setting?.paypay_enabled),
+      bankName: String(setting?.bank_name || ""),
+      bankBranchName: String(setting?.bank_branch_name || ""),
+      bankAccountType: setting?.bank_account_type === "checking" ? "checking" : "ordinary",
+      bankAccountNumber: String(setting?.bank_account_number || ""),
+      bankAccountHolder: String(setting?.bank_account_holder || ""),
+      paypayDisplayName: String(setting?.paypay_display_name || ""),
+      paypayPaymentUrl: String(setting?.paypay_payment_url || ""),
+      paymentInstructions: String(setting?.payment_instructions || ""),
+    });
+  }, [basicData.feeSetting, basicData.setting?.annual_fee_amount, basicData.town?.fiscal_start_month]);
 
   const handlePublishDraftChange = <K extends keyof PublishDraft>(field: K, value: PublishDraft[K]) => {
     setPublishDraft((current) => ({ ...current, [field]: value }));
@@ -3082,6 +3142,107 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     return activeFeeMembers.filter((member) => feeSelectedMembers[String(member.id)]);
   };
 
+  const handleFeeSettingsDraftChange = <K extends keyof FeeSettingsDraft>(field: K, value: FeeSettingsDraft[K]) => {
+    setFeeSettingsDraft((current) => ({ ...current, [field]: value }));
+    setFeeSettingsMessage("");
+  };
+
+  const handleFeeSettingsSave = async () => {
+    const feeName = feeSettingsDraft.feeName.trim();
+    const amount = Number(feeSettingsDraft.amount);
+    const fiscalYearStartMonth = Number(feeSettingsDraft.fiscalYearStartMonth);
+    const enabledMethods = [
+      feeSettingsDraft.cashEnabled,
+      feeSettingsDraft.stripeCardEnabled,
+      feeSettingsDraft.bankTransferEnabled,
+      feeSettingsDraft.paypayEnabled,
+    ].filter(Boolean).length;
+
+    if (!feeName) return setFeeSettingsMessage("会費名称を入力してください。");
+    if (!Number.isInteger(amount) || amount < 0) return setFeeSettingsMessage("標準会費額を0円以上の整数で入力してください。");
+    if (!Number.isInteger(fiscalYearStartMonth) || fiscalYearStartMonth < 1 || fiscalYearStartMonth > 12) {
+      return setFeeSettingsMessage("年度開始月を1月から12月の範囲で選択してください。");
+    }
+    if (!enabledMethods) return setFeeSettingsMessage("利用する受取方法を1つ以上選択してください。");
+
+    const bankName = feeSettingsDraft.bankName.trim();
+    const bankBranchName = feeSettingsDraft.bankBranchName.trim();
+    const bankAccountNumber = feeSettingsDraft.bankAccountNumber.replace(/\s/g, "");
+    const bankAccountHolder = feeSettingsDraft.bankAccountHolder.trim();
+    if (feeSettingsDraft.bankTransferEnabled && (!bankName || !bankBranchName || !bankAccountNumber || !bankAccountHolder)) {
+      return setFeeSettingsMessage("口座振込を利用する場合は、銀行名・支店名・口座番号・口座名義を入力してください。");
+    }
+
+    const paypayPaymentUrl = feeSettingsDraft.paypayPaymentUrl.trim();
+    if (feeSettingsDraft.paypayEnabled) {
+      if (!feeSettingsDraft.paypayDisplayName.trim()) return setFeeSettingsMessage("PayPayの表示名を入力してください。");
+      try {
+        const parsedUrl = new URL(paypayPaymentUrl);
+        if (parsedUrl.protocol !== "https:") throw new Error("invalid protocol");
+      } catch {
+        return setFeeSettingsMessage("PayPay決済案内URLを https:// から正しく入力してください。");
+      }
+    }
+
+    const overriddenFields = {
+      ...(basicData.feeSetting?.overridden_fields || {}),
+      fee_name: true,
+      amount: true,
+      fiscal_year_start_month: true,
+      cash_enabled: true,
+      stripe_card_enabled: true,
+      bank_transfer_enabled: true,
+      paypay_enabled: true,
+    };
+    const payload = {
+      neighborhood_id: townId,
+      standard_version_id: basicData.feeSetting?.standard_version_id || null,
+      fee_name: feeName,
+      amount,
+      fiscal_year_start_month: fiscalYearStartMonth,
+      billing_frequency: basicData.feeSetting?.billing_frequency || "annual",
+      billing_target: basicData.feeSetting?.billing_target || "active_households",
+      cash_enabled: feeSettingsDraft.cashEnabled,
+      stripe_card_enabled: feeSettingsDraft.stripeCardEnabled,
+      bank_transfer_enabled: feeSettingsDraft.bankTransferEnabled,
+      paypay_enabled: feeSettingsDraft.paypayEnabled,
+      bank_name: feeSettingsDraft.bankTransferEnabled ? bankName : null,
+      bank_branch_name: feeSettingsDraft.bankTransferEnabled ? bankBranchName : null,
+      bank_account_type: feeSettingsDraft.bankTransferEnabled ? feeSettingsDraft.bankAccountType : null,
+      bank_account_number: feeSettingsDraft.bankTransferEnabled ? bankAccountNumber : null,
+      bank_account_holder: feeSettingsDraft.bankTransferEnabled ? bankAccountHolder : null,
+      paypay_display_name: feeSettingsDraft.paypayEnabled ? feeSettingsDraft.paypayDisplayName.trim() : null,
+      paypay_payment_url: feeSettingsDraft.paypayEnabled ? paypayPaymentUrl : null,
+      payment_instructions: feeSettingsDraft.paymentInstructions.trim() || null,
+      revenue_category: basicData.feeSetting?.revenue_category || "会費",
+      overridden_fields: overriddenFields,
+      applied_at: new Date().toISOString(),
+    };
+
+    setFeeSettingsSaving(true);
+    setFeeSettingsMessage("");
+    try {
+      const { data, error } = await supabase
+        .from("neighborhood_fee_settings")
+        .upsert(payload, { onConflict: "neighborhood_id" })
+        .select("*")
+        .single();
+      if (error) throw error;
+      setBasicData((current) => ({ ...current, feeSetting: data }));
+      setFeeDraft((current) => ({ ...current, amount: String(amount) }));
+      setFeeSettingsMessage("この町内会・自治会の会費・決済設定を保存しました。既存の請求・入金実績は変更していません。");
+    } catch (error: any) {
+      const message = String(error?.message || "");
+      setFeeSettingsMessage(
+        message.includes("bank_transfer_enabled") || message.includes("paypay_enabled") || message.includes("schema cache")
+          ? "個別決済設定用のDB更新が未適用です。管理者へ連絡してください。"
+          : error?.message || "会費・決済設定の保存に失敗しました。",
+      );
+    } finally {
+      setFeeSettingsSaving(false);
+    }
+  };
+
   const handleFeeDraftChange = (field: keyof FeeDraft, value: string) => {
     setFeeDraft((current) => ({ ...current, [field]: value }));
     setFeeMessage("");
@@ -4162,6 +4323,100 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     if (activeBasicFeature === "会費管理") {
       return (
         <div className="admin-fee-screen">
+          <section className="admin-basic-card admin-fee-settings-card">
+            <div className="admin-basic-card-heading">
+              <div>
+                <h3>会費・決済方法の個別設定</h3>
+                <p>この町内会・自治会だけの会費と受取方法を設定します。保存しても既存の請求・入金実績やStripe登録内容は変更しません。</p>
+              </div>
+              <span className="admin-member-count">団体別設定</span>
+            </div>
+
+            <div className="admin-basic-form admin-fee-settings-form">
+              <label>
+                <span>会費名称</span>
+                <input value={feeSettingsDraft.feeName} onChange={(event) => handleFeeSettingsDraftChange("feeName", event.target.value)} placeholder="例：年会費" />
+              </label>
+              <label>
+                <span>標準会費額</span>
+                <input value={feeSettingsDraft.amount} onChange={(event) => handleFeeSettingsDraftChange("amount", event.target.value)} inputMode="numeric" placeholder="5000" />
+              </label>
+              <label>
+                <span>年度開始月</span>
+                <select value={feeSettingsDraft.fiscalYearStartMonth} onChange={(event) => handleFeeSettingsDraftChange("fiscalYearStartMonth", event.target.value)}>
+                  {monthOptions.map((monthNumber) => <option key={monthNumber} value={monthNumber}>{monthNumber}月</option>)}
+                </select>
+              </label>
+              <label className="admin-basic-wide">
+                <span>会員向け支払い案内（任意）</span>
+                <textarea value={feeSettingsDraft.paymentInstructions} onChange={(event) => handleFeeSettingsDraftChange("paymentInstructions", event.target.value)} rows={3} placeholder="例：毎年5月末までにお支払いください。" />
+              </label>
+            </div>
+
+            <div className="admin-fee-method-options">
+              <label className={feeSettingsDraft.cashEnabled ? "selected" : ""}>
+                <input type="checkbox" checked={feeSettingsDraft.cashEnabled} onChange={(event) => handleFeeSettingsDraftChange("cashEnabled", event.target.checked)} />
+                <i className="fas fa-hand-holding-yen" />
+                <span><strong>手集金</strong><small>役員が受け取った金額を会費一覧へ入力します。</small></span>
+              </label>
+              <label className={feeSettingsDraft.stripeCardEnabled ? "selected" : ""}>
+                <input type="checkbox" checked={feeSettingsDraft.stripeCardEnabled} onChange={(event) => handleFeeSettingsDraftChange("stripeCardEnabled", event.target.checked)} />
+                <i className="fas fa-credit-card" />
+                <span><strong>Stripeカード決済</strong><small>団体のConnect登録が有効な場合に利用します。</small></span>
+              </label>
+              <label className={feeSettingsDraft.bankTransferEnabled ? "selected" : ""}>
+                <input type="checkbox" checked={feeSettingsDraft.bankTransferEnabled} onChange={(event) => handleFeeSettingsDraftChange("bankTransferEnabled", event.target.checked)} />
+                <i className="fas fa-building-columns" />
+                <span><strong>口座振込</strong><small>団体が管理する会費受取口座を案内します。</small></span>
+              </label>
+              <label className={feeSettingsDraft.paypayEnabled ? "selected" : ""}>
+                <input type="checkbox" checked={feeSettingsDraft.paypayEnabled} onChange={(event) => handleFeeSettingsDraftChange("paypayEnabled", event.target.checked)} />
+                <i className="fas fa-mobile-screen-button" />
+                <span><strong>PayPay</strong><small>団体の決済案内URLを会員へ案内します。</small></span>
+              </label>
+            </div>
+
+            {feeSettingsDraft.bankTransferEnabled && (
+              <div className="admin-fee-method-details">
+                <h4><i className="fas fa-building-columns" /> 口座振込の案内情報</h4>
+                <div className="admin-basic-form">
+                  <label><span>銀行名</span><input value={feeSettingsDraft.bankName} onChange={(event) => handleFeeSettingsDraftChange("bankName", event.target.value)} /></label>
+                  <label><span>支店名</span><input value={feeSettingsDraft.bankBranchName} onChange={(event) => handleFeeSettingsDraftChange("bankBranchName", event.target.value)} /></label>
+                  <label>
+                    <span>口座種別</span>
+                    <select value={feeSettingsDraft.bankAccountType} onChange={(event) => handleFeeSettingsDraftChange("bankAccountType", event.target.value as FeeSettingsDraft["bankAccountType"])}>
+                      <option value="ordinary">普通</option>
+                      <option value="checking">当座</option>
+                    </select>
+                  </label>
+                  <label><span>口座番号</span><input value={feeSettingsDraft.bankAccountNumber} onChange={(event) => handleFeeSettingsDraftChange("bankAccountNumber", event.target.value)} inputMode="numeric" /></label>
+                  <label className="admin-basic-wide"><span>口座名義</span><input value={feeSettingsDraft.bankAccountHolder} onChange={(event) => handleFeeSettingsDraftChange("bankAccountHolder", event.target.value)} placeholder="例：ミドリクチョウナイカイ" /></label>
+                </div>
+              </div>
+            )}
+
+            {feeSettingsDraft.paypayEnabled && (
+              <div className="admin-fee-method-details">
+                <h4><i className="fas fa-mobile-screen-button" /> PayPayの案内情報</h4>
+                <div className="admin-basic-form">
+                  <label><span>会員に表示する名称</span><input value={feeSettingsDraft.paypayDisplayName} onChange={(event) => handleFeeSettingsDraftChange("paypayDisplayName", event.target.value)} placeholder="例：緑区町内会 会費" /></label>
+                  <label className="admin-basic-wide"><span>PayPay決済案内URL</span><input type="url" value={feeSettingsDraft.paypayPaymentUrl} onChange={(event) => handleFeeSettingsDraftChange("paypayPaymentUrl", event.target.value)} placeholder="https://" /></label>
+                </div>
+              </div>
+            )}
+
+            <p className="admin-basic-note">代表者本人情報・本人確認書類・Stripeの実際の入金先口座は、引き続き「Stripe連携」からStripeの安全な画面で入力します。</p>
+            <button type="button" className="admin-fee-settings-save" onClick={() => void handleFeeSettingsSave()} disabled={feeSettingsSaving}>
+              <i className={`fas ${feeSettingsSaving ? "fa-spinner fa-spin" : "fa-floppy-disk"}`} />
+              <span>{feeSettingsSaving ? "保存中" : "この団体の設定を保存"}</span>
+            </button>
+            {feeSettingsMessage && (
+              <div className={`admin-basic-message ${feeSettingsMessage.includes("失敗") || feeSettingsMessage.includes("入力") || feeSettingsMessage.includes("選択") || feeSettingsMessage.includes("未適用") ? "error" : "success"}`}>
+                {feeSettingsMessage}
+              </div>
+            )}
+          </section>
+
           <section className="admin-basic-card admin-fee-command">
             <div className="admin-basic-card-heading">
               <div>

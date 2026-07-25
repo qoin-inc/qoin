@@ -420,6 +420,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [facilityReservations, setFacilityReservations] = useState<FacilityReservation[]>([]);
   const [liveApplications, setLiveApplications] = useState<LiveApplication[]>([]);
   const [feeRecords, setFeeRecords] = useState<FeeRecord[]>([]);
+  const [feeSetting, setFeeSetting] = useState<any | null>(null);
   const [stripeAccountId, setStripeAccountId] = useState("");
   const [stripeReady, setStripeReady] = useState(false);
   const [feeLoading, setFeeLoading] = useState(true);
@@ -586,7 +587,13 @@ export default function ResidentView({ townId, townName, residentName, userId, r
           .maybeSingle();
       }
       const townData = townResult.data as any;
+      const { data: feeSettingData } = await supabase
+        .from("neighborhood_fee_settings")
+        .select("*")
+        .eq("neighborhood_id", townId)
+        .maybeSingle();
       if (active) {
+        setFeeSetting(feeSettingData || null);
         setStripeAccountId(townData?.stripe_account_id || "");
         setStripeReady(Boolean(
           townData?.stripe_account_id &&
@@ -1977,16 +1984,42 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                   <span><small>状態</small><strong>{getFeeStatusLabel(latestFee)}</strong></span>
                 </div>
                 <p>入金方法: {getPaymentMethodLabel(latestFee)}</p>
+                {feeSetting?.payment_instructions && <p className="el-fee-payment-note">{feeSetting.payment_instructions}</p>}
                 {getFeePaidAmount(latestFee) < getFeeBillingAmount(latestFee) ? (
-                  (latestFee.billing_channel === "stripe" || stripeAccountId) && stripeReady ? (
-                    <button className="el-primary-action" onClick={() => handleOnlinePayment(latestFee)}>
-                      <i className="fas fa-credit-card" /> オンラインで支払う
-                    </button>
-                  ) : latestFee.billing_channel === "stripe" || stripeAccountId ? (
-                    <div className="el-empty">Stripe本番連携の確認中です。役員からの案内をお待ちください。</div>
-                  ) : (
-                    <div className="el-empty">役員からの集金案内をご確認ください。</div>
-                  )
+                  <div className="el-fee-payment-methods">
+                    {feeSetting?.cash_enabled !== false && (
+                      <div className="el-fee-payment-method">
+                        <i className="fas fa-hand-holding-yen" />
+                        <span><strong>手集金</strong><small>役員からの集金案内をご確認ください。</small></span>
+                      </div>
+                    )}
+                    {feeSetting?.bank_transfer_enabled && (
+                      <div className="el-fee-payment-method">
+                        <i className="fas fa-building-columns" />
+                        <span>
+                          <strong>口座振込</strong>
+                          <small>{feeSetting.bank_name} {feeSetting.bank_branch_name}／{feeSetting.bank_account_type === "checking" ? "当座" : "普通"} {feeSetting.bank_account_number}</small>
+                          <small>口座名義：{feeSetting.bank_account_holder}</small>
+                        </span>
+                      </div>
+                    )}
+                    {feeSetting?.paypay_enabled && feeSetting?.paypay_payment_url && (
+                      <a className="el-fee-payment-method action" href={feeSetting.paypay_payment_url} target="_blank" rel="noopener noreferrer">
+                        <i className="fas fa-mobile-screen-button" />
+                        <span><strong>{feeSetting.paypay_display_name || "PayPayで支払う"}</strong><small>PayPayの決済案内を開きます。</small></span>
+                      </a>
+                    )}
+                    {feeSetting?.stripe_card_enabled !== false && ((latestFee.billing_channel === "stripe" || stripeAccountId) && stripeReady ? (
+                      <button className="el-primary-action" onClick={() => handleOnlinePayment(latestFee)}>
+                        <i className="fas fa-credit-card" /> Stripeカードで支払う
+                      </button>
+                    ) : latestFee.billing_channel === "stripe" || stripeAccountId ? (
+                      <div className="el-empty">Stripe本番連携の確認中です。役員からの案内をお待ちください。</div>
+                    ) : null)}
+                    {(feeSetting?.bank_transfer_enabled || feeSetting?.paypay_enabled) && (
+                      <p className="el-fee-payment-caution">振込・PayPayの着金確認後、役員が入金状況を反映します。</p>
+                    )}
+                  </div>
                 ) : (
                   <Link
                     href={`/resident/receipt?name=${encodeURIComponent(displayName)}&amount=${getFeePaidAmount(latestFee)}&method=${encodeURIComponent(getPaymentMethodLabel(latestFee))}&town=${encodeURIComponent(placeName)}`}

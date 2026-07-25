@@ -2919,6 +2919,112 @@ button { cursor: pointer; border: 0; }
   gap: 14px;
 }
 
+.admin-fee-settings-card {
+  grid-column: 1 / -1;
+  border-color: #bae6fd;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.1), transparent 34%),
+    #fff;
+}
+
+.admin-fee-settings-form {
+  margin-top: 18px;
+}
+
+.admin-fee-method-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.admin-fee-method-options > label {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #dbe3ed;
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.admin-fee-method-options > label.selected {
+  border-color: #38bdf8;
+  background: #f0f9ff;
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.12);
+}
+
+.admin-fee-method-options input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: #0284c7;
+}
+
+.admin-fee-method-options i {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  color: #0369a1;
+  background: #e0f2fe;
+}
+
+.admin-fee-method-options span {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-fee-method-options strong {
+  color: #0f2942;
+}
+
+.admin-fee-method-options small {
+  color: #60758a;
+  line-height: 1.55;
+}
+
+.admin-fee-method-details {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: #f8fbff;
+}
+
+.admin-fee-method-details h4 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  color: #15324e;
+}
+
+.admin-fee-settings-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: #0369a1;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-fee-settings-save:disabled {
+  opacity: 0.62;
+  cursor: wait;
+}
+
 .admin-fee-command,
 .admin-fee-summary,
 .admin-fee-list {
@@ -3289,6 +3395,71 @@ button { cursor: pointer; border: 0; }
   color: #111827;
   font-size: 15px;
   font-weight: 900;
+}
+
+.el-status-card .el-fee-payment-note {
+  margin-top: 14px;
+  padding: 12px;
+  border-left: 4px solid #fb923c;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.el-fee-payment-methods {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.el-fee-payment-method {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  color: #374151;
+  background: #fff;
+  text-decoration: none;
+}
+
+.el-fee-payment-method.action {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
+.el-fee-payment-method > i {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 9px;
+  color: #c2410c;
+  background: #ffedd5;
+}
+
+.el-fee-payment-method span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.el-fee-payment-method strong {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.el-fee-payment-method small {
+  overflow-wrap: anywhere;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.el-status-card .el-fee-payment-caution {
+  font-size: 11px;
 }
 
 .admin-definition-list {
@@ -4888,6 +5059,7 @@ button { cursor: pointer; border: 0; }
 
   .admin-fee-form,
   .admin-fee-form.compact,
+  .admin-fee-method-options,
   .admin-fee-targets,
   .admin-fee-target-mode,
   .admin-feature-nav,
