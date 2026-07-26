@@ -131,6 +131,25 @@ export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
         <div className="signup-brand">
           <img src="/assets/logo_horizontal_final.png" alt="el-town" />
           <p>町内会・自治会を新しく登録</p>
+          <a
+            href="/manual/admin-signup"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              marginTop: 10,
+              color: "#087dac",
+              fontSize: 12,
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            <i className="fas fa-book-open" aria-hidden="true" />
+            申し込み手順を見る
+            <i className="fas fa-arrow-up-right-from-square" aria-hidden="true" />
+          </a>
         </div>
 
         <form onSubmit={handleSubmit} className="signup-form">

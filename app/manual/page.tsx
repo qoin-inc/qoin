@@ -1,95 +1,89 @@
-'use client';
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 
-import React from 'react';
-import Link from 'next/link';
-import Card from '@/components/Card';
-
-interface ManualCard {
-  title: string;
-  subtitle: string;
-  description: string;
-  href: string;
-  icon: string;
-  color: string;
-  bgColor: string;
-  badge?: string;
-}
-
-const manuals: ManualCard[] = [
-  {
-    title: '会員向け操作マニュアル',
-    subtitle: '入会から日々の利用まで',
-    description: 'QRコード読み取り、LINE連携、電子掲示板の閲覧、イベント参加申込などの基本操作',
-    href: '/manual/member',
-    icon: 'fa-mobile-alt',
-    color: '#4F95D3',
-    bgColor: 'bg-blue-50',
-  },
-  {
-    title: '役員管理画面 操作マニュアル',
-    subtitle: '管理画面の基本操作ガイド',
-    description: 'ダッシュボード、回覧板の作成・配信、名簿管理、会費管理などの管理機能',
-    href: '/manual/admin',
-    icon: 'fa-user-cog',
-    color: '#4F95D3',
-    bgColor: 'bg-indigo-50',
-  },
-  {
-    title: 'Stripe連携 操作マニュアル',
-    subtitle: '本番Stripe登録から会費請求まで',
-    description: '町内会・自治会が本番モードでStripe登録し、会員へオンライン請求する手順',
-    href: '/manual/stripe',
-    icon: 'fa-credit-card',
-    color: '#635BFF',
-    bgColor: 'bg-purple-50',
-  },
-];
+export const metadata: Metadata = {
+  title: "オンラインマニュアル | el-town",
+  description: "el-townの利用者別オンラインマニュアルです。",
+};
 
 export default function ManualHubPage() {
   return (
-    <div className="bg-background min-h-screen font-sans flex flex-col items-center py-8 px-4">
-      <div className="w-full max-w-lg">
+    <main className="min-h-screen bg-[#f4f9fb] px-4 py-10 text-[#243746]">
+      <div className="mx-auto w-full max-w-3xl">
+        <header className="mb-9 text-center">
+          <Image
+            src="/assets/logo_horizontal_final.png"
+            alt="el-town"
+            width={190}
+            height={50}
+            className="mx-auto mb-6 h-auto w-[170px]"
+            priority
+          />
+          <p className="mb-2 text-xs font-black tracking-[.18em] text-[#168eb5]">ONLINE MANUAL</p>
+          <h1 className="text-3xl font-black tracking-tight text-[#203947]">オンラインマニュアル</h1>
+          <p className="mt-3 text-sm font-bold leading-7 text-[#637b88]">
+            やりたいことに合わせて、操作手順をご案内します。
+          </p>
+        </header>
 
-        {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-md mb-4">
-            <i className="fas fa-book-open text-3xl text-blue-500"></i>
+        <section aria-labelledby="start-heading">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <span className="rounded-full bg-[#dff5fb] px-3 py-1 text-[11px] font-black text-[#087dac]">
+                はじめての方
+              </span>
+              <h2 id="start-heading" className="mt-3 text-xl font-black text-[#203947]">
+                利用を開始する
+              </h2>
+            </div>
+            <span className="text-xs font-bold text-[#8296a0]">順次追加予定</span>
           </div>
-          <h1 className="text-2xl font-black text-gray-800 tracking-tight">el-town 操作マニュアル</h1>
-          <p className="text-gray-500 font-bold text-sm mt-2">操作ガイドで<br />使い方を確認できます</p>
-        </div>
 
-        {/* マニュアルカード一覧 */}
-        <div className="space-y-4">
-          {manuals.map((m, i) => (
-            <Card key={i} className={m.bgColor}>
-              <Link href={m.href} className="card-link">
-                <div className="card-icon" style={{ backgroundColor: m.color }}>
-                  <i className={`fas ${m.icon}`} />
+          <Link
+            href="/manual/admin-signup"
+            className="group block rounded-2xl border border-[#cfe1e8] bg-white p-6 no-underline shadow-[0_10px_35px_rgba(33,78,98,.07)] transition hover:-translate-y-0.5 hover:border-[#8bcde1] hover:shadow-[0_14px_40px_rgba(33,78,98,.11)]"
+          >
+            <div className="flex items-start gap-5">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#e8f7fb] text-xl text-[#118bb3]">
+                <i className="fas fa-house-circle-check" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-black text-[#118bb3]">役員代表者向け</span>
+                  <span className="rounded bg-[#eef3f5] px-2 py-1 text-[10px] font-black text-[#607784]">約5分</span>
                 </div>
-                <div className="card-text">
-                  <h2 className="card-title">{m.title}</h2>
-                  {m.badge && <span className="badge">{m.badge}</span>}
-                  <p className="card-subtitle" style={{ color: m.color }}>{m.subtitle}</p>
-                  <p className="card-description">{m.description}</p>
-                </div>
-                <div className="card-arrow">
-                  <i className="fas fa-chevron-right" />
-                </div>
-              </Link>
-            </Card>
-          ))}
-        </div>
+                <h3 className="text-lg font-black text-[#203947]">町内会・自治会を新規申し込みする</h3>
+                <p className="mt-2 text-sm font-semibold leading-7 text-[#647b88]">
+                  団体と最初の役員代表者を登録し、管理画面の利用を開始するまでの手順です。
+                </p>
+              </div>
+              <i
+                className="fas fa-chevron-right mt-5 text-[#91a8b3] transition group-hover:translate-x-1 group-hover:text-[#118bb3]"
+                aria-hidden="true"
+              />
+            </div>
+          </Link>
+        </section>
 
-        {/* フッター */}
-        <div className="text-center mt-8">
-          <p className="text-[10px] text-gray-400 leading-relaxed">
-            ※マニュアルは随時追加・更新されます<br />
-            ご不明な点は管理者にお問い合わせください
+        <div className="mt-10 rounded-2xl border border-dashed border-[#c9dbe2] bg-white/60 p-6 text-center">
+          <i className="fas fa-book-open mb-3 text-xl text-[#81a7b7]" aria-hidden="true" />
+          <p className="text-sm font-black text-[#496573]">このマニュアルは、実際の利用順に作成しています</p>
+          <p className="mt-2 text-xs font-semibold leading-6 text-[#7b909b]">
+            役員の追加、団体の初期設定、会員登録などの手順を順次追加します。
           </p>
         </div>
 
+        <footer className="mt-10 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-black text-[#607b89] no-underline hover:text-[#118bb3]"
+          >
+            <i className="fas fa-arrow-left" aria-hidden="true" />
+            el-townトップへ戻る
+          </Link>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
