@@ -30,7 +30,7 @@ const preparationItems = [
 const formItems = [
   {
     label: "町内会・自治会名",
-    example: "七日町自治会",
+    example: "エルタウン町内会",
     note: "略称ではなく、普段使用している正式な団体名を入力します。",
   },
   {
@@ -50,7 +50,7 @@ const formItems = [
   },
   {
     label: "お名前",
-    example: "山田 太郎",
+    example: "エルタウン太郎",
     note: "申し込みを行う役員ご本人の氏名を入力します。",
   },
   {
