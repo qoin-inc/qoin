@@ -28,6 +28,13 @@ const isMissingColumnError = (error: any, columnName: string) => {
   return message.includes(columnName) && (message.includes("schema cache") || message.includes("column"));
 };
 
+const countPasswordCategories = (value: string) => [
+  /[A-Z]/.test(value),
+  /[a-z]/.test(value),
+  /[0-9]/.test(value),
+  /[^A-Za-z0-9]/.test(value),
+].filter(Boolean).length;
+
 export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
   const [townName, setTownName] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -36,6 +43,7 @@ export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,9 +58,20 @@ export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
       !adminRole.trim() ||
       !adminName.trim() ||
       !adminEmail.trim() ||
-      password.length < 8
+      !password ||
+      !confirmPassword
     ) {
-      setError("町内会・自治会名、郵便番号、役職、お名前、メールID、町内会規模、8文字以上のパスワードを入力してください。");
+      setError("町内会・自治会名、郵便番号、役職、お名前、メールID、町内会規模、パスワード、確認用パスワードを入力してください。");
+      return;
+    }
+
+    if (password.length < 8 || countPasswordCategories(password) < 3) {
+      setError("パスワードは、英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定してください。");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("確認用パスワードが一致しません。同じパスワードを入力してください。");
       return;
     }
 
@@ -157,7 +176,7 @@ export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
 
           <label>
             <span>町内会・自治会名</span>
-            <input value={townName} onChange={(e) => setTownName(e.target.value)} placeholder="例：七日町自治会" required />
+            <input value={townName} onChange={(e) => setTownName(e.target.value)} placeholder="例：エルタウン町内会" required />
           </label>
 
           <label>
@@ -182,7 +201,7 @@ export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
 
           <label>
             <span>お名前</span>
-            <input value={adminName} onChange={(e) => setAdminName(e.target.value)} placeholder="例：山田 太郎" required />
+            <input value={adminName} onChange={(e) => setAdminName(e.target.value)} placeholder="例：エルタウン太郎" required />
           </label>
 
           <label>
@@ -193,6 +212,20 @@ export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
           <label>
             <span>ログインパスワード</span>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8文字以上" required />
+            <small className="signup-password-hint">
+              英大文字・英小文字・数字・記号のうち3種類以上を組み合わせてください。
+            </small>
+          </label>
+
+          <label>
+            <span>ログインパスワード（確認用）</span>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="同じパスワードを再入力"
+              required
+            />
           </label>
 
           <button type="submit" className="el-primary-action" disabled={submitting}>

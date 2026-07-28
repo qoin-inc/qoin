@@ -60,8 +60,13 @@ const formItems = [
   },
   {
     label: "ログインパスワード",
-    example: "8文字以上",
-    note: "第三者に推測されにくい、8文字以上のパスワードを設定します。",
+    example: "8文字以上・3種類以上の文字を使用",
+    note: "英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定します。",
+  },
+  {
+    label: "ログインパスワード（確認用）",
+    example: "上と同じパスワード",
+    note: "確認のため、設定したパスワードをもう一度入力します。",
   },
 ];
 
@@ -79,7 +84,7 @@ const steps = [
   {
     number: "3",
     title: "団体と代表者の情報を入力する",
-    text: "表示された7項目を上から順に入力します。入力内容は、登録後の管理画面でも使用されます。",
+    text: "表示された8項目を上から順に入力します。入力内容は、登録後の管理画面でも使用されます。",
   },
   {
     number: "4",
@@ -122,7 +127,7 @@ export default function AdminSignupManualPage() {
           </p>
           <div className={styles.heroMeta}>
             <span><i className="far fa-clock" aria-hidden="true" /> 所要時間の目安：5分</span>
-            <span><i className="fas fa-list-check" aria-hidden="true" /> 入力項目：7項目</span>
+            <span><i className="fas fa-list-check" aria-hidden="true" /> 入力項目：8項目</span>
           </div>
         </div>
       </section>
@@ -195,7 +200,7 @@ export default function AdminSignupManualPage() {
           <section id="fields" className={styles.section}>
             <SectionHeading number="3" eyebrow="FORM GUIDE" title="入力項目の説明" />
             <p className={styles.lead}>
-              申し込み画面では、以下の7項目を入力します。すべて必須です。
+              申し込み画面では、以下の8項目を入力します。すべて必須です。
             </p>
             <div className={styles.fieldList}>
               {formItems.map((item, index) => (
@@ -213,7 +218,7 @@ export default function AdminSignupManualPage() {
               kind="warning"
               icon="fa-shield-halved"
               title="メールアドレスとパスワードの取り扱い"
-              text="複数の人で同じパスワードを共有せず、ほかのサービスで使用していないパスワードを設定してください。パスワードをメールや回覧文書へ記載しないでください。"
+              text="英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定します。確認欄にも同じパスワードを入力してください。複数の人で共有せず、メールや回覧文書へ記載しないでください。"
             />
           </section>
 
@@ -242,7 +247,7 @@ export default function AdminSignupManualPage() {
             <div className={styles.faq}>
               <details>
                 <summary>「入力してください」と表示される</summary>
-                <p>未入力の項目がないか確認してください。パスワードは8文字以上必要です。</p>
+                <p>未入力の項目がないか確認してください。パスワードは3種類以上の文字を組み合わせた8文字以上とし、確認欄にも同じ内容を入力します。</p>
               </details>
               <details>
                 <summary>登録に失敗したと表示される</summary>

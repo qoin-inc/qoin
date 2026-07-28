@@ -1,0 +1,75 @@
+.headerInner {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.article {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.preparationGrid {
+  width: 100%;
+  max-width: 56rem;
+  margin: 1.75rem auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.stepList {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.stepCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17.5rem, 22rem);
+  align-items: center;
+  gap: 3rem;
+}
+
+.stepCopy {
+  min-width: 0;
+}
+
+.stepVisual {
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.stepCardReverse .stepCopy {
+  order: 2;
+}
+
+.stepCardReverse .stepVisual {
+  order: 1;
+}
+
+@media (max-width: 767px) {
+  .headerInner {
+    padding-inline: 1rem;
+  }
+
+  .preparationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stepCard {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  .stepCardReverse .stepCopy,
+  .stepCardReverse .stepVisual {
+    order: initial;
+  }
+}
