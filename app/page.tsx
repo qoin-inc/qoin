@@ -48,6 +48,15 @@ function InitialMenu() {
           <p>町内会・自治会DXアプリ</p>
         </div>
 
+        <div className="initial-menu-welcome">
+          <strong>ようこそ、el-townへ</strong>
+          <p>
+            ご利用になるメニューをお選びください。
+            <br />
+            初めての方は「操作方法」をご覧ください。
+          </p>
+        </div>
+
         <div className="initial-menu-list">
           <Link href="/admin/" className="initial-menu-item initial-menu-item-admin">
             <span className="initial-menu-icon initial-menu-icon-indigo"><i className="fas fa-user-tie" /></span>
@@ -68,6 +77,7 @@ function InitialMenu() {
           <Link href="/manual/" className="initial-menu-item initial-menu-item-help">
             <span className="initial-menu-icon initial-menu-icon-gray"><i className="fas fa-book-open" /></span>
             <span>
+              <span className="initial-menu-badge">初めての方へ</span>
               <strong>操作方法</strong>
               <small>使い方・ヘルプを見る</small>
             </span>
