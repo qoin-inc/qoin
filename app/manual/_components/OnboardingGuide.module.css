@@ -280,6 +280,98 @@
   font-weight: 900;
 }
 
+.formPreviewFigure {
+  width: 100%;
+  max-width: 310px;
+  margin: 0;
+  text-align: center;
+}
+
+.formPreviewScreen {
+  min-height: 390px;
+  padding: 1.5rem 1.25rem;
+  border: 8px solid #26343c;
+  border-radius: 2.4rem;
+  background: #fff;
+  box-shadow: 0 20px 45px rgba(27, 55, 68, 0.2);
+}
+
+.formPreviewBrand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  color: #506b78;
+  font-size: 0.7rem;
+}
+
+.formPreviewBrand img {
+  width: 118px;
+  height: auto;
+}
+
+.formPreviewFields {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.7rem;
+  text-align: left;
+}
+
+.formPreviewField {
+  animation: onboarding-field-focus 2.6s ease-in-out infinite;
+}
+
+.formPreviewField > span {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #203947;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.formPreviewField > div {
+  min-height: 2.35rem;
+  padding: 0.65rem 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #cfdce2;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #607b89;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.formPreviewSelect i {
+  color: #607b89;
+  font-size: 0.6rem;
+}
+
+.formPreviewAction {
+  position: relative;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.8rem 0.7rem;
+  border-radius: 0.75rem;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(33, 78, 98, 0.16);
+  animation: onboarding-button-pulse 2s ease-in-out infinite;
+}
+
+.formPreviewAction > i {
+  margin-right: 0.4rem;
+}
+
+.formPreviewFigure figcaption {
+  margin-top: 0.75rem;
+  color: #607b89;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
 @keyframes onboarding-float {
   0%,
   100% {
@@ -310,6 +402,19 @@
   }
 }
 
+@keyframes onboarding-field-focus {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+    filter: none;
+  }
+  82% {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 5px 8px rgba(17, 139, 179, 0.16));
+  }
+}
+
 @keyframes onboarding-qr-scan {
   0%,
   100% {
@@ -324,7 +429,9 @@
   .animatedActionIcon,
   .animatedActionButton,
   .tapIndicator,
-  .qrScanLine {
+  .qrScanLine,
+  .formPreviewField,
+  .formPreviewAction {
     animation: none;
   }
 }

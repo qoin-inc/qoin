@@ -294,6 +294,52 @@ export function QrLineScanVisual() {
   );
 }
 
+export function AnimatedFormPreview({
+  theme,
+  title,
+  fields,
+  action,
+}: {
+  theme: Theme;
+  title: string;
+  fields: Array<{ label: string; value: string; type?: "input" | "select" | "password" }>;
+  action?: string;
+}) {
+  const colors = themeStyles[theme];
+
+  return (
+    <figure className={styles.formPreviewFigure}>
+      <div className={styles.formPreviewScreen}>
+        <div className={styles.formPreviewBrand}>
+          <Image src="/assets/logo_horizontal_final.png" alt="el-town" width={132} height={35} />
+          <strong>{title}</strong>
+        </div>
+        <div className={styles.formPreviewFields}>
+          {fields.map((field, index) => (
+            <div className={styles.formPreviewField} key={field.label} style={{ animationDelay: `${index * 0.45}s` }}>
+              <span>{field.label}</span>
+              <div className={field.type === "select" ? styles.formPreviewSelect : ""}>
+                {field.type === "password" ? "••••••••••••" : field.value}
+                {field.type === "select" && <i className="fas fa-chevron-down" aria-hidden="true" />}
+              </div>
+            </div>
+          ))}
+        </div>
+        {action && (
+          <div className={`${styles.formPreviewAction} ${colors.button}`}>
+            <i className="fas fa-check" aria-hidden="true" />
+            {action}
+            <span className={styles.tapIndicator}>
+              <i className="fas fa-hand-pointer" aria-hidden="true" />
+            </span>
+          </div>
+        )}
+      </div>
+      <figcaption>実際の入力項目に合わせた操作イメージ</figcaption>
+    </figure>
+  );
+}
+
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="text-center">
