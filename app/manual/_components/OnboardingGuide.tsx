@@ -244,6 +244,56 @@ export function AnimatedAction({
   );
 }
 
+export function QrLineScanVisual() {
+  const qrPattern = [
+    "11111110101111111",
+    "10000010101000001",
+    "10111010101011101",
+    "10111010001011101",
+    "10111010111011101",
+    "10000010001000001",
+    "11111110101111111",
+    "00000000100000000",
+    "11010111101101011",
+    "00101100110110100",
+    "11110111001101111",
+    "00000000111010010",
+    "11111110101110111",
+    "10000010011010100",
+    "10111010101111101",
+    "10000010110000110",
+    "11111110101110111",
+  ].join("");
+
+  return (
+    <figure className={styles.qrLineFigure}>
+      <div className={styles.qrLinePhone}>
+        <div className={styles.qrLineHeader}>
+          <i className="fab fa-line" aria-hidden="true" />
+          <strong>LINEでQRコードを読み取る</strong>
+        </div>
+        <div className={styles.qrScanner}>
+          <div className={styles.qrCode} aria-hidden="true">
+            {Array.from(qrPattern).map((cell, index) => (
+              <span className={cell === "1" ? styles.qrCellDark : ""} key={index} />
+            ))}
+          </div>
+          <span className={styles.qrScanLine} aria-hidden="true" />
+          <span className={`${styles.qrCorner} ${styles.qrCornerTopLeft}`} aria-hidden="true" />
+          <span className={`${styles.qrCorner} ${styles.qrCornerTopRight}`} aria-hidden="true" />
+          <span className={`${styles.qrCorner} ${styles.qrCornerBottomLeft}`} aria-hidden="true" />
+          <span className={`${styles.qrCorner} ${styles.qrCornerBottomRight}`} aria-hidden="true" />
+        </div>
+        <div className={styles.qrLineResult}>
+          <i className="fas fa-check-circle" aria-hidden="true" />
+          el-townの会員登録画面を開きます
+        </div>
+      </div>
+      <figcaption>操作イメージ（この図のQRコードは読み取り用ではありません）</figcaption>
+    </figure>
+  );
+}
+
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="text-center">

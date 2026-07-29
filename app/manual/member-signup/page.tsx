@@ -3,11 +3,12 @@ import {
   ActualScreenImage,
   AnimatedAction,
   OnboardingGuide,
+  QrLineScanVisual,
 } from "../_components/OnboardingGuide";
 
 export const metadata: Metadata = {
   title: "会員として利用を開始する | el-town オンラインマニュアル",
-  description: "LINEでログインし、el-townの会員名簿と本人情報を連携する手順です。",
+  description: "会員用QRコードをLINEで読み取り、el-townの会員名簿と本人情報を照合・連携する手順です。",
 };
 
 export default function MemberSignupManualPage() {
@@ -17,41 +18,35 @@ export default function MemberSignupManualPage() {
       audience="会員向け"
       audienceIcon="fa-user-plus"
       title="会員として利用を開始する"
-      summary="LINEでログインし、エルタウン町内会の会員名簿とご本人の情報を連携する手順です。"
+      summary="役員から案内された会員用QRコードをLINEで読み取り、エルタウン町内会の会員名簿とご本人の情報を照合して利用を開始する手順です。"
       time="約5分"
       preparation={[
         { icon: "fab fa-line", title: "LINEアカウント", text: "普段お使いのLINEアカウント" },
+        { icon: "fas fa-qrcode", title: "会員用QRコード", text: "役員から配布・案内されたQRコード" },
         { icon: "fas fa-address-card", title: "会員名簿の情報", text: "役員へ届け出ている氏名・住所" },
-        { icon: "fas fa-mobile-screen", title: "スマートフォン", text: "LINE認証を行える端末" },
       ]}
       steps={[
         {
-          title: "トップ画面で「会員の方」を選ぶ",
-          text: "el-townのトップ画面から「会員の方」を押し、会員用画面を開きます。「会員登録・LINE連携はこちら」と表示されたカードが目印です。",
-          visual: (
-            <ActualScreenImage
-              src="/manual/screens/member-home.png"
-              alt="実際のel-townトップ画面"
-              caption="実際のトップ画面"
-            />
-          ),
+          title: "会員用QRコードをLINEで読み取る",
+          text: "役員から配布・案内された会員用QRコードを用意します。LINEのホーム画面にあるQRコードリーダーを開き、カメラをQRコードへ向けて読み取ります。表示されたel-townのリンクを開いてください。",
+          visual: <QrLineScanVisual />,
         },
         {
-          title: "LINEでログインする",
-          text: "「LINEでログインする」を押し、表示される認証画面で連携を許可します。el-townの利用にはLINEアカウントの連携が必要です。",
+          title: "LINE認証を許可する",
+          text: "QRコードからel-townを開くと、初回のみLINEの認証画面が表示されます。内容を確認して「許可する」を押します。認証後、会員名簿との照合画面へ進みます。",
           visual: (
             <AnimatedAction
               theme="green"
               icon="fab fa-line"
-              title="LINE認証へ進みます"
-              text="初回のみLINEの認証画面が表示されます。「許可する」を押してください。"
-              action="LINEでログインする"
+              title="QRコードからLINE認証へ"
+              text="初回のみLINEの認証画面が表示されます。内容を確認して進んでください。"
+              action="許可する"
             />
           ),
         },
         {
-          title: "初回登録画面で団体と住所を入力する",
-          text: "LINE連携後、まだ会員名簿と連携していない方には「会員情報を連携」画面が表示されます。町内会名と、役員へ届け出ている住所を入力します。",
+          title: "会員名簿に登録された団体と住所を入力する",
+          text: "「会員情報を連携」画面で、町内会名・郵便番号・住所を入力します。ここで入力する内容は、役員が事前に登録した会員名簿の内容と一致する必要があります。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/member-signup-top.png"
@@ -61,8 +56,8 @@ export default function MemberSignupManualPage() {
           ),
         },
         {
-          title: "世帯主と登録する方の氏名を入力する",
-          text: "会員名簿に登録されている世帯主の氏名・カナと、今回LINEを連携するご本人の氏名・カナを入力します。ご本人が世帯主の場合は同じ氏名を入力します。",
+          title: "会員名簿に登録された氏名を入力する",
+          text: "会員名簿に登録されている世帯主の氏名・カナと、今回LINEを連携するご本人の氏名・カナを入力します。LINEの表示名ではありません。ご本人が世帯主の場合は、両方に同じ氏名を入力します。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/member-signup-bottom.png"
@@ -72,8 +67,8 @@ export default function MemberSignupManualPage() {
           ),
         },
         {
-          title: "「連携する」を押して登録を完了する",
-          text: "入力内容を確認して「連携する」を押します。エルタウン町内会の会員画面が表示されたら、LINEと会員名簿の連携は完了です。",
+          title: "名簿との照合を完了する",
+          text: "入力内容を確認して「連携する」を押します。登録済みの会員名簿と一致すると、LINEアカウントがその会員情報へ連携されます。エルタウン町内会の会員画面が表示されたら完了です。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/member-signup-bottom.png"
@@ -93,8 +88,9 @@ export default function MemberSignupManualPage() {
         { label: "登録する方のお名前", value: "エルタウン太郎" },
         { label: "登録する方のカナ氏名", value: "エルタウン タロウ" },
       ]}
-      fieldNote="入力内容は、役員が登録した会員名簿と一致する必要があります。表記が分からない場合は役員へ確認してください。"
+      fieldNote="新しい会員名簿を作る画面ではありません。入力内容を役員が事前登録した会員名簿と照合し、一致した会員情報へLINEアカウントを連携します。表記が分からない場合は役員へ確認してください。"
       troubleItems={[
+        "必ず役員から案内された会員用QRコードをLINEで読み取って開始してください。",
         "町内会名は略称ではなく、名簿に登録された正式名称を入力してください。",
         "氏名、カナ、郵便番号、丁目・番地の空白や表記を確認してください。",
         "「一致する会員名簿が見つかりません」と表示された場合は、役員へ登録内容を確認してください。",
