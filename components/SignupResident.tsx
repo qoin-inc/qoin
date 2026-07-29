@@ -190,7 +190,7 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
 
           <label>
             <span>町内会名</span>
-            <input value={townName} onChange={(e) => setTownName(e.target.value)} placeholder="例：東京町内会" required />
+            <input value={townName} onChange={(e) => setTownName(e.target.value)} placeholder="例：エルタウン町内会" required />
           </label>
 
           <label>
@@ -210,12 +210,12 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
 
           <label>
             <span>世帯主のお名前</span>
-            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="例：山田 太郎" required />
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="例：エルタウン太郎" required />
           </label>
 
           <label>
             <span>世帯主のカナ氏名</span>
-            <input value={kanaName} onChange={(e) => setKanaName(e.target.value)} placeholder="例：ヤマダ タロウ" required />
+            <input value={kanaName} onChange={(e) => setKanaName(e.target.value)} placeholder="例：エルタウン タロウ" required />
           </label>
 
           <div className="signup-form-section-note">
@@ -225,12 +225,12 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
 
           <label>
             <span>登録する方のお名前</span>
-            <input value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="例：山田 花子" required />
+            <input value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="例：エルタウン太郎" required />
           </label>
 
           <label>
             <span>登録する方のカナ氏名</span>
-            <input value={memberKanaName} onChange={(e) => setMemberKanaName(e.target.value)} placeholder="例：ヤマダ ハナコ" required />
+            <input value={memberKanaName} onChange={(e) => setMemberKanaName(e.target.value)} placeholder="例：エルタウン タロウ" required />
           </label>
 
           <button type="submit" className="el-primary-action" disabled={submitting}>

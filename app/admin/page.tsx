@@ -575,7 +575,7 @@ export default function AdminPage() {
                 value={inviteName}
                 onChange={e => setInviteName(e.target.value)}
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                placeholder="例：副会長 山田"
+                placeholder="例：副会長 エルタウン太郎"
                 required
               />
             </div>

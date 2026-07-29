@@ -184,79 +184,62 @@ export function OnboardingGuide({
   );
 }
 
-export function PhoneFrame({
-  theme,
-  title,
-  children,
+export function ActualScreenImage({
+  src,
+  alt,
+  caption,
 }: {
-  theme: Theme;
-  title: string;
-  children: ReactNode;
+  src: string;
+  alt: string;
+  caption: string;
 }) {
-  const colors = themeStyles[theme];
   return (
-    <figure className="w-full max-w-[310px]">
-      <div className="rounded-[2.6rem] border-[9px] border-[#26343c] bg-white p-2 shadow-[0_20px_45px_rgba(27,55,68,.18)]">
-        <div className="mx-auto mb-2 h-1.5 w-16 rounded-full bg-[#26343c]" />
-        <div className="min-h-[380px] overflow-hidden rounded-[1.8rem] bg-[#f4f7f8]">
-          <div className={`px-4 py-3 text-center text-xs font-black text-white ${colors.solid}`}>{title}</div>
-          <div className="space-y-3 p-4">{children}</div>
-        </div>
+    <figure className={styles.actualScreenFigure}>
+      <div className={styles.actualScreenFrame}>
+        <Image
+          src={src}
+          alt={alt}
+          width={390}
+          height={844}
+          className={styles.actualScreenImage}
+        />
       </div>
-      <figcaption className="mt-3 text-center text-[11px] font-semibold text-[#7b909b]">画面イメージ</figcaption>
+      <figcaption className="mt-3 text-center text-[11px] font-black text-[#607b89]">
+        <i className="fas fa-camera mr-2" aria-hidden="true" />
+        {caption}
+      </figcaption>
     </figure>
   );
 }
 
-export function MockField({
-  label,
-  value,
-  muted = false,
-}: {
-  label: string;
-  value: string;
-  muted?: boolean;
-}) {
-  return (
-    <div>
-      <p className="mb-1 text-[10px] font-black text-[#536b77]">{label}</p>
-      <div className={`rounded-lg border border-[#dce5e9] bg-white px-3 py-2 text-[11px] font-bold ${muted ? "text-[#9aabb3]" : "text-[#344d59]"}`}>
-        {value}
-      </div>
-    </div>
-  );
-}
-
-export function MockButton({
+export function AnimatedAction({
   theme,
-  children,
-}: {
-  theme: Theme;
-  children: ReactNode;
-}) {
-  return (
-    <div className={`rounded-xl px-3 py-3 text-center text-xs font-black text-white ${themeStyles[theme].button}`}>
-      {children}
-    </div>
-  );
-}
-
-export function MockNotice({
   icon,
   title,
   text,
+  action,
 }: {
+  theme: Theme;
   icon: string;
   title: string;
   text: string;
+  action: string;
 }) {
+  const colors = themeStyles[theme];
   return (
-    <div className="rounded-2xl border border-[#dce8ed] bg-white p-4 text-center shadow-sm">
-      <span className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-[#edf5f8] text-[#55727f]">
+    <div className={`${styles.animatedAction} ${colors.pale} ${colors.border}`}>
+      <span className={`${styles.animatedActionIcon} ${colors.soft} ${colors.text}`}>
         <i className={icon} aria-hidden="true" />
       </span>
-      <p className="mt-3 text-xs font-black text-[#203947]">{title}</p>
-      <p className="mt-2 text-[10px] font-semibold leading-5 text-[#718792]">{text}</p>
+      <h4>{title}</h4>
+      <p>{text}</p>
+      <div className={`${styles.animatedActionButton} ${colors.button}`}>
+        {action}
+        <span className={styles.tapIndicator}>
+          <i className="fas fa-hand-pointer" aria-hidden="true" />
+        </span>
+      </div>
+      <p className={styles.animationCaption}>操作イメージ</p>
     </div>
   );
 }

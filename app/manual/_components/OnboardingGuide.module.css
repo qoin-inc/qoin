@@ -54,6 +54,134 @@
   order: 1;
 }
 
+.actualScreenFrame {
+  overflow: hidden;
+  border: 8px solid #26343c;
+  border-radius: 2.4rem;
+  background: #fff;
+  box-shadow: 0 20px 45px rgba(27, 55, 68, 0.2);
+}
+
+.actualScreenFigure {
+  width: 100%;
+  max-width: 310px;
+  margin: 0;
+}
+
+.actualScreenImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.animatedAction {
+  width: 100%;
+  max-width: 310px;
+  min-height: 390px;
+  padding: 2rem 1.5rem;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 20px 45px rgba(27, 55, 68, 0.12);
+}
+
+.animatedActionIcon {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  animation: onboarding-float 2.2s ease-in-out infinite;
+}
+
+.animatedAction h4 {
+  margin-top: 1.25rem;
+  color: #203947;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.animatedAction p {
+  margin-top: 0.75rem;
+  color: #607b89;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.animatedActionButton {
+  position: relative;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.85rem;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(33, 78, 98, 0.16);
+  animation: onboarding-button-pulse 2s ease-in-out infinite;
+}
+
+.tapIndicator {
+  position: absolute;
+  right: 1rem;
+  bottom: -1.2rem;
+  color: #203947;
+  font-size: 1.8rem;
+  filter: drop-shadow(0 3px 2px rgba(255, 255, 255, 0.9));
+  animation: onboarding-tap 1.5s ease-in-out infinite;
+}
+
+.animatedAction .animationCaption {
+  margin-top: 1.7rem;
+  color: #7b909b;
+  font-size: 0.68rem;
+}
+
+@keyframes onboarding-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes onboarding-button-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.025);
+  }
+}
+
+@keyframes onboarding-tap {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-12deg);
+  }
+  50% {
+    transform: translate(-8px, -8px) rotate(-12deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animatedActionIcon,
+  .animatedActionButton,
+  .tapIndicator {
+    animation: none;
+  }
+}
+
 @media (max-width: 767px) {
   .headerInner {
     padding-inline: 1rem;

@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import {
-  MockButton,
-  MockField,
-  MockNotice,
+  ActualScreenImage,
+  AnimatedAction,
   OnboardingGuide,
-  PhoneFrame,
 } from "../_components/OnboardingGuide";
 
 export const metadata: Metadata = {
@@ -31,66 +29,48 @@ export default function AdminInviteManualPage() {
           title: "代表役員から招待URLを受け取る",
           text: "招待した代表役員から、メールやメッセージで届いた専用URLを開きます。通常の役員ログイン画面ではなく、必ず届いたURLから進んでください。",
           visual: (
-            <PhoneFrame theme="blue" title="招待メッセージ">
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <p className="text-[10px] font-bold text-[#7a8e98]">エルタウン町内会</p>
-                <p className="mt-2 text-xs font-black text-[#203947]">役員への招待が届きました</p>
-                <p className="mt-3 text-[10px] font-semibold leading-5 text-[#607b89]">
-                  エルタウン町内会の役員として、el-townへの登録をお願いします。
-                </p>
-                <div className="mt-4 rounded-lg bg-[#e8f7fb] px-3 py-2 text-[10px] font-black text-[#118bb3]">
-                  招待URLを開く
-                </div>
-              </div>
-              <MockNotice
-                icon="fas fa-shield-halved"
-                title="ご本人専用のURLです"
-                text="他の方へ転送せず、招待された方が開きます。"
-              />
-            </PhoneFrame>
+            <AnimatedAction
+              theme="blue"
+              icon="fas fa-envelope-open-text"
+              title="役員招待が届きます"
+              text="代表役員から届いた、ご本人専用のURLを開きます。"
+              action="招待URLを開く"
+            />
           ),
         },
         {
           title: "お名前とメールアドレスを入力する",
           text: "「役員として合流する」画面で、お名前（または役職名）と、招待されたメールアドレスを入力します。メールアドレスは招待先と同じものを使用してください。",
           visual: (
-            <PhoneFrame theme="blue" title="役員として合流する">
-              <p className="text-center text-[10px] font-semibold text-[#607b89]">
-                ご自身のお名前とパスワードを設定してください。
-              </p>
-              <MockField label="お名前（または役職名）" value="副会長 エルタウン太郎" />
-              <MockField label="メールアドレス" value="招待を受け取ったアドレス" muted />
-            </PhoneFrame>
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-form.png"
+              alt="実際の役員として合流する登録画面"
+              caption="実際の「役員として合流する」画面"
+            />
           ),
         },
         {
           title: "安全なパスワードを設定する",
           text: "英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定します。確認欄にも同じパスワードを入力してください。",
           visual: (
-            <PhoneFrame theme="blue" title="パスワードの設定">
-              <MockField label="設定するパスワード" value="••••••••••" />
-              <MockField label="パスワード（確認用）" value="••••••••••" />
-              <div className="rounded-xl bg-[#fff8e6] p-3 text-[10px] font-semibold leading-5 text-[#7a652a]">
-                <i className="fas fa-lightbulb mr-1" aria-hidden="true" />
-                3種類以上の文字を組み合わせます
-              </div>
-            </PhoneFrame>
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-form.png"
+              alt="パスワード欄と確認用パスワード欄がある実際の役員登録画面"
+              caption="パスワード欄も実画面で確認できます"
+            />
           ),
         },
         {
           title: "役員として合流する",
           text: "入力内容を確認し、「パスワードを設定して役員に合流する」を押します。エルタウン町内会の管理画面が表示されたら登録完了です。",
           visual: (
-            <PhoneFrame theme="blue" title="登録内容の確認">
-              <MockField label="お名前" value="副会長 エルタウン太郎" />
-              <MockField label="所属" value="エルタウン町内会" />
-              <MockButton theme="blue">パスワードを設定して役員に合流する</MockButton>
-              <MockNotice
-                icon="fas fa-circle-check"
-                title="登録完了"
-                text="管理画面が表示されたら、役員としての登録は完了です。"
-              />
-            </PhoneFrame>
+            <AnimatedAction
+              theme="blue"
+              icon="fas fa-user-shield"
+              title="入力内容を確認します"
+              text="ボタンを押すと役員アカウントが登録され、管理画面へ進みます。"
+              action="パスワードを設定して役員に合流する"
+            />
           ),
         },
       ]}
