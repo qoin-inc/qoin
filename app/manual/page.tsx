@@ -85,7 +85,7 @@ export default function ManualHubPage() {
               label="会員向け"
               time="約5分"
               title="会員として利用を開始する"
-              description="LINEでログインし、エルタウン町内会の会員名簿とご本人の情報を連携します。"
+              description="会員用QRコードをLINEで読み取り、エルタウン町内会の会員名簿とご本人の情報を連携します。"
               icon="fa-user-plus"
               tone="green"
             />

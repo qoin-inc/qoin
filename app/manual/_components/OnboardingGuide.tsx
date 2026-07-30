@@ -289,7 +289,7 @@ export function QrLineScanVisual() {
           el-townの会員登録画面を開きます
         </div>
       </div>
-      <figcaption>操作イメージ（この図のQRコードは読み取り用ではありません）</figcaption>
+      <figcaption>LINEでの読み取り手順（図のQRコードは読み取りできません）</figcaption>
     </figure>
   );
 }

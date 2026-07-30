@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   ActualScreenImage,
   OnboardingGuide,
+  QrLineScanVisual,
 } from "../_components/OnboardingGuide";
 
 export const metadata: Metadata = {
@@ -26,14 +27,8 @@ export default function MemberSignupManualPage() {
       steps={[
         {
           title: "会員用QRコードをLINEで読み取る",
-          text: "役員から配布・案内された会員用QRコードを用意します。LINEのホーム画面にあるQRコードリーダーを開き、カメラをQRコードへ向けて読み取ります。表示されたel-townのリンクを開いてください。",
-          visual: (
-            <ActualScreenImage
-              src="/manual/screens/top-menu.png"
-              alt="会員の方ボタンが表示された実際のel-townトップ画面"
-              caption="QRコードのリンク先はel-townです。通常のトップ画面では「会員の方」から進めます"
-            />
-          ),
+          text: "役員から配布・案内された会員用QRコードを用意します。LINEを開き、「ホーム」画面上部のQRコードリーダーを押してください。紙や別の端末に表示されたQRコードはカメラで読み取ります。QRコードが同じスマートフォンに画像で届いた場合は、読み取り画面の画像ボタンから保存した画像を選びます。読み取り結果に表示されたel-townのリンクを押して開いてください。",
+          visual: <QrLineScanVisual />,
         },
         {
           title: "LINE認証を許可する",
