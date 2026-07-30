@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import {
-  AnimatedAction,
-  AnimatedFormPreview,
+  ActualScreenImage,
   OnboardingGuide,
 } from "../_components/OnboardingGuide";
 
@@ -29,12 +28,10 @@ export default function AdminSignupManualPage() {
           title: "トップ画面から「役員の方」を開く",
           text: "el-townのトップ画面で「役員の方」を押し、役員ログイン画面を開きます。すでに登録済みの団体へ参加する場合は、この新規申し込みではなく代表役員からの招待URLを使用してください。",
           visual: (
-            <AnimatedAction
-              theme="blue"
-              icon="fas fa-user-tie"
-              title="役員用画面へ進みます"
-              text="トップ画面に表示される「役員の方」を選びます。"
-              action="役員の方"
+            <ActualScreenImage
+              src="/manual/screens/top-menu.png"
+              alt="役員の方ボタンが表示された実際のel-townトップ画面"
+              caption="実際のトップ画面で「役員の方」を選びます"
             />
           ),
         },
@@ -42,12 +39,10 @@ export default function AdminSignupManualPage() {
           title: "新規の町内会・自治会を登録する",
           text: "役員ログイン画面の下にある「新規の町内会・自治会を登録する」を押します。団体を初めて登録する代表役員だけがこの操作を行います。",
           visual: (
-            <AnimatedAction
-              theme="blue"
-              icon="fas fa-house-circle-check"
-              title="新規申し込みを選びます"
-              text="ログイン欄ではなく、画面下部の新規登録ボタンを押してください。"
-              action="新規の町内会・自治会を登録する"
+            <ActualScreenImage
+              src="/manual/screens/admin-login.png"
+              alt="新規の町内会・自治会を登録するボタンがある実際の役員ログイン画面"
+              caption="実際の役員ログイン画面下部に新規登録ボタンがあります"
             />
           ),
         },
@@ -55,15 +50,10 @@ export default function AdminSignupManualPage() {
           title: "団体の基本情報を入力する",
           text: "町内会・自治会名、郵便番号、会員世帯数、申し込む方の役職を入力します。団体名は略称ではなく、普段使用している正式名称を入力してください。",
           visual: (
-            <AnimatedFormPreview
-              theme="blue"
-              title="町内会・自治会を新しく登録"
-              fields={[
-                { label: "町内会・自治会名", value: "エルタウン町内会" },
-                { label: "郵便番号", value: "100-0001" },
-                { label: "会員世帯数", value: "500世帯未満", type: "select" },
-                { label: "役職", value: "会長" },
-              ]}
+            <ActualScreenImage
+              src="/manual/screens/admin-signup-top.png"
+              alt="町内会名、郵便番号、会員世帯数、役職の入力欄がある実際の新規登録画面"
+              caption="実際の新規登録画面・前半"
             />
           ),
         },
@@ -71,15 +61,10 @@ export default function AdminSignupManualPage() {
           title: "代表役員の情報とパスワードを入力する",
           text: "お名前は「エルタウン太郎」、メールIDは今後のログインに使用するアドレスを入力します。パスワードは英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定し、確認欄にも同じ内容を入力します。",
           visual: (
-            <AnimatedFormPreview
-              theme="blue"
-              title="代表役員のログイン情報"
-              fields={[
-                { label: "お名前", value: "エルタウン太郎" },
-                { label: "メールID", value: "admin@example.com" },
-                { label: "ログインパスワード", value: "", type: "password" },
-                { label: "ログインパスワード（確認用）", value: "", type: "password" },
-              ]}
+            <ActualScreenImage
+              src="/manual/screens/admin-signup-bottom.png"
+              alt="代表役員のお名前、メールID、パスワード入力欄がある実際の新規登録画面"
+              caption="実際の新規登録画面・後半"
             />
           ),
         },
@@ -87,15 +72,10 @@ export default function AdminSignupManualPage() {
           title: "内容を確認して登録を開始する",
           text: "団体名・メールID・パスワードを確認し、「登録して開始」を押します。エルタウン町内会の管理画面が表示されたら、新規申し込みは完了です。",
           visual: (
-            <AnimatedFormPreview
-              theme="blue"
-              title="入力内容を確認"
-              fields={[
-                { label: "町内会・自治会名", value: "エルタウン町内会" },
-                { label: "代表役員", value: "会長　エルタウン太郎" },
-                { label: "メールID", value: "admin@example.com" },
-              ]}
-              action="登録して開始"
+            <ActualScreenImage
+              src="/manual/screens/admin-signup-bottom.png"
+              alt="登録して開始ボタンがある実際の新規登録画面"
+              caption="入力内容を確認し、実画面の「登録して開始」を押します"
             />
           ),
         },

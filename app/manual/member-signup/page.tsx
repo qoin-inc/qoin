@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import {
   ActualScreenImage,
-  AnimatedAction,
   OnboardingGuide,
-  QrLineScanVisual,
 } from "../_components/OnboardingGuide";
 
 export const metadata: Metadata = {
@@ -29,18 +27,22 @@ export default function MemberSignupManualPage() {
         {
           title: "会員用QRコードをLINEで読み取る",
           text: "役員から配布・案内された会員用QRコードを用意します。LINEのホーム画面にあるQRコードリーダーを開き、カメラをQRコードへ向けて読み取ります。表示されたel-townのリンクを開いてください。",
-          visual: <QrLineScanVisual />,
+          visual: (
+            <ActualScreenImage
+              src="/manual/screens/top-menu.png"
+              alt="会員の方ボタンが表示された実際のel-townトップ画面"
+              caption="QRコードのリンク先はel-townです。通常のトップ画面では「会員の方」から進めます"
+            />
+          ),
         },
         {
           title: "LINE認証を許可する",
           text: "QRコードからel-townを開くと、初回のみLINEの認証画面が表示されます。内容を確認して「許可する」を押します。認証後、会員名簿との照合画面へ進みます。",
           visual: (
-            <AnimatedAction
-              theme="green"
-              icon="fab fa-line"
-              title="QRコードからLINE認証へ"
-              text="初回のみLINEの認証画面が表示されます。内容を確認して進んでください。"
-              action="許可する"
+            <ActualScreenImage
+              src="/manual/screens/member-signup-top.png"
+              alt="LINE認証後に表示される実際の会員情報連携画面"
+              caption="LINE認証が完了すると、実際の会員情報連携画面が表示されます"
             />
           ),
         },
@@ -71,9 +73,9 @@ export default function MemberSignupManualPage() {
           text: "入力内容を確認して「連携する」を押します。登録済みの会員名簿と一致すると、LINEアカウントがその会員情報へ連携されます。エルタウン町内会の会員画面が表示されたら完了です。",
           visual: (
             <ActualScreenImage
-              src="/manual/screens/member-signup-bottom.png"
-              alt="連携するボタンが表示された実際の会員情報連携画面"
-              caption="「連携する」ボタンも実画面で確認できます"
+              src="/manual/screens/member-home.png"
+              alt="会員名簿との連携後に表示される実際の会員ホーム画面"
+              caption="連携が完了すると、実際の会員ホーム画面が表示されます"
             />
           ),
         },

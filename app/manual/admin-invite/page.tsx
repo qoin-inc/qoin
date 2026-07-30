@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import {
   ActualScreenImage,
-  AnimatedAction,
   OnboardingGuide,
 } from "../_components/OnboardingGuide";
 
@@ -29,12 +28,10 @@ export default function AdminInviteManualPage() {
           title: "代表役員から招待URLを受け取る",
           text: "招待した代表役員から、メールやメッセージで届いた専用URLを開きます。通常の役員ログイン画面ではなく、必ず届いたURLから進んでください。",
           visual: (
-            <AnimatedAction
-              theme="blue"
-              icon="fas fa-envelope-open-text"
-              title="役員招待が届きます"
-              text="代表役員から届いた、ご本人専用のURLを開きます。"
-              action="招待URLを開く"
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-form.png"
+              alt="招待URLを開いたときに表示される実際の役員登録画面"
+              caption="招待URLを開くと、この役員登録画面が表示されます"
             />
           ),
         },
@@ -64,12 +61,10 @@ export default function AdminInviteManualPage() {
           title: "役員として合流する",
           text: "入力内容を確認し、「パスワードを設定して役員に合流する」を押します。エルタウン町内会の管理画面が表示されたら登録完了です。",
           visual: (
-            <AnimatedAction
-              theme="blue"
-              icon="fas fa-user-shield"
-              title="入力内容を確認します"
-              text="ボタンを押すと役員アカウントが登録され、管理画面へ進みます。"
-              action="パスワードを設定して役員に合流する"
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-form.png"
+              alt="パスワードを設定して役員に合流するボタンがある実際の役員登録画面"
+              caption="実画面の一番下にある登録ボタンを押します"
             />
           ),
         },

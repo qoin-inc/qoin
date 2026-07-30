@@ -122,7 +122,7 @@ export function OnboardingGuide({
         </section>
 
         <section>
-          <SectionTitle title="画面を見ながら登録する" subtitle="実際の操作順に、画面イメージと一緒に説明します" />
+          <SectionTitle title="画面を見ながら登録する" subtitle="実際に表示される画面を使って、操作順に説明します" />
           <ol className={styles.stepList}>
             {steps.map((step, index) => {
               const visualFirst = index % 2 === 1;
