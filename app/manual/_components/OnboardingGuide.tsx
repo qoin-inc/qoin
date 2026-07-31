@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ManualSiteHeader } from "./ManualSiteHeader";
 import styles from "./OnboardingGuide.module.css";
 
 type Theme = "blue" | "green";
@@ -9,11 +10,6 @@ type GuideStep = {
   title: string;
   text: string;
   visual: ReactNode;
-};
-
-type FieldItem = {
-  label: string;
-  value: string;
 };
 
 const themeStyles = {
@@ -46,8 +42,6 @@ export function OnboardingGuide({
   time,
   preparation,
   steps,
-  fields,
-  fieldNote,
   troubleItems,
 }: {
   theme: Theme;
@@ -58,34 +52,13 @@ export function OnboardingGuide({
   time: string;
   preparation: Array<{ icon: string; title: string; text: string }>;
   steps: GuideStep[];
-  fields: FieldItem[];
-  fieldNote?: string;
   troubleItems: string[];
 }) {
   const colors = themeStyles[theme];
 
   return (
     <main className="min-h-screen bg-[#f4f9fb] text-[#243746]">
-      <header className="border-b border-[#dce8ed] bg-white">
-        <div className={`${styles.headerInner} px-4 py-4`}>
-          <Link
-            href="/manual"
-            className={`justify-self-start text-sm font-black text-[#607b89] no-underline ${colors.hover}`}
-          >
-            <i className="fas fa-chevron-left mr-2" aria-hidden="true" />
-            <span className="hidden sm:inline">マニュアル一覧</span>
-          </Link>
-          <Image
-            src="/assets/logo_horizontal_final.png"
-            alt="el-town"
-            width={150}
-            height={40}
-            className="h-auto w-[135px]"
-            priority
-          />
-          <span aria-hidden="true" />
-        </div>
-      </header>
+      <ManualSiteHeader />
 
       <section className={`${colors.soft} px-4 py-12 text-center`}>
         <div className="mx-auto max-w-3xl">
@@ -143,22 +116,6 @@ export function OnboardingGuide({
               );
             })}
           </ol>
-        </section>
-
-        <section className="rounded-[2rem] border border-[#dce8ed] bg-white p-6 text-center shadow-[0_12px_40px_rgba(33,78,98,.06)] md:p-9">
-          <SectionTitle title="入力項目と記入例" />
-          <div className="mx-auto mt-7 max-w-3xl overflow-hidden rounded-2xl border border-[#dce8ed] text-left">
-            {fields.map((item) => (
-              <div
-                key={item.label}
-                className="grid gap-1 border-b border-[#e5eef2] bg-white p-4 last:border-b-0 md:grid-cols-[220px_1fr]"
-              >
-                <span className="text-sm font-black text-[#203947]">{item.label}</span>
-                <span className="text-sm font-semibold text-[#607b89]">{item.value}</span>
-              </div>
-            ))}
-          </div>
-          {fieldNote && <p className="mx-auto mt-5 max-w-3xl text-xs font-semibold leading-6 text-[#718792]">{fieldNote}</p>}
         </section>
 
         <section className="rounded-[2rem] border border-[#dce8ed] bg-white p-6 text-center shadow-[0_12px_40px_rgba(33,78,98,.06)] md:p-9">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ManualSiteHeader } from '@/app/manual/_components/ManualSiteHeader';
 
 export type ManualStep = {
   title: string;
@@ -29,20 +30,23 @@ const ManualViewer: React.FC<ManualViewerProps> = ({ title, subtitle, steps, acc
   };
 
   return (
-    <div className="manual-viewer">
-      <div style={headerStyle}>
-        {icon && <i className={`fas ${icon}`} />}
-        <h1 style={{ margin: 0 }}>{title}</h1>
-      </div>
-      {subtitle && <h2 className="subtitle" style={{ margin: '0.5rem 0' }}>{subtitle}</h2>}
-      <div className="steps">
-        {steps.map((step, idx) => (
-          <section key={idx} className="step" style={{ marginBottom: '1.5rem' }}>
-            <h3>{step.title}</h3>
-            <p>{step.description}</p>
-            <div className="content">{step.content}</div>
-          </section>
-        ))}
+    <div className="min-h-screen bg-[#f4f9fb]">
+      <ManualSiteHeader />
+      <div className="manual-viewer">
+        <div style={headerStyle}>
+          {icon && <i className={`fas ${icon}`} />}
+          <h1 style={{ margin: 0 }}>{title}</h1>
+        </div>
+        {subtitle && <h2 className="subtitle" style={{ margin: '0.5rem 0' }}>{subtitle}</h2>}
+        <div className="steps">
+          {steps.map((step, idx) => (
+            <section key={idx} className="step" style={{ marginBottom: '1.5rem' }}>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+              <div className="content">{step.content}</div>
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ManualSiteHeader } from '../_components/ManualSiteHeader';
 
 export default function MemberManualPage() {
   const [step, setStep] = useState(1);
@@ -36,7 +37,9 @@ export default function MemberManualPage() {
   const togglePlay = () => setIsPlaying(!isPlaying);
 
   return (
-    <div className="bg-gray-100 min-h-screen font-sans flex flex-col items-center py-6 px-4">
+    <>
+      <ManualSiteHeader />
+      <div className="bg-gray-100 min-h-screen font-sans flex flex-col items-center py-6 px-4">
       <div className="w-full max-w-md">
         
         {/* ヘッダーエリア */}
@@ -463,6 +466,7 @@ export default function MemberManualPage() {
           to { max-width: 100% }
         }
       `}} />
-    </div>
+      </div>
+    </>
   );
 }
