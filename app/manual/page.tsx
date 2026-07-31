@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "オンラインマニュアル | el-town",
@@ -36,7 +37,7 @@ const manualSections: Array<{
         time: "約5分",
         title: "町内会・自治会を新規登録する",
         description: "団体と最初の役員代表者を登録し、管理画面の利用を開始します。",
-        icon: "fa-house-circle-check",
+        icon: "fa-house",
       },
       {
         href: "/manual/admin-invite",
@@ -112,45 +113,45 @@ const manualSections: Array<{
 
 export default function ManualHubPage() {
   return (
-    <main className="min-h-screen bg-[#f4f9fb] px-4 py-10 text-[#243746]">
-      <div className="mx-auto w-full max-w-4xl">
-        <header className="mb-9 text-center">
+    <main className={styles.page}>
+      <div className={styles.container}>
+        <header className={styles.hero}>
           <Link
             href="/"
             aria-label="el-townトップメニューへ"
-            className="mx-auto mb-6 inline-flex min-h-14 items-center rounded-2xl px-4 transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#118bb3]"
+            className={styles.heroLogoLink}
           >
             <Image
               src="/assets/logo_horizontal_final.png"
               alt="el-townトップメニューへ"
               width={190}
               height={50}
-              className="h-auto w-[170px]"
+              className={styles.heroLogo}
               priority
             />
           </Link>
-          <p className="mb-2 text-xs font-black tracking-[.18em] text-[#168eb5]">ONLINE MANUAL</p>
-          <h1 className="text-3xl font-black tracking-tight text-[#203947]">オンラインマニュアル</h1>
-          <p className="mt-3 text-sm font-bold leading-7 text-[#637b88]">
+          <p className={styles.kicker}>ONLINE MANUAL</p>
+          <h1 className={styles.title}>オンラインマニュアル</h1>
+          <p className={styles.lead}>
             目的に合うマニュアル名を選んで、操作手順を確認してください。
           </p>
         </header>
 
-        <nav aria-label="オンラインマニュアル一覧" className="space-y-10">
+        <nav aria-label="オンラインマニュアル一覧" className={styles.nav}>
           {manualSections.map((section) => (
             <section
               key={section.id}
               aria-labelledby={`${section.id}-heading`}
-              className="rounded-[2rem] border border-[#d7e6ec] bg-white/75 p-5 shadow-[0_12px_40px_rgba(33,78,98,.06)] sm:p-7"
+              className={styles.section}
             >
-              <span className="rounded-full bg-[#dff5fb] px-3 py-1 text-[11px] font-black text-[#087dac]">
+              <span className={styles.sectionEyebrow}>
                 {section.eyebrow}
               </span>
-              <h2 id={`${section.id}-heading`} className="mt-3 text-xl font-black text-[#203947]">
+              <h2 id={`${section.id}-heading`} className={styles.sectionTitle}>
                 {section.title}
               </h2>
-              <p className="mt-2 text-sm font-semibold leading-7 text-[#637b88]">{section.description}</p>
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <p className={styles.sectionDescription}>{section.description}</p>
+              <div className={`${styles.itemsGrid} ${section.items.length === 3 ? styles.itemsGridThree : styles.itemsGridTwo}`}>
                 {section.items.map((item) => (
                   <ManualCard key={item.href} {...item} />
                 ))}
@@ -159,19 +160,19 @@ export default function ManualHubPage() {
           ))}
         </nav>
 
-        <div className="mt-10 rounded-2xl border border-dashed border-[#c9dbe2] bg-white/60 p-6 text-center">
-          <i className="fas fa-book-open mb-3 text-xl text-[#81a7b7]" aria-hidden="true" />
-          <p className="text-sm font-black text-[#496573]">どのマニュアルを選べばよいか迷ったとき</p>
-          <p className="mt-2 text-xs font-semibold leading-6 text-[#7b909b]">
+        <div className={styles.helpBox}>
+          <i className="fas fa-book-open" aria-hidden="true" />
+          <p className={styles.helpTitle}>どのマニュアルを選べばよいか迷ったとき</p>
+          <p className={styles.helpText}>
             初めて登録する場合は「利用を開始する」、登録後の操作は「基本機能を使う」、
             決済やオンライン会議の設定は「外部サービス・追加機能を設定する」から選んでください。
           </p>
         </div>
 
-        <footer className="mt-10 text-center">
+        <footer className={styles.footer}>
           <Link
             href="/"
-            className="inline-flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl border-2 border-[#9bcbd9] bg-white px-7 py-4 text-base font-black text-[#176f8d] underline decoration-2 underline-offset-4 shadow-sm transition hover:border-[#118bb3] hover:bg-[#eaf8fc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#118bb3] sm:w-auto"
+            className={styles.homeLink}
           >
             <span aria-hidden="true">←</span>
             <span>el-town トップへ戻る</span>
@@ -194,46 +195,41 @@ function ManualCard({
   const color =
     tone === "green"
       ? {
-          icon: "bg-[#edf8f1] text-[#168a51]",
-          label: "text-[#168a51]",
-          link: "text-[#147748] hover:text-[#0d5d38]",
+          iconBackground: "#edf8f1",
+          accent: "#168a51",
+          title: "#147748",
         }
       : tone === "purple"
         ? {
-            icon: "bg-[#f0edff] text-[#635BFF]",
-            label: "text-[#635BFF]",
-            link: "text-[#5148ce] hover:text-[#3c35a5]",
+            iconBackground: "#f0edff",
+            accent: "#635bff",
+            title: "#5148ce",
           }
         : {
-          icon: "bg-[#e8f7fb] text-[#118bb3]",
-          label: "text-[#118bb3]",
-          link: "text-[#087dac] hover:text-[#075f82]",
+          iconBackground: "#e8f7fb",
+          accent: "#118bb3",
+          title: "#087dac",
         };
 
   return (
-    <article className="rounded-2xl border border-[#cfe1e8] bg-white p-5 shadow-[0_10px_35px_rgba(33,78,98,.07)]">
-      <div className="flex items-start gap-4">
-        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-lg ${color.icon}`}>
+    <Link href={href} className={styles.cardLink} aria-label={`${title}を開く`}>
+      <article className={styles.card}>
+        <div className={styles.cardIcon} style={{ backgroundColor: color.iconBackground, color: color.accent }}>
           <i className={`fas ${icon}`} aria-hidden="true" />
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={`text-[11px] font-black ${color.label}`}>{label}</span>
-            <span className="rounded bg-[#eef3f5] px-2 py-1 text-[10px] font-black text-[#607784]">{time}</span>
+        <div className={styles.cardBody}>
+          <div className={styles.cardMeta}>
+            <span style={{ color: color.accent }}>{label}</span>
+            <span className={styles.cardTime}>{time}</span>
           </div>
-          <h3 className="leading-6">
-            <Link
-              href={href}
-              style={{ minHeight: 44, paddingTop: 8, paddingBottom: 8 }}
-              className={`inline-flex min-h-11 items-center gap-2 rounded-lg py-2 font-black underline decoration-2 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${color.link}`}
-            >
-              {title}
-              <i className="fas fa-arrow-right text-xs" aria-hidden="true" />
-            </Link>
-          </h3>
-          <p className="mt-2 text-xs font-semibold leading-6 text-[#647b88]">{description}</p>
+          <h3 className={styles.cardTitle} style={{ color: color.title }}>{title}</h3>
+          <p className={styles.cardDescription}>{description}</p>
+          <span className={styles.cardAction}>
+            このマニュアルを開く
+            <i className="fas fa-arrow-right" aria-hidden="true" />
+          </span>
         </div>
-      </div>
-    </article>
+      </article>
+    </Link>
   );
 }
