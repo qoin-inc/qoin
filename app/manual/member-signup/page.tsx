@@ -68,9 +68,9 @@ export default function MemberSignupManualPage() {
           text: "入力内容を確認して「連携する」を押します。登録済みの会員名簿と一致すると、LINEアカウントがその会員情報へ連携されます。エルタウン町内会の会員画面が表示されたら完了です。",
           visual: (
             <ActualScreenImage
-              src="/manual/screens/member-home.png"
-              alt="会員名簿との連携後に表示される実際の会員ホーム画面"
-              caption="連携が完了すると、実際の会員ホーム画面が表示されます"
+              src="/manual/screens/member-home.jpg"
+              alt="エルタウン町内会の回覧とお知らせが表示された会員ホーム画面"
+              caption="連携が完了すると、エルタウン町内会の回覧やお知らせが表示されます"
             />
           ),
         },
