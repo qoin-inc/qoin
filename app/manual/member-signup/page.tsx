@@ -35,9 +35,9 @@ export default function MemberSignupManualPage() {
           text: "QRコードからel-townを開くと、初回のみLINEの認証画面が表示されます。内容を確認して「許可する」を押します。認証後、会員名簿との照合画面へ進みます。",
           visual: (
             <ActualScreenImage
-              src="/manual/screens/member-signup-top.png"
-              alt="LINE認証後に表示される実際の会員情報連携画面"
-              caption="LINE認証が完了すると、実際の会員情報連携画面が表示されます"
+              src="/manual/screens/line-authentication.png"
+              alt="el-townアイコンと町内会・自治会DXアプリの説明が表示されたLINE認証画面"
+              caption="内容を確認し、実際のLINE認証画面で「許可する」を押します"
             />
           ),
         },
