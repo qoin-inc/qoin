@@ -215,25 +215,6 @@
   line-height: 1.75;
 }
 
-.cardAction {
-  min-height: 2.75rem;
-  width: 100%;
-  margin-top: auto;
-  padding: 0.75rem 0.9rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  border-radius: 0.8rem;
-  background: #087dac;
-  color: #fff;
-  font-size: 0.82rem;
-  font-weight: 900;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
-
 .helpBox {
   margin-top: 2.5rem;
   padding: 1.5rem;
@@ -241,6 +222,52 @@
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.65);
   text-align: center;
+}
+
+.accessNotice {
+  margin-top: 1.5rem;
+  padding: 2rem 1.5rem;
+  border: 1px solid #c9dbe2;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.82);
+  color: #607784;
+  text-align: center;
+  font-weight: 700;
+}
+
+.accessNotice > i {
+  color: #118bb3;
+  font-size: 1.5rem;
+}
+
+.accessNotice h2 {
+  margin: 0.8rem 0 0;
+  color: #294d5e;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.accessNotice p {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.8;
+}
+
+.accessLinks {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.accessLinks a {
+  padding: 0.7rem 1.2rem;
+  border-radius: 0.75rem;
+  background: #e8f7fb;
+  color: #087dac;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-decoration: underline;
 }
 
 .helpBox > i {

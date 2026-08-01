@@ -13,6 +13,38 @@
   margin: 0 auto;
 }
 
+.manualListLink {
+  width: 100%;
+  max-width: 28rem;
+  min-height: 4rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #9bcbd9;
+  border-radius: 1rem;
+  background: #fff;
+  color: #176f8d;
+  font-size: 1rem;
+  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  box-shadow: 0 8px 24px rgba(33, 78, 98, 0.1);
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.manualListLink:hover {
+  border-color: #118bb3;
+  background: #eaf8fc;
+}
+
+.manualListLink:focus-visible {
+  outline: 3px solid #118bb3;
+  outline-offset: 3px;
+}
+
 .preparationGrid {
   width: 100%;
   max-width: 56rem;

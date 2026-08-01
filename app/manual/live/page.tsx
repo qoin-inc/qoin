@@ -2,6 +2,7 @@
 
 import React from 'react';
 import ManualViewer, { ManualStep } from '@/components/ManualViewer';
+import { ManualAccessGate } from '../_components/ManualAccess';
 
 /* ─────────────────── CSSキーフレーム & アニメーションスタイルの定義 ─────────────────── */
 const animationStyle = `
@@ -388,7 +389,7 @@ const steps: ManualStep[] = [
 
 export default function LiveManualPage() {
   return (
-    <>
+    <ManualAccessGate>
       <style>{animationStyle}</style>
       <ManualViewer
         title="Live・施設予約管理マニュアル"
@@ -397,6 +398,6 @@ export default function LiveManualPage() {
         accentColor="#4F46E5"
         icon="fa-video"
       />
-    </>
+    </ManualAccessGate>
   );
 }

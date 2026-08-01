@@ -42,7 +42,6 @@ export function OnboardingGuide({
   time,
   preparation,
   steps,
-  troubleItems,
 }: {
   theme: Theme;
   audience: string;
@@ -52,7 +51,6 @@ export function OnboardingGuide({
   time: string;
   preparation: Array<{ icon: string; title: string; text: string }>;
   steps: GuideStep[];
-  troubleItems: string[];
 }) {
   const colors = themeStyles[theme];
 
@@ -118,21 +116,10 @@ export function OnboardingGuide({
           </ol>
         </section>
 
-        <section className="rounded-[2rem] border border-[#dce8ed] bg-white p-6 text-center shadow-[0_12px_40px_rgba(33,78,98,.06)] md:p-9">
-          <SectionTitle title="登録できないとき" />
-          <ul className="mx-auto mt-7 max-w-3xl space-y-3 text-left text-sm font-semibold leading-7 text-[#506b78]">
-            {troubleItems.map((item) => (
-              <li key={item} className="flex gap-3 rounded-2xl bg-[#f7fafb] p-4">
-                <i className={`fas fa-circle-info mt-1 ${colors.text}`} aria-hidden="true" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
       </article>
 
-      <footer className="pb-14 text-center">
-        <Link href="/manual" className={`text-sm font-black text-[#607b89] no-underline ${colors.hover}`}>
+      <footer className="px-4 pb-14 text-center">
+        <Link href="/manual" className={`${styles.manualListLink} ${colors.hover}`}>
           <i className="fas fa-book-open mr-2" aria-hidden="true" />
           マニュアル一覧へ戻る
         </Link>

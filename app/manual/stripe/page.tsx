@@ -2,6 +2,7 @@
 
 import React from 'react';
 import ManualViewer, { ManualStep } from '@/components/ManualViewer';
+import { ManualAccessGate } from '../_components/ManualAccess';
 
 /* ─────────────────── ステップ1：el-townがStripeを標準採用する理由 ─────────────────── */
 function Step1Content() {
@@ -585,13 +586,15 @@ const steps: ManualStep[] = [
 
 export default function StripeManualPage() {
   return (
-    <ManualViewer
-      title="Stripe連携 操作マニュアル"
-      subtitle="本番Stripe登録から会費請求まで"
-      steps={steps}
-      accentColor="#635BFF"
-      icon="fa-credit-card"
-    />
+    <ManualAccessGate>
+      <ManualViewer
+        title="Stripe連携 操作マニュアル"
+        subtitle="本番Stripe登録から会費請求まで"
+        steps={steps}
+        accentColor="#635BFF"
+        icon="fa-credit-card"
+      />
+    </ManualAccessGate>
   );
 }
 

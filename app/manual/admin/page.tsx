@@ -2,6 +2,7 @@
 
 import React from 'react';
 import ManualViewer, { ManualStep } from '@/components/ManualViewer';
+import { ManualAccessGate } from '../_components/ManualAccess';
 
 /* ============================================================
    役員管理画面 操作マニュアル
@@ -643,12 +644,14 @@ const steps: ManualStep[] = [
 /* ---------- ページ コンポーネント ---------- */
 export default function AdminManualPage() {
   return (
-    <ManualViewer
-      title="役員管理画面 操作マニュアル"
-      subtitle="管理画面の基本操作ガイド"
-      steps={steps}
-      accentColor="#4F95D3"
-      icon="fa-user-cog"
-    />
+    <ManualAccessGate>
+      <ManualViewer
+        title="役員管理画面 操作マニュアル"
+        subtitle="管理画面の基本操作ガイド"
+        steps={steps}
+        accentColor="#4F95D3"
+        icon="fa-user-cog"
+      />
+    </ManualAccessGate>
   );
 }

@@ -16,7 +16,7 @@ export default function AdminSignupManualPage() {
       audience="代表役員向け"
       audienceIcon="fa-people-roof"
       title="町内会・自治会を新規申し込みする"
-      summary="エルタウン町内会を初めてel-townへ登録し、最初の代表役員アカウントを作成する手順です。"
+      summary="町内会・自治会を初めてel-townへ登録し、最初の代表役員アカウントを作成する手順です。"
       time="約5分"
       preparation={[
         { icon: "fas fa-people-roof", title: "団体の基本情報", text: "正式名称・郵便番号・おおよその会員世帯数" },
@@ -70,7 +70,7 @@ export default function AdminSignupManualPage() {
         },
         {
           title: "内容を確認して登録を開始する",
-          text: "団体名・メールID・パスワードを確認し、「登録して開始」を押します。エルタウン町内会の管理画面が表示されたら、新規申し込みは完了です。",
+          text: "団体名・メールID・パスワードを確認し、「登録して開始」を押します。登録した町内会・自治会の管理画面が表示されたら、新規申し込みは完了です。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/admin-signup-bottom.png"
@@ -79,12 +79,6 @@ export default function AdminSignupManualPage() {
             />
           ),
         },
-      ]}
-      troubleItems={[
-        "すでにel-townへ登録済みの団体へ参加する場合は、新規申し込みを行わず、代表役員から届いた招待URLを使用してください。",
-        "パスワードは英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上にしてください。",
-        "確認用パスワードには、上の欄と同じパスワードを入力してください。",
-        "同じメールアドレスで登録済みの場合は、新規申し込みではなく役員ログイン画面からログインしてください。",
       ]}
     />
   );

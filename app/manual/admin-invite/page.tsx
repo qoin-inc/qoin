@@ -16,7 +16,7 @@ export default function AdminInviteManualPage() {
       audience="招待された役員向け"
       audienceIcon="fa-envelope-open-text"
       title="招待を受けて役員として登録する"
-      summary="代表役員から届いた招待URLを使い、エルタウン町内会の役員アカウントを登録します。"
+      summary="代表役員から届いた招待URLを使い、町内会・自治会の役員アカウントを登録します。"
       time="約3分"
       preparation={[
         { icon: "fas fa-link", title: "招待URL", text: "代表役員から届いた、ご本人専用のURL" },
@@ -59,7 +59,7 @@ export default function AdminInviteManualPage() {
         },
         {
           title: "役員として合流する",
-          text: "入力内容を確認し、「パスワードを設定して役員に合流する」を押します。エルタウン町内会の管理画面が表示されたら登録完了です。",
+          text: "入力内容を確認し、「パスワードを設定して役員に合流する」を押します。登録先の町内会・自治会の管理画面が表示されたら登録完了です。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/admin-invite-form.png"
@@ -68,11 +68,6 @@ export default function AdminInviteManualPage() {
             />
           ),
         },
-      ]}
-      troubleItems={[
-        "「招待情報が見つかりません」と表示された場合は、URLを省略せずに開き直してください。",
-        "メールアドレスが一致しない場合は、招待した代表役員に登録先を確認してください。",
-        "招待が利用済み・無効の場合は、代表役員へ再招待を依頼してください。",
       ]}
     />
   );

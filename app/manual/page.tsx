@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
+import { ProtectedManualSections } from "./_components/ProtectedManualSections";
 
 export const metadata: Metadata = {
   title: "オンラインマニュアル | el-town",
@@ -58,57 +59,6 @@ const manualSections: Array<{
       },
     ],
   },
-  {
-    id: "daily-use",
-    eyebrow: "日常の操作",
-    title: "基本機能を使う",
-    description: "利用開始後に使う、会員画面と役員管理画面の操作手順です。",
-    items: [
-      {
-        href: "/manual/member",
-        label: "会員向け",
-        time: "全10ステップ",
-        title: "会員向け操作マニュアル",
-        description: "回覧板の確認、イベント参加、会費、設定などの基本操作を説明します。",
-        icon: "fa-mobile-screen-button",
-        tone: "green",
-      },
-      {
-        href: "/manual/admin",
-        label: "役員向け",
-        time: "全10ステップ",
-        title: "役員管理画面 操作マニュアル",
-        description: "お知らせの配信、会員名簿、会費、管理者設定などを説明します。",
-        icon: "fa-user-gear",
-      },
-    ],
-  },
-  {
-    id: "feature-guides",
-    eyebrow: "機能別",
-    title: "外部サービス・追加機能を設定する",
-    description: "決済やオンライン会議など、必要な機能の手順を確認できます。",
-    items: [
-      {
-        href: "/manual/stripe",
-        label: "役員向け",
-        time: "全6ステップ",
-        title: "Stripe連携 操作マニュアル",
-        description: "オンライン集金に必要なStripe登録から会費請求までを説明します。",
-        icon: "fa-credit-card",
-        tone: "purple",
-      },
-      {
-        href: "/manual/live",
-        label: "役員向け",
-        time: "全8ステップ",
-        title: "Live・施設予約管理マニュアル",
-        description: "オンライン会議・配信URLの設定と施設予約の操作を説明します。",
-        icon: "fa-video",
-        tone: "purple",
-      },
-    ],
-  },
 ];
 
 export default function ManualHubPage() {
@@ -158,14 +108,15 @@ export default function ManualHubPage() {
               </div>
             </section>
           ))}
+          <ProtectedManualSections />
         </nav>
 
         <div className={styles.helpBox}>
           <i className="fas fa-book-open" aria-hidden="true" />
           <p className={styles.helpTitle}>どのマニュアルを選べばよいか迷ったとき</p>
           <p className={styles.helpText}>
-            初めて登録する場合は「利用を開始する」、登録後の操作は「基本機能を使う」、
-            決済やオンライン会議の設定は「外部サービス・追加機能を設定する」から選んでください。
+            初めて登録する場合は、一般公開されている「利用を開始する」から選んでください。
+            登録後は、基本機能や追加機能のマニュアルも表示されます。
           </p>
         </div>
 
@@ -224,10 +175,6 @@ function ManualCard({
           </div>
           <h3 className={styles.cardTitle} style={{ color: color.title }}>{title}</h3>
           <p className={styles.cardDescription}>{description}</p>
-          <span className={styles.cardAction}>
-            このマニュアルを開く
-            <i className="fas fa-arrow-right" aria-hidden="true" />
-          </span>
         </div>
       </article>
     </Link>

@@ -17,7 +17,7 @@ export default function MemberSignupManualPage() {
       audience="会員向け"
       audienceIcon="fa-user-plus"
       title="会員として利用を開始する"
-      summary="役員から案内された会員用QRコードをLINEで読み取り、エルタウン町内会の会員名簿とご本人の情報を照合して利用を開始する手順です。"
+      summary="役員から案内された会員用QRコードをLINEで読み取り、町内会・自治会の会員名簿とご本人の情報を照合して利用を開始する手順です。"
       time="約5分"
       preparation={[
         { icon: "fab fa-line", title: "LINEアカウント", text: "普段お使いのLINEアカウント" },
@@ -74,13 +74,6 @@ export default function MemberSignupManualPage() {
             />
           ),
         },
-      ]}
-      troubleItems={[
-        "必ず役員から案内された会員用QRコードをLINEで読み取って開始してください。",
-        "町内会名は略称ではなく、名簿に登録された正式名称を入力してください。",
-        "氏名、カナ、郵便番号、丁目・番地の空白や表記を確認してください。",
-        "「一致する会員名簿が見つかりません」と表示された場合は、役員へ登録内容を確認してください。",
-        "すでに家族2名まで連携済みの場合は、世帯主または役員へ確認してください。",
       ]}
     />
   );
