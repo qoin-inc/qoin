@@ -109,15 +109,6 @@ export default function ManualHubPage() {
           ))}
         </nav>
 
-        <div className={styles.helpBox}>
-          <i className="fas fa-book-open" aria-hidden="true" />
-          <p className={styles.helpTitle}>どのマニュアルを選べばよいか迷ったとき</p>
-          <p className={styles.helpText}>
-            はじめて登録する場合は、一般公開されている「利用を開始する」から選んでください。
-            登録後の操作は、会員画面・役員管理画面の「？」ヘルプから確認できます。
-          </p>
-        </div>
-
         <footer className={styles.footer}>
           <Link
             href="/"
