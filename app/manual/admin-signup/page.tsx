@@ -16,7 +16,7 @@ export default function AdminSignupManualPage() {
       audience="代表役員向け"
       audienceIcon="fa-people-roof"
       title="町内会・自治会を新規申し込みする"
-      summary="町内会・自治会を初めてel-townへ登録し、最初の代表役員アカウントを作成する手順です。"
+      summary="町内会・自治会をはじめてel-townへ登録し、最初の代表役員アカウントを作成する手順です。"
       time="約5分"
       preparation={[
         { icon: "fas fa-people-roof", title: "団体の基本情報", text: "正式名称・郵便番号・おおよその会員世帯数" },
@@ -37,7 +37,7 @@ export default function AdminSignupManualPage() {
         },
         {
           title: "新規の町内会・自治会を登録する",
-          text: "役員ログイン画面の下にある「新規の町内会・自治会を登録する」を押します。団体を初めて登録する代表役員だけがこの操作を行います。",
+          text: "役員ログイン画面の下にある「新規の町内会・自治会を登録する」を押します。団体をはじめて登録する代表役員だけがこの操作を行います。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/admin-login.png"

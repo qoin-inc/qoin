@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AdminView from '@/components/AdminView';
 import SignupTown from '@/components/SignupTown';
+import HelpCenter from '@/components/HelpCenter';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function AdminPage() {
@@ -720,24 +721,25 @@ export default function AdminPage() {
   if (view === 'dashboard' && town) {
     return (
       <div className="bg-[#e4e4e4] min-h-screen font-sans flex flex-col">
-        <div className="bg-qoin-gray_dark p-3 text-center text-white text-sm z-50 relative shadow-md flex justify-between items-center px-6">
-           <span className="font-bold text-gray-300"><i className="fas fa-map-marker-alt mr-2 text-qoin-main"></i>{town.name} <span className="ml-2 text-xs opacity-70">(el-town管理機能)</span></span>
-           <div className="flex gap-2 md:gap-4 items-center">
+        <div className="admin-session-bar bg-qoin-gray_dark text-center text-white text-sm z-50 relative shadow-md">
+           <span className="admin-session-town font-bold text-gray-300"><i className="fas fa-map-marker-alt text-qoin-main"></i><span>{town.name}</span><small>(el-town管理機能)</small></span>
+           <div className="admin-session-actions">
              <a 
                href="/"
-               className="px-3 py-1 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded text-xs font-bold transition text-gray-300 flex items-center shadow-sm cursor-pointer"
+               className="admin-session-button bg-gray-800 hover:bg-gray-700 border border-gray-600"
              >
-               <i className="fas fa-home mr-1"></i><span className="hidden md:inline">トップへ</span>
+               <i className="fas fa-home"></i><span>トップ</span>
              </a>
+             <HelpCenter audience="admin" className="admin-session-button admin-session-help" />
              <button 
-               className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs font-bold transition text-gray-300 cursor-pointer"
+               className="admin-session-button bg-gray-700 hover:bg-gray-600"
                onClick={async () => {
                  await supabase.auth.signOut();
                  setView('login');
                  setTown(null);
                }}
              >
-               ログアウト
+               <i className="fas fa-right-from-bracket"></i><span>ログアウト</span>
              </button>
            </div>
         </div>

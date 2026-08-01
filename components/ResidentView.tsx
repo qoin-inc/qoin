@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import HelpCenter from "@/components/HelpCenter";
 import { supabase } from "@/lib/supabaseClient";
 
 type ResidentViewProps = {
@@ -2094,6 +2095,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
           </button>
         </div>
       )}
+
+      <HelpCenter audience="member" showLabel={false} className={`el-floating-help ${bottomNavHidden ? "nav-hidden" : ""}`} />
 
       <button
         type="button"

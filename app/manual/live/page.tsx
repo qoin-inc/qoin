@@ -143,7 +143,7 @@ function Step3Content() {
       </div>
       <div className="mt-6 bg-red-50 border-2 border-red-200 rounded-2xl px-6 py-4 w-full max-w-[500px] text-left shadow-sm">
         <p className="text-xs md:text-sm text-red-800 font-bold leading-relaxed">
-          ⚠️ 初めてライブ配信機能を使う場合、有効化に最大24時間かかります。総会などの直前の準備では配信枠を作れません。必ず**前日以前**に申請を完了させてください。
+          ⚠️ はじめてライブ配信機能を使う場合、有効化に最大24時間かかります。総会などの直前の準備では配信枠を作れません。必ず**前日以前**に申請を完了させてください。
         </p>
       </div>
     </div>
@@ -352,7 +352,7 @@ const steps: ManualStep[] = [
   {
     title: '③ YouTube: 配信機能の有効化（24時間待機）',
     description:
-      '【重要】初めてライブ配信を行う場合、本人確認（SMS認証）完了後、機能が有効化されるまでに最大24時間かかります。必ず前日以前に申請を完了させてください。',
+      '【重要】はじめてライブ配信を行う場合、本人確認（SMS認証）完了後、機能が有効化されるまでに最大24時間かかります。必ず前日以前に申請を完了させてください。',
     content: <Step3Content />,
   },
   {

@@ -53,7 +53,7 @@ function InitialMenu() {
           <p>
             ご利用になるメニューをお選びください。
             <br />
-            初めての方は「操作方法」をご覧ください。
+            はじめての方は「操作方法」をご覧ください。
           </p>
         </div>
 
@@ -77,7 +77,7 @@ function InitialMenu() {
           <Link href="/manual/" className="initial-menu-item initial-menu-item-help">
             <span className="initial-menu-icon initial-menu-icon-gray"><i className="fas fa-book-open" /></span>
             <span>
-              <span className="initial-menu-badge">初めての方へ</span>
+              <span className="initial-menu-badge">はじめての方へ</span>
               <strong>操作方法</strong>
               <small>使い方・ヘルプを見る</small>
             </span>

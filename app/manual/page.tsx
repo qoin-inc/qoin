@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { ProtectedManualSections } from "./_components/ProtectedManualSections";
 
 export const metadata: Metadata = {
   title: "オンラインマニュアル | el-town",
@@ -108,15 +107,14 @@ export default function ManualHubPage() {
               </div>
             </section>
           ))}
-          <ProtectedManualSections />
         </nav>
 
         <div className={styles.helpBox}>
           <i className="fas fa-book-open" aria-hidden="true" />
           <p className={styles.helpTitle}>どのマニュアルを選べばよいか迷ったとき</p>
           <p className={styles.helpText}>
-            初めて登録する場合は、一般公開されている「利用を開始する」から選んでください。
-            登録後は、基本機能や追加機能のマニュアルも表示されます。
+            はじめて登録する場合は、一般公開されている「利用を開始する」から選んでください。
+            登録後の操作は、会員画面・役員管理画面の「？」ヘルプから確認できます。
           </p>
         </div>
 

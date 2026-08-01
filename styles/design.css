@@ -259,6 +259,55 @@ button { cursor: pointer; border: 0; }
 .el-bottom-nav button.active { border-color: var(--qoin-main); background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%); color: var(--qoin-main-dark); box-shadow: inset 0 -4px 0 rgba(46,139,192,.24), 0 8px 16px rgba(46,139,192,.18); transform: translateY(-1px); }
 .el-bottom-nav.is-sub button.active { border-color: var(--qoin-accent); background: linear-gradient(180deg, #fff7ed 0%, #fed7aa 100%); color: #c2410c; box-shadow: inset 0 -4px 0 rgba(194,65,12,.22), 0 8px 16px rgba(242,140,40,.18); }
 
+.el-floating-help {
+  position: absolute;
+  right: 16px;
+  bottom: 142px;
+  z-index: 20;
+  width: 52px;
+  height: 52px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  color: #fff;
+  font-size: 25px;
+  box-shadow: 0 10px 25px rgba(79,70,229,.38);
+}
+.el-floating-help.nav-hidden { bottom: 54px; }
+
+.admin-session-bar { min-height: 58px; padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.admin-session-town { min-width: 0; display: flex; align-items: center; gap: 8px; text-align: left; }
+.admin-session-town > span { overflow-wrap: anywhere; }
+.admin-session-town small { font-size: 11px; opacity: .72; white-space: nowrap; }
+.admin-session-actions { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+.admin-session-button { min-height: 36px; padding: 7px 12px; border-radius: 7px; color: #e5e7eb; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 900; line-height: 1.1; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+.admin-session-button.admin-session-help { border: 1px solid #7dd3fc; background: #075985; color: #fff; }
+
+.help-center-overlay { position: fixed; inset: 0; z-index: 3000; padding: 18px; display: grid; place-items: center; background: rgba(15,23,42,.62); backdrop-filter: blur(4px); }
+.help-center-dialog { width: min(520px, 100%); max-height: min(760px, calc(100dvh - 36px)); overflow-y: auto; border: 1px solid #dbeafe; border-radius: 18px; background: #fff; box-shadow: 0 24px 70px rgba(15,23,42,.32); color: #1f2937; text-align: left; }
+.help-center-header { padding: 20px 20px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #effaff 0%, #f5f3ff 100%); }
+.help-center-header p { margin: 0 0 4px; color: #0284c7; font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+.help-center-header h2 { margin: 0; color: #172033; font-size: 20px; font-weight: 900; }
+.help-center-close { width: 40px; height: 40px; flex: 0 0 40px; border: 1px solid #d1d5db; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #475569; font-size: 18px; }
+.help-center-manual { margin: 16px; min-height: 72px; padding: 14px; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px; border: 1px solid #bae6fd; border-radius: 12px; background: #f0f9ff; color: #075985; }
+.help-center-manual > i:first-child { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; background: #fff; font-size: 20px; }
+.help-center-manual span, .help-center-manual strong, .help-center-manual small { display: block; }
+.help-center-manual strong { font-size: 14px; font-weight: 900; }
+.help-center-manual small { margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 700; }
+.help-center-chat { padding: 0 16px 18px; }
+.help-center-bot-answer { min-height: 82px; padding: 14px; display: grid; grid-template-columns: 30px 1fr; gap: 10px; border-radius: 12px; background: #f8fafc; color: #334155; }
+.help-center-bot-answer > i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #e0f2fe; color: #0284c7; }
+.help-center-bot-answer p { margin: 2px 0 0; font-size: 13px; line-height: 1.7; font-weight: 750; }
+.help-center-suggestions { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 7px; }
+.help-center-suggestions button { min-height: 34px; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 999px; background: #fff; color: #475569; font-size: 11px; font-weight: 850; }
+.help-center-form label { display: block; margin-bottom: 6px; color: #475569; font-size: 12px; font-weight: 900; }
+.help-center-form > div { display: grid; grid-template-columns: 1fr 44px; gap: 7px; }
+.help-center-form input { min-width: 0; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 9px; padding: 9px 11px; color: #1f2937; background: #fff; font-size: 14px; }
+.help-center-form button { min-height: 44px; border: 0; border-radius: 9px; background: #0284c7; color: #fff; }
+.help-center-note { display: block; margin-top: 8px; color: #94a3b8; font-size: 10px; font-weight: 700; }
+
 .admin-dashboard { width: min(1040px, 100%); margin: 0 auto; padding: 0 16px 36px; }
 .admin-hero { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
 .admin-hero h1 { margin: 4px 0 8px; font-size: clamp(24px, 4vw, 36px); font-weight: 900; }
@@ -292,6 +341,17 @@ button { cursor: pointer; border: 0; }
   .admin-summary-grid, .admin-module-grid { grid-template-columns: 1fr; }
   .admin-hero { align-items: flex-start; }
   .admin-hero img { width: 54px; height: 54px; }
+  .admin-session-bar { padding: 10px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; }
+  .admin-session-town { align-self: stretch; gap: 6px; font-size: 13px; }
+  .admin-session-town small { display: none; }
+  .admin-session-actions { gap: 6px; }
+  .admin-session-button { width: 46px; min-height: 44px; padding: 5px 3px; flex-direction: column; gap: 3px; font-size: 9px; }
+  .admin-session-button i { font-size: 15px; }
+  .admin-hero-compact { flex-direction: column; align-items: stretch; padding: 20px; }
+  .admin-hero-compact > div { width: 100%; min-width: 0; }
+  .admin-hero-compact h1 { overflow-wrap: anywhere; font-size: clamp(25px, 8vw, 34px); line-height: 1.25; }
+  .admin-hero-logo-link { order: -1; min-width: 0; min-height: 3.5rem; align-self: center; }
+  .admin-hero .admin-hero-logo-wide { width: min(230px, 72vw); height: auto; }
 }
 
 .signup-screen {
