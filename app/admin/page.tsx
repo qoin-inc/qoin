@@ -338,14 +338,14 @@ export default function AdminPage() {
       // 1. tokenから役員候補者の招待レコードを探す
       let pendingAdminResult = await supabase
         .from('neighborhood_admins')
-        .select('id, neighborhood_id, admin_email, admin_name, admin_role, status, neighborhoods(id, name)')
+        .select('id, neighborhood_id, admin_email, admin_name, admin_role, status, invited_at, neighborhoods(id, name)')
         .eq('admin_invite_token', inviteTokenParam)
         .maybeSingle();
 
       if (pendingAdminResult.error && String(pendingAdminResult.error.message || '').includes('admin_invite_token')) {
         pendingAdminResult = await supabase
           .from('neighborhood_admins')
-          .select('id, neighborhood_id, admin_email, admin_name, admin_role, status, neighborhoods(id, name)')
+          .select('id, neighborhood_id, admin_email, admin_name, admin_role, status, invited_at, neighborhoods(id, name)')
           .eq('invite_token', inviteTokenParam)
           .maybeSingle();
       }
@@ -359,6 +359,11 @@ export default function AdminPage() {
       }
       if (pendingAdmin.status === 'active') {
         throw new Error('この役員招待はすでに利用済みです。通常ログインしてください。');
+      }
+      const invitedAt = new Date(pendingAdmin.invited_at || '').getTime();
+      const inviteExpiresAt = invitedAt + (7 * 24 * 60 * 60 * 1000);
+      if (!Number.isFinite(invitedAt) || inviteExpiresAt <= Date.now()) {
+        throw new Error('この役員招待は発行から7日を過ぎて失効しました。代表者に再発行を依頼してください。');
       }
       if (String(pendingAdmin.admin_email || '').toLowerCase() !== loginEmail.trim().toLowerCase()) {
         throw new Error('招待されたメールアドレスと入力したメールアドレスが一致しません。');

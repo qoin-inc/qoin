@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import PayPayApplicationPanel from "@/components/PayPayApplicationPanel";
 
@@ -488,6 +489,7 @@ const memberCsvHeaders = ["氏名", "氏名カタカナ", "郵便番号", "住�
 const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所３"]);
 const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message", "family_withdrawal_status_1", "family_withdrawal_status_2"];
 const adminDetailColumns = ["admin_role", "admin_invite_token", "invite_token", "invited_at", "retired_at"];
+const adminInviteValidityMs = 7 * 24 * 60 * 60 * 1000;
 const feeDetailColumns = [
   "neighborhood_id",
   "roster_id",
@@ -664,8 +666,18 @@ const getMemberStatusLabel = (member: any) => {
   if (familyRequests.length) return `家族${familyRequests.join("・")}退会申請中`;
   return "利用中";
 };
+const getAdminInviteExpiresAt = (admin: any) => {
+  const invitedAt = new Date(admin?.invited_at || "").getTime();
+  return Number.isFinite(invitedAt) ? new Date(invitedAt + adminInviteValidityMs) : null;
+};
+const isAdminInviteExpired = (admin: any) => {
+  if (!["pending", "waiting_approval"].includes(admin?.status)) return false;
+  const expiresAt = getAdminInviteExpiresAt(admin);
+  return Boolean(expiresAt && expiresAt.getTime() <= Date.now());
+};
 const getAdminStatusLabel = (admin: any) => {
   if (admin.status === "active") return "管理中";
+  if (isAdminInviteExpired(admin)) return "期限切れ";
   if (admin.status === "pending") return "招待中";
   if (admin.status === "waiting_approval") return "承認待ち";
   if (admin.status === "retired") return "退任済み";
@@ -2916,7 +2928,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     throw new Error("役員情報の保存に失敗しました。");
   };
 
-  const activeOrInvitedAdminCount = basicData.admins.filter((admin) => admin.status !== "retired" && admin.status !== "rejected").length;
+  const activeOrInvitedAdminCount = basicData.admins.filter((admin) => admin.status !== "retired" && admin.status !== "rejected" && !isAdminInviteExpired(admin)).length;
 
   const handleAdminInviteCreate = async () => {
     const email = adminInviteDraft.email.trim().toLowerCase();
@@ -2932,7 +2944,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     }
 
     const duplicatedInTown = basicData.admins.some((admin) => {
-      return String(admin.admin_email || "").toLowerCase() === email && admin.status !== "retired" && admin.status !== "rejected";
+      return String(admin.admin_email || "").toLowerCase() === email && admin.status !== "retired" && admin.status !== "rejected" && !isAdminInviteExpired(admin);
     });
     if (duplicatedInTown) {
       setAdminMessage("同じ町内会・自治会に、同じメールアドレスの有効な役員または招待中役員がいます。");
@@ -2942,6 +2954,14 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     setAdminBusy(true);
     setAdminMessage("");
     try {
+      const expiredDuplicates = basicData.admins.filter((admin) => (
+        String(admin.admin_email || "").toLowerCase() === email && isAdminInviteExpired(admin) && admin.id
+      ));
+      for (const expired of expiredDuplicates) {
+        const { error } = await supabase.from("neighborhood_admins").delete().eq("id", expired.id);
+        if (error) throw error;
+      }
+
       const token = crypto.randomUUID();
       const payload = {
         neighborhood_id: townId,
@@ -2955,15 +2975,36 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       };
       const saved = await saveAdminRecordWithFallback(payload);
       const url = buildAdminInviteUrl(token);
-      setBasicData((current) => ({ ...current, admins: [saved, ...current.admins] }));
+      setBasicData((current) => ({
+        ...current,
+        admins: [saved, ...current.admins.filter((admin) => !expiredDuplicates.some((expired) => String(expired.id) === String(admin.id)))],
+      }));
       setAdminInviteDraft({ name: "", email: "", role: "" });
       setAdminInviteUrl(url);
       try {
         await navigator.clipboard?.writeText(url);
-        setAdminMessage("役員候補者用の招待URLを作成し、コピーしました。");
-      } catch {
-        setAdminMessage("役員候補者用の招待URLを作成しました。下のURLを送ってください。");
+      } catch {}
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setAdminMessage("招待URLを作成しましたが、メール送信前にログイン状態を確認できませんでした。URLをコピーして送ってください。");
+        return;
       }
+
+      const emailResponse = await fetch("/api/admin/send-admin-invite", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ townId, invitationId: saved.id }),
+      });
+      const emailResult = await emailResponse.json().catch(() => ({}));
+      if (!emailResponse.ok) {
+        setAdminMessage(emailResult?.error || "招待URLを作成しましたが、メールを送信できませんでした。URLをコピーして送ってください。");
+        return;
+      }
+      setAdminMessage("役員候補者へ招待メールを送信しました。招待URLの有効期限は発行から7日間です。");
     } catch (error: any) {
       setAdminMessage(error?.message || "役員招待URLの作成に失敗しました。");
     } finally {
@@ -4691,7 +4732,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <div className="admin-basic-card-heading">
               <div>
                 <h3>役員候補者を招待</h3>
-                <p>候補者へ送る専用URLを作成します。候補者はURLからログイン認証し、管理者として加わります。</p>
+                <p>候補者へ招待メールを送信します。メール内の専用URLは発行から7日間有効です。</p>
               </div>
               <span className="admin-member-count">役員 {activeOrInvitedAdminCount.toLocaleString()} / 20名</span>
             </div>
@@ -4709,8 +4750,8 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <input value={adminInviteDraft.role} onChange={(event) => handleAdminInviteDraftChange("role", event.target.value)} placeholder="例: 副会長、会計" />
               </label>
               <button type="button" onClick={handleAdminInviteCreate} disabled={adminBusy || activeOrInvitedAdminCount >= 20}>
-                <i className={`fas ${adminBusy ? "fa-spinner fa-spin" : "fa-link"}`} />
-                <span>{activeOrInvitedAdminCount >= 20 ? "上限20名" : "招待URLを作成"}</span>
+                <i className={`fas ${adminBusy ? "fa-spinner fa-spin" : "fa-envelope"}`} />
+                <span>{activeOrInvitedAdminCount >= 20 ? "上限20名" : "招待メールを送信"}</span>
               </button>
             </div>
             {adminInviteUrl && (
@@ -4721,7 +4762,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               </div>
             )}
             {adminMessage && (
-              <div className={`admin-basic-message ${adminMessage.includes("失敗") || adminMessage.includes("入力") || adminMessage.includes("上限") || adminMessage.includes("最大") || adminMessage.includes("最後") || adminMessage.includes("同じ") ? "error" : "success"}`}>
+              <div className={`admin-basic-message ${adminMessage.includes("失敗") || adminMessage.includes("入力") || adminMessage.includes("上限") || adminMessage.includes("最大") || adminMessage.includes("最後") || adminMessage.includes("同じ") || adminMessage.includes("未完了") || adminMessage.includes("できません") ? "error" : "success"}`}>
                 {adminMessage}
               </div>
             )}
@@ -4746,7 +4787,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <div key={admin.id || index} className={`admin-admin-row ${admin.status === "retired" ? "retired" : admin.status === "pending" ? "pending" : ""}`}>
                   <span>
                     <strong>{admin.admin_name || admin.name || "名称未設定"}</strong>
-                    <small>{admin.invited_at ? `招待: ${new Date(admin.invited_at).toLocaleDateString("ja-JP")}` : "招待日未設定"}</small>
+                    <small>{admin.invited_at ? `招待: ${new Date(admin.invited_at).toLocaleDateString("ja-JP")} / 期限: ${getAdminInviteExpiresAt(admin)?.toLocaleDateString("ja-JP") || "未設定"}` : "招待日未設定"}</small>
                   </span>
                   <span>{admin.admin_email || "メール未設定"}</span>
                   <span>{admin.admin_role || "役職未設定"}</span>
@@ -5682,11 +5723,13 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     <main className="admin-dashboard admin-dashboard-v2">
       <section className="admin-hero admin-hero-compact">
         <div>
-          <p className="el-kicker">el-town 管理</p>
+          <p className="el-kicker">el-town管理機能</p>
           <h1>{townName}</h1>
-          <p>機能メニューから操作画面を選び、必要な画面へ切り替えて管理します。</p>
+          <p>管理機能メニューから操作画面を選び、必要な画面へ切り替えて管理します。</p>
         </div>
-        <img className="admin-hero-logo-wide" src="/assets/logo_horizontal_final.png" alt="el-town" />
+        <Link href="/" className="admin-hero-logo-link" aria-label="el-townトップメニューへ">
+          <img className="admin-hero-logo-wide" src="/assets/logo_horizontal_final.png" alt="el-townトップメニューへ" />
+        </Link>
       </section>
 
       <section className="admin-function-groups" aria-label="機能集合体">

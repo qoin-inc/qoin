@@ -59,7 +59,7 @@ export default function AdminSignupManualPage() {
         },
         {
           title: "代表役員の情報とパスワードを入力する",
-          text: "お名前は「エルタウン太郎」、メールIDは今後のログインに使用するアドレスを入力します。パスワードは英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定し、確認欄にも同じ内容を入力します。",
+          text: "お名前、メールIDは今後のログインに使用するアドレスを入力します。パスワードは英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定し、確認欄にも同じ内容を入力します。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/admin-signup-bottom.png"

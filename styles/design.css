@@ -1441,8 +1441,28 @@ button { cursor: pointer; border: 0; }
   margin-bottom: 14px;
 }
 
-.admin-hero-logo-wide {
-  width: min(220px, 32vw);
+.admin-hero-logo-link {
+  min-width: 12rem;
+  min-height: 4.5rem;
+  padding: 0.6rem 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  transition: background-color .16s ease;
+}
+
+.admin-hero-logo-link:hover {
+  background: #eef8fb;
+}
+
+.admin-hero-logo-link:focus-visible {
+  outline: 3px solid #118bb3;
+  outline-offset: 3px;
+}
+
+.admin-hero .admin-hero-logo-wide {
+  width: min(260px, 36vw);
   height: auto;
   object-fit: contain;
 }
