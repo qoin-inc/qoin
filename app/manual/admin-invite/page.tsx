@@ -37,7 +37,7 @@ export default function AdminInviteManualPage() {
         },
         {
           title: "お名前とメールアドレスを入力する",
-          text: "「役員として合流する」画面で、お名前（または役職名）と、招待されたメールアドレスを入力します。メールアドレスは招待先と同じものを使用してください。",
+          text: "「役員として合流する」画面で、お名前と、招待されたメールアドレスを入力します。メールアドレスは招待先と同じものを使用してください。",
           visual: (
             <ActualScreenImage
               src="/manual/screens/admin-invite-form.png"

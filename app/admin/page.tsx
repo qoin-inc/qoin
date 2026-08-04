@@ -18,6 +18,7 @@ export default function AdminPage() {
 
   // 招待URL用ステート
   const [inviteTokenParam, setInviteTokenParam] = useState('');
+  const [inviteTownName, setInviteTownName] = useState('');
   const [inviteName, setInviteName] = useState('');
   const [inviteConfirmPassword, setInviteConfirmPassword] = useState('');
   const [joinConfirmPassword, setJoinConfirmPassword] = useState('');
@@ -50,7 +51,29 @@ export default function AdminPage() {
       if (typeof window !== 'undefined' && window.location.search.includes('mode=invite')) {
         await supabase.auth.signOut();
         const params = new URLSearchParams(window.location.search);
-        setInviteTokenParam(params.get('token') || '');
+        const inviteToken = params.get('token') || '';
+        setInviteTokenParam(inviteToken);
+
+        if (inviteToken) {
+          let inviteResult = await supabase
+            .from('neighborhood_admins')
+            .select('neighborhoods(name)')
+            .eq('admin_invite_token', inviteToken)
+            .maybeSingle();
+
+          if (inviteResult.error && String(inviteResult.error.message || '').includes('admin_invite_token')) {
+            inviteResult = await supabase
+              .from('neighborhood_admins')
+              .select('neighborhoods(name)')
+              .eq('invite_token', inviteToken)
+              .maybeSingle();
+          }
+
+          const invitedTown = Array.isArray(inviteResult.data?.neighborhoods)
+            ? inviteResult.data.neighborhoods[0]
+            : inviteResult.data?.neighborhoods;
+          if (invitedTown?.name) setInviteTownName(invitedTown.name);
+        }
         setView('invite');
         return;
       }
@@ -564,8 +587,11 @@ export default function AdminPage() {
       <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-10 p-8 pb-10">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-black text-qoin-main tracking-tight mb-2">役員として合流する</h1>
-            <p className="text-gray-500 font-bold text-xs">ご自身のお名前とパスワードを設定してください。</p>
+            <p className="text-gray-500 font-bold text-xs mb-2">役員として合流する</p>
+            <h1 className="text-2xl font-black text-qoin-main tracking-tight mb-3">
+              {inviteTownName || '町内会・自治会'}
+            </h1>
+            <p className="text-gray-500 font-bold text-xs">ご登録いただくことにより役員の管理機能が利用できます</p>
           </div>
 
           <form onSubmit={handleInviteSubmit} className="space-y-5">
@@ -575,13 +601,13 @@ export default function AdminPage() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">お名前（または役職名）</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">お名前</label>
               <input 
                 type="text" 
                 value={inviteName}
                 onChange={e => setInviteName(e.target.value)}
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                placeholder="例：副会長 エルタウン太郎"
+                placeholder="例：エルタウン太郎"
                 required
               />
             </div>
