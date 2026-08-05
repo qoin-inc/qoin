@@ -8,10 +8,30 @@ import HelpCenter from '@/components/HelpCenter';
 import { supabase } from '@/lib/supabaseClient';
 
 type InviteStatus = 'loading' | 'valid' | 'used' | 'expired' | 'invalid' | 'revoked' | 'unavailable';
+type AdminMembership = {
+  adminId: string;
+  role: string;
+  town: { id: number; name: string };
+};
+
+const LAST_ADMIN_TOWN_KEY = 'el-town:last-admin-neighborhood';
+
+const fetchAdminMemberships = async (accessToken: string): Promise<AdminMembership[]> => {
+  const response = await fetch('/api/admin/memberships', {
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body?.error || '所属する町内会・自治会を確認できません。');
+  }
+  return Array.isArray(body?.memberships) ? body.memberships : [];
+};
 
 export default function AdminPage() {
-  const [view, setView] = useState<'login' | 'signup' | 'join' | 'invite' | 'dashboard' | 'forgot_password' | 'update_password'>('login');
+  const [view, setView] = useState<'login' | 'signup' | 'join' | 'invite' | 'select_town' | 'dashboard' | 'forgot_password' | 'update_password'>('login');
   const [town, setTown] = useState<{id: number, name: string} | null>(null);
+  const [adminMemberships, setAdminMemberships] = useState<AdminMembership[]>([]);
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -26,9 +46,51 @@ export default function AdminPage() {
   const [inviteConfirmPassword, setInviteConfirmPassword] = useState('');
   const [joinConfirmPassword, setJoinConfirmPassword] = useState('');
 
+  const selectAdminMembership = (membership: AdminMembership) => {
+    setTown(membership.town);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(LAST_ADMIN_TOWN_KEY, String(membership.town.id));
+    }
+    setView('dashboard');
+  };
+
+  const applyAdminMemberships = (memberships: AdminMembership[], preferLastTown: boolean) => {
+    if (memberships.length === 0) {
+      throw new Error('有効な役員登録が見つかりません。町内会・自治会の代表者へご確認ください。');
+    }
+
+    setAdminMemberships(memberships);
+    const lastTownId = preferLastTown && typeof window !== 'undefined'
+      ? window.sessionStorage.getItem(LAST_ADMIN_TOWN_KEY)
+      : null;
+    const preferredMembership = lastTownId
+      ? memberships.find((membership) => String(membership.town.id) === lastTownId)
+      : null;
+
+    if (memberships.length === 1 || preferredMembership) {
+      selectAdminMembership(preferredMembership || memberships[0]);
+      return;
+    }
+
+    setTown(null);
+    setView('select_town');
+  };
+
   // セッションがあれば自動ログイン
   useEffect(() => {
     const init = async () => {
+      if (
+        typeof window !== 'undefined' &&
+        process.env.NODE_ENV !== 'production' &&
+        window.location.search.includes('test_memberships=2')
+      ) {
+        setAdminMemberships([
+          { adminId: 'demo-admin-1', role: '会長', town: { id: 1, name: '青空町内会' } },
+          { adminId: 'demo-admin-2', role: '会計', town: { id: 2, name: 'さくら自治会' } },
+        ]);
+        setView('select_town');
+        return;
+      }
       if (
         typeof window !== 'undefined' &&
         process.env.NODE_ENV !== 'production' &&
@@ -111,55 +173,15 @@ export default function AdminPage() {
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // 複数管理者テーブルから所属する町内会・自治会を検索（複数ヒットエラー回避のため配列で取得）
-        const { data: adminRecords } = await supabase
-          .from('neighborhood_admins')
-          .select('status, neighborhood_id, neighborhoods(id, name)')
-          .eq('admin_auth_id', session.user.id)
-          .eq('status', 'active')
-          .limit(1);
-
-        let adminRecord = adminRecords && adminRecords.length > 0 ? adminRecords[0] : null;
-
-        // 【自己修復フェーズ】旧テーブル(neighborhoods)にデータがあるが新テーブルへ移行されていない場合、その場で移行する
-        if (!adminRecord) {
-          const { data: oldTownData } = await supabase.from('neighborhoods').select('*').eq('admin_auth_id', session.user.id).limit(1);
-          if (oldTownData && oldTownData.length > 0) {
-            const oldTown = oldTownData[0];
-            await supabase.from('neighborhood_admins').insert({
-               neighborhood_id: oldTown.id,
-               admin_auth_id: session.user.id,
-               admin_email: oldTown.admin_email || session.user.email,
-               admin_name: oldTown.admin_name || '初期管理者',
-               status: 'active'
-            });
-            const { data: retryRecords } = await supabase.from('neighborhood_admins').select('status, neighborhood_id, neighborhoods(id, name)').eq('admin_auth_id', session.user.id).eq('status', 'active').limit(1);
-            if (retryRecords && retryRecords.length > 0) adminRecord = retryRecords[0];
-          }
-        }
-
-        if (adminRecord) {
-          if (adminRecord.status === 'waiting_approval') {
-            setLoginError('管理者アカウントは現在承認待ちです。代表者（最初の役員）の承認をお待ちください。');
-            await supabase.auth.signOut();
-            return;
-          }
-          if (adminRecord.status === 'rejected') {
-            setLoginError('管理者アカウントの登録申請が却下されました。');
-            await supabase.auth.signOut();
-            return;
-          }
-        }
-
-        if (adminRecord && adminRecord.status === 'active' && adminRecord.neighborhoods) {
-          // 単一のオブジェクトとして取り出す (SupabaseのJOIN仕様による)
-          const townData = Array.isArray(adminRecord.neighborhoods) 
-             ? adminRecord.neighborhoods[0] 
-             : adminRecord.neighborhoods;
-          if (townData) {
-            setTown(townData as any);
-            setView('dashboard');
-          }
+        try {
+          const memberships = await fetchAdminMemberships(session.access_token);
+          applyAdminMemberships(memberships, true);
+        } catch (error: any) {
+          await supabase.auth.signOut();
+          setAdminMemberships([]);
+          setTown(null);
+          setLoginError(error.message || '所属する町内会・自治会を確認できません。');
+          setView('login');
         }
       }
     };
@@ -178,69 +200,14 @@ export default function AdminPage() {
       });
 
       if (authError) throw authError;
-
-      const { data: adminRecords, error: adminError } = await supabase
-          .from('neighborhood_admins')
-          .select('status, neighborhood_id, neighborhoods(id, name)')
-          .eq('admin_auth_id', authData.user?.id)
-          .eq('status', 'active')
-          .limit(1);
-
-      let adminRecord = adminRecords && adminRecords.length > 0 ? adminRecords[0] : null;
-      let debugMsg = `user:${authData.user?.id}`;
-
-      // 【自己修復フェーズ】旧テーブル(neighborhoods)にデータがあるが新テーブルへ移行されていない場合、その場で移行する
-      if (!adminRecord) {
-        const { data: oldTownData, error: oldError } = await supabase.from('neighborhoods').select('*').eq('admin_auth_id', authData.user?.id).limit(1);
-        debugMsg += `, oldFound:${oldTownData?.length || 0}, oldErr:${oldError?.message||'none'}`;
-
-        if (oldTownData && oldTownData.length > 0) {
-          const oldTown = oldTownData[0];
-          const menuItems = [
-  { name: 'ホーム', href: '/', icon: 'fas fa-home', bg: 'var(--color-primary)', subLink: '' },
-  { name: 'ポータル', href: '/portal', icon: 'fas fa-th', bg: '#6366f1', subLink: '機能一覧はこちら' },
-  { name: 'マニュアル', href: '/manual', icon: 'fas fa-book', bg: '#10b981', subLink: '活用ガイドはこちら' },
-  { name: '設定', href: '/admin', icon: 'fas fa-cog', bg: '#f59e0b', subLink: '管理者設定はこちら' },
-];
-          const { error: insErr } = await supabase.from('neighborhood_admins').insert({
-             neighborhood_id: oldTown.id,
-             admin_auth_id: authData.user?.id,
-             admin_email: oldTown.admin_email || loginEmail,
-             admin_name: oldTown.admin_name || '初期管理者',
-             status: 'active'
-          });
-          debugMsg += `, insErr: ${insErr?.message || 'none'}`;
-
-          const { data: retryRecords, error: retryErr } = await supabase.from('neighborhood_admins').select('status, neighborhood_id, neighborhoods(id, name)').eq('admin_auth_id', authData.user?.id).eq('status', 'active').limit(1);
-          debugMsg += `, retErr: ${retryErr?.message || 'none'}`;
-          
-          if (retryRecords && retryRecords.length > 0) adminRecord = retryRecords[0];
-        }
-      }
-
-      if (adminRecord) {
-        if (adminRecord.status === 'waiting_approval') {
-          await supabase.auth.signOut();
-          throw new Error('管理者アカウントは現在承認待ちです。代表者（最初の役員）の承認をお待ちください。');
-        }
-        if (adminRecord.status === 'rejected') {
-          await supabase.auth.signOut();
-          throw new Error('管理者アカウントの登録申請が却下されました。');
-        }
-      }
-
-      if (!adminRecord || adminRecord.status !== 'active' || !adminRecord.neighborhoods) {
-        throw new Error(`町内会・自治会情報が見つかりません。入力したメールアドレスの登録がないか、退会済みの可能性があります。(${debugMsg})`);
-      }
-
-      const townData = Array.isArray(adminRecord.neighborhoods) 
-         ? adminRecord.neighborhoods[0] 
-         : adminRecord.neighborhoods;
-         
-      setTown(townData as any);
-      setView('dashboard');
+      const accessToken = authData.session?.access_token || '';
+      const memberships = await fetchAdminMemberships(accessToken);
+      applyAdminMemberships(memberships, false);
     } catch (err: any) {
       console.error(err);
+      await supabase.auth.signOut();
+      setAdminMemberships([]);
+      setTown(null);
       setLoginError(err.message || 'ログインに失敗しました。メールアドレスとパスワードをご確認ください。');
     } finally {
       setIsLoggingIn(false);
@@ -713,9 +680,9 @@ export default function AdminPage() {
             </div>
           )}
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-            <Link href="/admin" className="text-sm font-bold text-gray-500 hover:text-gray-700">
+            <a href="/admin" className="text-sm font-bold text-gray-500 hover:text-gray-700">
               {inviteStatus === 'valid' ? 'キャンセルして戻る' : '通常ログインへ進む'}
-            </Link>
+            </a>
           </div>
         </div>
         <div className="absolute top-0 left-0 w-full h-64 bg-qoin-main rounded-b-[4rem] z-0"></div>
@@ -804,6 +771,55 @@ export default function AdminPage() {
     );
   }
 
+  if (view === 'select_town' && adminMemberships.length > 0) {
+    return (
+      <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-10 p-8 pb-10">
+          <div className="text-center mb-8">
+            <img src="/assets/logo_horizontal_final.png" alt="el-town" className="admin-login-logo mx-auto" />
+            <h1 className="text-2xl font-black text-qoin-main tracking-tight mt-5 mb-2">管理する町内会を選択</h1>
+            <p className="text-gray-500 font-bold text-xs">役員として所属している町内会・自治会を選んでください</p>
+          </div>
+
+          <div className="space-y-3">
+            {adminMemberships.map((membership) => (
+              <button
+                key={membership.adminId}
+                type="button"
+                onClick={() => selectAdminMembership(membership)}
+                className="w-full rounded-2xl border-2 border-sky-100 bg-sky-50 px-5 py-4 text-left transition hover:border-qoin-main hover:bg-white focus:outline-none focus:ring-2 focus:ring-sky-200"
+              >
+                <span className="flex items-center justify-between gap-4">
+                  <span>
+                    <strong className="block text-base font-black text-gray-800">{membership.town.name}</strong>
+                    <small className="mt-1 block font-bold text-gray-500">役職：{membership.role}</small>
+                  </span>
+                  <i className="fas fa-chevron-right text-qoin-main" aria-hidden="true"></i>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+            <button
+              type="button"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setAdminMemberships([]);
+                setTown(null);
+                setView('login');
+              }}
+              className="text-sm font-bold text-gray-500 hover:text-gray-700"
+            >
+              ログアウトして戻る
+            </button>
+          </div>
+        </div>
+        <div className="absolute top-0 left-0 w-full h-64 bg-qoin-main rounded-b-[4rem] z-0"></div>
+      </div>
+    );
+  }
+
   if (view === 'dashboard' && town) {
     return (
       <div className="bg-[#e4e4e4] min-h-screen font-sans flex flex-col">
@@ -816,6 +832,15 @@ export default function AdminPage() {
              >
                <i className="fas fa-home"></i><span>トップ</span>
              </a>
+             {adminMemberships.length > 1 && (
+               <button
+                 type="button"
+                 className="admin-session-button bg-gray-700 hover:bg-gray-600"
+                 onClick={() => setView('select_town')}
+               >
+                 <i className="fas fa-repeat"></i><span>町内会切替</span>
+               </button>
+             )}
              <HelpCenter audience="admin" className="admin-session-button admin-session-help" />
              <button 
                className="admin-session-button bg-gray-700 hover:bg-gray-600"
@@ -823,6 +848,7 @@ export default function AdminPage() {
                  await supabase.auth.signOut();
                  setView('login');
                  setTown(null);
+                 setAdminMemberships([]);
                }}
              >
                <i className="fas fa-right-from-bracket"></i><span>ログアウト</span>
