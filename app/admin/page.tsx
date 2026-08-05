@@ -60,9 +60,10 @@ export default function AdminPage() {
             { cache: 'no-store' },
           );
           const inviteDetails = await inviteResponse.json().catch(() => ({}));
-          if (inviteResponse.ok && inviteDetails?.townName) {
+          if (inviteDetails?.townName) {
             setInviteTownName(String(inviteDetails.townName));
-          } else {
+          }
+          if (!inviteResponse.ok) {
             setLoginError(inviteDetails?.error || '招待先の町内会・自治会を確認できません。');
           }
         }
@@ -425,8 +426,6 @@ export default function AdminPage() {
         admin_email: loginEmail.trim().toLowerCase(),
         admin_name: inviteName.trim() || pendingAdmin.admin_name,
         status: 'active',
-        admin_invite_token: null,
-        invite_token: null,
       };
 
       let updateResult = await supabase

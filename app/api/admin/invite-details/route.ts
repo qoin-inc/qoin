@@ -40,17 +40,6 @@ export async function GET(request: Request) {
   if (inviteResult.error || !invitation) {
     return json({ error: "役員招待情報が見つかりません。招待URLをご確認ください。" }, 404);
   }
-  if (invitation.status === "retired" || invitation.status === "rejected") {
-    return json({ error: "この役員招待は利用できません。代表者に再招待を依頼してください。" }, 410);
-  }
-  if (invitation.status === "active") {
-    return json({ error: "この役員招待はすでに利用済みです。" }, 409);
-  }
-
-  const invitedAt = new Date(invitation.invited_at || "").getTime();
-  if (!Number.isFinite(invitedAt) || invitedAt + INVITE_VALIDITY_MS <= Date.now()) {
-    return json({ error: "この役員招待は発行から7日を過ぎて失効しました。" }, 410);
-  }
 
   const town = Array.isArray(invitation.neighborhoods)
     ? invitation.neighborhoods[0]
@@ -58,6 +47,18 @@ export async function GET(request: Request) {
   const townName = String(town?.name || "").trim();
   if (!townName) {
     return json({ error: "招待先の町内会・自治会を確認できません。" }, 404);
+  }
+
+  if (invitation.status === "retired" || invitation.status === "rejected") {
+    return json({ townName, error: "この役員招待は利用できません。代表者に再招待を依頼してください。" }, 410);
+  }
+  if (invitation.status === "active") {
+    return json({ townName, error: "この役員招待はすでに登録済みです。通常ログインをご利用ください。" }, 409);
+  }
+
+  const invitedAt = new Date(invitation.invited_at || "").getTime();
+  if (!Number.isFinite(invitedAt) || invitedAt + INVITE_VALIDITY_MS <= Date.now()) {
+    return json({ townName, error: "この役員招待は発行から7日を過ぎて失効しました。" }, 410);
   }
 
   return json({ townName });
