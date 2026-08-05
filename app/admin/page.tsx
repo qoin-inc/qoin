@@ -55,24 +55,16 @@ export default function AdminPage() {
         setInviteTokenParam(inviteToken);
 
         if (inviteToken) {
-          let inviteResult = await supabase
-            .from('neighborhood_admins')
-            .select('neighborhoods(name)')
-            .eq('admin_invite_token', inviteToken)
-            .maybeSingle();
-
-          if (inviteResult.error && String(inviteResult.error.message || '').includes('admin_invite_token')) {
-            inviteResult = await supabase
-              .from('neighborhood_admins')
-              .select('neighborhoods(name)')
-              .eq('invite_token', inviteToken)
-              .maybeSingle();
+          const inviteResponse = await fetch(
+            `/api/admin/invite-details?token=${encodeURIComponent(inviteToken)}`,
+            { cache: 'no-store' },
+          );
+          const inviteDetails = await inviteResponse.json().catch(() => ({}));
+          if (inviteResponse.ok && inviteDetails?.townName) {
+            setInviteTownName(String(inviteDetails.townName));
+          } else {
+            setLoginError(inviteDetails?.error || '招待先の町内会・自治会を確認できません。');
           }
-
-          const invitedTown = Array.isArray(inviteResult.data?.neighborhoods)
-            ? inviteResult.data.neighborhoods[0]
-            : inviteResult.data?.neighborhoods;
-          if (invitedTown?.name) setInviteTownName(invitedTown.name);
         }
         setView('invite');
         return;
@@ -589,7 +581,7 @@ export default function AdminPage() {
           <div className="text-center mb-8">
             <p className="text-gray-500 font-bold text-xs mb-2">役員として合流する</p>
             <h1 className="text-2xl font-black text-qoin-main tracking-tight mb-3">
-              {inviteTownName || '町内会・自治会'}
+              {inviteTownName || '招待先を確認しています…'}
             </h1>
             <p className="text-gray-500 font-bold text-xs">ご登録いただくことにより役員の管理機能が利用できます</p>
           </div>
