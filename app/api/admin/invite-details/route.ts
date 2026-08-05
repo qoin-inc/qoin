@@ -10,12 +10,12 @@ const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(
 
 export async function GET(request: Request) {
   const token = new URL(request.url).searchParams.get("token")?.trim() || "";
-  if (!token) return json({ error: "招待IDが不正です。URLをご確認ください。" }, 400);
+  if (!token) return json({ code: "invalid", error: "招待IDが不正です。URLをご確認ください。" }, 400);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!supabaseUrl || !supabaseSecretKey) {
-    return json({ error: "招待情報を確認できません。しばらくしてから再度お試しください。" }, 503);
+    return json({ code: "unavailable", error: "招待情報を確認できません。しばらくしてから再度お試しください。" }, 503);
   }
 
   const supabase = createClient(supabaseUrl, supabaseSecretKey, {
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
   const invitation = inviteResult.data;
   if (inviteResult.error || !invitation) {
-    return json({ error: "役員招待情報が見つかりません。招待URLをご確認ください。" }, 404);
+    return json({ code: "invalid", error: "役員招待情報が見つかりません。招待URLをご確認ください。" }, 404);
   }
 
   const town = Array.isArray(invitation.neighborhoods)
@@ -46,20 +46,20 @@ export async function GET(request: Request) {
     : invitation.neighborhoods;
   const townName = String(town?.name || "").trim();
   if (!townName) {
-    return json({ error: "招待先の町内会・自治会を確認できません。" }, 404);
+    return json({ code: "invalid", error: "招待先の町内会・自治会を確認できません。" }, 404);
   }
 
   if (invitation.status === "retired" || invitation.status === "rejected") {
-    return json({ townName, error: "この役員招待は利用できません。代表者に再招待を依頼してください。" }, 410);
+    return json({ code: "revoked", townName, error: "この役員招待は利用できません。代表者に再招待を依頼してください。" }, 410);
   }
   if (invitation.status === "active") {
-    return json({ townName, error: "この役員招待はすでに登録済みです。通常ログインをご利用ください。" }, 409);
+    return json({ code: "used", townName, error: "この役員招待はすでに登録済みです。通常ログインをご利用ください。" }, 409);
   }
 
   const invitedAt = new Date(invitation.invited_at || "").getTime();
   if (!Number.isFinite(invitedAt) || invitedAt + INVITE_VALIDITY_MS <= Date.now()) {
-    return json({ townName, error: "この役員招待は発行から7日を過ぎて失効しました。" }, 410);
+    return json({ code: "expired", townName, error: "この役員招待は発行から7日を過ぎて失効しました。" }, 410);
   }
 
-  return json({ townName });
+  return json({ code: "valid", townName });
 }

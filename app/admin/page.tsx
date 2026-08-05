@@ -7,6 +7,8 @@ import SignupTown from '@/components/SignupTown';
 import HelpCenter from '@/components/HelpCenter';
 import { supabase } from '@/lib/supabaseClient';
 
+type InviteStatus = 'loading' | 'valid' | 'used' | 'expired' | 'invalid' | 'revoked' | 'unavailable';
+
 export default function AdminPage() {
   const [view, setView] = useState<'login' | 'signup' | 'join' | 'invite' | 'dashboard' | 'forgot_password' | 'update_password'>('login');
   const [town, setTown] = useState<{id: number, name: string} | null>(null);
@@ -19,6 +21,7 @@ export default function AdminPage() {
   // 招待URL用ステート
   const [inviteTokenParam, setInviteTokenParam] = useState('');
   const [inviteTownName, setInviteTownName] = useState('');
+  const [inviteStatus, setInviteStatus] = useState<InviteStatus>('loading');
   const [inviteName, setInviteName] = useState('');
   const [inviteConfirmPassword, setInviteConfirmPassword] = useState('');
   const [joinConfirmPassword, setJoinConfirmPassword] = useState('');
@@ -53,8 +56,18 @@ export default function AdminPage() {
         const params = new URLSearchParams(window.location.search);
         const inviteToken = params.get('token') || '';
         setInviteTokenParam(inviteToken);
+        setInviteTownName('');
+        setLoginError('');
+        setInviteStatus('loading');
+        setView('invite');
 
-        if (inviteToken) {
+        if (!inviteToken) {
+          setLoginError('招待IDが不正です。招待URLをご確認ください。');
+          setInviteStatus('invalid');
+          return;
+        }
+
+        try {
           const inviteResponse = await fetch(
             `/api/admin/invite-details?token=${encodeURIComponent(inviteToken)}`,
             { cache: 'no-store' },
@@ -63,11 +76,30 @@ export default function AdminPage() {
           if (inviteDetails?.townName) {
             setInviteTownName(String(inviteDetails.townName));
           }
-          if (!inviteResponse.ok) {
-            setLoginError(inviteDetails?.error || '招待先の町内会・自治会を確認できません。');
+
+          if (inviteResponse.ok) {
+            setInviteStatus('valid');
+            return;
           }
+
+          const responseCode = String(inviteDetails?.code || '');
+          const knownStatuses: InviteStatus[] = ['used', 'expired', 'invalid', 'revoked', 'unavailable'];
+          const nextStatus = knownStatuses.includes(responseCode as InviteStatus)
+            ? responseCode as InviteStatus
+            : inviteResponse.status === 503
+              ? 'unavailable'
+              : inviteResponse.status === 409
+                ? 'used'
+                : inviteResponse.status === 410
+                  ? 'expired'
+                  : 'invalid';
+          setInviteStatus(nextStatus);
+          setLoginError(inviteDetails?.error || '招待先の町内会・自治会を確認できません。');
+        } catch (error) {
+          console.error('Failed to load admin invitation details:', error);
+          setInviteStatus('unavailable');
+          setLoginError('招待情報を確認できません。通信状況をご確認のうえ、もう一度お試しください。');
         }
-        setView('invite');
         return;
       }
       // URLに ?mode=join があれば招待された役員の合流画面
@@ -579,74 +611,111 @@ export default function AdminPage() {
         <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-10 p-8 pb-10">
           <div className="text-center mb-8">
             <p className="text-gray-500 font-bold text-xs mb-2">役員として合流する</p>
-            <h1 className="text-2xl font-black text-qoin-main tracking-tight mb-3">
-              {inviteTownName || '招待先を確認しています…'}
+            <h1 className="text-xl sm:text-2xl font-black text-qoin-main tracking-tight mb-3">
+              {inviteTownName || (inviteStatus === 'loading' ? '招待先を確認しています…' : '役員招待をご利用できません')}
             </h1>
-            <p className="text-gray-500 font-bold text-xs">ご登録いただくことにより役員の管理機能が利用できます</p>
+            <p className="text-gray-500 font-bold text-xs">
+              {inviteStatus === 'valid'
+                ? 'ご登録いただくことにより役員の管理機能が利用できます'
+                : inviteStatus === 'loading'
+                  ? '招待情報を確認しています。しばらくお待ちください'
+                  : '招待の状態をご確認ください'}
+            </p>
           </div>
 
-          <form onSubmit={handleInviteSubmit} className="space-y-5">
-            {loginError && (
-              <div className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-xl mb-4 border border-red-200">
-                {loginError}
+          {inviteStatus === 'loading' ? (
+            <div className="rounded-xl border border-sky-100 bg-sky-50 p-5 text-center text-sm font-bold text-gray-600">
+              <i className="fas fa-spinner fa-spin mr-2 text-qoin-main" aria-hidden="true"></i>
+              招待情報を確認しています
+            </div>
+          ) : inviteStatus === 'valid' ? (
+            <form onSubmit={handleInviteSubmit} className="space-y-5">
+              {loginError && (
+                <div className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-xl mb-4 border border-red-200">
+                  {loginError}
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">お名前</label>
+                <input
+                  type="text"
+                  value={inviteName}
+                  onChange={e => setInviteName(e.target.value)}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
+                  placeholder="例：エルタウン太郎"
+                  required
+                />
               </div>
-            )}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">お名前</label>
-              <input 
-                type="text" 
-                value={inviteName}
-                onChange={e => setInviteName(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                placeholder="例：エルタウン太郎"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">メールアドレス</label>
-              <input 
-                type="email" 
-                value={loginEmail}
-                onChange={e => setLoginEmail(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">設定するパスワード <span className="text-red-500">*</span></label>
-              <input 
-                type="password" 
-                value={loginPassword}
-                onChange={e => setLoginPassword(e.target.value)}
-                placeholder="半角英数字8文字以上"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                required
-              />
-              <p className="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">
-                安全なアカウント運用のために、「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせた8文字以上の文字列を設定してください。
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">メールアドレス</label>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={e => setLoginEmail(e.target.value)}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">設定するパスワード <span className="text-red-500">*</span></label>
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={e => setLoginPassword(e.target.value)}
+                  placeholder="半角英数字8文字以上"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
+                  required
+                />
+                <p className="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">
+                  安全なアカウント運用のために、「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせた8文字以上の文字列を設定してください。
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">パスワード（確認用） <span className="text-red-500">*</span></label>
+                <input
+                  type="password"
+                  value={inviteConfirmPassword}
+                  onChange={e => setInviteConfirmPassword(e.target.value)}
+                  placeholder="パスワードを再入力してください"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full bg-qoin-main text-white font-black py-4 rounded-xl shadow-lg hover:bg-qoin-main_hover transition disabled:opacity-50 flex items-center justify-center cursor-pointer mt-2"
+              >
+                {isLoggingIn ? <i className="fas fa-spinner fa-spin"></i> : 'パスワードを設定して役員に合流する'}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-5">
+              <div className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-xl mb-4 border border-red-200">
+                {loginError || 'この役員招待は利用できません。'}
+              </div>
+              <p className="text-sm font-bold leading-7 text-gray-600">
+                {inviteStatus === 'used'
+                  ? 'この招待での役員登録は完了しています。登録したメールアドレスとパスワードでログインしてください。'
+                  : inviteStatus === 'unavailable'
+                    ? '一時的に招待情報を取得できませんでした。時間をおいて、もう一度お試しください。'
+                    : 'このURLからは登録できません。町内会・自治会の代表者へ、新しい招待URLの発行を依頼してください。'}
               </p>
+              {inviteStatus === 'unavailable' && (
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="w-full border-2 border-qoin-main text-qoin-main font-black py-3 rounded-xl hover:bg-sky-50 transition"
+                >
+                  もう一度確認する
+                </button>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">パスワード（確認用） <span className="text-red-500">*</span></label>
-              <input 
-                type="password" 
-                value={inviteConfirmPassword}
-                onChange={e => setInviteConfirmPassword(e.target.value)}
-                placeholder="パスワードを再入力してください"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              disabled={isLoggingIn}
-              className="w-full bg-qoin-main text-white font-black py-4 rounded-xl shadow-lg hover:bg-qoin-main_hover transition disabled:opacity-50 flex items-center justify-center cursor-pointer mt-2"
-            >
-              {isLoggingIn ? <i className="fas fa-spinner fa-spin"></i> : 'パスワードを設定して役員に合流する'}
-            </button>
-          </form>
+          )}
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-             <button type="button" onClick={() => setView('login')} className="text-sm font-bold text-gray-500 hover:text-gray-700">キャンセルして戻る</button>
+            <Link href="/admin" className="text-sm font-bold text-gray-500 hover:text-gray-700">
+              {inviteStatus === 'valid' ? 'キャンセルして戻る' : '通常ログインへ進む'}
+            </Link>
           </div>
         </div>
         <div className="absolute top-0 left-0 w-full h-64 bg-qoin-main rounded-b-[4rem] z-0"></div>
