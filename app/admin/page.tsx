@@ -114,7 +114,6 @@ export default function AdminPage() {
       }
       // URLに ?mode=invite&token=... があれば新しい招待フロー
       if (typeof window !== 'undefined' && window.location.search.includes('mode=invite')) {
-        await supabase.auth.signOut();
         const params = new URLSearchParams(window.location.search);
         const inviteToken = params.get('token') || '';
         setInviteTokenParam(inviteToken);
@@ -351,6 +350,17 @@ export default function AdminPage() {
         throw new Error('安全なアカウント運用のために、パスワードには「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせてください。');
       }
 
+      const normalizedInviteEmail = loginEmail.trim().toLowerCase();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      let matchingSession = currentSession;
+      if (
+        matchingSession?.user
+        && String(matchingSession.user.email || '').trim().toLowerCase() !== normalizedInviteEmail
+      ) {
+        await supabase.auth.signOut();
+        matchingSession = null;
+      }
+
       // 1. tokenから役員候補者の招待レコードを探す
       let pendingAdminResult = await supabase
         .from('neighborhood_admins')
@@ -381,7 +391,7 @@ export default function AdminPage() {
       if (!Number.isFinite(invitedAt) || inviteExpiresAt <= Date.now()) {
         throw new Error('この役員招待は発行から7日を過ぎて失効しました。代表者に再発行を依頼してください。');
       }
-      if (String(pendingAdmin.admin_email || '').toLowerCase() !== loginEmail.trim().toLowerCase()) {
+      if (String(pendingAdmin.admin_email || '').toLowerCase() !== normalizedInviteEmail) {
         throw new Error('招待されたメールアドレスと入力したメールアドレスが一致しません。');
       }
 
@@ -394,27 +404,29 @@ export default function AdminPage() {
       }
 
       // 2. Authでユーザーを新規作成、もし既に登録済みならログインを試みる
-      let authUserId;
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: loginEmail,
-        password: loginPassword,
-      });
+      let authUserId = matchingSession?.user?.id;
+      if (!authUserId) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: normalizedInviteEmail,
+          password: loginPassword,
+        });
 
-      if (authError) {
-        if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: loginEmail,
-            password: loginPassword,
-          });
-          if (signInError) {
-             throw new Error('このメールアドレスは既にシステムに登録されています。以前作成したパスワードを入力してください。（再合流）');
+        if (authError) {
+          if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: normalizedInviteEmail,
+              password: loginPassword,
+            });
+            if (signInError) {
+              throw new Error('このメールアドレスは既にシステムに登録されています。以前作成したパスワードを入力してください。（再合流）');
+            }
+            authUserId = signInData.user?.id;
+          } else {
+            throw authError;
           }
-          authUserId = signInData.user?.id;
         } else {
-          throw authError;
+          authUserId = authData.user?.id;
         }
-      } else {
-        authUserId = authData.user?.id;
       }
 
       if (!authUserId) throw new Error('ユーザー情報の取得に失敗しました。');
@@ -422,7 +434,7 @@ export default function AdminPage() {
       // 3. 招待済みの役員候補者レコードを有効化する
       let updatePayload: Record<string, any> = {
         admin_auth_id: authUserId,
-        admin_email: loginEmail.trim().toLowerCase(),
+        admin_email: normalizedInviteEmail,
         admin_name: inviteName.trim() || pendingAdmin.admin_name,
         status: 'active',
       };
@@ -448,9 +460,15 @@ export default function AdminPage() {
       }
       if (updateResult.error) throw updateResult.error;
 
-      // 4. ダッシュボードへ
-      setTown(townData as any);
-      setView('dashboard');
+      // 4. 複数所属を再取得し、必要なら町内会・自治会の選択画面へ
+      const { data: { session: activeSession } } = await supabase.auth.getSession();
+      if (activeSession?.access_token) {
+        const memberships = await fetchAdminMemberships(activeSession.access_token);
+        applyAdminMemberships(memberships, false);
+      } else {
+        setTown(townData as any);
+        setView('dashboard');
+      }
     } catch (err: any) {
       console.error(err);
       setLoginError(err.message || '登録処理に失敗しました。');

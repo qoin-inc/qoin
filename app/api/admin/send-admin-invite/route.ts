@@ -24,8 +24,12 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const townId = String(body?.townId || "");
     const invitationId = String(body?.invitationId || "");
+    const deliveryId = String(body?.deliveryId || "");
     if (!townId || !invitationId) {
       return NextResponse.json({ error: "招待情報を確認できません。" }, { status: 400 });
+    }
+    if (deliveryId && !/^[0-9a-f-]{36}$/i.test(deliveryId)) {
+      return NextResponse.json({ error: "メール送信情報が正しくありません。" }, { status: 400 });
     }
 
     const { writeClient } = await requireNeighborhoodAdmin(request, townId);
@@ -89,7 +93,7 @@ export async function POST(request: Request) {
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": `admin-invite-${invitation.id}-${invitedAt.getTime()}`,
+        "Idempotency-Key": `admin-invite-${invitation.id}-${deliveryId || invitedAt.getTime()}`,
       },
       body: JSON.stringify({
         from: emailFrom,

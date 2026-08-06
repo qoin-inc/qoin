@@ -2930,6 +2930,22 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
 
   const activeOrInvitedAdminCount = basicData.admins.filter((admin) => admin.status !== "retired" && admin.status !== "rejected" && !isAdminInviteExpired(admin)).length;
 
+  const requestAdminInviteEmail = async (invitationId: string | number, accessToken: string) => {
+    const deliveryId = crypto.randomUUID();
+    const emailResponse = await fetch("/api/admin/send-admin-invite", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ townId, invitationId, deliveryId }),
+    });
+    const emailResult = await emailResponse.json().catch(() => ({}));
+    if (!emailResponse.ok) {
+      throw new Error(emailResult?.error || "招待メールを送信できませんでした。URLをコピーして送ってください。");
+    }
+  };
+
   const handleAdminInviteCreate = async () => {
     const email = adminInviteDraft.email.trim().toLowerCase();
     const name = adminInviteDraft.name.trim();
@@ -2948,6 +2964,14 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     });
     if (duplicatedInTown) {
       setAdminMessage("同じ町内会・自治会に、同じメールアドレスの有効な役員または招待中役員がいます。");
+      return;
+    }
+
+    let accessToken = "";
+    try {
+      accessToken = await getAdminAccessToken();
+    } catch {
+      setAdminMessage("ログインの有効期限が切れています。ページを再読み込みして、もう一度ログインしてください。");
       return;
     }
 
@@ -2985,25 +3009,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         await navigator.clipboard?.writeText(url);
       } catch {}
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        setAdminMessage("招待URLを作成しましたが、メール送信前にログイン状態を確認できませんでした。URLをコピーして送ってください。");
-        return;
-      }
-
-      const emailResponse = await fetch("/api/admin/send-admin-invite", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ townId, invitationId: saved.id }),
-      });
-      const emailResult = await emailResponse.json().catch(() => ({}));
-      if (!emailResponse.ok) {
-        setAdminMessage(emailResult?.error || "招待URLを作成しましたが、メールを送信できませんでした。URLをコピーして送ってください。");
-        return;
-      }
+      await requestAdminInviteEmail(saved.id, accessToken);
       setAdminMessage("役員候補者へ招待メールを送信しました。招待URLの有効期限は発行から7日間です。");
     } catch (error: any) {
       setAdminMessage(error?.message || "役員招待URLの作成に失敗しました。");
@@ -3269,6 +3275,26 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       );
     } finally {
       setFeeSettingsSaving(false);
+    }
+  };
+
+  const handleAdminInviteResend = async (admin: any) => {
+    if (!admin?.id || admin.status !== "pending" || isAdminInviteExpired(admin)) return;
+    setAdminBusy(true);
+    setAdminMessage("");
+    try {
+      const accessToken = await getAdminAccessToken();
+      if (!accessToken) {
+        throw new Error("ログインの有効期限が切れています。ページを再読み込みして、もう一度ログインしてください。");
+      }
+      await requestAdminInviteEmail(admin.id, accessToken);
+      const token = admin.admin_invite_token || admin.invite_token;
+      if (token) setAdminInviteUrl(buildAdminInviteUrl(token));
+      setAdminMessage("役員候補者へ招待メールを再送しました。");
+    } catch (error: any) {
+      setAdminMessage(error?.message || "招待メールを再送できませんでした。");
+    } finally {
+      setAdminBusy(false);
     }
   };
 
@@ -3604,7 +3630,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   };
 
   const getAdminAccessToken = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    let { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      const { data: refreshData } = await supabase.auth.refreshSession();
+      session = refreshData.session;
+    }
     if (!session?.access_token) throw new Error("管理者ログインを確認できません。再ログインしてください。");
     return session.access_token;
   };
@@ -4762,7 +4792,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               </div>
             )}
             {adminMessage && (
-              <div className={`admin-basic-message ${adminMessage.includes("失敗") || adminMessage.includes("入力") || adminMessage.includes("上限") || adminMessage.includes("最大") || adminMessage.includes("最後") || adminMessage.includes("同じ") || adminMessage.includes("未完了") || adminMessage.includes("できません") ? "error" : "success"}`}>
+              <div className={`admin-basic-message ${adminMessage.includes("失敗") || adminMessage.includes("入力") || adminMessage.includes("上限") || adminMessage.includes("最大") || adminMessage.includes("最後") || adminMessage.includes("同じ") || adminMessage.includes("未完了") || adminMessage.includes("できません") || adminMessage.includes("ログイン") ? "error" : "success"}`}>
                 {adminMessage}
               </div>
             )}
@@ -4794,7 +4824,12 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                   <span><em>{getAdminStatusLabel(admin)}</em></span>
                   <span className="admin-admin-actions">
                     {isDeletableAdminInvite(admin) ? (
-                      <button type="button" className="delete" onClick={() => handleAdminInviteDelete(admin)} disabled={adminBusy || admin.id === "empty"}>招待削除</button>
+                      <>
+                        {admin.status === "pending" && !isAdminInviteExpired(admin) && (
+                          <button type="button" onClick={() => handleAdminInviteResend(admin)} disabled={adminBusy || admin.id === "empty"}>メール再送</button>
+                        )}
+                        <button type="button" className="delete" onClick={() => handleAdminInviteDelete(admin)} disabled={adminBusy || admin.id === "empty"}>招待削除</button>
+                      </>
                     ) : admin.status === "retired" ? (
                       <button type="button" onClick={() => handleAdminStatusChange(admin, "active")} disabled={adminBusy || admin.id === "empty"}>復活</button>
                     ) : (
