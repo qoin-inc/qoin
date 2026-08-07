@@ -43,6 +43,7 @@ export default function AdminPage() {
   const [inviteTownName, setInviteTownName] = useState('');
   const [inviteStatus, setInviteStatus] = useState<InviteStatus>('loading');
   const [inviteName, setInviteName] = useState('');
+  const [inviteSessionEmail, setInviteSessionEmail] = useState('');
   const [inviteConfirmPassword, setInviteConfirmPassword] = useState('');
   const [joinConfirmPassword, setJoinConfirmPassword] = useState('');
 
@@ -121,6 +122,13 @@ export default function AdminPage() {
         setLoginError('');
         setInviteStatus('loading');
         setView('invite');
+
+        const { data: { session: inviteSession } } = await supabase.auth.getSession();
+        const currentEmail = String(inviteSession?.user?.email || '').trim().toLowerCase();
+        setInviteSessionEmail(currentEmail);
+        if (currentEmail) {
+          setLoginEmail(currentEmail);
+        }
 
         if (!inviteToken) {
           setLoginError('招待IDが不正です。招待URLをご確認ください。');
@@ -325,31 +333,6 @@ export default function AdminPage() {
     setLoginError('');
 
     try {
-      // パスワード制限チェック
-      if (loginPassword !== inviteConfirmPassword) {
-        throw new Error('パスワードと確認用パスワードが一致しません。');
-      }
-      if (loginPassword.length < 8) {
-        throw new Error('パスワードは8文字以上で入力してください。');
-      }
-
-      // 安全なアカウント運用のための複雑さチェック（3種類以上）
-      const pwd = loginPassword;
-      const hasUpper = /[A-Z]/.test(pwd);
-      const hasLower = /[a-z]/.test(pwd);
-      const hasDigit = /\d/.test(pwd);
-      const hasSymbol = /[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/.test(pwd);
-      
-      let typesCount = 0;
-      if (hasUpper) typesCount++;
-      if (hasLower) typesCount++;
-      if (hasDigit) typesCount++;
-      if (hasSymbol) typesCount++;
-
-      if (typesCount < 3) {
-        throw new Error('安全なアカウント運用のために、パスワードには「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせてください。');
-      }
-
       const normalizedInviteEmail = loginEmail.trim().toLowerCase();
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       let matchingSession = currentSession;
@@ -359,6 +342,28 @@ export default function AdminPage() {
       ) {
         await supabase.auth.signOut();
         matchingSession = null;
+      }
+
+      // 同じメールアドレスでログイン済みの場合は、既存アカウントへ所属だけを追加する。
+      // ログアウト中は、初回登録または既存アカウントの本人確認にパスワードを使用する。
+      if (!matchingSession?.user) {
+        if (loginPassword !== inviteConfirmPassword) {
+          throw new Error('パスワードと確認用パスワードが一致しません。');
+        }
+        if (loginPassword.length < 8) {
+          throw new Error('パスワードは8文字以上で入力してください。');
+        }
+
+        const pwd = loginPassword;
+        const hasUpper = /[A-Z]/.test(pwd);
+        const hasLower = /[a-z]/.test(pwd);
+        const hasDigit = /\d/.test(pwd);
+        const hasSymbol = /[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/.test(pwd);
+        const typesCount = [hasUpper, hasLower, hasDigit, hasSymbol].filter(Boolean).length;
+
+        if (typesCount < 3) {
+          throw new Error('安全なアカウント運用のために、パスワードには「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせてください。');
+        }
       }
 
       // 1. tokenから役員候補者の招待レコードを探す
@@ -591,6 +596,11 @@ export default function AdminPage() {
   // --- 旧仕様の Join 画面終了 ---
 
   if (view === 'invite') {
+    const normalizedLoginEmail = loginEmail.trim().toLowerCase();
+    const isAddingInviteToCurrentAccount = Boolean(
+      inviteSessionEmail && normalizedLoginEmail === inviteSessionEmail,
+    );
+
     return (
       <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-10 p-8 pb-10">
@@ -620,6 +630,12 @@ export default function AdminPage() {
                   {loginError}
                 </div>
               )}
+              {isAddingInviteToCurrentAccount && (
+                <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-xs font-bold leading-6 text-sky-900">
+                  <p><i className="fas fa-circle-info mr-2" aria-hidden="true"></i>ログイン中の役員アカウントへ、この町内会・自治会の所属を追加します。</p>
+                  <p className="mt-1 text-sky-700">パスワードは現在のものから変わりません。町内会・自治会ごとに別のパスワードを設定する必要はありません。</p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">お名前</label>
                 <input
@@ -640,38 +656,54 @@ export default function AdminPage() {
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
                   required
                 />
+                {inviteSessionEmail && !isAddingInviteToCurrentAccount && (
+                  <p className="mt-2 text-[10px] font-bold leading-relaxed text-amber-700">
+                    現在ログイン中のメールアドレスと異なります。登録を続けると、現在のアカウントからログアウトします。
+                  </p>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">設定するパスワード <span className="text-red-500">*</span></label>
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={e => setLoginPassword(e.target.value)}
-                  placeholder="半角英数字8文字以上"
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                  required
-                />
-                <p className="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">
-                  安全なアカウント運用のために、「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせた8文字以上の文字列を設定してください。
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">パスワード（確認用） <span className="text-red-500">*</span></label>
-                <input
-                  type="password"
-                  value={inviteConfirmPassword}
-                  onChange={e => setInviteConfirmPassword(e.target.value)}
-                  placeholder="パスワードを再入力してください"
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                  required
-                />
-              </div>
+              {!isAddingInviteToCurrentAccount && (
+                <>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">パスワード <span className="text-red-500">*</span></label>
+                    <input
+                      type="password"
+                      value={loginPassword}
+                      onChange={e => setLoginPassword(e.target.value)}
+                      placeholder="8文字以上"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
+                      required
+                    />
+                    <p className="text-[10px] text-gray-500 font-bold mt-1 leading-relaxed">
+                      初めて役員登録する方は新しいパスワードを設定してください。すでに別の町内会・自治会へ同じメールアドレスで登録済みの方は、現在のパスワードを入力してください。
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">
+                      「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせた8文字以上の文字列を使用してください。
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">パスワード（確認用） <span className="text-red-500">*</span></label>
+                    <input
+                      type="password"
+                      value={inviteConfirmPassword}
+                      onChange={e => setInviteConfirmPassword(e.target.value)}
+                      placeholder="パスワードを再入力してください"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
+                      required
+                    />
+                  </div>
+                </>
+              )}
               <button
                 type="submit"
                 disabled={isLoggingIn}
                 className="w-full bg-qoin-main text-white font-black py-4 rounded-xl shadow-lg hover:bg-qoin-main_hover transition disabled:opacity-50 flex items-center justify-center cursor-pointer mt-2"
               >
-                {isLoggingIn ? <i className="fas fa-spinner fa-spin"></i> : 'パスワードを設定して役員に合流する'}
+                {isLoggingIn
+                  ? <i className="fas fa-spinner fa-spin"></i>
+                  : isAddingInviteToCurrentAccount
+                    ? '現在のアカウントに役員所属を追加する'
+                    : '役員として登録する'}
               </button>
             </form>
           ) : (

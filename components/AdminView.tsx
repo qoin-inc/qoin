@@ -4762,7 +4762,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <div className="admin-basic-card-heading">
               <div>
                 <h3>役員候補者を招待</h3>
-                <p>候補者へ招待メールを送信します。メール内の専用URLは発行から7日間有効です。</p>
+                <p>候補者へ招待メールを送信します。メール内の専用URLは発行から7日間有効です。別の町内会・自治会で登録済みのメールアドレスも招待できます。</p>
               </div>
               <span className="admin-member-count">役員 {activeOrInvitedAdminCount.toLocaleString()} / 20名</span>
             </div>
@@ -4784,6 +4784,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <span>{activeOrInvitedAdminCount >= 20 ? "上限20名" : "招待メールを送信"}</span>
               </button>
             </div>
+            <p className="mt-3 text-xs font-bold leading-6 text-gray-500">
+              登録済みの役員は、現在のアカウントと共通のパスワードで所属を追加します。町内会・自治会ごとに新しいパスワードを作る必要はありません。
+            </p>
             {adminInviteUrl && (
               <div className="admin-admin-invite-url">
                 <strong>招待URL</strong>
@@ -4802,7 +4805,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <div className="admin-basic-card-heading">
               <div>
                 <h3>役員一覧</h3>
-                <p>招待中の誤登録は削除できます。管理中の役員は削除ではなく退任にし、誤操作時は復活できます。</p>
+                <p>招待メールが届かない場合は「メール再送」を利用できます。招待中の誤登録は削除できます。管理中の役員は削除ではなく退任にし、誤操作時は復活できます。</p>
               </div>
             </div>
             <div className="admin-admin-table">

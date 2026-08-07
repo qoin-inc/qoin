@@ -22,7 +22,7 @@ const AdminHeader = ({ title, showClose }: { title?: string; showClose?: boolean
 );
 
 const SettingsTabs = ({ active }: { active: string }) => {
-  const tabs = ['基本情報', '会員名簿', '会費管理', '管理者設定'];
+  const tabs = ['基本情報', '会員名簿', '会費管理', '役員管理'];
   return (
     <div className="flex border-b bg-white">
       {tabs.map(t => (
@@ -532,20 +532,20 @@ const steps: ManualStep[] = [
     ),
   },
 
-  /* ── ステップ9: 管理者（役員）を追加する ── */
+  /* ── ステップ9: 役員を招待する ── */
   {
-    title: '⑨ 管理者（役員）を追加する',
+    title: '⑨ 役員を招待する',
     description:
-      '「設定」→「管理者設定」タブから、他の役員を管理者として追加できます。追加された役員も管理画面にアクセスできるようになります。',
+      '「設定」→「役員管理」から名前・メールアドレス・役職を入力して招待します。招待メールと有効期間7日間の専用URLが発行されます。メールが届かない場合は、招待中の役員にある「メール再送」を押すか、表示された招待URLをコピーして本人へ共有してください。同じメールアドレスですでに別の町内会・自治会へ登録している役員も招待できます。',
     content: (
       <div className="flex flex-col h-full bg-gray-50">
         <AdminHeader title="設定" />
-        <SettingsTabs active="管理者設定" />
+        <SettingsTabs active="役員管理" />
         <div className="flex-1 p-3 overflow-y-auto">
           {/* 管理者一覧 */}
           <div className="bg-white rounded-xl shadow-sm border overflow-hidden mb-3">
             <div className="bg-gray-50 px-3 py-1.5 text-[9px] font-bold text-gray-500">
-              現在の管理者
+              現在の役員
             </div>
             {[
               { name: '得留 太郎', role: '代表', icon: 'fa-crown', color: 'text-yellow-500' },
@@ -569,18 +569,18 @@ const steps: ManualStep[] = [
               </div>
             ))}
           </div>
-          {/* 追加ボタン */}
+          {/* 招待ボタン */}
           <div className="relative">
             <div className="w-full bg-[#4F95D3] text-white text-center py-3 rounded-xl font-bold shadow-md text-sm">
-              <i className="fas fa-user-plus mr-1" />
-              管理者を追加
+              <i className="fas fa-envelope mr-1" />
+              役員を招待してメール送信
             </div>
             <div className="absolute right-6 -bottom-2 text-4xl transform -rotate-12 animate-bounce drop-shadow-xl z-50">
               👆
             </div>
           </div>
           <div className="text-[9px] text-gray-400 text-center mt-2">
-            追加された管理者も管理画面にアクセスできます
+            招待URLは7日間有効です。未着時はメール再送またはURLを共有します
           </div>
         </div>
       </div>

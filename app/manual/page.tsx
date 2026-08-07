@@ -42,9 +42,9 @@ const manualSections: Array<{
       {
         href: "/manual/admin-invite",
         label: "招待された役員向け",
-        time: "約3分",
+        time: "約3〜5分",
         title: "招待を受けて役員として登録する",
-        description: "代表役員から届いた招待URLを使い、役員アカウントを登録します。",
+        description: "招待URLから役員登録し、複数の町内会・自治会への所属追加や切替を行います。",
         icon: "fa-envelope-open-text",
       },
       {
