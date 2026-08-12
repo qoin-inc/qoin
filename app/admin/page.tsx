@@ -657,7 +657,7 @@ export default function AdminPage() {
               )}
               {isAddingInviteToCurrentAccount && (
                 <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-xs font-bold leading-6 text-sky-900">
-                  <p><i className="fas fa-circle-info mr-2" aria-hidden="true"></i>ログイン中の役員アカウントへ、この町内会・自治会の所属を追加します。</p>
+                  <p><i className="fas fa-circle-info mr-2" aria-hidden="true"></i>すでに別の町内会・自治会で役員登録しているアカウントにログイン中です。このアカウントへ、招待された町内会・自治会を追加します。</p>
                   <p className="mt-1 text-sky-700">パスワードは現在のものから変わりません。町内会・自治会ごとに別のパスワードを設定する必要はありません。</p>
                 </div>
               )}
@@ -727,7 +727,7 @@ export default function AdminPage() {
                 {isLoggingIn
                   ? <i className="fas fa-spinner fa-spin"></i>
                   : isAddingInviteToCurrentAccount
-                    ? '現在のアカウントに役員所属を追加する'
+                    ? '現在のアカウントに町内会・自治会を追加する'
                     : '役員として登録する'}
               </button>
             </form>

@@ -44,7 +44,7 @@ const manualSections: Array<{
         label: "招待された役員向け",
         time: "約3〜5分",
         title: "招待を受けて役員として登録する",
-        description: "招待URLから役員登録し、複数の町内会・自治会への所属追加や切替を行います。",
+        description: "招待URLから役員登録し、複数の町内会・自治会の追加や切替を行います。",
         icon: "fa-envelope-open-text",
       },
       {

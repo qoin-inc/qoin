@@ -4785,7 +4785,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               </button>
             </div>
             <p className="mt-3 text-xs font-bold leading-6 text-gray-500">
-              登録済みの役員は、現在のアカウントと共通のパスワードで所属を追加します。町内会・自治会ごとに新しいパスワードを作る必要はありません。
+              登録済みの役員は、現在のアカウントと共通のパスワードで別の町内会・自治会を追加します。町内会・自治会ごとに新しいパスワードを作る必要はありません。
             </p>
             {adminInviteUrl && (
               <div className="admin-admin-invite-url">
