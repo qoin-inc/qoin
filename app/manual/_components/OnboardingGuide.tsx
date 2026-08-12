@@ -132,10 +132,14 @@ export function ActualScreenImage({
   src,
   alt,
   caption,
+  width = 390,
+  height = 844,
 }: {
   src: string;
   alt: string;
   caption: string;
+  width?: number;
+  height?: number;
 }) {
   return (
     <figure className={styles.actualScreenFigure}>
@@ -143,8 +147,8 @@ export function ActualScreenImage({
         <Image
           src={src}
           alt={alt}
-          width={390}
-          height={844}
+          width={width}
+          height={height}
           className={styles.actualScreenImage}
         />
       </div>

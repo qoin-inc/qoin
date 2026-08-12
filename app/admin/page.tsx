@@ -80,6 +80,31 @@ export default function AdminPage() {
   // セッションがあれば自動ログイン
   useEffect(() => {
     const init = async () => {
+      if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+        const testInvite = new URLSearchParams(window.location.search).get('test_invite');
+        if (testInvite) {
+          setInviteTokenParam('manual-preview');
+          setInviteTownName('エルタウン町内会');
+          setInviteName('エルタウン太郎');
+          setLoginEmail('taro@example.jp');
+          setLoginPassword('Sample123!');
+          setInviteConfirmPassword('Sample123!');
+          setLoginError(testInvite === 'expired' ? 'この招待は期限切れです。代表役員へ再送を依頼してください。' : '');
+          setInviteStatus(testInvite === 'expired' ? 'expired' : 'valid');
+          setInviteSessionEmail(testInvite === 'current-account' ? 'taro@example.jp' : '');
+          setView('invite');
+          return;
+        }
+        if (window.location.search.includes('test_town_switch=1')) {
+          setAdminMemberships([
+            { adminId: 'demo-admin-1', role: '副会長', town: { id: 1, name: 'エルタウン町内会' } },
+            { adminId: 'demo-admin-2', role: '会計', town: { id: 2, name: '青空自治会' } },
+          ]);
+          setTown({ id: 1, name: 'エルタウン町内会' });
+          setView('dashboard');
+          return;
+        }
+      }
       if (
         typeof window !== 'undefined' &&
         process.env.NODE_ENV !== 'production' &&

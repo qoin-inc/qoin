@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import { OnboardingGuide } from "../_components/OnboardingGuide";
-import {
-  AdminInviteFormScreen,
-  AdminInviteUnavailableScreen,
-  AdminTownSelectionScreen,
-  AdminTownSwitchScreen,
-} from "../_components/AdminInviteScreens";
+import { ActualScreenImage, OnboardingGuide } from "../_components/OnboardingGuide";
 
 export const metadata: Metadata = {
   title: "招待を受けて役員として登録する | el-town オンラインマニュアル",
@@ -30,37 +24,83 @@ export default function AdminInviteManualPage() {
         {
           title: "代表役員から招待URLを受け取る",
           text: "招待した代表役員から、メールやメッセージで届いた専用URLを開きます。通常の役員ログイン画面ではなく、必ず届いたURLから進んでください。",
-          visual: <AdminInviteFormScreen />,
+          visual: (
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-actual.png"
+              alt="実際の役員招待登録画面"
+              caption="招待URLから開く実際の役員登録画面"
+              width={374}
+              height={1036}
+            />
+          ),
         },
         {
           title: "お名前とメールアドレスを入力する",
           text: "「役員として合流する」画面で、お名前と、招待されたメールアドレスを入力します。メールアドレスは招待先と同じものを使用してください。",
-          visual: <AdminInviteFormScreen />,
+          visual: (
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-actual.png"
+              alt="お名前とメールアドレスを入力した実際の役員登録画面"
+              caption="お名前と招待先メールアドレスを入力します"
+              width={374}
+              height={1036}
+            />
+          ),
         },
         {
           title: "初回登録か、現在のアカウントへの所属追加かを確認する",
           text: "初めて役員登録する方は、英大文字・英小文字・数字・記号のうち3種類以上を組み合わせた8文字以上のパスワードを新しく設定します。すでに同じメールアドレスで別の町内会・自治会へ登録済みの方は、現在のパスワードを使用してください。同じメールアドレスに町内会・自治会ごとの別パスワードは設定できません。",
-          visual: <AdminInviteFormScreen />,
+          visual: (
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-actual.png"
+              alt="パスワード入力欄が表示された実際の役員登録画面"
+              caption="初回登録または登録済みアカウントのパスワードを入力します"
+              width={374}
+              height={1036}
+            />
+          ),
         },
         {
           title: "ログイン中なら、現在のアカウントへ所属を追加する",
           text: "招待先と同じメールアドレスでログイン中の場合、パスワード欄は表示されません。「現在のアカウントに役員所属を追加する」を押してください。現在のパスワードは変更されず、登録先の町内会・自治会だけが追加されます。",
-          visual: <AdminInviteFormScreen mode="current-account" />,
+          visual: (
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-current-account-actual.png"
+              alt="ログイン中のアカウントへ所属を追加する実際の画面"
+              caption="ログイン中はパスワード欄を表示せず所属を追加します"
+            />
+          ),
         },
         {
           title: "複数の所属から管理する町内会・自治会を選ぶ",
           text: "登録後に所属先が2件以上ある場合は、「管理する町内会を選択」画面が表示されます。町内会・自治会名と役職を確認して、管理する所属先を選んでください。管理画面上部の「町内会切替」から、ログアウトせずに選び直せます。切り替えてもパスワードは共通です。",
           visual: (
             <div className="grid gap-6">
-              <AdminTownSelectionScreen />
-              <AdminTownSwitchScreen />
+              <ActualScreenImage
+                src="/manual/screens/admin-town-selection-actual.png"
+                alt="実際の管理する町内会選択画面"
+                caption="所属する町内会・自治会から管理先を選びます"
+              />
+              <ActualScreenImage
+                src="/manual/screens/admin-town-switch-actual.png"
+                alt="実際の役員管理画面上部にある町内会切替ボタン"
+                caption="管理画面上部の町内会切替ボタン"
+                width={375}
+                height={812}
+              />
             </div>
           ),
         },
         {
           title: "招待URLを利用できないとき",
           text: "登録済みのURLを開いた場合は通常ログインへ進んでください。期限切れ・取消済み・無効なURLの場合は、代表役員へ新しい招待を依頼します。メールが届かない場合は、代表役員に「メール再送」を依頼するか、招待URLを別の連絡手段で共有してもらってください。",
-          visual: <AdminInviteUnavailableScreen />,
+          visual: (
+            <ActualScreenImage
+              src="/manual/screens/admin-invite-expired-actual.png"
+              alt="期限切れの招待URLを開いた実際の案内画面"
+              caption="期限切れの場合は新しい招待を依頼します"
+            />
+          ),
         },
       ]}
     />
