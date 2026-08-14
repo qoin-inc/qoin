@@ -491,6 +491,7 @@ const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所�
 const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message", "family_withdrawal_status_1", "family_withdrawal_status_2"];
 const adminDetailColumns = ["admin_role", "admin_invite_token", "invite_token", "invited_at", "retired_at"];
 const adminInviteValidityMs = 7 * 24 * 60 * 60 * 1000;
+const systemAdminEmail = "admin@el-town.jp";
 const feeDetailColumns = [
   "neighborhood_id",
   "roster_id",
@@ -686,6 +687,7 @@ const getAdminStatusLabel = (admin: any) => {
   return admin.status || "状態未設定";
 };
 const isDeletableAdminInvite = (admin: any) => ["pending", "waiting_approval"].includes(admin.status);
+const isSystemAdminRecord = (admin: any) => String(admin?.admin_email || "").trim().toLowerCase() === systemAdminEmail;
 const getFeeRosterId = (fee: any) => fee.roster_id ?? fee.resident_roster_id ?? fee.member_id ?? null;
 const getFeeYear = (fee: any) => Number(fee.fiscal_year ?? fee.year ?? new Date().getFullYear());
 const getFeeBillingAmount = (fee: any) => Number(fee.expected_amount ?? fee.billing_amount ?? fee.amount ?? 0);
@@ -974,6 +976,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [integratedFacilityMonth, setIntegratedFacilityMonth] = useState("");
   const [integratedFacilityDate, setIntegratedFacilityDate] = useState("");
   const [basicData, setBasicData] = useState<BasicData>({ town: null, members: [], fees: [], feeSetting: null, systemBillings: [], systemPaymentProfile: null, admins: [], setting: null });
+  const organizationAdmins = useMemo(() => basicData.admins.filter((admin) => !isSystemAdminRecord(admin)), [basicData.admins]);
   const [liveFacilityData, setLiveFacilityData] = useState<LiveFacilityData>({ liveSessions: [], liveApplications: [], facilities: [], reservations: [] });
   const [activeAdminScreen, setActiveAdminScreen] = useState<AdminScreenMode>("dashboard");
   const [activeDashboardMenu, setActiveDashboardMenu] = useState<DashboardMenu>("basic");
@@ -1370,14 +1373,14 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
 
   useEffect(() => {
     const town = basicData.town;
-    const adminEmail = town?.admin_email || basicData.admins[0]?.admin_email || "";
+    const adminEmail = town?.admin_email || organizationAdmins[0]?.admin_email || "";
     setStripeOnboardingDraft((current) => ({
       ...current,
       organizationName: current.organizationName || town?.name || townName || "",
       supportEmail: current.supportEmail || adminEmail,
     }));
     if (town && !town.stripe_account_id) setStripeProfileLoaded(true);
-  }, [basicData.admins, basicData.town, townName]);
+  }, [basicData.town, organizationAdmins, townName]);
 
   useEffect(() => {
     const year = currentFiscalYear(basicData.town?.fiscal_start_month);
@@ -2931,12 +2934,12 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   };
 
   const adminsByStatus = useMemo(() => ({
-    active: basicData.admins.filter((admin) => admin.status === "active"),
-    invited: basicData.admins.filter((admin) => !["active", "retired", "rejected"].includes(admin.status)),
-    retired: basicData.admins.filter((admin) => ["retired", "rejected"].includes(admin.status)),
-  }), [basicData.admins]);
+    active: organizationAdmins.filter((admin) => admin.status === "active"),
+    invited: organizationAdmins.filter((admin) => !["active", "retired", "rejected"].includes(admin.status)),
+    retired: organizationAdmins.filter((admin) => ["retired", "rejected"].includes(admin.status)),
+  }), [organizationAdmins]);
   const displayedAdmins = adminsByStatus[activeAdminListStatus];
-  const activeOrInvitedAdminCount = basicData.admins.filter((admin) => admin.status !== "retired" && admin.status !== "rejected" && !isAdminInviteExpired(admin)).length;
+  const activeOrInvitedAdminCount = organizationAdmins.filter((admin) => admin.status !== "retired" && admin.status !== "rejected" && !isAdminInviteExpired(admin)).length;
   const adminListTabs: Array<{ key: AdminListStatus; label: string }> = [
     { key: "active", label: "在任中" },
     { key: "invited", label: "招待中" },
@@ -3048,7 +3051,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const handleAdminStatusChange = async (admin: any, nextStatus: "retired" | "active") => {
     if (!admin?.id) return;
     const retiring = nextStatus === "retired";
-    const activeAdmins = basicData.admins.filter((item) => item.status === "active");
+    const activeAdmins = organizationAdmins.filter((item) => item.status === "active");
     if (retiring && activeAdmins.length <= 1 && admin.status === "active") {
       setAdminMessage("最後の管理者は退任できません。先に別の役員を招待してください。");
       return;
@@ -3505,8 +3508,8 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       : stripeDetailsSubmitted
         ? "Stripe審査中"
         : "本番登録の完了待ち";
-  const representativeName = basicData.town?.admin_name || basicData.admins[0]?.admin_name || "未設定";
-  const representativeEmail = basicData.town?.admin_email || basicData.admins[0]?.admin_email || "未設定";
+  const representativeName = basicData.town?.admin_name || organizationAdmins[0]?.admin_name || "未設定";
+  const representativeEmail = basicData.town?.admin_email || organizationAdmins[0]?.admin_email || "未設定";
   const systemConnectionUnitPrice = Number(basicData.setting?.monthly_household_price ?? 0);
   const systemFreePushLimit = Number(basicData.setting?.free_push_limit ?? 0);
   const systemPushUnitPrice = Number(basicData.setting?.push_unit_price ?? 0);
