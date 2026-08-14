@@ -2613,6 +2613,64 @@ button { cursor: pointer; border: 0; }
   overflow-x: auto;
 }
 
+.admin-admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.admin-admin-tabs button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-admin-tabs button strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  padding: 0 7px;
+  color: #475569;
+  font-size: 12px;
+}
+
+.admin-admin-tabs button.active {
+  border-color: #0284c7;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.admin-admin-tabs button.active strong {
+  background: #0284c7;
+  color: #fff;
+}
+
+.admin-admin-empty {
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #64748b;
+  padding: 28px 18px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 850;
+}
+
 .admin-admin-row {
   min-width: 920px;
   display: grid;

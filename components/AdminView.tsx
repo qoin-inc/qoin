@@ -20,6 +20,7 @@ type Summary = {
 
 type BasicFeature = "基本情報" | "会員管理" | "会費管理" | "システム利用料" | "役員管理" | "Stripe連携";
 type AdminScreenMode = "dashboard" | "basicFeature" | "publishFeature";
+type AdminListStatus = "active" | "invited" | "retired";
 
 type BasicData = {
   town: any | null;
@@ -999,6 +1000,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [adminInviteUrl, setAdminInviteUrl] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminMessage, setAdminMessage] = useState("");
+  const [activeAdminListStatus, setActiveAdminListStatus] = useState<AdminListStatus>("active");
   const [systemBillingMonth, setSystemBillingMonth] = useState("");
   const [systemBillingMessage, setSystemBillingMessage] = useState("");
   const [systemBillingBusy, setSystemBillingBusy] = useState(false);
@@ -2928,7 +2930,32 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     throw new Error("役員情報の保存に失敗しました。");
   };
 
+  const adminsByStatus = useMemo(() => ({
+    active: basicData.admins.filter((admin) => admin.status === "active"),
+    invited: basicData.admins.filter((admin) => !["active", "retired", "rejected"].includes(admin.status)),
+    retired: basicData.admins.filter((admin) => ["retired", "rejected"].includes(admin.status)),
+  }), [basicData.admins]);
+  const displayedAdmins = adminsByStatus[activeAdminListStatus];
   const activeOrInvitedAdminCount = basicData.admins.filter((admin) => admin.status !== "retired" && admin.status !== "rejected" && !isAdminInviteExpired(admin)).length;
+  const adminListTabs: Array<{ key: AdminListStatus; label: string }> = [
+    { key: "active", label: "在任中" },
+    { key: "invited", label: "招待中" },
+    { key: "retired", label: "退任済み" },
+  ];
+
+  const getAdminListMeta = (admin: any) => {
+    if (activeAdminListStatus === "retired") {
+      return admin.retired_at
+        ? `退任日: ${new Date(admin.retired_at).toLocaleDateString("ja-JP")}`
+        : "退任日未設定";
+    }
+    if (activeAdminListStatus === "invited") {
+      return admin.invited_at
+        ? `招待: ${new Date(admin.invited_at).toLocaleDateString("ja-JP")} / 期限: ${getAdminInviteExpiresAt(admin)?.toLocaleDateString("ja-JP") || "未設定"}`
+        : "招待日未設定";
+    }
+    return "在任中";
+  };
 
   const requestAdminInviteEmail = async (invitationId: string | number, accessToken: string) => {
     const deliveryId = crypto.randomUUID();
@@ -4805,8 +4832,23 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             <div className="admin-basic-card-heading">
               <div>
                 <h3>役員一覧</h3>
-                <p>招待メールが届かない場合は「メール再送」を利用できます。招待中の誤登録は削除できます。管理中の役員は削除ではなく退任にし、誤操作時は復活できます。</p>
+                <p>在任中、招待中、退任済みに分けて確認できます。期限切れの招待は「招待中」に表示されます。</p>
               </div>
+            </div>
+            <div className="admin-admin-tabs" role="tablist" aria-label="役員の状態">
+              {adminListTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeAdminListStatus === tab.key}
+                  className={activeAdminListStatus === tab.key ? "active" : ""}
+                  onClick={() => setActiveAdminListStatus(tab.key)}
+                >
+                  <span>{tab.label}</span>
+                  <strong>{adminsByStatus[tab.key].length.toLocaleString()}</strong>
+                </button>
+              ))}
             </div>
             <div className="admin-admin-table">
               <div className="admin-admin-row admin-admin-head">
@@ -4816,11 +4858,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <span>状態</span>
                 <span>操作</span>
               </div>
-              {(basicData.admins.length ? basicData.admins : [{ id: "empty", admin_name: "役員レコードは未取得です", status: "未設定" }]).map((admin, index) => (
+              {displayedAdmins.map((admin, index) => (
                 <div key={admin.id || index} className={`admin-admin-row ${admin.status === "retired" ? "retired" : admin.status === "pending" ? "pending" : ""}`}>
                   <span>
                     <strong>{admin.admin_name || admin.name || "名称未設定"}</strong>
-                    <small>{admin.invited_at ? `招待: ${new Date(admin.invited_at).toLocaleDateString("ja-JP")} / 期限: ${getAdminInviteExpiresAt(admin)?.toLocaleDateString("ja-JP") || "未設定"}` : "招待日未設定"}</small>
+                    <small>{getAdminListMeta(admin)}</small>
                   </span>
                   <span>{admin.admin_email || "メール未設定"}</span>
                   <span>{admin.admin_role || "役職未設定"}</span>
@@ -4841,6 +4883,13 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                   </span>
                 </div>
               ))}
+              {displayedAdmins.length === 0 && (
+                <div className="admin-admin-empty">
+                  {activeAdminListStatus === "active" && "在任中の役員はいません。"}
+                  {activeAdminListStatus === "invited" && "招待中の役員はいません。"}
+                  {activeAdminListStatus === "retired" && "退任済みの役員はいません。"}
+                </div>
+              )}
             </div>
           </section>
         </div>
