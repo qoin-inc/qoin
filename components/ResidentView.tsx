@@ -489,15 +489,17 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         .eq("neighborhood_id", townId)
         .order("created_at", { ascending: false })
         .limit(30);
-      const targetRequest = openTargetId
+      const isLatestTarget = openTargetId === "latest";
+      const targetRequest = openTargetId && !isLatestTarget
         ? supabase.from("circulars").select("*").eq("neighborhood_id", townId).eq("id", openTargetId).maybeSingle()
         : Promise.resolve({ data: null, error: null });
       const [circularResult, targetResult] = await Promise.all([circularRequest, targetRequest]);
 
       if (!circularResult.error && circularResult.data) {
+        const newestItem = (circularResult.data as Circular[])[0] || null;
         const items = [...(circularResult.data as Circular[])].reverse();
         setCirculars(items);
-        const target = targetResult.data as Circular | null;
+        const target = isLatestTarget ? newestItem : targetResult.data as Circular | null;
         if (target) {
           setSelectedCircular(target);
           setReplyDraft(createReplyDraft(displayName, target));

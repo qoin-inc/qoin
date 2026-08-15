@@ -264,8 +264,7 @@ function ResidentPageContent() {
     if (session && roster && town) {
       const redirectAfter = searchParams?.get('redirect_after');
       if (redirectAfter === 'portal') {
-        // LIFFでの確実な遷移とSupabaseセッションの反映のためフルリロード遷移を使用
-        window.location.href = '/portal';
+        router.replace(searchParams?.get('latest') === '1' ? '/portal?latest=1' : '/portal');
       }
     }
   }, [session, roster, town, searchParams]);

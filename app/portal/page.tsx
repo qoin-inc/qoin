@@ -13,6 +13,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: f
 
 export default function PortalPage() {
   const router = useRouter();
+  const showLatestOnOpenRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [town, setTown] = useState<any>(null);
@@ -47,6 +48,7 @@ export default function PortalPage() {
   const townPostsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    showLatestOnOpenRef.current = new URLSearchParams(window.location.search).get('latest') === '1';
     checkSessionAndFetchData();
   }, []);
 
@@ -111,18 +113,16 @@ export default function PortalPage() {
         return;
       }
 
-      const { data: townData } = await supabase
-        .from('neighborhoods')
-        .select('*')
-        .eq('id', rosterData.neighborhood_id)
-        .single();
+      const [{ data: townData }] = await Promise.all([
+        supabase.from('neighborhoods').select('*').eq('id', rosterData.neighborhood_id).single(),
+        fetchData(),
+      ]);
       setTown(townData);
     } else {
       router.push('/resident');
       return;
     }
 
-    await fetchData();
   };
 
   const fetchData = async () => {
@@ -141,6 +141,11 @@ export default function PortalPage() {
 
     if (postsData) {
       setPosts(postsData);
+      if (showLatestOnOpenRef.current && postsData.length > 0) {
+        const latestPost = postsData[postsData.length - 1];
+        if (latestPost.category === 'food' || latestPost.category === 'sight') setActiveTab(latestPost.category);
+        setSelectedTownId(null);
+      }
       
       const latestPostMap = new Map();
       postsData.forEach(post => {

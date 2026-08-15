@@ -57,7 +57,8 @@ function answerHelpQuestion(audience: HelpAudience, question: string) {
   const normalized = question.trim().toLowerCase();
   if (!normalized) return "質問を入力してください。";
   if (audience === "member") {
-    if (/イベント|行事|参加人数|出欠/.test(normalized) && !/総会/.test(normalized)) return "画面下の「回覧板」を押し、「イベント」を選びます。予定を開き、参加人数を入力して回答してください。";
+    if (/(イベント|行事|参加人数|出欠).*(変更|修正|やり直|訂正)|(変更|修正|やり直|訂正).*(イベント|行事|参加人数|出欠)/.test(normalized) && !/総会/.test(normalized)) return "変更できます。画面下の「回覧板」→「イベント」の順に押し、回答済みの予定をもう一度開いてください。大人・子供の人数を修正し、「参加人数を変更する」を押すと更新できます。";
+    if (/イベント|行事|参加人数|出欠/.test(normalized) && !/総会/.test(normalized)) return "画面下の「回覧板」→「イベント」の順に押します。予定を開き、大人・子供の参加人数を入力して「参加申込を保存する」を押してください。回答後も同じ予定を開き直せば人数を変更できます。";
     if (/回覧|お知らせ|連絡|掲示/.test(normalized)) return "画面下の「回覧板」を押し、「電子回覧板」または「連絡」を選びます。カードを押すと詳しい内容や添付資料を確認できます。";
     if (/会費|支払|決済|領収|請求|入金/.test(normalized)) return "画面下の「会費」を押すと、請求額・入金状況・支払い方法を確認できます。入金後は同じ画面で領収書を確認してください。";
     if (/施設|予約|集会所|会館/.test(normalized)) return "画面下の「Live」を押し、「施設予約」に切り替えます。空き状況を確認し、施設・時間・人数・用途を入力して申し込んでください。";
@@ -83,6 +84,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   const [asking, setAsking] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChat);
   const chatLogRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
   const selectedCategory = memberCategories.find((category) => category.id === selectedCategoryId);
   const title = audience === "member" ? "会員の方のヘルプ" : "役員の方のヘルプ";
 
@@ -96,6 +98,15 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   useEffect(() => {
     if (chatLogRef.current) chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
   }, [asking, chatMessages]);
+
+  const openHelp = () => {
+    setSelectedCategoryId("");
+    setOperationAnswer("知りたい操作のカテゴリを選んでください。");
+    setOpen(true);
+    window.requestAnimationFrame(() => {
+      if (dialogRef.current) dialogRef.current.scrollTop = 0;
+    });
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -118,7 +129,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
       if (!response.ok || !result.answer) throw new Error(result.error || "回答を取得できませんでした。");
       setChatMessages((current) => [...current, { role: "assistant", content: result.answer }]);
     } catch {
-      setChatMessages((current) => [...current, { role: "assistant", content: `${answerHelpQuestion(audience, trimmedQuestion)}（現在AIによる回答を利用できないため、基本案内を表示しています。）` }]);
+      setChatMessages((current) => [...current, { role: "assistant", content: `${answerHelpQuestion(audience, trimmedQuestion)}（現在AIへ接続できないため、登録済みの操作案内から回答しています。）` }]);
     } finally {
       setAsking(false);
     }
@@ -126,12 +137,12 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
 
   return (
     <>
-      <button type="button" className={`help-center-trigger ${className}`.trim()} onClick={() => setOpen(true)} aria-label={title} title={title}>
+      <button type="button" className={`help-center-trigger ${className}`.trim()} onClick={openHelp} aria-label={title} title={title}>
         <i className="fas fa-circle-question" aria-hidden="true" />{showLabel && <span>ヘルプ</span>}
       </button>
       {open && (
         <div className="help-center-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
-          <section className="help-center-dialog" role="dialog" aria-modal="true" aria-labelledby={`help-center-title-${audience}`}>
+          <section ref={dialogRef} className="help-center-dialog" role="dialog" aria-modal="true" aria-labelledby={`help-center-title-${audience}`}>
             <header className="help-center-header">
               <div><p>el-town HELP</p><h2 id={`help-center-title-${audience}`}>{title}</h2></div>
               <button type="button" className="help-center-close" onClick={() => setOpen(false)} aria-label="ヘルプを閉じる"><i className="fas fa-xmark" /></button>

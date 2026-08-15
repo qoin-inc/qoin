@@ -1,16 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 type HelpAudience = "member" | "admin";
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 const MEMBER_GUIDE = `
-- 回覧板: 画面下の「回覧板」から「すべて・電子回覧板・連絡・イベント」を選ぶ。カードを押すと詳細や添付資料を確認できる。
-- イベント: 「回覧板」内の「イベント」から予定を開き、参加人数を入力して回答する。
-- 会費: 画面下の「会費」で請求額、入金状況、支払方法、入金後の領収書を確認する。会費の状態は同じ世帯で共有される。
-- Live・総会: 総会は回覧板ではなく、画面下の「Live」から確認する。予定を選び、必要に応じて参加人数を入力して申し込む。開始時刻になったら詳細画面の参加ボタンからWeb会議を開く。
-- 施設予約: 「Live」を開き、下部メニューを「施設予約」に切り替える。カレンダーで日付と空き状況を確認し、施設、時間、人数、用途を入力して申し込む。申込内容の確認、変更、取消も同じ画面で行う。
-- 設定: 画面下の「設定」で登録情報と家族の連携状況を確認する。退会は「退会手続き」から申請する。
+- ボタン階層: 画面下の主ボタンは「回覧板」「会費」「Live」「設定」。回覧板の下は「全て」「電子回覧板」「連絡」「イベント」。会費の下は「会費」。Liveの下は「Live」「施設予約」。設定の下は「退会申請」。
+- 回覧板: 「全て」は電子回覧板・連絡・イベントをまとめて表示する。「電子回覧板」「連絡」「イベント」を押すと種類を絞り込める。カードを押すと本文、配信日、添付画像や資料を確認できる。
+- イベントの参加回答: 「回覧板」→「イベント」→予定カードを開き、大人と子供の参加人数を入力して「参加申込を保存する」を押す。回答済みの予定をもう一度開くと人数が表示され、「参加人数を変更する」から変更できる。
+- 会費: 「会費」→「会費」で請求額、入金額、納入状態、支払方法を確認する。未納時は表示された支払方法を使う。入金後は同じ画面から領収書を開ける。会費状態は同じ世帯で共有される。
+- Live・総会: 総会は回覧板ではなく「Live」→「Live」に表示される。予定を開き、必要に応じて参加人数を入力して申し込む。開始時刻になったら参加ボタンからWeb会議を開く。
+- 施設予約: 「Live」→「施設予約」でカレンダーから日付を選び、施設、開始・終了時間、人数、用途を入力して申し込む。自分の申込は同じ画面で確認でき、変更や取消もできる。
+- 設定・退会: 「設定」→「退会申請」から申請する。役員の承認後はその町内会・自治会の会員画面を利用できなくなる。
+- 迷った場合: 最初に押す主ボタン、その次に押すボタン、最後に行う操作の順で説明する。質問が曖昧なら、どの画面・どの操作かを短く確認する。
 `;
 
 const ADMIN_GUIDE = `
@@ -97,12 +100,13 @@ export async function POST(request: NextRequest) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_HELP_MODEL || "gpt-5.6-luna",
+        model: process.env.OPENAI_HELP_MODEL || "gpt-5.6-terra",
         store: false,
-        reasoning: { effort: "none" },
-        text: { verbosity: "low" },
-        max_output_tokens: 300,
-        instructions: `あなたはel-townの${roleLabel}向け操作ヘルプです。次の案内だけを根拠に、日本語で簡潔に回答してください。案内にない仕様を推測しないでください。分からない場合は「このヘルプでは確認できないため、町内会・自治会の役員へお問い合わせください」と案内してください。個人情報、パスワード、カード番号、APIキーの入力を求めないでください。総会は必ずLiveから案内し、回覧板からは案内しないでください。\n\n${guide}`,
+        reasoning: { effort: "low" },
+        text: { verbosity: "medium" },
+        max_output_tokens: 700,
+        safety_identifier: createHash("sha256").update(userData.user.id).digest("hex"),
+        instructions: `あなたはel-townの${roleLabel}向け操作サポート担当です。次の案内を根拠に、日本語で分かりやすく回答してください。最初に結論を示し、その後に「押すボタンの順番」と具体的な操作手順を説明してください。変更できるか、やり直せるか、見つからない場合の確認方法も、案内から判断できる範囲で補足してください。直前の会話を踏まえて追加質問にも答えてください。案内にない仕様を推測せず、確認できない内容だけは町内会・自治会の役員への問い合わせを案内してください。個人情報、パスワード、カード番号、APIキーの入力を求めないでください。総会は必ずLiveから案内し、回覧板からは案内しないでください。\n\n${guide}`,
         input: [...history, { role: "user", content: question }],
       }),
       signal: AbortSignal.timeout(20_000),
@@ -110,6 +114,7 @@ export async function POST(request: NextRequest) {
 
     const payload = await openAIResponse.json().catch(() => ({}));
     if (!openAIResponse.ok) {
+      console.error("OpenAI help response failed", { status: openAIResponse.status, code: payload?.error?.code || payload?.error?.type || "unknown" });
       return NextResponse.json({ error: "AIから回答を取得できませんでした。" }, { status: 502 });
     }
 

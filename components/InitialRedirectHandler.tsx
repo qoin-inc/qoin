@@ -35,8 +35,9 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
 
     const moveToResidentFallback = (reason: string) => {
       const fallbackParams = new URLSearchParams({ line_error: reason });
-      if (initialRedirectTarget === "portal") {
+      if (initialRedirectTarget === "portal" || initialRedirectTarget === "portal-latest") {
         fallbackParams.set("redirect_after", "portal");
+        if (initialRedirectTarget === "portal-latest") fallbackParams.set("latest", "1");
       } else if (initialRedirectTarget && initialRedirectTarget !== "resident") {
         fallbackParams.set("open", initialRedirectTarget);
       }
@@ -150,21 +151,21 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
         if (initialRedirectTarget === "resident") {
           await ensureSupabaseSessionFromLineProfile();
           window.sessionStorage.removeItem(LIFF_LOGIN_ATTEMPT_KEY);
-          window.location.href = "/resident/";
+          router.replace("/resident/");
           return;
         }
 
-        if (initialRedirectTarget === "portal") {
+        if (initialRedirectTarget === "portal" || initialRedirectTarget === "portal-latest") {
           await ensureSupabaseSessionFromLineProfile();
           window.sessionStorage.removeItem(LIFF_LOGIN_ATTEMPT_KEY);
-          window.location.href = "/portal";
+          router.replace(initialRedirectTarget === "portal-latest" ? "/portal?latest=1" : "/portal");
           return;
         }
 
         if (initialRedirectTarget === "admin") router.push("/admin/");
         else {
           await ensureSupabaseSessionFromLineProfile();
-          window.location.href = `/resident/?open=${encodeURIComponent(initialRedirectTarget)}`;
+          router.replace(`/resident/?open=${encodeURIComponent(initialRedirectTarget)}`);
         }
         return;
       }
