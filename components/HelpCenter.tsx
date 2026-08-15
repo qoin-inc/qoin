@@ -89,6 +89,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   const helpSessionRef = useRef(0);
   const selectedCategory = memberCategories.find((category) => category.id === selectedCategoryId);
   const title = audience === "member" ? "会員の方のヘルプ" : "役員の方のヘルプ";
+  const isAiChatActive = chatMessages.length > 1 || asking;
 
   const resetHelpState = useCallback(() => {
     helpSessionRef.current += 1;
@@ -160,52 +161,56 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
       </button>
       {open && (
         <div className="help-center-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeHelp(); }}>
-          <section ref={dialogRef} className="help-center-dialog" role="dialog" aria-modal="true" aria-labelledby={`help-center-title-${audience}`}>
+          <section ref={dialogRef} className={`help-center-dialog${isAiChatActive ? " is-ai-chat-active" : ""}`} role="dialog" aria-modal="true" aria-labelledby={`help-center-title-${audience}`}>
             <header className="help-center-header">
               <div><p>el-town HELP</p><h2 id={`help-center-title-${audience}`}>{title}</h2></div>
               <button type="button" className="help-center-close" onClick={closeHelp} aria-label="ヘルプを閉じる"><i className="fas fa-xmark" /></button>
             </header>
-            {audience === "admin" && (
+            {audience === "admin" && !isAiChatActive && (
               <Link href="/manual/admin" className="help-center-manual" onClick={closeHelp}>
                 <i className="fas fa-book-open" /><span><strong>役員管理画面マニュアルを見る</strong><small>画像付きの手順を確認できます</small></span><i className="fas fa-chevron-right" />
               </Link>
             )}
-            <div className="help-center-chat">
-              <div className="help-center-bot-answer" aria-live="polite"><i className="fas fa-circle-info" /><p>{operationAnswer}</p></div>
-              {audience === "member" ? (
-                selectedCategory ? (
-                  <div className="help-center-operation-level">
-                    <button type="button" className="help-center-level-back" onClick={() => { setSelectedCategoryId(""); setOperationAnswer("知りたい操作のカテゴリを選んでください。"); }}><i className="fas fa-chevron-left" /> 操作カテゴリへ戻る</button>
-                    <p className="help-center-section-label">{selectedCategory.label}</p>
-                    <div className="help-center-operation-list" aria-label={`${selectedCategory.label}の操作`}>
-                      {selectedCategory.operations.map((operation) => (
-                        <button key={operation.label} type="button" onClick={() => setOperationAnswer(operation.answer)}>
-                          <span><strong>{operation.label}</strong><small>{operation.description}</small></span><i className="fas fa-chevron-right" aria-hidden="true" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="help-center-section-label">知りたい操作を選ぶ</p>
-                    <div className="help-center-suggestions is-operation-grid" aria-label="知りたい操作を選ぶ">
-                      {memberCategories.map((category) => (
-                        <button key={category.id} type="button" onClick={() => { setSelectedCategoryId(category.id); setOperationAnswer(`「${category.label}」の中から、確認したい操作を選んでください。`); }}>
-                          <i className={`fas ${category.icon}`} aria-hidden="true" /><span><strong>{category.label}</strong><small>{category.description}</small></span><i className="fas fa-chevron-right help-center-category-arrow" aria-hidden="true" />
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )
-              ) : (
-                <><p className="help-center-section-label">よくある質問</p><div className="help-center-suggestions" aria-label="よくある質問">
-                  {adminSuggestions.map((suggestion) => <button key={suggestion.label} type="button" onClick={() => setOperationAnswer(answerHelpQuestion("admin", suggestion.label))}><i className={`fas ${suggestion.icon}`} /><strong>{suggestion.label}</strong></button>)}
-                </div></>
+            <div className={`help-center-chat${isAiChatActive ? " is-ai-chat-active" : ""}`}>
+              {!isAiChatActive && (
+                <>
+                  <div className="help-center-bot-answer" aria-live="polite"><i className="fas fa-circle-info" /><p>{operationAnswer}</p></div>
+                  {audience === "member" ? (
+                    selectedCategory ? (
+                      <div className="help-center-operation-level">
+                        <button type="button" className="help-center-level-back" onClick={() => { setSelectedCategoryId(""); setOperationAnswer(initialOperationAnswer); }}><i className="fas fa-chevron-left" /> 操作カテゴリへ戻る</button>
+                        <p className="help-center-section-label">{selectedCategory.label}</p>
+                        <div className="help-center-operation-list" aria-label={`${selectedCategory.label}の操作`}>
+                          {selectedCategory.operations.map((operation) => (
+                            <button key={operation.label} type="button" onClick={() => setOperationAnswer(operation.answer)}>
+                              <span><strong>{operation.label}</strong><small>{operation.description}</small></span><i className="fas fa-chevron-right" aria-hidden="true" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="help-center-section-label">知りたい操作を選ぶ</p>
+                        <div className="help-center-suggestions is-operation-grid" aria-label="知りたい操作を選ぶ">
+                          {memberCategories.map((category) => (
+                            <button key={category.id} type="button" onClick={() => { setSelectedCategoryId(category.id); setOperationAnswer(`「${category.label}」の中から、確認したい操作を選んでください。`); }}>
+                              <i className={`fas ${category.icon}`} aria-hidden="true" /><span><strong>{category.label}</strong><small>{category.description}</small></span><i className="fas fa-chevron-right help-center-category-arrow" aria-hidden="true" />
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )
+                  ) : (
+                    <><p className="help-center-section-label">よくある質問</p><div className="help-center-suggestions" aria-label="よくある質問">
+                      {adminSuggestions.map((suggestion) => <button key={suggestion.label} type="button" onClick={() => setOperationAnswer(answerHelpQuestion("admin", suggestion.label))}><i className={`fas ${suggestion.icon}`} /><strong>{suggestion.label}</strong></button>)}
+                    </div></>
+                  )}
+                </>
               )}
               <section className="help-center-ai" aria-labelledby={`help-ai-title-${audience}`}>
                 <div className="help-center-ai-heading">
                   <div><i className="fas fa-comments" /><span><strong id={`help-ai-title-${audience}`}>AIチャットで質問</strong><small>続けて質問できます</small></span></div>
-                  {chatMessages.length > 1 && <button type="button" onClick={() => setChatMessages(initialChat)}>会話をクリア</button>}
+                  {isAiChatActive && <button type="button" onClick={resetHelpState}>操作メニューへ戻る</button>}
                 </div>
                 <div className="help-center-chat-log" ref={chatLogRef} aria-live="polite">
                   {chatMessages.map((message, index) => <div key={`${message.role}-${index}`} className={`help-center-chat-message ${message.role}`}><span>{message.role === "assistant" ? "AI" : "あなた"}</span><p>{message.content}</p></div>)}
