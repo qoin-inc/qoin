@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
 type HelpAudience = "member" | "admin";
+type ChatMessage = { role: "user" | "assistant"; content: string };
 
 const MEMBER_GUIDE = `
 - 回覧板: 画面下の「回覧板」から「すべて・電子回覧板・連絡・イベント」を選ぶ。カードを押すと詳細や添付資料を確認できる。
@@ -76,6 +77,13 @@ export async function POST(request: NextRequest) {
     const question = String(body?.question || "").trim();
     if (!question) return NextResponse.json({ error: "質問を入力してください。" }, { status: 400 });
     if (question.length > 300) return NextResponse.json({ error: "質問は300文字以内で入力してください。" }, { status: 400 });
+    const history: ChatMessage[] = (Array.isArray(body?.history) ? body.history : [])
+      .slice(-6)
+      .flatMap((item: any) => {
+        const role = item?.role === "assistant" ? "assistant" : item?.role === "user" ? "user" : null;
+        const content = String(item?.content || "").trim();
+        return role && content && content.length <= 300 ? [{ role, content }] : [];
+      });
 
     const apiKey = process.env.OPENAI_API_KEY || "";
     if (!apiKey) return NextResponse.json({ error: "AIヘルプを準備中です。" }, { status: 503 });
@@ -95,7 +103,7 @@ export async function POST(request: NextRequest) {
         text: { verbosity: "low" },
         max_output_tokens: 300,
         instructions: `あなたはel-townの${roleLabel}向け操作ヘルプです。次の案内だけを根拠に、日本語で簡潔に回答してください。案内にない仕様を推測しないでください。分からない場合は「このヘルプでは確認できないため、町内会・自治会の役員へお問い合わせください」と案内してください。個人情報、パスワード、カード番号、APIキーの入力を求めないでください。総会は必ずLiveから案内し、回覧板からは案内しないでください。\n\n${guide}`,
-        input: question,
+        input: [...history, { role: "user", content: question }],
       }),
       signal: AbortSignal.timeout(20_000),
     });
