@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type HelpAudience = "member" | "admin";
@@ -75,33 +75,48 @@ function answerHelpQuestion(audience: HelpAudience, question: string) {
 }
 
 const initialChat: ChatMessage[] = [{ role: "assistant", content: "操作について分からないことを質問してください。続けて質問することもできます。" }];
+const initialOperationAnswer = "知りたい操作のカテゴリを選んでください。";
 
 export default function HelpCenter({ audience, showLabel = true, className = "" }: HelpCenterProps) {
   const [open, setOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [operationAnswer, setOperationAnswer] = useState("知りたい操作のカテゴリを選んでください。");
+  const [operationAnswer, setOperationAnswer] = useState(initialOperationAnswer);
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChat);
   const chatLogRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const helpSessionRef = useRef(0);
   const selectedCategory = memberCategories.find((category) => category.id === selectedCategoryId);
   const title = audience === "member" ? "会員の方のヘルプ" : "役員の方のヘルプ";
 
+  const resetHelpState = useCallback(() => {
+    helpSessionRef.current += 1;
+    setSelectedCategoryId("");
+    setOperationAnswer(initialOperationAnswer);
+    setQuestion("");
+    setAsking(false);
+    setChatMessages(initialChat);
+  }, []);
+
+  const closeHelp = useCallback(() => {
+    resetHelpState();
+    setOpen(false);
+  }, [resetHelpState]);
+
   useEffect(() => {
     if (!open) return;
-    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") closeHelp(); };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open]);
+  }, [closeHelp, open]);
 
   useEffect(() => {
     if (chatLogRef.current) chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
   }, [asking, chatMessages]);
 
   const openHelp = () => {
-    setSelectedCategoryId("");
-    setOperationAnswer("知りたい操作のカテゴリを選んでください。");
+    resetHelpState();
     setOpen(true);
     window.requestAnimationFrame(() => {
       if (dialogRef.current) dialogRef.current.scrollTop = 0;
@@ -112,6 +127,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
     event.preventDefault();
     const trimmedQuestion = question.trim();
     if (!trimmedQuestion || asking) return;
+    const helpSession = helpSessionRef.current;
     const history = chatMessages.slice(-6);
     setQuestion("");
     setChatMessages((current) => [...current, { role: "user", content: trimmedQuestion }]);
@@ -127,11 +143,13 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result.answer) throw new Error(result.error || "回答を取得できませんでした。");
+      if (helpSession !== helpSessionRef.current) return;
       setChatMessages((current) => [...current, { role: "assistant", content: result.answer }]);
     } catch {
+      if (helpSession !== helpSessionRef.current) return;
       setChatMessages((current) => [...current, { role: "assistant", content: `${answerHelpQuestion(audience, trimmedQuestion)}（現在AIへ接続できないため、登録済みの操作案内から回答しています。）` }]);
     } finally {
-      setAsking(false);
+      if (helpSession === helpSessionRef.current) setAsking(false);
     }
   };
 
@@ -141,14 +159,14 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
         <i className="fas fa-circle-question" aria-hidden="true" />{showLabel && <span>ヘルプ</span>}
       </button>
       {open && (
-        <div className="help-center-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
+        <div className="help-center-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeHelp(); }}>
           <section ref={dialogRef} className="help-center-dialog" role="dialog" aria-modal="true" aria-labelledby={`help-center-title-${audience}`}>
             <header className="help-center-header">
               <div><p>el-town HELP</p><h2 id={`help-center-title-${audience}`}>{title}</h2></div>
-              <button type="button" className="help-center-close" onClick={() => setOpen(false)} aria-label="ヘルプを閉じる"><i className="fas fa-xmark" /></button>
+              <button type="button" className="help-center-close" onClick={closeHelp} aria-label="ヘルプを閉じる"><i className="fas fa-xmark" /></button>
             </header>
             {audience === "admin" && (
-              <Link href="/manual/admin" className="help-center-manual" onClick={() => setOpen(false)}>
+              <Link href="/manual/admin" className="help-center-manual" onClick={closeHelp}>
                 <i className="fas fa-book-open" /><span><strong>役員管理画面マニュアルを見る</strong><small>画像付きの手順を確認できます</small></span><i className="fas fa-chevron-right" />
               </Link>
             )}
