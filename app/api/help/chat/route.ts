@@ -50,6 +50,14 @@ function readResponseText(payload: any) {
     .join("\n");
 }
 
+function answerCourtesyMessage(question: string) {
+  const normalized = question.trim().toLowerCase().replace(/[。．.!！?？\s]+$/g, "");
+  if (/^(ありがとう|ありがとうございます|ありがとうございました|どうもありがとう|助かりました)$/.test(normalized)) {
+    return "どういたしまして。また分からないことがあれば、いつでも質問してください。";
+  }
+  return "";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const authorization = request.headers.get("authorization") || "";
@@ -80,6 +88,8 @@ export async function POST(request: NextRequest) {
     const question = String(body?.question || "").trim();
     if (!question) return NextResponse.json({ error: "質問を入力してください。" }, { status: 400 });
     if (question.length > 300) return NextResponse.json({ error: "質問は300文字以内で入力してください。" }, { status: 400 });
+    const courtesyAnswer = answerCourtesyMessage(question);
+    if (courtesyAnswer) return NextResponse.json({ answer: courtesyAnswer });
     const history: ChatMessage[] = (Array.isArray(body?.history) ? body.history : [])
       .slice(-6)
       .flatMap((item: any) => {
@@ -106,7 +116,7 @@ export async function POST(request: NextRequest) {
         text: { verbosity: "medium" },
         max_output_tokens: 700,
         safety_identifier: createHash("sha256").update(userData.user.id).digest("hex"),
-        instructions: `あなたはel-townの${roleLabel}向け操作サポート担当です。次の案内を根拠に、日本語で分かりやすく回答してください。最初に結論を示し、その後に「押すボタンの順番」と具体的な操作手順を説明してください。変更できるか、やり直せるか、見つからない場合の確認方法も、案内から判断できる範囲で補足してください。直前の会話を踏まえて追加質問にも答えてください。案内にない仕様を推測せず、確認できない内容だけは町内会・自治会の役員への問い合わせを案内してください。個人情報、パスワード、カード番号、APIキーの入力を求めないでください。総会は必ずLiveから案内し、回覧板からは案内しないでください。\n\n${guide}`,
+        instructions: `あなたはel-townの${roleLabel}向け操作サポート担当です。次の案内を根拠に、日本語で分かりやすく回答してください。最初に結論を示し、その後に「押すボタンの順番」と具体的な操作手順を説明してください。変更できるか、やり直せるか、見つからない場合の確認方法も、案内から判断できる範囲で補足してください。直前の会話を踏まえて追加質問にも答えてください。ただし、挨拶やお礼だけの入力には短く自然に返し、直前の操作説明を繰り返さないでください。案内にない仕様を推測せず、確認できない内容だけは町内会・自治会の役員への問い合わせを案内してください。個人情報、パスワード、カード番号、APIキーの入力を求めないでください。総会は必ずLiveから案内し、回覧板からは案内しないでください。\n\n${guide}`,
         input: [...history, { role: "user", content: question }],
       }),
       signal: AbortSignal.timeout(20_000),

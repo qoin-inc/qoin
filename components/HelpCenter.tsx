@@ -53,7 +53,17 @@ const adminSuggestions = [
   { label: "役員を追加", icon: "fa-user-plus" },
 ];
 
+function answerCourtesyMessage(question: string) {
+  const normalized = question.trim().toLowerCase().replace(/[。．.!！?？\s]+$/g, "");
+  if (/^(ありがとう|ありがとうございます|ありがとうございました|どうもありがとう|助かりました)$/.test(normalized)) {
+    return "どういたしまして。また分からないことがあれば、いつでも質問してください。";
+  }
+  return "";
+}
+
 function answerHelpQuestion(audience: HelpAudience, question: string) {
+  const courtesyAnswer = answerCourtesyMessage(question);
+  if (courtesyAnswer) return courtesyAnswer;
   const normalized = question.trim().toLowerCase();
   if (!normalized) return "質問を入力してください。";
   if (audience === "member") {
