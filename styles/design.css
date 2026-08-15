@@ -300,13 +300,24 @@ button { cursor: pointer; border: 0; }
 .help-center-bot-answer { min-height: 82px; padding: 14px; display: grid; grid-template-columns: 30px 1fr; gap: 10px; border-radius: 12px; background: #f8fafc; color: #334155; }
 .help-center-bot-answer > i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #e0f2fe; color: #0284c7; }
 .help-center-bot-answer p { margin: 2px 0 0; font-size: 13px; line-height: 1.7; font-weight: 750; }
+.help-center-section-label { margin: 14px 0 8px; color: #334155; font-size: 12px; font-weight: 900; }
 .help-center-suggestions { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 7px; }
-.help-center-suggestions button { min-height: 34px; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 999px; background: #fff; color: #475569; font-size: 11px; font-weight: 850; }
+.help-center-suggestions button { min-height: 34px; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 999px; display: flex; align-items: center; gap: 7px; background: #fff; color: #475569; font-size: 11px; font-weight: 850; text-align: left; }
+.help-center-suggestions button > i { color: #0284c7; }
+.help-center-suggestions button strong, .help-center-suggestions button small { display: block; }
+.help-center-suggestions button small { margin-top: 2px; color: #64748b; font-size: 9px; line-height: 1.35; }
+.help-center-suggestions.is-operation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.help-center-suggestions.is-operation-grid button { min-height: 58px; padding: 9px 10px; border-color: #dbeafe; border-radius: 11px; background: #f8fbff; }
+.help-center-suggestions.is-operation-grid button > i { width: 24px; flex: 0 0 24px; text-align: center; font-size: 16px; }
+.help-center-suggestions.is-operation-grid button strong { color: #334155; font-size: 11px; }
 .help-center-form label { display: block; margin-bottom: 6px; color: #475569; font-size: 12px; font-weight: 900; }
 .help-center-form > div { display: grid; grid-template-columns: 1fr 44px; gap: 7px; }
 .help-center-form input { min-width: 0; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 9px; padding: 9px 11px; color: #1f2937; background: #fff; font-size: 14px; }
 .help-center-form button { min-height: 44px; border: 0; border-radius: 9px; background: #0284c7; color: #fff; }
 .help-center-note { display: block; margin-top: 8px; color: #94a3b8; font-size: 10px; font-weight: 700; }
+@media (max-width: 420px) {
+  .help-center-suggestions.is-operation-grid { grid-template-columns: 1fr; }
+}
 
 .admin-dashboard { width: min(1040px, 100%); margin: 0 auto; padding: 0 16px 36px; }
 .admin-hero { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; box-shadow: var(--shadow); margin-bottom: 18px; }
