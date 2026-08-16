@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import dynamic from 'next/dynamic';
 import LiffProvider from '@/components/LiffProvider';
+import HelpCenter from '@/components/HelpCenter';
 import '@/styles/homepage.css';
 import { useRouter } from 'next/navigation';
 // Direct LIFF import removed; will use window.liff within DynamicLiffProvider
@@ -344,6 +345,7 @@ const renderPostCard = (post: any) => {
         {/* ヘッダー (flex-shrink-0 を追加して潰れ・めり込みを防止、左矢印を削除、スリム化) */}
         <div className="portal-header">
           <h1>マイel-town</h1>
+          <HelpCenter audience="portal" showLabel={false} className="portal-header-help" />
         </div>
 
         {/* コンテンツエリア (スクロール領域) */}

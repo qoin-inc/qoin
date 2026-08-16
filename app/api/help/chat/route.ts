@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-type HelpAudience = "member" | "admin";
+type HelpAudience = "member" | "portal" | "admin";
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 const MEMBER_GUIDE = `
@@ -22,6 +22,16 @@ const ADMIN_GUIDE = `
 - 会費の請求と入金状況は「基本機能」→「会費管理」で確認する。決済連携は「Stripe連携」で行う。
 - 役員の招待は「基本機能」→「役員管理」で行う。
 - Live配信URL、総会、施設登録、予約承認は「Live・施設予約」で管理する。
+`;
+
+const PORTAL_GUIDE = `
+- ボタン階層: 画面下の主ボタンは「食べ・映えel-town」「伝えel-town」「マイel-town」。その下の「メニューを閉じる」「メニューを開く」で3つの主ボタンを隠したり戻したりできる。
+- 食べ・映えel-town: お店、グルメ、景色などのおすすめ投稿を表示する。投稿内の町内会・自治会名を押すと、その地域を地図で開ける。
+- 伝えel-town: 町内会・自治会の行事や活動の投稿を表示する。投稿内の町内会・自治会名を押すと、その地域を地図で開ける。
+- 投稿: 「食べ・映えel-town」または「伝えel-town」を選び、右下の鉛筆ボタンを押す。投稿の種類を選び、ニックネーム、タイトル、アピール内容を入力して「発信する」を押す。場所と写真は任意。
+- 投稿の編集・削除: 自分の投稿だけ、投稿右上の鉛筆ボタンから編集、ごみ箱ボタンから削除できる。編集後は「更新する」を押す。削除した投稿は元に戻せない。
+- マイel-town: 地図上の町内会・自治会を押すと、その地域の投稿欄が開く。「閉じる」「開く」で投稿欄をたたんだり表示したりでき、右上の×で地域の選択を終了する。新しい投稿は投稿欄の下に表示される。
+- 迷った場合: 最初に押す画面下のボタン、その次に押すボタン、最後に行う操作の順で説明する。案内にない仕様は推測しない。
 `;
 
 const requestLog = new Map<string, number[]>();
@@ -84,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const audience: HelpAudience = body?.audience === "admin" ? "admin" : "member";
+    const audience: HelpAudience = body?.audience === "admin" ? "admin" : body?.audience === "portal" ? "portal" : "member";
     const question = String(body?.question || "").trim();
     if (!question) return NextResponse.json({ error: "質問を入力してください。" }, { status: 400 });
     if (question.length > 300) return NextResponse.json({ error: "質問は300文字以内で入力してください。" }, { status: 400 });
@@ -101,8 +111,8 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.OPENAI_API_KEY || "";
     if (!apiKey) return NextResponse.json({ error: "AIヘルプを準備中です。" }, { status: 503 });
 
-    const guide = audience === "member" ? MEMBER_GUIDE : ADMIN_GUIDE;
-    const roleLabel = audience === "member" ? "会員" : "役員";
+    const guide = audience === "member" ? MEMBER_GUIDE : audience === "portal" ? PORTAL_GUIDE : ADMIN_GUIDE;
+    const roleLabel = audience === "member" ? "会員" : audience === "portal" ? "マイel-town利用者" : "役員";
     const openAIResponse = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -116,7 +126,7 @@ export async function POST(request: NextRequest) {
         text: { verbosity: "medium" },
         max_output_tokens: 700,
         safety_identifier: createHash("sha256").update(userData.user.id).digest("hex"),
-        instructions: `あなたはel-townの${roleLabel}向け操作サポート担当です。次の案内を根拠に、日本語で分かりやすく回答してください。最初に結論を示し、その後に「押すボタンの順番」と具体的な操作手順を説明してください。変更できるか、やり直せるか、見つからない場合の確認方法も、案内から判断できる範囲で補足してください。直前の会話を踏まえて追加質問にも答えてください。ただし、挨拶やお礼だけの入力には短く自然に返し、直前の操作説明を繰り返さないでください。案内にない仕様を推測せず、確認できない内容だけは町内会・自治会の役員への問い合わせを案内してください。個人情報、パスワード、カード番号、APIキーの入力を求めないでください。総会は必ずLiveから案内し、回覧板からは案内しないでください。\n\n${guide}`,
+        instructions: `あなたはel-townの${roleLabel}向け操作サポート担当です。次の案内を根拠に、日本語で分かりやすく回答してください。最初に結論を示し、その後に「押すボタンの順番」と具体的な操作手順を説明してください。変更できるか、やり直せるか、見つからない場合の確認方法も、案内から判断できる範囲で補足してください。直前の会話を踏まえて追加質問にも答えてください。ただし、挨拶やお礼だけの入力には短く自然に返し、直前の操作説明を繰り返さないでください。案内にない仕様を推測せず、確認できない内容だけは町内会・自治会の役員への問い合わせを案内してください。個人情報、パスワード、カード番号、APIキーの入力を求めないでください。会員画面について回答する場合、総会は必ずLiveから案内し、回覧板からは案内しないでください。\n\n${guide}`,
         input: [...history, { role: "user", content: question }],
       }),
       signal: AbortSignal.timeout(20_000),

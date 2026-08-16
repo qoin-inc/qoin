@@ -4,10 +4,10 @@ import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-type HelpAudience = "member" | "admin";
+type HelpAudience = "member" | "portal" | "admin";
 type ChatMessage = { role: "user" | "assistant"; content: string };
 type HelpOperation = { label: string; description: string; answer: string };
-type MemberCategory = { id: string; label: string; description: string; icon: string; operations: HelpOperation[] };
+type HelpCategory = { id: string; label: string; description: string; icon: string; operations: HelpOperation[] };
 
 type HelpCenterProps = {
   audience: HelpAudience;
@@ -15,7 +15,7 @@ type HelpCenterProps = {
   className?: string;
 };
 
-const memberCategories: MemberCategory[] = [
+const memberCategories: HelpCategory[] = [
   {
     id: "board", label: "回覧板", description: "全て・電子回覧板・連絡・イベント", icon: "fa-clipboard-list",
     operations: [
@@ -42,6 +42,38 @@ const memberCategories: MemberCategory[] = [
     id: "settings", label: "設定", description: "退会申請", icon: "fa-gear",
     operations: [
       { label: "退会申請", description: "会員登録を終了", answer: "「設定」→「退会申請」を押し、画面の案内に従って申請してください。退会すると、この町内会・自治会の会員画面を利用できなくなります。" },
+    ],
+  },
+];
+
+const portalCategories: HelpCategory[] = [
+  {
+    id: "food", label: "食べ・映えel-town", description: "お店・グルメ・景色の情報", icon: "fa-camera-retro",
+    operations: [
+      { label: "投稿を見る", description: "地域のおすすめ情報を見る", answer: "画面下の「食べ・映えel-town」を押すと、お店・グルメ・景色などの投稿が表示されます。投稿内の町内会・自治会名を押すと、その地域を地図で確認できます。" },
+      { label: "情報を発信する", description: "おすすめ情報を投稿", answer: "画面下の「食べ・映えel-town」を押し、右下の鉛筆ボタンを押します。「食べ・映えel-town」を選び、ニックネーム、お店・スポット名、アピール内容を入力して「発信する」を押してください。場所と写真は任意です。" },
+    ],
+  },
+  {
+    id: "sight", label: "伝えel-town", description: "町内会・自治会の活動情報", icon: "fa-bullhorn",
+    operations: [
+      { label: "活動情報を見る", description: "行事・活動の投稿を見る", answer: "画面下の「伝えel-town」を押すと、町内会・自治会の行事や活動に関する投稿が表示されます。投稿内の町内会・自治会名を押すと、その地域を地図で確認できます。" },
+      { label: "活動情報を発信する", description: "行事・活動を投稿", answer: "画面下の「伝えel-town」を押し、右下の鉛筆ボタンを押します。「伝えel-town」を選び、ニックネーム、行事・活動のタイトル、アピール内容を入力して「発信する」を押してください。開催場所と写真は任意です。" },
+    ],
+  },
+  {
+    id: "map", label: "マイel-town", description: "地図・地域ごとの投稿", icon: "fa-map-marked-alt",
+    operations: [
+      { label: "地図から地域を探す", description: "町内会・自治会を選ぶ", answer: "画面下の「マイel-town」を押し、地図上の町内会・自治会を押してください。選んだ地域の投稿欄が開き、新しい投稿が下に表示されます。" },
+      { label: "地域の投稿を開閉する", description: "投稿欄を広く見る・閉じる", answer: "地図で地域を選ぶと投稿欄が開きます。「閉じる」「開く」で投稿欄をたたんだり表示したりできます。右上の×を押すと地域の選択を終了します。" },
+    ],
+  },
+  {
+    id: "manage", label: "投稿の管理", description: "自分の投稿を編集・削除", icon: "fa-pen-to-square",
+    operations: [
+      { label: "投稿を編集する", description: "自分の投稿内容を変更", answer: "「食べ・映えel-town」または「伝えel-town」で自分の投稿を表示し、投稿右上の鉛筆ボタンを押します。内容を直して「更新する」を押してください。" },
+      { label: "投稿を削除する", description: "自分の投稿を削除", answer: "「食べ・映えel-town」または「伝えel-town」で自分の投稿を表示し、投稿右上のごみ箱ボタンを押します。確認画面で削除を確定してください。削除した投稿は元に戻せません。" },
+      { label: "下のメニューを開閉する", description: "表示範囲を広げる", answer: "画面下の「メニューを閉じる」を押すと、3つのメニューボタンが隠れて表示範囲が広がります。もう一度「メニューを開く」を押すと元に戻ります。" },
     ],
   },
 ];
@@ -76,6 +108,14 @@ function answerHelpQuestion(audience: HelpAudience, question: string) {
     if (/設定|退会|登録情報|名前|家族|プロフィール/.test(normalized)) return "画面下の「設定」を押すと、登録情報と家族の連携状況を確認できます。退会は「退会手続き」から申請してください。";
     return "このヘルプでは確認できないため、町内会・自治会の役員へお問い合わせください。";
   }
+  if (audience === "portal") {
+    if (/編集|修正|変更/.test(normalized)) return "「食べ・映えel-town」または「伝えel-town」で自分の投稿を表示し、投稿右上の鉛筆ボタンを押します。内容を直して「更新する」を押してください。";
+    if (/削除|消す/.test(normalized)) return "自分の投稿の右上にあるごみ箱ボタンを押し、確認画面で削除を確定してください。削除した投稿は元に戻せません。";
+    if (/投稿|発信|写真|おすすめ|グルメ|景色/.test(normalized)) return "画面下の「食べ・映えel-town」または「伝えel-town」を押し、右下の鉛筆ボタンを押します。投稿の種類を選び、必須項目を入力して「発信する」を押してください。";
+    if (/地図|地域|町内会|自治会|場所/.test(normalized)) return "画面下の「マイel-town」を押し、地図上の町内会・自治会を押してください。選んだ地域の投稿欄が開きます。";
+    if (/メニュー|広く|閉じる|開く/.test(normalized)) return "画面下の「メニューを閉じる」を押すと表示範囲が広がります。「メニューを開く」を押すと3つのメニューボタンが戻ります。";
+    return "このヘルプでは確認できないため、町内会・自治会の役員へお問い合わせください。";
+  }
   if (/回覧|配信|お知らせ|連絡|イベント/.test(normalized)) return "「発信機能」を開き、配信種別を選んで作成します。";
   if (/会員|名簿|世帯/.test(normalized)) return "「基本機能」→「会員管理」から、会員名簿の確認・登録・修正を行えます。";
   if (/会費|支払|決済|stripe/.test(normalized)) return "「基本機能」→「会費管理」から請求と入金状況を確認できます。";
@@ -97,8 +137,9 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   const chatLogRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const helpSessionRef = useRef(0);
-  const selectedCategory = memberCategories.find((category) => category.id === selectedCategoryId);
-  const title = audience === "member" ? "会員の方のヘルプ" : "役員の方のヘルプ";
+  const operationCategories = audience === "portal" ? portalCategories : memberCategories;
+  const selectedCategory = operationCategories.find((category) => category.id === selectedCategoryId);
+  const title = audience === "member" ? "会員の方のヘルプ" : audience === "portal" ? "マイel-townのヘルプ" : "役員の方のヘルプ";
   const isAiChatActive = chatMessages.length > 1 || asking;
 
   const resetHelpState = useCallback(() => {
@@ -185,7 +226,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
               {!isAiChatActive && (
                 <>
                   <div className="help-center-bot-answer" aria-live="polite"><i className="fas fa-circle-info" /><p>{operationAnswer}</p></div>
-                  {audience === "member" ? (
+                  {audience !== "admin" ? (
                     selectedCategory ? (
                       <div className="help-center-operation-level">
                         <button type="button" className="help-center-level-back" onClick={() => { setSelectedCategoryId(""); setOperationAnswer(initialOperationAnswer); }}><i className="fas fa-chevron-left" /> 操作カテゴリへ戻る</button>
@@ -202,7 +243,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
                       <>
                         <p className="help-center-section-label">知りたい操作を選ぶ</p>
                         <div className="help-center-suggestions is-operation-grid" aria-label="知りたい操作を選ぶ">
-                          {memberCategories.map((category) => (
+                          {operationCategories.map((category) => (
                             <button key={category.id} type="button" onClick={() => { setSelectedCategoryId(category.id); setOperationAnswer(`「${category.label}」の中から、確認したい操作を選んでください。`); }}>
                               <i className={`fas ${category.icon}`} aria-hidden="true" /><span><strong>{category.label}</strong><small>{category.description}</small></span><i className="fas fa-chevron-right help-center-category-arrow" aria-hidden="true" />
                             </button>
@@ -228,7 +269,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
                 </div>
                 <form className="help-center-form" onSubmit={handleSubmit}>
                   <label htmlFor={`help-question-${audience}`}>質問を入力</label><div>
-                    <input id={`help-question-${audience}`} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="例：会費の領収書はどこですか？" maxLength={300} disabled={asking} />
+                    <input id={`help-question-${audience}`} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={audience === "portal" ? "例：おすすめ情報はどう投稿しますか？" : "例：会費の領収書はどこですか？"} maxLength={300} disabled={asking} />
                     <button type="submit" aria-label="質問を送る" disabled={asking || !question.trim()}><i className="fas fa-paper-plane" /></button>
                   </div>
                 </form>
