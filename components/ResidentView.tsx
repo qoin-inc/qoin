@@ -464,6 +464,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const boardFeedEndRef = useRef<HTMLDivElement | null>(null);
+  const residentScrollRef = useRef<HTMLElement | null>(null);
   const calendarSelectionRef = useRef<HTMLElement | null>(null);
   const readStorageKey = `eltown.circularReads.${townId || "town"}.${userId || residentName || "resident"}`;
 
@@ -557,7 +558,16 @@ export default function ResidentView({ townId, townName, residentName, userId, r
 
   useEffect(() => {
     if (!loading && (!openTargetId || openTargetId === "latest") && activeTab === "board" && boardViewMode === "cards") {
-      boardFeedEndRef.current?.scrollIntoView({ block: "end" });
+      let secondFrame = 0;
+      const frame = window.requestAnimationFrame(() => {
+        secondFrame = window.requestAnimationFrame(() => {
+          if (residentScrollRef.current) residentScrollRef.current.scrollTop = residentScrollRef.current.scrollHeight;
+        });
+      });
+      return () => {
+        window.cancelAnimationFrame(frame);
+        window.cancelAnimationFrame(secondFrame);
+      };
     }
   }, [activeTab, boardFilter, boardViewMode, loading, openTargetId]);
 
@@ -1597,7 +1607,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
 
   return (
     <div className="el-phone-screen">
-      <main className={`el-scroll-area ${showViewModeSwitch ? "has-view-switch" : ""}`}>
+      <main ref={residentScrollRef} className={`el-scroll-area ${showViewModeSwitch ? "has-view-switch" : ""}`}>
         {activeTab === "board" && (
           <section className="el-stack">
             <div className="el-board-title">
@@ -1660,10 +1670,11 @@ export default function ResidentView({ townId, townName, residentName, userId, r
               </div>
             ) : (
               <div className="el-board-feed">
-                {boardItems.map((item) => {
+                {boardItems.map((item, index) => {
                   const attachments = parseAttachmentList(item);
                   const previewImage = attachments.find(isImageAttachment);
                   const isRead = item.is_read || readCircularIds.has(String(item.id));
+                  const isLatestItem = index === boardItems.length - 1;
                   return (
                     <article key={item.id} data-circular-id={String(item.id)} className={`el-board-card ${item.category || "circular"}`}>
                       <div className="el-board-meta">
@@ -1677,7 +1688,17 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                         <h3>{item.title} {attachments.length > 0 && <i className="fas fa-paperclip" />}</h3>
                         {item.category === "event" && <div className="el-card-event-date"><i className="fas fa-calendar-alt" /> 開催日時：{eventSchedule(item)}</div>}
                         <p>{bodyText(item)}</p>
-                        {previewImage && <img className="el-board-thumb" src={previewImage.url} alt={previewImage.name || item.title || "添付画像"} />}
+                        {previewImage && <img
+                          className="el-board-thumb"
+                          src={previewImage.url}
+                          alt={previewImage.name || item.title || "添付画像"}
+                          onLoad={() => {
+                            if (!isLatestItem || (openTargetId && openTargetId !== "latest")) return;
+                            window.requestAnimationFrame(() => {
+                              if (residentScrollRef.current) residentScrollRef.current.scrollTop = residentScrollRef.current.scrollHeight;
+                            });
+                          }}
+                        />}
                         <em>詳細を確認する <i className="fas fa-chevron-right" /></em>
                       </button>
                     </article>

@@ -11,10 +11,13 @@ import { useRouter } from 'next/navigation';
 
 // Leafletを使用するコンポーネントはSSRを無効化する
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false });
+const PORTAL_POST_SELECT = 'id, neighborhood_id, user_auth_id, nickname, title, content, location_info, image_url, category, created_at, neighborhoods(name, lat, lng)';
+const INITIAL_POST_LIMIT = 100;
 
 export default function PortalPage() {
   const router = useRouter();
   const showLatestOnOpenRef = useRef(false);
+  const latestPostIdRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [town, setTown] = useState<any>(null);
@@ -55,10 +58,16 @@ export default function PortalPage() {
 
   useEffect(() => {
     if (loading || (activeTab !== 'food' && activeTab !== 'sight')) return;
+    let secondFrame = 0;
     const frame = window.requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ block: 'end' });
+      secondFrame = window.requestAnimationFrame(() => {
+        if (contentRef.current) contentRef.current.scrollTop = contentRef.current.scrollHeight;
+      });
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(secondFrame);
+    };
   }, [activeTab, loading, posts]);
 
   useEffect(() => {
@@ -131,8 +140,9 @@ export default function PortalPage() {
     const [{ data: postsData }, { data: neighborhoodsData }] = await Promise.all([
       supabase
         .from('public_posts')
-        .select('*, neighborhoods(name, lat, lng)')
-        .order('created_at', { ascending: true }),
+        .select(PORTAL_POST_SELECT)
+        .order('created_at', { ascending: false })
+        .limit(INITIAL_POST_LIMIT),
       supabase
         .from('neighborhoods')
         .select('id, name, lat, lng')
@@ -141,15 +151,17 @@ export default function PortalPage() {
     ]);
 
     if (postsData) {
-      setPosts(postsData);
+      const latestPost = postsData[0] || null;
+      const chronologicalPosts = [...postsData].reverse();
+      latestPostIdRef.current = latestPost?.id ? String(latestPost.id) : null;
+      setPosts(chronologicalPosts);
       if (showLatestOnOpenRef.current && postsData.length > 0) {
-        const latestPost = postsData[postsData.length - 1];
         if (latestPost.category === 'food' || latestPost.category === 'sight') setActiveTab(latestPost.category);
         setSelectedTownId(null);
       }
       
       const latestPostMap = new Map();
-      postsData.forEach(post => {
+      chronologicalPosts.forEach(post => {
         latestPostMap.set(post.neighborhood_id, {
           category: post.category,
           title: post.title,
@@ -160,6 +172,37 @@ export default function PortalPage() {
         ...item,
         latestPost: latestPostMap.get(item.id) || null,
       })));
+
+      // Show the latest posts first, then hydrate older history without
+      // blocking the initial screen in LINE's in-app browser.
+      if (postsData.length === INITIAL_POST_LIMIT) {
+        const oldestLoadedAt = postsData[postsData.length - 1]?.created_at;
+        if (oldestLoadedAt) {
+          window.setTimeout(async () => {
+            const { data: olderPosts } = await supabase
+              .from('public_posts')
+              .select(PORTAL_POST_SELECT)
+              .lt('created_at', oldestLoadedAt)
+              .order('created_at', { ascending: true });
+            if (!olderPosts?.length) return;
+
+            const allPosts = [...olderPosts, ...chronologicalPosts];
+            setPosts(allPosts);
+            const completeLatestPostMap = new Map();
+            allPosts.forEach((post: any) => {
+              completeLatestPostMap.set(post.neighborhood_id, {
+                category: post.category,
+                title: post.title,
+                nickname: post.nickname,
+              });
+            });
+            setTowns((neighborhoodsData || []).map((item: any) => ({
+              ...item,
+              latestPost: completeLatestPostMap.get(item.id) || null,
+            })));
+          }, 0);
+        }
+      }
     }
     setLoading(false);
   };
@@ -329,7 +372,16 @@ const renderPostCard = (post: any) => {
         {post.image_url && (
           <div className="portal-post-card-image">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.image_url} alt={`${post.title || '投稿'}の画像`} />
+            <img
+              src={post.image_url}
+              alt={`${post.title || '投稿'}の画像`}
+              onLoad={() => {
+                if (!showLatestOnOpenRef.current || String(post.id) !== latestPostIdRef.current) return;
+                window.requestAnimationFrame(() => {
+                  if (contentRef.current) contentRef.current.scrollTop = contentRef.current.scrollHeight;
+                });
+              }}
+            />
           </div>
         )}
       </article>

@@ -37,7 +37,9 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       const fallbackParams = new URLSearchParams({ line_error: reason });
       if (initialRedirectTarget === "portal" || initialRedirectTarget === "portal-latest") {
         fallbackParams.set("redirect_after", "portal");
-        if (initialRedirectTarget === "portal-latest") fallbackParams.set("latest", "1");
+        fallbackParams.set("latest", "1");
+      } else if (initialRedirectTarget === "resident") {
+        fallbackParams.set("open", "latest");
       } else if (initialRedirectTarget && initialRedirectTarget !== "resident") {
         fallbackParams.set("open", initialRedirectTarget);
       }
@@ -151,14 +153,14 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
         if (initialRedirectTarget === "resident") {
           await ensureSupabaseSessionFromLineProfile();
           window.sessionStorage.removeItem(LIFF_LOGIN_ATTEMPT_KEY);
-          router.replace("/resident/");
+          router.replace("/resident/?open=latest");
           return;
         }
 
         if (initialRedirectTarget === "portal" || initialRedirectTarget === "portal-latest") {
           await ensureSupabaseSessionFromLineProfile();
           window.sessionStorage.removeItem(LIFF_LOGIN_ATTEMPT_KEY);
-          router.replace(initialRedirectTarget === "portal-latest" ? "/portal?latest=1" : "/portal");
+          router.replace("/portal?latest=1");
           return;
         }
 
