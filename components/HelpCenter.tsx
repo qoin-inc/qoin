@@ -78,11 +78,46 @@ const portalCategories: HelpCategory[] = [
   },
 ];
 
-const adminSuggestions = [
-  { label: "電子回覧板を配信", icon: "fa-paper-plane" },
-  { label: "会員を管理", icon: "fa-users" },
-  { label: "会費を管理", icon: "fa-yen-sign" },
-  { label: "役員を追加", icon: "fa-user-plus" },
+const adminCategories: HelpCategory[] = [
+  {
+    id: "basic", label: "基本機能", description: "団体・会員・会費・役員・決済", icon: "fa-layer-group",
+    operations: [
+      { label: "基本情報", description: "団体情報を確認・変更", answer: "管理トップで「基本機能」→「基本情報」を押します。町内会・自治会名、決算月、世帯規模、郵便番号、代表者表示などを確認・変更し、保存してください。" },
+      { label: "会員管理", description: "名簿・連携・退会状態", answer: "管理トップで「基本機能」→「会員管理」を押します。連携済み会員、未連携名簿、家族アカウント、退会状態を確認し、必要な会員情報を登録・修正してください。" },
+      { label: "会費管理", description: "請求・入金・手集金", answer: "管理トップで「基本機能」→「会費管理」を押します。会費設定、年間請求額、納入額、支払い方法を確認できます。役員が現金を受け取った場合は、対象会員の手集金額を入力して保存してください。" },
+      { label: "システム利用料", description: "利用料・配信数を確認", answer: "管理トップで「基本機能」→「システム利用料」を押します。月額世帯単価、無料プッシュ枠、超過配信数、請求額を確認してください。" },
+      { label: "役員管理", description: "招待・再送・退任", answer: "管理トップで「基本機能」→「役員管理」を押します。候補者名とメールアドレスを入力して招待できます。招待中の役員には再送でき、在任中の役員は退任、退任済みの役員は復活できます。" },
+      { label: "Stripe連携", description: "オンライン決済の受付設定", answer: "管理トップで「基本機能」→「Stripe連携」を押します。Stripe Connectの登録状態と決済受付状態を確認し、未完了の場合は画面の案内に従って設定してください。" },
+    ],
+  },
+  {
+    id: "publish", label: "発信機能", description: "回覧板・連絡・イベント・総会", icon: "fa-paper-plane",
+    operations: [
+      { label: "電子回覧板", description: "資料を添えて会員へ配信", answer: "管理トップで「発信機能」→「電子回覧板」を押します。表題、発信者、本文を入力し、必要に応じてPDFや画像を添付します。LINEにも通知する場合は通知欄を確認してから保存してください。" },
+      { label: "連絡", description: "本文中心のお知らせを配信", answer: "管理トップで「発信機能」→「連絡」を押します。表題、発信者、本文を入力し、必要に応じて添付資料とLINE通知を設定して保存してください。" },
+      { label: "イベント", description: "開催案内・参加人数を受付", answer: "管理トップで「発信機能」→「イベント」を押します。表題、開催日、開催時間、本文を入力して保存します。配信後は参加者の大人・子供の人数を発信一覧で確認できます。" },
+      { label: "総会案内", description: "出欠・委任状を受付", answer: "管理トップで「発信機能」→「総会案内」を押します。総会日時、本文、委任状の文面を入力して保存します。配信後は出欠回答と委任状を発信一覧で確認できます。" },
+      { label: "発信を編集・削除", description: "配信済み内容を管理", answer: "管理トップの発信一覧で対象のカードを探し、「編集」または「削除」を押します。編集後は保存し直してください。削除した内容は元に戻せないため、対象を確認してから実行してください。" },
+    ],
+  },
+  {
+    id: "live", label: "Live・施設予約", description: "Web会議・施設・予約承認", icon: "fa-video",
+    operations: [
+      { label: "Web会議", description: "Live開催案内を登録", answer: "管理トップで「Live・施設予約」→「Web会議」を押します。LINEまたはYouTubeを選び、表題、開催日、時間、開催URL、内容を入力して案内を登録してください。必要に応じてLINE通知も設定できます。" },
+      { label: "施設登録", description: "予約対象施設と利用条件", answer: "管理トップで「Live・施設予約」→「施設予約」を押します。施設名、場所、規模、利用可能時間、利用できない曜日・日付を入力して施設を登録してください。" },
+      { label: "予約承認", description: "予約を承認・否認", answer: "管理トップの「Live・施設予約」または総合ビューの施設予約管理を開きます。施設、状態、月、日で絞り込み、対象予約の「承認」「否認」「解除」を押してください。" },
+      { label: "登録内容の変更", description: "Web会議・施設を編集", answer: "管理トップの一覧から対象のWeb会議または施設を探し、「編集」または「修正」を押します。内容を変更して更新してください。削除する場合は対象を十分に確認してください。" },
+    ],
+  },
+  {
+    id: "accounting", label: "総会会計", description: "科目・予算・決算・帳票", icon: "fa-chart-pie",
+    operations: [
+      { label: "科目管理", description: "収入・支出科目を設定", answer: "管理トップで「総会会計」→「科目管理」を押します。収入・支出の科目や補助科目を追加・編集し、表示順を設定してください。" },
+      { label: "予算書作成", description: "年度予算を入力", answer: "管理トップで「総会会計」→「予算書作成」を押します。会計年度を選び、各科目の予算額と備考を入力して保存してください。" },
+      { label: "決算書作成", description: "収入・支出実績を入力", answer: "管理トップで「総会会計」→「決算書作成」を押します。会計年度と対象期間を確認し、科目、日付、金額、内容を入力して保存してください。" },
+      { label: "CSV・PDF・印刷", description: "会計帳票を出力", answer: "管理トップで「総会会計」を開き、年度と集計内容を確認します。「予算CSV」「決算CSV」「予算PDF/印刷」「決算PDF/印刷」から必要な形式を選んでください。" },
+    ],
+  },
 ];
 
 function answerCourtesyMessage(question: string) {
@@ -116,11 +151,17 @@ function answerHelpQuestion(audience: HelpAudience, question: string) {
     if (/メニュー|広く|閉じる|開く/.test(normalized)) return "画面下の「メニューを閉じる」を押すと表示範囲が広がります。「メニューを開く」を押すと3つのメニューボタンが戻ります。";
     return "このヘルプでは確認できないため、町内会・自治会の役員へお問い合わせください。";
   }
-  if (/回覧|配信|お知らせ|連絡|イベント/.test(normalized)) return "「発信機能」を開き、配信種別を選んで作成します。";
-  if (/会員|名簿|世帯/.test(normalized)) return "「基本機能」→「会員管理」から、会員名簿の確認・登録・修正を行えます。";
-  if (/会費|支払|決済|stripe/.test(normalized)) return "「基本機能」→「会費管理」から請求と入金状況を確認できます。";
-  if (/役員|招待|管理者/.test(normalized)) return "「基本機能」→「役員管理」から役員を招待できます。";
-  if (/live|ライブ|施設|予約/.test(normalized)) return "「Live・施設予約」から配信URL、施設、予約を管理できます。";
+  if (/総会.*(会計|予算|決算|科目)|予算|決算|科目|csv|印刷/.test(normalized)) return "管理トップで「総会会計」を押します。科目管理、予算書作成、決算書作成、CSV・PDF出力から必要な操作を選んでください。";
+  if (/総会|委任状|出欠/.test(normalized)) return "管理トップで「発信機能」→「総会案内」を押し、総会日時、本文、委任状文面を入力して保存します。配信後の出欠と委任状は発信一覧で確認できます。";
+  if (/回覧|配信|お知らせ|連絡|イベント/.test(normalized)) return "管理トップで「発信機能」を押し、「電子回覧板」「連絡」「イベント」から配信種別を選んで作成してください。";
+  if (/会員|名簿|世帯|退会/.test(normalized)) return "管理トップで「基本機能」→「会員管理」を押すと、会員名簿、LINE連携、家族アカウント、退会状態を確認・管理できます。";
+  if (/システム利用料|プッシュ|超過/.test(normalized)) return "管理トップで「基本機能」→「システム利用料」を押すと、月額世帯単価、無料プッシュ枠、超過配信数、請求額を確認できます。";
+  if (/会費|支払|入金|手集金/.test(normalized)) return "管理トップで「基本機能」→「会費管理」を押すと、会費設定、請求額、入金状況、手集金を管理できます。";
+  if (/stripe|決済|paypay/.test(normalized)) return "管理トップで「基本機能」→「Stripe連携」を押し、Connect登録と決済受付状態を確認してください。";
+  if (/役員|招待|管理者/.test(normalized)) return "管理トップで「基本機能」→「役員管理」を押すと、役員の招待、再送、退任、復活を行えます。";
+  if (/live|ライブ|web会議|ウェブ会議/.test(normalized)) return "管理トップで「Live・施設予約」→「Web会議」を押し、開催種別、表題、日時、URL、内容を入力して登録してください。";
+  if (/施設|予約|承認|否認/.test(normalized)) return "管理トップで「Live・施設予約」→「施設予約」を押します。施設の登録・変更と、会員からの予約の承認・否認を行えます。";
+  if (/基本情報|団体情報|決算月|郵便番号/.test(normalized)) return "管理トップで「基本機能」→「基本情報」を押し、団体名、決算月、世帯規模、郵便番号、代表者表示を確認・変更してください。";
   return "このヘルプでは確認できないため、操作マニュアルを確認してください。";
 }
 
@@ -137,7 +178,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   const chatLogRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const helpSessionRef = useRef(0);
-  const operationCategories = audience === "portal" ? portalCategories : memberCategories;
+  const operationCategories = audience === "portal" ? portalCategories : audience === "admin" ? adminCategories : memberCategories;
   const selectedCategory = operationCategories.find((category) => category.id === selectedCategoryId);
   const title = audience === "member" ? "会員の方のヘルプ" : audience === "portal" ? "マイel-townのヘルプ" : "役員の方のヘルプ";
   const isAiChatActive = chatMessages.length > 1 || asking;
@@ -226,35 +267,29 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
               {!isAiChatActive && (
                 <>
                   <div className="help-center-bot-answer" aria-live="polite"><i className="fas fa-circle-info" /><p>{operationAnswer}</p></div>
-                  {audience !== "admin" ? (
-                    selectedCategory ? (
-                      <div className="help-center-operation-level">
-                        <button type="button" className="help-center-level-back" onClick={() => { setSelectedCategoryId(""); setOperationAnswer(initialOperationAnswer); }}><i className="fas fa-chevron-left" /> 操作カテゴリへ戻る</button>
-                        <p className="help-center-section-label">{selectedCategory.label}</p>
-                        <div className="help-center-operation-list" aria-label={`${selectedCategory.label}の操作`}>
-                          {selectedCategory.operations.map((operation) => (
-                            <button key={operation.label} type="button" onClick={() => setOperationAnswer(operation.answer)}>
-                              <span><strong>{operation.label}</strong><small>{operation.description}</small></span><i className="fas fa-chevron-right" aria-hidden="true" />
-                            </button>
-                          ))}
-                        </div>
+                  {selectedCategory ? (
+                    <div className="help-center-operation-level">
+                      <button type="button" className="help-center-level-back" onClick={() => { setSelectedCategoryId(""); setOperationAnswer(initialOperationAnswer); }}><i className="fas fa-chevron-left" /> 操作カテゴリへ戻る</button>
+                      <p className="help-center-section-label">{selectedCategory.label}</p>
+                      <div className="help-center-operation-list" aria-label={`${selectedCategory.label}の操作`}>
+                        {selectedCategory.operations.map((operation) => (
+                          <button key={operation.label} type="button" onClick={() => setOperationAnswer(operation.answer)}>
+                            <span><strong>{operation.label}</strong><small>{operation.description}</small></span><i className="fas fa-chevron-right" aria-hidden="true" />
+                          </button>
+                        ))}
                       </div>
-                    ) : (
-                      <>
-                        <p className="help-center-section-label">知りたい操作を選ぶ</p>
-                        <div className="help-center-suggestions is-operation-grid" aria-label="知りたい操作を選ぶ">
-                          {operationCategories.map((category) => (
-                            <button key={category.id} type="button" onClick={() => { setSelectedCategoryId(category.id); setOperationAnswer(`「${category.label}」の中から、確認したい操作を選んでください。`); }}>
-                              <i className={`fas ${category.icon}`} aria-hidden="true" /><span><strong>{category.label}</strong><small>{category.description}</small></span><i className="fas fa-chevron-right help-center-category-arrow" aria-hidden="true" />
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )
+                    </div>
                   ) : (
-                    <><p className="help-center-section-label">よくある質問</p><div className="help-center-suggestions" aria-label="よくある質問">
-                      {adminSuggestions.map((suggestion) => <button key={suggestion.label} type="button" onClick={() => setOperationAnswer(answerHelpQuestion("admin", suggestion.label))}><i className={`fas ${suggestion.icon}`} /><strong>{suggestion.label}</strong></button>)}
-                    </div></>
+                    <>
+                      <p className="help-center-section-label">知りたい操作を選ぶ</p>
+                      <div className="help-center-suggestions is-operation-grid" aria-label="知りたい操作を選ぶ">
+                        {operationCategories.map((category) => (
+                          <button key={category.id} type="button" onClick={() => { setSelectedCategoryId(category.id); setOperationAnswer(`「${category.label}」の中から、確認したい操作を選んでください。`); }}>
+                            <i className={`fas ${category.icon}`} aria-hidden="true" /><span><strong>{category.label}</strong><small>{category.description}</small></span><i className="fas fa-chevron-right help-center-category-arrow" aria-hidden="true" />
+                          </button>
+                        ))}
+                      </div>
+                    </>
                   )}
                 </>
               )}
@@ -269,7 +304,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
                 </div>
                 <form className="help-center-form" onSubmit={handleSubmit}>
                   <label htmlFor={`help-question-${audience}`}>質問を入力</label><div>
-                    <input id={`help-question-${audience}`} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={audience === "portal" ? "例：おすすめ情報はどう投稿しますか？" : "例：会費の領収書はどこですか？"} maxLength={300} disabled={asking} />
+                    <input id={`help-question-${audience}`} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={audience === "portal" ? "例：おすすめ情報はどう投稿しますか？" : audience === "admin" ? "例：電子回覧板はどう配信しますか？" : "例：会費の領収書はどこですか？"} maxLength={300} disabled={asking} />
                     <button type="submit" aria-label="質問を送る" disabled={asking || !question.trim()}><i className="fas fa-paper-plane" /></button>
                   </div>
                 </form>
