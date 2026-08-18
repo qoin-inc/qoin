@@ -4,12 +4,15 @@ import type { ReactNode } from "react";
 import { ManualSiteHeader } from "./ManualSiteHeader";
 import styles from "./OnboardingGuide.module.css";
 
-type Theme = "blue" | "green";
+type Theme = "blue" | "green" | "purple";
 
 type GuideStep = {
   title: string;
   text: string;
   visual: ReactNode;
+  points?: string[];
+  caution?: string;
+  link?: { href: string; label: string };
 };
 
 const themeStyles = {
@@ -31,6 +34,15 @@ const themeStyles = {
     button: "bg-[#168a51]",
     hover: "hover:text-[#168a51]",
   },
+  purple: {
+    soft: "bg-[#f0efff]",
+    pale: "bg-[#f7f6ff]",
+    text: "text-[#635bff]",
+    solid: "bg-[#635bff]",
+    border: "border-[#d8d5ff]",
+    button: "bg-[#635bff]",
+    hover: "hover:text-[#635bff]",
+  },
 };
 
 export function OnboardingGuide({
@@ -42,6 +54,8 @@ export function OnboardingGuide({
   time,
   preparation,
   steps,
+  processTitle = "画面を見ながら登録する",
+  processSubtitle = "実際に表示される画面を使って、操作順に説明します",
 }: {
   theme: Theme;
   audience: string;
@@ -51,6 +65,8 @@ export function OnboardingGuide({
   time: string;
   preparation: Array<{ icon: string; title: string; text: string }>;
   steps: GuideStep[];
+  processTitle?: string;
+  processSubtitle?: string;
 }) {
   const colors = themeStyles[theme];
 
@@ -93,7 +109,7 @@ export function OnboardingGuide({
         </section>
 
         <section>
-          <SectionTitle title="画面を見ながら登録する" subtitle="実際に表示される画面を使って、操作順に説明します" />
+          <SectionTitle title={processTitle} subtitle={processSubtitle} />
           <ol className={styles.stepList}>
             {steps.map((step, index) => {
               const visualFirst = index % 2 === 1;
@@ -108,6 +124,28 @@ export function OnboardingGuide({
                     </div>
                     <h3 className="text-xl font-black leading-8 text-[#203947]">{step.title}</h3>
                     <p className="mt-4 text-sm font-semibold leading-8 text-[#607b89]">{step.text}</p>
+                    {step.points && (
+                      <ul className="mt-5 space-y-2 text-sm font-bold leading-7 text-[#46606d]">
+                        {step.points.map((point) => (
+                          <li className="flex items-start gap-2" key={point}>
+                            <i className={`fas fa-check-circle mt-1.5 ${colors.text}`} aria-hidden="true" />
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {step.caution && (
+                      <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-6 text-amber-900">
+                        <i className="fas fa-triangle-exclamation mr-2 text-amber-600" aria-hidden="true" />
+                        {step.caution}
+                      </p>
+                    )}
+                    {step.link && (
+                      <Link href={step.link.href} className={`mt-5 inline-flex items-center rounded-xl border-2 bg-white px-4 py-3 text-sm font-black no-underline ${colors.border} ${colors.text}`}>
+                        <i className="fas fa-book-open mr-2" aria-hidden="true" />
+                        {step.link.label}
+                      </Link>
+                    )}
                   </div>
                   <div className={styles.stepVisual}>{step.visual}</div>
                 </li>

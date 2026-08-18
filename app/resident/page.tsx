@@ -155,7 +155,7 @@ function ResidentPageContent() {
     if (searchParams?.get('test_bypass') === '1') {
       setSession({ user: { id: 'test' }});
       setRoster({ full_name: 'デモ太郎', neighborhood_id: 1 });
-      setTown({ id: 1, name: 'デモ町内会・自治会' });
+      setTown({ id: 1, name: 'エルタウン町内会' });
       setLiffInitialized(true);
       setLoading(false);
       return;

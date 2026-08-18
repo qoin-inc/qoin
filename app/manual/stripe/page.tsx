@@ -1,600 +1,147 @@
-﻿'use client';
+import type { Metadata } from "next";
+import {
+  AnimatedAction,
+  AnimatedFormPreview,
+  OnboardingGuide,
+} from "../_components/OnboardingGuide";
+import { ManualAccessGate } from "../_components/ManualAccess";
 
-import React from 'react';
-import ManualViewer, { ManualStep } from '@/components/ManualViewer';
-import { ManualAccessGate } from '../_components/ManualAccess';
-
-/* ─────────────────── ステップ1：el-townがStripeを標準採用する理由 ─────────────────── */
-function Step1Content() {
-  const reasons = [
-    {
-      num: '1',
-      icon: 'fa-yen-sign',
-      title: '初期費用0円',
-      desc: '年会費決済時のみ手数料3.6%',
-      note: '※口座送金時 手数料240円/回 (2026/5現在)',
-      color: '#635BFF',
-    },
-    {
-      num: '2',
-      icon: 'fa-shield-alt',
-      title: 'セキュリティ万全',
-      desc: 'PCI DSS Level1 準拠',
-      note: '3Dセキュア・不正検知AI・TLS暗号化',
-      color: '#0A2540',
-    },
-    {
-      num: '3',
-      icon: 'fa-globe',
-      title: '世界500万社以上が採用',
-      desc: 'Amazon・Google・TOYOTA等が利用',
-      note: '日本でも多数の企業が導入済み',
-      color: '#00D4AA',
-    },
-    {
-      num: '4',
-      icon: 'fa-exchange-alt',
-      title: '現金とのハイブリッド対応',
-      desc: 'キャッシュレス＋現金をel-townで一括管理',
-      note: '',
-      color: '#FF6B35',
-    },
-  ];
-
-  return (
-    <div className="h-full bg-gradient-to-br from-[#635BFF] via-[#7A73FF] to-[#0A2540] flex flex-col p-5 overflow-y-auto">
-      {/* メインタイトル */}
-      <div className="text-center mb-5">
-        <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-2xl shadow-lg mb-3">
-          <i className="fab fa-stripe-s text-[#635BFF] text-3xl"></i>
-        </div>
-        <h2 className="text-white font-black text-lg md:text-xl leading-tight">
-          el-townがStripeを<br />標準採用する理由
-        </h2>
-        <div className="text-white/60 text-xs font-bold mt-1">世界最高水準のオンライン決済</div>
-      </div>
-
-      {/* 1〜4の理由 */}
-      <div className="space-y-2.5 flex-1">
-        {reasons.map((r, i) => (
-          <div
-            key={i}
-            className="bg-white rounded-xl p-3.5 shadow-lg flex items-start gap-3"
-          >
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-              style={{ backgroundColor: r.color }}
-            >
-              <span className="text-white font-black text-sm">{r.num}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-black text-gray-800 text-sm md:text-base">{r.title}</div>
-              <div className="text-sm text-gray-600 font-bold mt-0.5">{r.desc}</div>
-              {r.note && <div className="text-xs text-gray-400 font-bold mt-0.5">{r.note}</div>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ2：本番連携を開始する ─────────────────── */
-function Step2Content() {
-  return (
-    <div className="h-full bg-[#f0f2f5] flex flex-col">
-      {/* 管理画面ヘッダー */}
-      <div className="bg-[#2C3E50] text-white flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="font-black text-sm opacity-80">el-town</span>
-          <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold">管理画面</span>
-        </div>
-        <i className="fas fa-bars text-base"></i>
-      </div>
-
-      {/* タブ */}
-      <div className="bg-white border-b flex shrink-0">
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">基本情報</div>
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">通知設定</div>
-        <div className="px-4 py-3 text-sm font-black text-[#635BFF] border-b-2 border-[#635BFF]">オンライン集金</div>
-      </div>
-
-      {/* コンテンツ */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 mb-3">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-[#635BFF]/10 rounded-lg flex items-center justify-center">
-              <i className="fab fa-stripe-s text-[#635BFF] text-xl"></i>
-            </div>
-            <div>
-              <div className="font-black text-base text-gray-800">Stripe決済連携</div>
-              <div className="text-sm text-gray-400 font-bold">オンラインで会費を集金</div>
-            </div>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <div className="flex items-start gap-2">
-              <i className="fas fa-info-circle text-blue-500 text-sm mt-0.5"></i>
-              <p className="text-sm text-blue-700 font-bold leading-relaxed">
-                町内会・自治会は本番モードでStripe登録を行います。事前登録や環境切替の操作は不要です。
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-3 mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-              <span className="text-sm text-gray-500 font-bold">Stripe未連携</span>
-            </div>
-          </div>
-
-          <div className="relative">
-            <button className="w-full bg-[#635BFF] text-white font-black py-3.5 rounded-xl text-base shadow-md hover:bg-[#524AE8] transition flex items-center justify-center gap-2">
-              <i className="fab fa-stripe-s"></i>
-              Stripeアカウントを登録・連携する
-            </button>
-            <div className="absolute right-4 -bottom-2 text-5xl transform -rotate-12 animate-bounce drop-shadow-xl z-50">👆</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ3：Stripe登録画面の入力ポイント ─────────────────── */
-function Step3Content() {
-  const fields = [
-    { label: '事業形態', value: '個人事業主 / 非営利団体', highlight: true, note: 'いずれかを選択' },
-    { label: '法人番号', value: '（空欄でOK）', highlight: false, note: 'スキップ可能' },
-    { label: '代表者の氏名', value: '得留　太郎', highlight: true, note: '本人確認書類と一致' },
-    { label: '代表者の住所', value: '東京都○○区...', highlight: true, note: '本人確認書類と一致' },
-    { label: '銀行口座情報', value: '○○銀行 普通 1234567', highlight: true, note: '入金先口座' },
-  ];
-
-  return (
-    <div className="h-full bg-white flex flex-col">
-      {/* Stripe風ヘッダー */}
-      <div className="bg-[#0A2540] text-white flex items-center px-4 py-3 shrink-0">
-        <i className="fab fa-stripe text-3xl mr-2"></i>
-        <span className="font-bold text-base">アカウント登録</span>
-      </div>
-
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <div className="flex items-start gap-2">
-            <i className="fas fa-lightbulb text-blue-500 text-sm mt-0.5"></i>
-            <p className="text-sm text-blue-700 font-bold leading-relaxed">
-              入力のポイントを確認しましょう
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {fields.map((f, i) => (
-            <div
-              key={i}
-              className={`rounded-lg p-3 border ${f.highlight ? 'border-[#635BFF]/30 bg-[#635BFF]/5' : 'border-gray-200 bg-gray-50'}`}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-black text-gray-700">{f.label}</label>
-                {f.highlight && (
-                  <span className="text-xs bg-[#635BFF] text-white px-2 py-0.5 rounded font-bold">重要</span>
-                )}
-              </div>
-              <div className="bg-white border rounded px-3 py-2 text-sm text-gray-600 font-bold">
-                {f.value}
-              </div>
-              <div className="text-xs text-gray-400 font-bold mt-1 flex items-center gap-1">
-                <i className="fas fa-arrow-right text-xs"></i>{f.note}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ4：本番連携の完了 ─────────────────── */
-function Step4Content() {
-  return (
-    <div className="h-full bg-[#f0f2f5] flex flex-col">
-      {/* 管理画面ヘッダー */}
-      <div className="bg-[#2C3E50] text-white flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="font-black text-sm opacity-80">el-town</span>
-          <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold">管理画面</span>
-        </div>
-        <i className="fas fa-bars text-base"></i>
-      </div>
-
-      {/* タブ */}
-      <div className="bg-white border-b flex shrink-0">
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">基本情報</div>
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">通知設定</div>
-        <div className="px-4 py-3 text-sm font-black text-[#635BFF] border-b-2 border-[#635BFF]">オンライン集金</div>
-      </div>
-
-      <div className="flex-1 p-5 flex flex-col items-center justify-center">
-        <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 w-full text-center">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-check-circle text-4xl text-green-500"></i>
-          </div>
-          <h3 className="font-black text-gray-800 text-lg mb-1">Stripe連携が完了しています</h3>
-          <p className="text-sm text-gray-500 font-bold mb-4">本番モードで接続中</p>
-
-          <div className="bg-gray-50 rounded-lg p-3 mb-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm text-gray-500 font-bold">アカウントID</span>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">本番</span>
-            </div>
-            <div className="text-sm font-mono text-gray-700 font-bold">acct_1Abc2DefGhIjKlMn</div>
-          </div>
-
-          <div className="flex items-center gap-2 justify-center">
-            <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
-            <span className="text-sm text-green-600 font-bold">接続中</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ5：会員支払いの流れ ─────────────────── */
-function Step5Content() {
-  return (
-    <div className="h-full bg-gradient-to-b from-[#f0f2f5] to-[#e8eaed] flex flex-col items-center justify-center p-5">
-      {/* スマホフレーム */}
-      <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 w-full max-w-[340px] overflow-hidden">
-        {/* スマホ支払い画面ヘッダー */}
-        <div className="bg-[#635BFF] text-white px-4 py-3 flex items-center gap-2">
-          <i className="fas fa-lock text-sm"></i>
-          <span className="text-sm font-bold">会費のお支払い</span>
-        </div>
-
-        <div className="p-5">
-          <div className="text-center mb-5">
-            <div className="text-sm text-gray-500 font-bold">お支払い金額</div>
-            <div className="text-3xl font-black text-gray-800">¥3,000</div>
-            <div className="text-sm text-gray-400 font-bold">2026年度 年会費</div>
-          </div>
-
-          <div className="space-y-3 mb-5">
-            <div>
-              <label className="text-sm font-bold text-gray-600 mb-1 block">カード番号</label>
-              <div className="bg-gray-50 border rounded-lg px-3 py-2.5 flex items-center justify-between">
-                <span className="text-sm font-mono font-bold text-gray-800">4242 4242 4242 4242</span>
-                <i className="fab fa-cc-visa text-blue-600 text-lg"></i>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-sm font-bold text-gray-600 mb-1 block">有効期限</label>
-                <div className="bg-gray-50 border rounded-lg px-3 py-2.5 text-sm font-mono font-bold text-gray-800">12/29</div>
-              </div>
-              <div className="flex-1">
-                <label className="text-sm font-bold text-gray-600 mb-1 block">CVC</label>
-                <div className="bg-gray-50 border rounded-lg px-3 py-2.5 text-sm font-mono font-bold text-gray-800">123</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#635BFF] text-white font-black py-3 rounded-lg text-center text-base shadow-md">
-            オンラインで支払う
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 w-full">
-        <div className="flex items-center gap-2">
-          <i className="fas fa-lock text-blue-500 text-sm"></i>
-          <p className="text-sm text-blue-700 font-bold">本番登録完了後、会員はStripeの安全な決済画面で支払います</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ6：登録後の審査確認 ─────────────────── */
-function Step6Content() {
-  return (
-    <div className="h-full bg-[#f0f2f5] flex flex-col">
-      {/* 管理画面ヘッダー */}
-      <div className="bg-[#2C3E50] text-white flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="font-black text-sm opacity-80">el-town</span>
-          <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold">管理画面</span>
-        </div>
-        <i className="fas fa-bars text-base"></i>
-      </div>
-      <div className="bg-white border-b flex shrink-0">
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">基本情報</div>
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">通知設定</div>
-        <div className="px-4 py-3 text-sm font-black text-[#635BFF] border-b-2 border-[#635BFF]">オンライン集金</div>
-      </div>
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 mb-3">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <i className="fas fa-check-circle text-green-500 text-xl"></i>
-            </div>
-            <div>
-              <div className="font-black text-base text-gray-800">Stripe本番登録中</div>
-              <div className="text-sm text-orange-600 font-bold"><i className="fas fa-hourglass-half mr-1"></i>審査・確認中</div>
-            </div>
-          </div>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-            <div className="text-sm text-green-700 font-bold mb-1">✅ 登録情報を送信したら</div>
-            <p className="text-sm text-green-600 font-bold leading-relaxed">Stripeの審査が進みます。不足情報がある場合は、同じボタンから登録を再開できます。</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-blue-100">
-          <div className="flex items-center gap-2 mb-2">
-            <i className="fas fa-rocket text-blue-500 text-sm"></i>
-            <span className="text-sm font-black text-blue-600">登録情報の確認・再開</span>
-          </div>
-          <p className="text-sm text-gray-500 font-bold mb-3 leading-relaxed">入力途中で中断した場合や追加情報が必要な場合は、Stripe登録画面を再度開きます。</p>
-          <div className="relative">
-            <button className="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl text-base shadow-md flex items-center justify-center gap-2">
-              <i className="fas fa-arrow-up-right-from-square"></i>登録を再開・確認する
-            </button>
-            <div className="absolute right-4 -bottom-2 text-5xl transform -rotate-12 animate-bounce drop-shadow-xl z-50">👆</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ7：追加情報の提出 ─────────────────── */
-function Step7Content() {
-  return (
-    <div className="h-full bg-[#f0f2f5] flex flex-col">
-      <div className="bg-[#2C3E50] text-white flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="font-black text-sm opacity-80">el-town</span>
-          <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold">管理画面</span>
-        </div>
-        <i className="fas fa-bars text-base"></i>
-      </div>
-      <div className="bg-white border-b p-5">
-        <div className="bg-[#635BFF]/5 border border-[#635BFF]/20 rounded-xl p-4 mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <i className="fas fa-rocket text-[#635BFF] text-sm"></i>
-            <span className="text-sm font-black text-[#635BFF]">本番用アカウントを登録</span>
-          </div>
-          <p className="text-sm text-gray-600 font-bold leading-relaxed">不足情報がある場合は、Stripe画面で追加提出します</p>
-        </div>
-        <div className="relative">
-          <button className="w-full bg-[#635BFF] text-white font-black py-3.5 rounded-xl text-base shadow-md flex items-center justify-center gap-2">
-            <i className="fab fa-stripe-s"></i>Stripeアカウントを登録・連携する
-          </button>
-          <div className="absolute right-4 -bottom-2 text-5xl transform -rotate-12 animate-bounce drop-shadow-xl z-50">👆</div>
-        </div>
-      </div>
-      <div className="flex-1 p-5 overflow-y-auto">
-        <div className="text-sm font-black text-gray-700 mb-3 flex items-center gap-1"><i className="fas fa-clipboard-check text-[#635BFF]"></i>本番登録で必要なもの</div>
-        <div className="space-y-3">
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0"><i className="fas fa-id-card text-blue-500 text-base"></i></div>
-            <div><div className="text-sm font-black text-gray-800">本人確認書類</div><div className="text-xs text-gray-400 font-bold">運転免許証・マイナンバーカード等</div></div>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center shrink-0"><i className="fas fa-university text-green-500 text-base"></i></div>
-            <div><div className="text-sm font-black text-gray-800">実際の銀行口座情報</div><div className="text-xs text-gray-400 font-bold">売上入金先の口座</div></div>
-          </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center shrink-0"><i className="fas fa-file-upload text-purple-500 text-base"></i></div>
-            <div><div className="text-sm font-black text-gray-800">書類のアップロード</div><div className="text-xs text-gray-400 font-bold">スマホで撮影してアップロード</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ8：本番連携の完了＆審査 ─────────────────── */
-function Step8Content() {
-  return (
-    <div className="h-full bg-[#f0f2f5] flex flex-col">
-      <div className="bg-[#2C3E50] text-white flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="font-black text-sm opacity-80">el-town</span>
-          <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold">管理画面</span>
-        </div>
-        <i className="fas fa-bars text-base"></i>
-      </div>
-      <div className="bg-white border-b flex shrink-0">
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">基本情報</div>
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">通知設定</div>
-        <div className="px-4 py-3 text-sm font-black text-[#635BFF] border-b-2 border-[#635BFF]">オンライン集金</div>
-      </div>
-      <div className="flex-1 p-5 flex flex-col items-center justify-center">
-        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100 w-full">
-          <div className="text-center mb-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3"><i className="fas fa-check-circle text-3xl text-green-500"></i></div>
-            <h3 className="font-black text-gray-800 text-base mb-0.5">Stripe連携が完了しています</h3>
-            <p className="text-sm text-gray-500 font-bold">本番モードで接続中</p>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-3 mb-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm text-gray-500 font-bold">アカウントID</span>
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">本番</span>
-            </div>
-            <div className="text-sm font-mono text-gray-700 font-bold">acct_1ReaL2ProdAcCtId</div>
-          </div>
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center"><i className="fas fa-hourglass-half text-orange-500 text-sm animate-pulse"></i></div>
-              <div><div className="text-sm font-black text-orange-700">アカウント審査中</div><div className="text-xs text-orange-500 font-bold">Stripeによる自動審査</div></div>
-            </div>
-            <div className="bg-white rounded-lg p-2.5 flex items-center gap-2">
-              <i className="fas fa-clock text-orange-400 text-sm"></i>
-              <span className="text-sm font-bold text-gray-700">審査は通常 <span className="text-orange-600 font-black">1〜2営業日</span> で完了</span>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-gray-100">
-            <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-full bg-green-400 flex items-center justify-center"><i className="fas fa-check text-white text-xs"></i></div><span className="text-sm font-bold text-green-600">本番アカウント登録完了</span></div>
-            <div className="ml-2.5 border-l-2 border-dashed border-gray-200 h-4"></div>
-            <div className="flex items-center gap-2 mb-2"><div className="w-5 h-5 rounded-full bg-orange-400 flex items-center justify-center animate-pulse"><i className="fas fa-spinner text-white text-xs"></i></div><span className="text-sm font-bold text-orange-600">審査中...</span></div>
-            <div className="ml-2.5 border-l-2 border-dashed border-gray-200 h-4"></div>
-            <div className="flex items-center gap-2"><div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center"><i className="fas fa-flag text-gray-400 text-xs"></i></div><span className="text-sm font-bold text-gray-400">決済・入金が可能に</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ9：役員側の会費請求操作 ─────────────────── */
-function Step9Content() {
-  return (
-    <div className="h-full bg-[#f0f2f5] flex flex-col">
-      <div className="bg-[#2C3E50] text-white flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="font-black text-sm opacity-80">el-town</span>
-          <span className="text-xs bg-white/20 px-2 py-0.5 rounded font-bold">管理画面</span>
-        </div>
-        <i className="fas fa-bars text-base"></i>
-      </div>
-      <div className="bg-white border-b flex shrink-0">
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">基本情報</div>
-        <div className="px-4 py-3 text-sm font-black text-indigo-600 border-b-2 border-indigo-600">会費管理</div>
-        <div className="px-4 py-3 text-sm font-bold text-gray-400 border-b-2 border-transparent">オンライン集金</div>
-      </div>
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <div className="flex items-start gap-2">
-            <i className="fas fa-info-circle text-blue-500 text-sm mt-0.5"></i>
-            <p className="text-sm text-blue-700 font-bold leading-relaxed">審査完了後、「会費管理」タブから会員への請求を行います。</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3">
-          <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
-            <span className="text-sm font-black text-gray-700"><i className="fas fa-yen-sign mr-1 text-indigo-500"></i>会費一覧</span>
-            <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded font-bold">2026年度</span>
-          </div>
-          <table className="w-full text-sm">
-            <thead><tr className="bg-gray-50 text-xs text-gray-500 font-bold"><th className="p-2.5 text-left">会員名</th><th className="p-2.5 text-right">請求額</th><th className="p-2.5 text-center">ステータス</th></tr></thead>
-            <tbody>
-              <tr className="border-t border-gray-50"><td className="p-2.5 font-bold text-gray-800">田中 太郎</td><td className="p-2.5 text-right font-mono text-gray-800">3,000円</td><td className="p-2.5 text-center"><span className="bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded text-xs font-bold"><i className="fas fa-check-circle mr-0.5"></i>完納</span></td></tr>
-              <tr className="border-t border-gray-50"><td className="p-2.5 font-bold text-gray-800">佐藤 花子</td><td className="p-2.5 text-right font-mono text-gray-800">3,000円</td><td className="p-2.5 text-center"><span className="bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded text-xs font-bold"><i className="fas fa-exclamation-circle mr-0.5"></i>未納</span></td></tr>
-              <tr className="border-t border-gray-50"><td className="p-2.5 font-bold text-gray-800">鈴木 一郎</td><td className="p-2.5 text-right font-mono text-gray-800">3,000円</td><td className="p-2.5 text-center"><span className="bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded text-xs font-bold"><i className="fas fa-exclamation-circle mr-0.5"></i>未納</span></td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 mb-2"><i className="fas fa-paper-plane text-indigo-500 text-sm"></i><span className="text-sm font-black text-gray-700">会費請求を送信</span></div>
-          <p className="text-xs text-gray-500 font-bold mb-3 leading-relaxed">未納の会員にLINEで会費請求通知が届きます。会員はスマホから簡単に支払いが可能です。</p>
-          <button className="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-sm shadow-md flex items-center justify-center gap-2"><i className="fas fa-paper-plane"></i>未納者に請求を一括送信する</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── ステップ10：会員側の支払い画面 ─────────────────── */
-function Step10Content() {
-  return (
-    <div className="h-full bg-gradient-to-b from-[#7494C0] to-[#5a7ba5] flex flex-col items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 w-full max-w-[340px] overflow-hidden">
-        <div className="bg-[#7494C0] text-white px-4 py-2.5 text-center">
-          <span className="font-black text-sm">○○町内会</span>
-          <span className="text-blue-100 font-bold text-xs ml-1">電子掲示板</span>
-        </div>
-        <div className="p-5">
-          <h3 className="font-bold text-gray-800 text-base mb-4 border-b border-gray-100 pb-2"><i className="fas fa-yen-sign mr-2 text-blue-500"></i>町内会費のお支払い</h3>
-          <div className="bg-orange-50 p-5 rounded-xl border border-orange-200 text-center">
-            <div className="w-14 h-14 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-3 border border-orange-200"><i className="fas fa-file-invoice-dollar"></i></div>
-            <h4 className="text-orange-800 text-base font-black mb-1">会費のお願い</h4>
-            <p className="text-orange-600 text-xs font-bold mb-4">今年度の町内会費の納入をお願いいたします。</p>
-            <div className="bg-white p-3 rounded-xl border border-orange-100 mb-4 shadow-inner">
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2 mb-2">
-                <span className="text-gray-500 text-xs font-bold">請求金額</span>
-                <span className="text-gray-800 font-black text-xl">¥3,000</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500 text-xs font-bold">支払期限</span>
-                <span className="text-gray-700 text-sm font-bold">指定なし</span>
-              </div>
-            </div>
-            <div className="relative">
-              <button className="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl shadow-lg flex items-center justify-center"><i className="fas fa-credit-card mr-2 text-lg"></i> オンラインで支払う</button>
-              <div className="absolute right-3 -bottom-2 text-4xl transform -rotate-12 animate-bounce drop-shadow-xl z-50">👆</div>
-            </div>
-            <div className="mt-2.5 flex items-center justify-center text-[10px] text-gray-500"><i className="fas fa-lock mr-1"></i> Stripeによる安全な決済</div>
-          </div>
-        </div>
-        <div className="bg-gray-100 border-t border-gray-200 p-2">
-          <div className="flex bg-white rounded-lg overflow-hidden shadow-sm text-xs font-bold">
-            <div className="flex-1 py-2 text-center text-gray-400">回覧版</div>
-            <div className="flex-1 py-2 text-center text-pink-500 bg-pink-50 border-b-2 border-pink-500">会費</div>
-            <div className="flex-1 py-2 text-center text-gray-400">設定</div>
-          </div>
-        </div>
-      </div>
-      <div className="mt-3 bg-white/90 border border-white/50 rounded-lg px-4 py-2.5 w-full max-w-[340px]">
-        <div className="flex items-center gap-2">
-          <i className="fas fa-mobile-alt text-[#7494C0] text-sm"></i>
-          <p className="text-sm text-gray-700 font-bold">会員のスマホにはこの画面が表示されます</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────── メインページ ─────────────────── */
-const steps: ManualStep[] = [
-  {
-    title: '① el-townがStripeを標準採用する理由',
-    description:
-      '初期費用0円・決済時のみ手数料3.6%、世界最高水準のセキュリティ（PCI DSS準拠）、世界500万社以上の採用実績、そして現金とのハイブリッド管理。el-townがStripeを標準装備する4つの理由をご紹介します。',
-    content: <Step1Content />,
-  },
-  {
-    title: '② 本番Stripe登録を開始する',
-    description:
-      '管理画面の「Stripe連携」から「本番Stripe登録を開始」ボタンを押します。町内会・自治会は本番登録から開始します。',
-    content: <Step2Content />,
-  },
-  {
-    title: '③ Stripe登録画面の入力ポイント',
-    description:
-      '事業形態は「個人事業主」か「非営利団体」を選択。法人番号は空欄でスキップOK。代表者の氏名・住所は本人確認書類と一致させてください。',
-    content: <Step3Content />,
-  },
-  {
-    title: '④ 本番登録の完了と審査',
-    description:
-      '本番アカウント登録後、Stripeによる審査が開始されます。審査完了後に会費決済・入金が可能になります。',
-    content: <Step8Content />,
-  },
-  {
-    title: '⑤ 会費の請求（役員の操作）',
-    description:
-      '審査完了後、管理画面の「会費管理」タブから会員への請求を送信します。未納の会員にLINEで請求通知が届き、スマホから簡単に支払いが可能になります。',
-    content: <Step9Content />,
-  },
-  {
-    title: '⑥ 会員のお支払い画面',
-    description:
-      '会員のスマホには「会費のお支払い」画面が表示されます。「オンラインで支払う」ボタンを押すとStripeの安全な決済画面が開き、クレジットカードで支払いが完了します。',
-    content: <Step10Content />,
-  },
-];
+export const metadata: Metadata = {
+  title: "Stripe連携 操作マニュアル | el-town オンラインマニュアル",
+  description: "町内会・自治会がStripe本番登録を行い、会費のオンライン決済と入金を開始するまでの詳しい手順です。",
+};
 
 export default function StripeManualPage() {
   return (
     <ManualAccessGate>
-      <ManualViewer
+      <OnboardingGuide
+        theme="purple"
+        audience="代表役員・会計担当者向け"
+        audienceIcon="fa-credit-card"
         title="Stripe連携 操作マニュアル"
-        subtitle="本番Stripe登録から会費請求まで"
-        steps={steps}
-        accentColor="#635BFF"
-        icon="fa-credit-card"
+        summary="エルタウン町内会を例に、準備から本人確認、入金先口座、審査状況、会費請求、会員の支払い、運用後の確認までを順番に説明します。Stripe登録は途中保存されるため、確認事項が足りない場合は無理に進めず、準備後に再開できます。"
+        time="登録約20〜30分＋Stripeによる確認時間"
+        processTitle="本番登録から会費の入金確認まで"
+        processSubtitle="重要な個人情報はStripeの画面だけに入力し、各段階の状態を確認しながら進めます"
+        preparation={[
+          { icon: "fas fa-file-lines", title: "団体の確認資料", text: "規約・会則、正式名称、団体区分、Webサイトや活動内容" },
+          { icon: "fas fa-id-card", title: "代表者の本人確認書類", text: "Stripe画面に表示される有効な書類を原本で準備" },
+          { icon: "fas fa-building-columns", title: "団体が管理する口座", text: "金融機関名、支店、口座番号、名義を確認できるもの" },
+        ]}
+        steps={[
+          {
+            title: "Stripe連携でできることを確認する",
+            text: "Stripe Connectは、町内会・自治会が会員からオンラインで会費を受け取り、団体の口座へ入金するための決済基盤です。契約主体は団体とStripeで、el-townは管理画面と決済をつなぐ仕組みを提供します。",
+            points: [
+              "会員はStripeの安全な決済画面で支払い、カード情報はel-townへ保存されません。",
+              "役員はel-townの会費一覧で、手集金とStripe入金を分けて確認できます。",
+              "利用条件や手数料は登録時にStripe画面の最新表示を確認します。",
+            ],
+            caution: "Stripeのパスワード、確認コード、カード番号、本人確認書類の画像を、el-townの問い合わせやAIヘルプへ送らないでください。",
+            visual: <AnimatedAction theme="purple" icon="fab fa-stripe-s" title="安全なオンライン会費" text="会員の支払いから団体口座への入金までを連携します。" action="仕組みを確認する" />,
+          },
+          {
+            title: "団体区分と登録担当者を決める",
+            text: "会則や登記の有無を確認し、管理画面の団体区分から実態に合うものを選びます。町内会・自治会・任意団体、法人、個人、行政機関を自己判断で読み替えず、規約や正式な組織形態に合わせてください。",
+            points: [
+              "代表者本人が確認できる状態で手続きを行います。",
+              "Stripeからの確認メールを受信できる継続利用可能なメールアドレスを使います。",
+              "入金先は個人の生活口座ではなく、団体で管理する口座を用意します。",
+            ],
+            caution: "団体区分や代表者情報が実態と異なると、追加確認や入金保留の原因になります。不明な場合は会則・登記資料を確認してください。",
+            visual: <AnimatedFormPreview theme="purple" title="登録前の確認" fields={[{ label: "団体区分", value: "非営利団体（町内会・自治会・任意団体）", type: "select" }, { label: "団体名", value: "エルタウン町内会" }, { label: "登録担当", value: "代表者本人" }]} action="登録内容を確認" />,
+          },
+          {
+            title: "el-townで団体情報を入力する",
+            text: "管理トップの「基本機能」から「Stripe連携」を開きます。団体名は基本情報から同期されます。Stripe連絡先メール、問い合わせ電話番号、Webサイト、サービス内容を確認・入力してください。",
+            points: [
+              "サービス内容には、町内会費・自治会費をオンラインで受け取る目的を具体的に記載します。",
+              "Webサイトは団体や活動内容が確認できる公開ページを入力します。",
+              "登録済み内容がある場合は読み込み完了を待ち、空欄で上書きしないことを確認します。",
+            ],
+            caution: "団体名を変更する必要がある場合は、先に「基本情報」で正式名称を修正してからStripe連携へ戻ってください。",
+            visual: <AnimatedFormPreview theme="purple" title="Stripeへ登録する団体情報" fields={[{ label: "団体名", value: "エルタウン町内会" }, { label: "連絡先メール", value: "accounting@example.jp" }, { label: "Webサイト", value: "https://example.jp" }, { label: "サービス内容", value: "町内会費のオンライン決済" }]} action="入力内容を確認" />,
+          },
+          {
+            title: "3つの準備確認後に本番登録を開始する",
+            text: "「規約・登記上の団体区分」「代表者の本人確認書類」「団体が管理する入金先口座」の3項目を実際に準備できた場合だけチェックします。「入力内容を確認して本番Stripe登録を開始」を押すと、別画面でStripeの登録が始まります。",
+            points: [
+              "新しい画面が開かない場合は、ブラウザのポップアップ制限を確認してもう一度押します。",
+              "途中で閉じても「本番登録を再開・確認」から続きへ戻れます。",
+              "Stripe画面のURLとStripeの表示を確認してから個人情報を入力します。",
+            ],
+            caution: "チェックは資料を用意したという確認です。未準備のまま進めるとStripe画面で手続きが止まります。",
+            visual: <AnimatedAction theme="purple" icon="fas fa-arrow-up-right-from-square" title="本番Stripe登録を開始" text="3つの準備確認後、Stripeの安全な登録画面を開きます。" action="入力内容を確認して開始" />,
+          },
+          {
+            title: "Stripeで組織と代表者情報を入力する",
+            text: "Stripeの案内に従い、組織形態、所在地、代表者の氏名、生年月日、住所、連絡先などを入力します。氏名や住所は本人確認書類の表記と一致させ、略字・旧住所・入力漏れがないか確認してください。",
+            points: [
+              "画面に表示される必須項目はすべて入力します。",
+              "代表者が変更されている場合は、現在の代表者と団体内の承認状況を確認します。",
+              "入力内容の確認画面で誤字、番地、電話番号を見直します。",
+            ],
+            caution: "Stripeが求める項目は団体区分や確認状況により異なります。このマニュアルにない項目が出た場合は、画面の最新案内を優先してください。",
+            visual: <AnimatedFormPreview theme="purple" title="Stripe 本人情報" fields={[{ label: "代表者氏名", value: "本人確認書類と同じ表記" }, { label: "生年月日", value: "年／月／日" }, { label: "住所", value: "本人確認書類と同じ住所" }, { label: "電話番号", value: "連絡可能な番号" }]} action="内容を保存して続ける" />,
+          },
+          {
+            title: "本人確認書類と入金先口座を登録する",
+            text: "Stripe画面で指定された本人確認書類を撮影またはアップロードし、団体が管理する銀行口座を登録します。書類全体が明るく鮮明で、四隅と文字が読み取れることを確認してください。",
+            points: [
+              "口座名義、金融機関、支店、口座種別、番号を通帳などと照合します。",
+              "アップロード後に追加撮影や別書類を求められた場合は画面の案内に従います。",
+              "登録完了画面が表示されるまでブラウザの戻る操作を避けます。",
+            ],
+            caution: "本人確認書類と口座情報は必ずStripe画面へ直接入力します。スクリーンショットをメールやチャットへ添付しないでください。",
+            visual: <AnimatedAction theme="purple" icon="fas fa-id-card" title="本人確認・口座登録" text="書類を鮮明に提出し、団体口座の名義を照合します。" action="安全なStripe画面で登録" />,
+          },
+          {
+            title: "el-townへ戻り「Stripe状態を更新」する",
+            text: "Stripeで入力を終えてel-townへ戻ったら、「Stripe状態を更新」を押します。Connectアカウント、Stripe登録名、入金先口座末尾、決済受付、入金／振込の表示を確認します。",
+            points: [
+              "「本番決済受付中」かつ「決済受付：有効」「入金/振込：有効」なら会費請求へ進めます。",
+              "「追加入力が必要」と表示された場合は「本番登録を再開・確認」からStripeへ戻ります。",
+              "審査中の場合は時間を置き、Stripeからのメールを確認してから再更新します。",
+            ],
+            caution: "登録画面を完了しただけでは、決済受付と入金が有効になっていない場合があります。2項目の「有効」を必ず確認してください。",
+            visual: <AnimatedAction theme="purple" icon="fas fa-rotate" title="連携状態を確認" text="決済受付と入金・振込の両方が有効か更新します。" action="Stripe状態を更新" />,
+          },
+          {
+            title: "会費管理でオンライン決済を有効にする",
+            text: "Stripe連携が有効になったら「基本機能」→「会費管理」を開き、受取方法でStripeカード決済を有効にして保存します。会費名称、標準額、年度開始月、会員向け支払い案内も同時に確認します。",
+            points: [
+              "会計年度、金額、対象者を確認してStripe請求対象に設定します。",
+              "まず役員を含む少人数で表示と金額を確認してから全体へ案内します。",
+              "手集金も併用する場合は、現金とStripeの金額が別欄で集計されることを確認します。",
+            ],
+            caution: "Stripe連携の有効化と会員への請求設定は別操作です。対象者や金額を確認せず一括設定しないでください。",
+            visual: <AnimatedAction theme="purple" icon="fas fa-file-invoice-dollar" title="会費管理" text="受取方法と金額を確認し、対象会員へ請求を設定します。" action="Stripe請求対象に設定" />,
+          },
+          {
+            title: "会員の支払いと自動反映を確認する",
+            text: "会員は会員画面の会費案内から「オンラインで支払う」を押し、Stripeの決済画面で支払います。支払い完了後、役員は会費一覧を更新し、Stripe入金額と未入金額が正しく反映されたことを確認します。",
+            points: [
+              "会員へは支払う年度、金額、期限、支払い完了画面まで確認するよう案内します。",
+              "二重支払いを避けるため、完了画面が出た後に同じボタンを繰り返し押さないよう案内します。",
+              "反映に時間がかかる場合は画面を更新し、Stripe状態と決済結果を確認します。",
+            ],
+            caution: "役員が会員のカード番号や確認コードを聞き取って代理入力しないでください。会員本人がStripe画面へ入力します。",
+            visual: <AnimatedAction theme="purple" icon="fas fa-mobile-screen-button" title="会員のオンライン支払い" text="会員本人が安全な決済画面で支払いを完了します。" action="オンラインで支払う" />,
+          },
+          {
+            title: "運用開始後の確認とトラブル対応",
+            text: "日常運用では、会費一覧のStripe入金、未入金、入金先口座、決済受付、入金／振込の状態を定期的に確認します。代表者・住所・口座などを変更した場合やStripeから確認メールが届いた場合は、登録を再開して不足項目を完了します。",
+            points: [
+              "決済できない：Stripe状態を更新し、決済受付が有効か確認します。",
+              "入金されない：入金／振込が有効か、口座末尾が正しいか、Stripeの案内がないか確認します。",
+              "登録画面が開かない：ポップアップ制限を解除し、1回だけ再実行します。",
+              "解決しない：エラー文、発生時刻、操作箇所を控えます。個人情報や書類画像は添付しません。",
+            ],
+            caution: "団体区分、代表者、本人確認、銀行口座に関するStripeの判断は、Stripe画面とStripeからの通知を優先してください。",
+            visual: <AnimatedAction theme="purple" icon="fas fa-shield-halved" title="月次チェック" text="受付状態、入金、未納、登録情報の変更を定期確認します。" action="運用状況を確認する" />,
+          },
+        ]}
       />
     </ManualAccessGate>
   );
 }
-

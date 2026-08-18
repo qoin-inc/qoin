@@ -122,7 +122,7 @@ export default function AdminPage() {
         process.env.NODE_ENV !== 'production' &&
         window.location.search.includes('test_bypass=1')
       ) {
-        setTown({ id: 1, name: 'デモ町内会' });
+        setTown({ id: 1, name: 'エルタウン町内会' });
         setView('dashboard');
         return;
       }
