@@ -297,6 +297,8 @@ button { cursor: pointer; border: 0; }
 .help-center-manual span, .help-center-manual strong, .help-center-manual small { display: block; }
 .help-center-manual strong { font-size: 14px; font-weight: 900; }
 .help-center-manual small { margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 700; }
+.help-center-return { min-height: 40px; margin-left: auto; padding: 8px 12px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid #bae6fd; border-radius: 10px; background: #f0f9ff; color: #075985; font-size: 12px; font-weight: 900; white-space: nowrap; }
+.help-center-return:hover { background: #e0f2fe; }
 .help-center-chat { padding: 16px; }
 .help-center-chat.is-ai-chat-active { min-height: 0; flex: 1; display: flex; flex-direction: column; }
 .help-center-manual + .help-center-chat { padding-top: 0; }

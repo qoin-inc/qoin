@@ -166,7 +166,7 @@ function answerHelpQuestion(audience: HelpAudience, question: string) {
 }
 
 const initialChat: ChatMessage[] = [{ role: "assistant", content: "操作について分からないことを質問してください。続けて質問することもできます。" }];
-const initialOperationAnswer = "知りたい操作のカテゴリを選んでください。";
+const initialOperationAnswer = "知りたい操作を選んでください。";
 
 export default function HelpCenter({ audience, showLabel = true, className = "" }: HelpCenterProps) {
   const [open, setOpen] = useState(false);
@@ -256,6 +256,12 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
           <section ref={dialogRef} className={`help-center-dialog${isAiChatActive ? " is-ai-chat-active" : ""}`} role="dialog" aria-modal="true" aria-labelledby={`help-center-title-${audience}`}>
             <header className="help-center-header">
               <div><p>el-town HELP</p><h2 id={`help-center-title-${audience}`}>{title}</h2></div>
+              {audience === "admin" && (
+                <button type="button" className="help-center-return" onClick={closeHelp}>
+                  <i className="fas fa-arrow-left" aria-hidden="true" />
+                  管理画面へ戻る
+                </button>
+              )}
               <button type="button" className="help-center-close" onClick={closeHelp} aria-label="ヘルプを閉じる"><i className="fas fa-xmark" /></button>
             </header>
             {audience === "admin" && !isAiChatActive && (
@@ -264,7 +270,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
               </Link>
             )}
             <div className={`help-center-chat${isAiChatActive ? " is-ai-chat-active" : ""}`}>
-              {!isAiChatActive && (
+              {!isAiChatActive && audience !== "admin" && (
                 <>
                   <div className="help-center-bot-answer" aria-live="polite"><i className="fas fa-circle-info" /><p>{operationAnswer}</p></div>
                   {selectedCategory ? (

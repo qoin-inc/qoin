@@ -56,6 +56,9 @@ export function OnboardingGuide({
   steps,
   processTitle = "画面を見ながら登録する",
   processSubtitle = "実際に表示される画面を使って、操作順に説明します",
+  returnHref = "/manual",
+  returnLabel = "マニュアル一覧へ戻る",
+  desktopLayout = false,
 }: {
   theme: Theme;
   audience: string;
@@ -67,12 +70,15 @@ export function OnboardingGuide({
   steps: GuideStep[];
   processTitle?: string;
   processSubtitle?: string;
+  returnHref?: string;
+  returnLabel?: string;
+  desktopLayout?: boolean;
 }) {
   const colors = themeStyles[theme];
 
   return (
     <main className="min-h-screen bg-[#f4f9fb] text-[#243746]">
-      <ManualSiteHeader />
+      <ManualSiteHeader backHref={returnHref} backLabel={returnLabel} />
 
       <section className={`${colors.soft} px-4 py-12 text-center`}>
         <div className="mx-auto max-w-3xl">
@@ -89,7 +95,7 @@ export function OnboardingGuide({
         </div>
       </section>
 
-      <article className={`${styles.article} space-y-12 px-4 py-12`}>
+      <article className={`${styles.article} ${desktopLayout ? styles.articleDesktop : ""} space-y-12 px-4 py-12`}>
         <section className="text-center">
           <SectionTitle title="始める前に用意するもの" />
           <div className={styles.preparationGrid}>
@@ -110,7 +116,7 @@ export function OnboardingGuide({
 
         <section>
           <SectionTitle title={processTitle} subtitle={processSubtitle} />
-          <ol className={styles.stepList}>
+          <ol className={`${styles.stepList} ${desktopLayout ? styles.stepListDesktop : ""}`}>
             {steps.map((step, index) => {
               const visualFirst = index % 2 === 1;
               return (
@@ -157,9 +163,9 @@ export function OnboardingGuide({
       </article>
 
       <footer className="px-4 pb-14 text-center">
-        <Link href="/manual" className={`${styles.manualListLink} ${colors.hover}`}>
-          <i className="fas fa-book-open mr-2" aria-hidden="true" />
-          マニュアル一覧へ戻る
+        <Link href={returnHref} className={`${styles.manualListLink} ${colors.hover}`}>
+          <i className={`fas ${returnHref === "/admin" ? "fa-arrow-left" : "fa-book-open"} mr-2`} aria-hidden="true" />
+          {returnLabel}
         </Link>
       </footer>
     </main>
@@ -194,6 +200,118 @@ export function ActualScreenImage({
         <i className="fas fa-camera mr-2" aria-hidden="true" />
         {caption}
       </figcaption>
+    </figure>
+  );
+}
+
+export function DesktopScreenPreview({
+  src,
+  alt,
+  caption,
+  width = 1265,
+  height = 712,
+  scroll = false,
+  hotspots = [],
+}: {
+  src: string;
+  alt: string;
+  caption: string;
+  width?: number;
+  height?: number;
+  scroll?: boolean;
+  hotspots?: Array<{ left: string; top: string; label: string; delay?: number }>;
+}) {
+  return (
+    <figure className={styles.desktopScreenFigure}>
+      <div className={`${styles.desktopScreenFrame} ${scroll ? styles.desktopScreenScroll : ""}`}>
+        <Image
+          src={src}
+          alt={alt}
+          width={width}
+          height={height}
+          className={scroll ? styles.desktopScreenImageScroll : styles.desktopScreenImage}
+        />
+        {hotspots.map((hotspot) => (
+          <span
+            className={styles.desktopScreenHotspot}
+            style={{ left: hotspot.left, top: hotspot.top, animationDelay: `${hotspot.delay || 0}s` }}
+            key={`${hotspot.label}-${hotspot.left}-${hotspot.top}`}
+          >
+            <i className="fas fa-hand-pointer" aria-hidden="true" />
+            <strong>{hotspot.label}</strong>
+          </span>
+        ))}
+      </div>
+      <figcaption>
+        <i className="fas fa-desktop" aria-hidden="true" />
+        {caption}
+      </figcaption>
+    </figure>
+  );
+}
+
+export function StripeDesktopPreview({
+  focus = "registration",
+  caption,
+}: {
+  focus?: "status" | "registration" | "start" | "paypay";
+  caption: string;
+}) {
+  const focusClass = {
+    status: styles.stripeFocusStatus,
+    registration: styles.stripeFocusRegistration,
+    start: styles.stripeFocusStart,
+    paypay: styles.stripeFocusPaypay,
+  }[focus];
+
+  return (
+    <figure className={styles.stripeWalkthroughFigure}>
+      <div className={`${styles.stripeScreenFrame} ${focus === "paypay" ? styles.stripeScreenPaypay : ""}`}>
+        <div className={styles.stripeScreenCanvas}>
+          <div className={styles.stripeScreenHero}>
+            <span><i className="fas fa-arrow-left" aria-hidden="true" /> 管理トップへ戻る</span>
+            <div><small>基本機能</small><strong>Stripe連携</strong><em>Connectアカウント、オンボーディング、決済受付状態</em></div>
+          </div>
+          <div className={styles.stripeScreenTabs}>
+            {['基本情報', '会員管理', '会費管理', 'システム利用料', '役員管理', 'Stripe連携'].map((tab) => <span className={tab === 'Stripe連携' ? styles.stripeScreenTabActive : ''} key={tab}>{tab}</span>)}
+          </div>
+          <div className={styles.stripeScreenGrid}>
+            <section className={`${styles.stripeScreenPanel} ${focus === "status" ? focusClass : ""}`}>
+              <div className={styles.stripePanelHeading}><strong>Stripe本番連携</strong><b>未連携</b></div>
+              <p>町内会・自治会とStripeの個別契約として、本番モードのConnect登録を行います。</p>
+              <dl className={styles.stripeStatusList}>
+                <div><dt>登録モード</dt><dd>本番モード</dd></div>
+                <div><dt>Connectアカウント</dt><dd>未連携</dd></div>
+                <div><dt>Stripe登録名</dt><dd>未確認</dd></div>
+                <div><dt>入金先口座</dt><dd>未確認</dd></div>
+                <div><dt>決済受付</dt><dd>未確認</dd></div>
+                <div><dt>入金／振込</dt><dd>未確認</dd></div>
+              </dl>
+            </section>
+            <section className={`${styles.stripeScreenPanel} ${focus === "registration" || focus === "start" ? focusClass : ""}`}>
+              <h4>本番Stripe登録を開始</h4>
+              <p>Stripeへ移る前に、el-townで団体情報を確認・入力します。</p>
+              <div className={styles.stripeFieldGrid}>
+                <label><span>団体区分</span><b>非営利団体（町内会）⌄</b></label>
+                <label><span>Stripeへ登録する団体名</span><b>エルタウン町内会</b></label>
+                <label><span>Stripe連絡先メール</span><b>accounting@example.jp</b></label>
+                <label><span>問い合わせ電話番号</span><b>例：03-1234-5678</b></label>
+              </div>
+              <label className={styles.stripeServiceField}><span>サービス内容</span><b>町内会費・自治会費のオンライン受付</b></label>
+              <div className={styles.stripeChecks}><span>□ 団体区分を確認しました</span><span>□ 代表者の本人確認書類を準備しました</span><span>□ 団体が管理する入金先口座を準備しました</span></div>
+              <button className={`${styles.stripePrimaryButton} ${focus === "start" ? styles.stripeButtonFocus : ""}`} type="button">入力内容を確認して本番Stripe登録を開始</button>
+              <button className={styles.stripeSecondaryButton} type="button">Stripe状態を更新</button>
+            </section>
+          </div>
+          <section className={`${styles.stripePaypayPanel} ${focus === "paypay" ? focusClass : ""}`}>
+            <div className={styles.stripePanelHeading}><strong>団体別オプション　Stripe PayPayの申請</strong><b>未申請</b></div>
+            <p>利用する団体だけ申請します。先にStripe Connectの本番登録を完了してください。</p>
+            <div className={styles.stripePaypayFlow}><span>1. 団体が入力・申請</span><span>2. el-town運営が確認</span><span>3. 法定ページ公開</span><span>4. Stripe審査</span></div>
+            <div className={styles.stripePaypayFields}><span>団体名　エルタウン町内会</span><span>運営責任者　例：会長 山田太郎</span><span>郵便番号　123-4567</span><span>会費名称　年会費</span></div>
+          </section>
+        </div>
+      </div>
+      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
     </figure>
   );
 }

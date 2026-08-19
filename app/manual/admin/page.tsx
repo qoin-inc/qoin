@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import {
-  AnimatedAction,
-  AnimatedFormPreview,
+  DesktopScreenPreview,
   OnboardingGuide,
+  StripeDesktopPreview,
 } from "../_components/OnboardingGuide";
 import { ManualAccessGate } from "../_components/ManualAccess";
 
@@ -22,7 +22,10 @@ export default function AdminManualPage() {
         summary="エルタウン町内会を例に、日常の管理で使う6つの基本機能を、押す場所が分かる操作アニメーションと確認ポイント付きで説明します。"
         time="全体で約20分（必要な機能だけ確認できます）"
         processTitle="機能ごとの操作方法"
-        processSubtitle="左右を交互に配置した同じ大きさの操作画面で、各機能を順番に確認できます"
+        processSubtitle="現在のPC管理画面を見ながら、各画面の役割・押す場所・確認事項を順番に確認できます"
+        returnHref="/admin"
+        returnLabel="管理画面へ戻る"
+        desktopLayout
         preparation={[
           { icon: "fas fa-mobile-screen-button", title: "LINEまたはパソコン", text: "役員アカウントで管理画面を開ける端末" },
           { icon: "fas fa-address-book", title: "団体・会員情報", text: "正式名称、決算月、名簿、会費金額など" },
@@ -37,7 +40,7 @@ export default function AdminManualPage() {
               "複数団体を管理している場合は、作業前に対象団体を切り替えます。",
             ],
             caution: "別団体を選んだまま保存すると、その団体の情報が変更されます。最初に団体名を必ず確認してください。",
-            visual: <AnimatedAction theme="blue" icon="fas fa-layer-group" title="エルタウン町内会" text="管理トップから、設定したい機能を選びます。" action="基本機能を開く" />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/01-basic-menu.png" alt="管理トップの基本機能メニュー" caption="PC版・管理トップ：基本機能から操作画面を選びます" width={1264} height={1026} hotspots={[{ left: "14%", top: "35%", label: "基本機能を開く" }]} />,
           },
           {
             title: "基本情報を設定する",
@@ -47,7 +50,7 @@ export default function AdminManualPage() {
               "代表者表示と登録内容を確認し、変更後は画面を開き直して反映を確かめます。",
             ],
             caution: "決算月の変更は会費管理と総会会計の対象年度に影響します。年度途中の変更は会計担当者と確認してから行ってください。",
-            visual: <AnimatedFormPreview theme="blue" title="基本情報" fields={[{ label: "町内会・自治会名", value: "エルタウン町内会" }, { label: "決算月", value: "3月", type: "select" }, { label: "会員世帯数", value: "120世帯" }, { label: "郵便番号", value: "100-0001" }]} action="保存して反映" />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/02-basic-info.png" alt="基本情報のPC管理画面" caption="PC版・基本情報：団体情報を確認して保存します" hotspots={[{ left: "69%", top: "46%", label: "保存して反映" }]} />,
           },
           {
             title: "会員名簿とLINE連携を管理する",
@@ -58,7 +61,7 @@ export default function AdminManualPage() {
               "本人または家族がLINE連携した世帯がシステム利用料の対象です。",
             ],
             caution: "退会承認を行うとその世帯のLINE連携が解除されます。氏名と住所を確認してから実行してください。",
-            visual: <AnimatedAction theme="blue" icon="fas fa-users" title="会員管理" text="登録、CSV取込み、編集、LINE連携状態の確認を行います。" action="会員一覧を確認する" />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/03-member-management.png" alt="会員管理のPC管理画面" caption="PC版・会員管理：登録方法と会員一覧を同じ画面で確認します" hotspots={[{ left: "10%", top: "55%", label: "会員を登録" }, { left: "68%", top: "69%", label: "一覧を確認", delay: 1.2 }]} />,
           },
           {
             title: "会費の請求と入金を管理する",
@@ -69,7 +72,7 @@ export default function AdminManualPage() {
               "退会済み会員の過去の会費記録も年度集計に残ります。",
             ],
             caution: "会費設定を変更しても、作成済みの請求や入金実績は自動変更されません。金額・年度・対象者を請求前に確認してください。",
-            visual: <AnimatedAction theme="blue" icon="fas fa-yen-sign" title="会費管理" text="年度と対象者を選び、請求額と入金状況を管理します。" action="請求額を設定する" />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management.png" alt="会費管理のPC管理画面" caption="PC版・会費管理：会費設定、請求額、入金内訳を確認します" hotspots={[{ left: "12%", top: "52%", label: "会費設定" }, { left: "62%", top: "70%", label: "請求・入金一覧", delay: 1.2 }]} />,
           },
           {
             title: "システム利用料を確認する",
@@ -80,7 +83,7 @@ export default function AdminManualPage() {
               "料金対象世帯数は会員管理のLINE連携状況から確認できます。",
             ],
             caution: "支払い方法が未選択のままでは自動決済されません。運用開始前にカードまたは銀行振込を選択してください。",
-            visual: <AnimatedAction theme="blue" icon="fas fa-file-invoice" title="システム利用料" text="接続数、配信数、請求、支払い状況を月別に確認します。" action="今月の請求見込みを見る" />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee.png" alt="システム利用料のPC管理画面" caption="PC版・システム利用料：今月の利用数と請求見込みを確認します" hotspots={[{ left: "20%", top: "53%", label: "支払い方法" }, { left: "66%", top: "54%", label: "請求見込み", delay: 1.2 }]} />,
           },
           {
             title: "役員を招待・管理する",
@@ -91,7 +94,7 @@ export default function AdminManualPage() {
               "招待した相手が登録を完了したことを「在任中」で確認します。",
             ],
             caution: "最後の管理者は退任できません。先に別の役員の登録完了を確認してから担当を変更してください。",
-            visual: <AnimatedFormPreview theme="blue" title="役員を招待" fields={[{ label: "お名前", value: "山田 花子" }, { label: "メールアドレス", value: "yamada@example.jp" }, { label: "役職", value: "会計", type: "select" }]} action="招待メールを送信" />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" caption="PC版・役員管理：招待フォームと役員の状態を確認します" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
           },
           {
             title: "Stripe連携を開始・確認する",
@@ -103,7 +106,7 @@ export default function AdminManualPage() {
             ],
             caution: "本人確認書類、銀行口座、カード情報、パスワードをel-townの問い合わせやAIヘルプへ送らないでください。",
             link: { href: "/manual/stripe", label: "Stripe連携の詳しい別冊マニュアルを開く" },
-            visual: <AnimatedAction theme="blue" icon="fab fa-stripe-s" title="Stripe連携" text="本番登録、本人確認、入金先口座、受付状態を確認します。" action="Stripe連携を確認する" />,
+            visual: <StripeDesktopPreview focus="registration" caption="PC版・Stripe連携：本番登録、状態更新、PayPay申請の新画面を確認します" />,
           },
         ]}
       />

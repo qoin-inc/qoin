@@ -3,6 +3,7 @@ import {
   AnimatedAction,
   AnimatedFormPreview,
   OnboardingGuide,
+  StripeDesktopPreview,
 } from "../_components/OnboardingGuide";
 import { ManualAccessGate } from "../_components/ManualAccess";
 
@@ -23,6 +24,8 @@ export default function StripeManualPage() {
         time="登録約20〜30分＋Stripeによる確認時間"
         processTitle="本番登録から会費の入金確認まで"
         processSubtitle="重要な個人情報はStripeの画面だけに入力し、各段階の状態を確認しながら進めます"
+        returnHref="/admin"
+        returnLabel="管理画面へ戻る"
         preparation={[
           { icon: "fas fa-file-lines", title: "団体の確認資料", text: "規約・会則、正式名称、団体区分、Webサイトや活動内容" },
           { icon: "fas fa-id-card", title: "代表者の本人確認書類", text: "Stripe画面に表示される有効な書類を原本で準備" },
@@ -60,7 +63,7 @@ export default function StripeManualPage() {
               "登録済み内容がある場合は読み込み完了を待ち、空欄で上書きしないことを確認します。",
             ],
             caution: "団体名を変更する必要がある場合は、先に「基本情報」で正式名称を修正してからStripe連携へ戻ってください。",
-            visual: <AnimatedFormPreview theme="purple" title="Stripeへ登録する団体情報" fields={[{ label: "団体名", value: "エルタウン町内会" }, { label: "連絡先メール", value: "accounting@example.jp" }, { label: "Webサイト", value: "https://example.jp" }, { label: "サービス内容", value: "町内会費のオンライン決済" }]} action="入力内容を確認" />,
+            visual: <StripeDesktopPreview focus="registration" caption="現在のPC画面：右側の「本番Stripe登録を開始」で団体情報を入力します" />,
           },
           {
             title: "3つの準備確認後に本番登録を開始する",
@@ -71,7 +74,7 @@ export default function StripeManualPage() {
               "Stripe画面のURLとStripeの表示を確認してから個人情報を入力します。",
             ],
             caution: "チェックは資料を用意したという確認です。未準備のまま進めるとStripe画面で手続きが止まります。",
-            visual: <AnimatedAction theme="purple" icon="fas fa-arrow-up-right-from-square" title="本番Stripe登録を開始" text="3つの準備確認後、Stripeの安全な登録画面を開きます。" action="入力内容を確認して開始" />,
+            visual: <StripeDesktopPreview focus="start" caption="現在のPC画面：3つの準備確認後に紫色の開始ボタンを押します" />,
           },
           {
             title: "Stripeで組織と代表者情報を入力する",
@@ -104,7 +107,7 @@ export default function StripeManualPage() {
               "審査中の場合は時間を置き、Stripeからのメールを確認してから再更新します。",
             ],
             caution: "登録画面を完了しただけでは、決済受付と入金が有効になっていない場合があります。2項目の「有効」を必ず確認してください。",
-            visual: <AnimatedAction theme="purple" icon="fas fa-rotate" title="連携状態を確認" text="決済受付と入金・振込の両方が有効か更新します。" action="Stripe状態を更新" />,
+            visual: <StripeDesktopPreview focus="status" caption="現在のPC画面：左側の状態一覧と右側の「Stripe状態を更新」を照合します" />,
           },
           {
             title: "会費管理でオンライン決済を有効にする",
@@ -138,7 +141,7 @@ export default function StripeManualPage() {
               "解決しない：エラー文、発生時刻、操作箇所を控えます。個人情報や書類画像は添付しません。",
             ],
             caution: "団体区分、代表者、本人確認、銀行口座に関するStripeの判断は、Stripe画面とStripeからの通知を優先してください。",
-            visual: <AnimatedAction theme="purple" icon="fas fa-shield-halved" title="月次チェック" text="受付状態、入金、未納、登録情報の変更を定期確認します。" action="運用状況を確認する" />,
+            visual: <StripeDesktopPreview focus="paypay" caption="現在のPC画面：本番連携状態を確認し、必要な団体だけPayPay申請へ進みます" />,
           },
         ]}
       />

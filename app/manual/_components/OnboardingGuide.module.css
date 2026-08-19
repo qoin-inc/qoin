@@ -13,6 +13,10 @@
   margin: 0 auto;
 }
 
+.articleDesktop {
+  max-width: 80rem;
+}
+
 .manualListLink {
   width: 100%;
   max-width: 28rem;
@@ -85,6 +89,201 @@
 .stepCardReverse .stepVisual {
   order: 1;
 }
+
+.stepListDesktop .stepCard {
+  grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.55fr);
+}
+
+.stepListDesktop .stepCardReverse {
+  grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.8fr);
+}
+
+.desktopScreenFigure {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+.desktopScreenFrame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 7px solid #26343c;
+  border-radius: 1.1rem;
+  background: #e5e7eb;
+  box-shadow: 0 20px 45px rgba(27, 55, 68, 0.2);
+}
+
+.desktopScreenImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.desktopScreenScroll {
+  aspect-ratio: 16 / 10;
+}
+
+.desktopScreenImageScroll {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: onboarding-desktop-scroll 14s ease-in-out infinite;
+}
+
+.desktopScreenHotspot {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #0f172a;
+  filter: drop-shadow(0 2px 2px rgba(255, 255, 255, 0.95));
+  animation: onboarding-screen-focus 3.2s ease-in-out infinite;
+}
+
+.desktopScreenHotspot i {
+  color: #0284c7;
+  font-size: 1.6rem;
+}
+
+.desktopScreenHotspot strong {
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.94);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.desktopScreenFigure figcaption {
+  margin-top: 0.75rem;
+  color: #607b89;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.desktopScreenFigure figcaption i {
+  margin-right: 0.45rem;
+}
+
+.stripeWalkthroughFigure {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+}
+
+.stripeScreenFrame {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 7px solid #26343c;
+  border-radius: 1.1rem;
+  background: #e5e7eb;
+  box-shadow: 0 20px 45px rgba(27, 55, 68, 0.2);
+}
+
+.stripeScreenCanvas {
+  min-height: 720px;
+  padding: 18px;
+  background: #e8e8e8;
+  color: #111827;
+  text-align: left;
+}
+
+.stripeScreenHero {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  gap: 14px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.stripeScreenHero > span { color: #1d4ed8; font-size: 10px; font-weight: 900; }
+.stripeScreenHero div { display: grid; }
+.stripeScreenHero small { color: #64748b; font-size: 8px; font-weight: 900; }
+.stripeScreenHero strong { margin-top: 2px; font-size: 22px; font-weight: 950; }
+.stripeScreenHero em { margin-top: 3px; color: #64748b; font-size: 8px; font-style: normal; font-weight: 800; }
+
+.stripeScreenTabs {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.stripeScreenTabs span {
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: #fff;
+  color: #475569;
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.stripeScreenTabs .stripeScreenTabActive { background: #111827; color: #fff; }
+
+.stripeScreenGrid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stripeScreenPanel,
+.stripePaypayPanel {
+  position: relative;
+  padding: 13px;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.stripeScreenPanel h4 { margin: 0; font-size: 11px; font-weight: 950; }
+.stripeScreenPanel p,
+.stripePaypayPanel p { margin: 6px 0 8px; color: #64748b; font-size: 7px; line-height: 1.55; font-weight: 750; }
+.stripePanelHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; }
+.stripePanelHeading b { padding: 3px 6px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: 7px; }
+
+.stripeStatusList { margin: 0; }
+.stripeStatusList div { padding: 5px 0; display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #e5e7eb; font-size: 7px; }
+.stripeStatusList dt { color: #64748b; font-weight: 800; }
+.stripeStatusList dd { margin: 0; font-weight: 900; }
+
+.stripeFieldGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stripeFieldGrid label,
+.stripeServiceField { display: grid; gap: 3px; color: #334155; font-size: 6px; font-weight: 900; }
+.stripeFieldGrid b,
+.stripeServiceField b { min-height: 24px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; font-size: 7px; font-weight: 800; }
+.stripeServiceField { margin-top: 6px; }
+.stripeChecks { margin-top: 6px; display: grid; gap: 3px; }
+.stripeChecks span { padding: 4px; border: 1px solid #bfdbfe; border-radius: 4px; background: #eff6ff; color: #334155; font-size: 6px; font-weight: 800; }
+.stripePrimaryButton,
+.stripeSecondaryButton { width: 100%; min-height: 24px; margin-top: 5px; border-radius: 4px; font-size: 6px; font-weight: 900; }
+.stripePrimaryButton { border: 0; background: #4f46e5; color: #fff; }
+.stripeSecondaryButton { border: 1px solid #6366f1; background: #fff; color: #4338ca; }
+
+.stripePaypayPanel { width: calc(50% - 5px); margin-top: 10px; border-color: #fb7185; }
+.stripePaypayFlow { padding: 7px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; border: 1px solid #bae6fd; border-radius: 5px; background: #f0f9ff; color: #075985; font-size: 6px; font-weight: 900; }
+.stripePaypayFields { margin-top: 7px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stripePaypayFields span { padding: 7px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; font-size: 6px; font-weight: 800; }
+
+.stripeFocusStatus,
+.stripeFocusRegistration,
+.stripeFocusStart,
+.stripeFocusPaypay {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 5px rgba(56, 189, 248, 0.2);
+  animation: onboarding-stripe-focus 2.6s ease-in-out infinite;
+}
+
+.stripeButtonFocus { animation: onboarding-button-pulse 1.6s ease-in-out infinite; }
+.stripeScreenPaypay .stripeScreenCanvas { animation: onboarding-stripe-scroll 12s ease-in-out infinite; }
+.stripeWalkthroughFigure figcaption { margin-top: 0.75rem; color: #607b89; font-size: 0.72rem; font-weight: 900; }
+.stripeWalkthroughFigure figcaption i { margin-right: 0.45rem; }
 
 .actualScreenFrame {
   overflow: hidden;
@@ -457,6 +656,28 @@
   }
 }
 
+@keyframes onboarding-desktop-scroll {
+  0%, 18% { transform: translateY(0); }
+  46%, 68% { transform: translateY(-60%); }
+  88%, 100% { transform: translateY(0); }
+}
+
+@keyframes onboarding-screen-focus {
+  0%, 100% { transform: translate(-4px, 7px) scale(0.96); opacity: 0.55; }
+  45%, 65% { transform: translate(0, 0) scale(1.04); opacity: 1; }
+}
+
+@keyframes onboarding-stripe-focus {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12); }
+  50% { box-shadow: 0 0 0 7px rgba(56, 189, 248, 0.3); }
+}
+
+@keyframes onboarding-stripe-scroll {
+  0%, 22% { transform: translateY(0); }
+  48%, 72% { transform: translateY(-43%); }
+  92%, 100% { transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animatedActionIcon,
   .animatedActionButton,
@@ -464,6 +685,20 @@
   .qrScanLine,
   .formPreviewField,
   .formPreviewAction {
+    animation: none;
+  }
+
+  .desktopScreenImageScroll,
+  .desktopScreenHotspot {
+    animation: none;
+  }
+
+  .stripeFocusStatus,
+  .stripeFocusRegistration,
+  .stripeFocusStart,
+  .stripeFocusPaypay,
+  .stripeButtonFocus,
+  .stripeScreenPaypay .stripeScreenCanvas {
     animation: none;
   }
 }
@@ -485,5 +720,13 @@
   .stepCardReverse .stepCopy,
   .stepCardReverse .stepVisual {
     order: initial;
+  }
+
+  .stepListDesktop .stepCard {
+    grid-template-columns: 1fr;
+  }
+
+  .stepListDesktop .stepCardReverse {
+    grid-template-columns: 1fr;
   }
 }
