@@ -27,7 +27,7 @@ export default function StripeManualPage() {
         processTitle="本番登録から会費の入金確認まで"
         processSubtitle="全ステップをPC画面に統一し、重要な個人情報はStripeの画面だけに入力して進めます"
         returnHref="/admin"
-        returnLabel="管理画面へ戻る"
+        returnLabel="町内会の管理画面に戻る"
         desktopLayout
         preparation={[
           { icon: "fas fa-file-lines", title: "団体の確認資料", text: "規約・会則、正式名称、団体区分、Webサイトや活動内容" },

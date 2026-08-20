@@ -24,7 +24,7 @@ export default function AdminManualPage() {
         processTitle="機能ごとの操作方法"
         processSubtitle="現在のPC管理画面を見ながら、各画面の役割・押す場所・確認事項を順番に確認できます"
         returnHref="/admin"
-        returnLabel="管理画面へ戻る"
+        returnLabel="町内会の管理画面に戻る"
         desktopLayout
         preparation={[
           { icon: "fas fa-mobile-screen-button", title: "LINEまたはパソコン", text: "役員アカウントで管理画面を開ける端末" },
