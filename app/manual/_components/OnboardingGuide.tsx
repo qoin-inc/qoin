@@ -128,10 +128,10 @@ export function OnboardingGuide({
                     <div className={`mb-4 inline-grid h-10 w-10 place-items-center rounded-full text-sm font-black text-white ${colors.solid}`}>
                       {index + 1}
                     </div>
-                    <h3 className="text-xl font-black leading-8 text-[#203947]">{step.title}</h3>
-                    <p className="mt-4 text-sm font-semibold leading-8 text-[#607b89]">{step.text}</p>
+                    <h3 className={`${styles.stepTitle} text-xl font-black leading-8 text-[#203947]`}>{step.title}</h3>
+                    <p className={`${styles.stepText} mt-4 text-sm font-semibold leading-8 text-[#607b89]`}>{step.text}</p>
                     {step.points && (
-                      <ul className="mt-5 space-y-2 text-sm font-bold leading-7 text-[#46606d]">
+                      <ul className={`${styles.pointList} mt-5 space-y-2 text-sm font-bold leading-7 text-[#46606d]`}>
                         {step.points.map((point) => (
                           <li className="flex items-start gap-2" key={point}>
                             <i className={`fas fa-check-circle mt-1.5 ${colors.text}`} aria-hidden="true" />
@@ -141,7 +141,7 @@ export function OnboardingGuide({
                       </ul>
                     )}
                     {step.caution && (
-                      <p className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-6 text-amber-900">
+                      <p className={`${styles.caution} mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-6 text-amber-900`}>
                         <i className="fas fa-triangle-exclamation mr-2 text-amber-600" aria-hidden="true" />
                         {step.caution}
                       </p>

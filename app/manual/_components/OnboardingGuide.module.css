@@ -60,9 +60,11 @@
 
 .stepList {
   margin-top: 2rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
+  list-style: none;
 }
 
 .stepCard {
@@ -74,6 +76,11 @@
 
 .stepCopy {
   min-width: 0;
+}
+
+.pointList {
+  padding: 0;
+  list-style: none;
 }
 
 .stepVisual {
@@ -818,8 +825,60 @@
   }
 
   .stepCard {
+    width: 100%;
+    padding: 0 !important;
     grid-template-columns: 1fr;
-    gap: 1.75rem;
+    gap: 1.5rem;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .stepCopy {
+    width: 100%;
+  }
+
+  .stepTitle {
+    font-size: 1.4rem;
+    line-height: 1.5;
+  }
+
+  .stepText {
+    margin-top: 1rem;
+    color: #3f5663;
+    font-size: 1rem;
+    line-height: 1.9;
+    letter-spacing: 0.01em;
+  }
+
+  .pointList {
+    margin-top: 1.25rem;
+    padding: 0;
+    display: grid;
+    gap: 0.65rem;
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+
+  .pointList li {
+    gap: 0.65rem;
+  }
+
+  .caution {
+    margin-top: 1.25rem;
+    padding: 0.25rem 0 0.25rem 0.85rem !important;
+    border: 0 !important;
+    border-left: 4px solid #d97706 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #6b4f24;
+    font-size: 0.875rem;
+    line-height: 1.75;
+  }
+
+  .stepVisual {
+    width: 100%;
   }
 
   .stepCardReverse .stepCopy,
