@@ -285,6 +285,95 @@
 .stripeWalkthroughFigure figcaption { margin-top: 0.75rem; color: #607b89; font-size: 0.72rem; font-weight: 900; }
 .stripeWalkthroughFigure figcaption i { margin-right: 0.45rem; }
 
+.pcGuideFigure { width: 100%; margin: 0; text-align: center; }
+.pcGuideFrame { width: 100%; overflow: hidden; border: 7px solid #26343c; border-radius: 1.1rem; background: #f8fafc; box-shadow: 0 20px 45px rgba(27, 55, 68, 0.2); }
+.pcGuideToolbar { min-height: 28px; padding: 6px 12px; display: flex; align-items: center; gap: 7px; border-bottom: 1px solid #cbd5e1; background: #e2e8f0; color: #475569; font-size: 8px; font-weight: 800; text-align: left; }
+.pcGuideToolbar i { color: #16a34a; }
+.pcGuideFigure figcaption { margin-top: 0.75rem; color: #607b89; font-size: 0.72rem; font-weight: 900; }
+.pcGuideFigure figcaption i { margin-right: 0.45rem; }
+.pcFocusPanel { animation: onboarding-pc-focus 2.6s ease-in-out infinite; }
+
+.stripeFlowScreen { min-height: 360px; padding: 28px; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(135deg, #f7f6ff, #eef7ff); }
+.stripeFlowTitle { display: grid; gap: 5px; text-align: center; }
+.stripeFlowTitle small { color: #635bff; font-size: 10px; font-weight: 950; }
+.stripeFlowTitle strong { color: #1e293b; font-size: 22px; font-weight: 950; }
+.stripeFlowTitle span { color: #64748b; font-size: 9px; font-weight: 800; }
+.stripeFlowNodes { margin-top: 28px; display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 12px; }
+.stripeFlowNodes > div { min-height: 125px; padding: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border: 2px solid #d8d5ff; border-radius: 14px; background: #fff; box-shadow: 0 10px 26px rgba(67, 56, 202, 0.1); }
+.stripeFlowNodes > div > i { color: #475569; font-size: 26px; }
+.stripeFlowNodes > div > strong { color: #1e293b; font-size: 13px; font-weight: 950; }
+.stripeFlowNodes > div > span { color: #64748b; font-size: 8px; font-weight: 800; }
+.stripeFlowNodes > i { color: #635bff; font-size: 18px; animation: onboarding-flow-arrow 1.8s ease-in-out infinite; }
+.stripeFlowNodes .stripeFlowStripe { border-color: #635bff; background: #635bff; }
+.stripeFlowNodes .stripeFlowStripe > i,
+.stripeFlowNodes .stripeFlowStripe > strong,
+.stripeFlowNodes .stripeFlowStripe > span { color: #fff; }
+.stripeFlowChecks { margin-top: 20px; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.stripeFlowChecks span { padding: 7px 9px; border-radius: 999px; background: #fff; color: #475569; font-size: 7px; font-weight: 900; }
+.stripeFlowChecks i { margin-right: 3px; color: #16a34a; }
+
+.stripeHostedScreen { min-height: 390px; display: grid; grid-template-columns: 155px 1fr; background: #f8fafc; text-align: left; }
+.stripeHostedScreen aside { padding: 24px 16px; display: flex; flex-direction: column; gap: 12px; background: #111827; color: #cbd5e1; }
+.stripeHostedScreen aside > i { color: #fff; font-size: 34px; }
+.stripeHostedScreen aside > strong { margin-top: -12px; color: #fff; font-size: 14px; }
+.stripeHostedScreen aside > span { padding: 7px 8px; border-radius: 6px; font-size: 8px; font-weight: 850; }
+.stripeHostedScreen aside > small { margin-top: auto; color: #94a3b8; font-size: 7px; line-height: 1.5; }
+.stripeHostedScreen .pcStepActive { background: #312e81; color: #fff; }
+.stripeHostedScreen > section { padding: 28px; }
+.stripeHostedScreen h4 { margin: 0; color: #111827; font-size: 20px; font-weight: 950; }
+.stripeHostedScreen p { margin: 7px 0 18px; color: #64748b; font-size: 9px; font-weight: 750; }
+.stripeHostedForm { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stripeHostedForm label { display: grid; gap: 4px; }
+.stripeHostedForm span { color: #334155; font-size: 8px; font-weight: 900; }
+.stripeHostedForm b { min-height: 36px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; font-size: 8px; font-weight: 800; }
+.stripeHostedCards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stripeHostedCards > div { min-height: 170px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; border: 2px solid #e2e8f0; border-radius: 12px; background: #fff; text-align: center; }
+.stripeHostedCards i { color: #635bff; font-size: 28px; }
+.stripeHostedCards strong { color: #1e293b; font-size: 11px; font-weight: 950; }
+.stripeHostedCards span { color: #64748b; font-size: 8px; font-weight: 750; }
+.stripeHostedCards button { padding: 8px 13px; border-radius: 6px; background: #eef2ff; color: #4338ca; font-size: 8px; font-weight: 900; }
+.stripeHostedContinue { width: 100%; min-height: 36px; margin-top: 16px; border-radius: 6px; background: #635bff; color: #fff; font-size: 9px; font-weight: 950; animation: onboarding-button-pulse 2s ease-in-out infinite; }
+
+.feeDesktopScreen { min-height: 390px; padding: 18px; background: #e8e8e8; text-align: left; }
+.feeDesktopScreen header { padding: 14px 18px; display: grid; border-radius: 8px; background: #fff; }
+.feeDesktopScreen header small { color: #64748b; font-size: 7px; font-weight: 900; }
+.feeDesktopScreen header strong { color: #111827; font-size: 19px; font-weight: 950; }
+.feeDesktopScreen header span { color: #64748b; font-size: 8px; font-weight: 800; }
+.feeDesktopScreen nav { margin-top: 8px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+.feeDesktopScreen nav span { min-height: 28px; display: grid; place-items: center; border-radius: 5px; background: #fff; color: #475569; font-size: 6px; font-weight: 900; }
+.feeDesktopScreen nav .pcTabActive { background: #111827; color: #fff; }
+.feeDesktopGrid { margin-top: 9px; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.feeDesktopGrid section { min-height: 225px; padding: 14px; border: 2px solid transparent; border-radius: 8px; background: #fff; }
+.feeDesktopGrid h4 { margin: 0 0 10px; color: #111827; font-size: 10px; font-weight: 950; }
+.feeDesktopFields { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.feeDesktopFields span { min-height: 31px; padding: 9px; border: 1px solid #cbd5e1; border-radius: 5px; color: #475569; font-size: 7px; font-weight: 800; }
+.feeDesktopMethods { margin-top: 8px; display: grid; gap: 5px; }
+.feeDesktopMethods b { padding: 7px; border: 1px solid #e2e8f0; border-radius: 5px; color: #475569; font-size: 7px; }
+.feeDesktopMethods .feeDesktopStripe { border-color: #a5b4fc; background: #eef2ff; color: #4338ca; }
+.feeDesktopGrid section > button { width: 100%; min-height: 28px; margin-top: 9px; border-radius: 5px; background: #111827; color: #fff; font-size: 7px; font-weight: 900; }
+.feeDesktopActions { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.feeDesktopActions button { min-height: 31px; border-radius: 5px; background: #4f46e5; color: #fff; font-size: 7px; font-weight: 900; }
+.feeDesktopGrid section > small { display: block; margin-top: 12px; color: #64748b; font-size: 7px; line-height: 1.5; font-weight: 800; }
+
+.memberPaymentDesktop { min-height: 390px; display: grid; grid-template-columns: 155px 1fr; background: #f1f5f9; text-align: left; }
+.memberPaymentDesktop aside { padding: 24px 16px; display: flex; flex-direction: column; gap: 9px; background: #334155; color: #cbd5e1; }
+.memberPaymentDesktop aside strong { margin-bottom: 12px; color: #fff; font-size: 11px; font-weight: 950; }
+.memberPaymentDesktop aside span { padding: 9px; border-radius: 6px; font-size: 8px; font-weight: 850; }
+.memberPaymentDesktop aside .pcStepActive { background: #0ea5e9; color: #fff; }
+.memberPaymentDesktop > section { margin: 20px; padding: 22px; border-radius: 12px; background: #fff; box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08); }
+.memberPaymentDesktop > section > small { color: #0ea5e9; font-size: 8px; font-weight: 950; }
+.memberPaymentDesktop h4 { margin: 2px 0 7px; color: #1e293b; font-size: 19px; font-weight: 950; }
+.memberPaymentDesktop p { margin: 0; color: #64748b; font-size: 8px; font-weight: 750; }
+.memberFeeSummary { margin-top: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.memberFeeSummary span { padding: 10px; display: grid; gap: 3px; border-radius: 7px; background: #f8fafc; }
+.memberFeeSummary small { color: #64748b; font-size: 7px; font-weight: 800; }
+.memberFeeSummary strong { color: #1e293b; font-size: 12px; font-weight: 950; }
+.memberPaymentMethods { margin-top: 14px; display: grid; gap: 7px; }
+.memberPaymentMethods > span { padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; color: #475569; font-size: 8px; font-weight: 850; }
+.memberPaymentMethods button { min-height: 38px; border: 2px solid #38bdf8; border-radius: 7px; background: #0284c7; color: #fff; font-size: 9px; font-weight: 950; }
+.memberPaymentMethods small { color: #64748b; font-size: 7px; font-weight: 750; text-align: center; }
+.memberPaymentMethods a { color: #0369a1; font-size: 7px; font-weight: 900; text-align: center; text-decoration: underline; }
+
 .actualScreenFrame {
   overflow: hidden;
   border: 8px solid #26343c;
@@ -678,6 +767,16 @@
   92%, 100% { transform: translateY(0); }
 }
 
+@keyframes onboarding-pc-focus {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.12); }
+  50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.32); }
+}
+
+@keyframes onboarding-flow-arrow {
+  0%, 100% { transform: translateX(-3px); opacity: 0.5; }
+  50% { transform: translateX(3px); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animatedActionIcon,
   .animatedActionButton,
@@ -699,6 +798,12 @@
   .stripeFocusPaypay,
   .stripeButtonFocus,
   .stripeScreenPaypay .stripeScreenCanvas {
+    animation: none;
+  }
+
+  .pcFocusPanel,
+  .stripeHostedContinue,
+  .stripeFlowNodes > i {
     animation: none;
   }
 }

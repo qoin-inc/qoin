@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import {
-  AnimatedAction,
-  AnimatedFormPreview,
+  FeeSettingsDesktopPreview,
+  MemberPaymentDesktopPreview,
   OnboardingGuide,
   StripeDesktopPreview,
+  StripeFlowDesktopPreview,
+  StripeHostedDesktopPreview,
 } from "../_components/OnboardingGuide";
 import { ManualAccessGate } from "../_components/ManualAccess";
 
 export const metadata: Metadata = {
   title: "Stripe連携 操作マニュアル | el-town オンラインマニュアル",
-  description: "町内会・自治会がStripe本番登録を行い、会費のオンライン決済と入金を開始するまでの詳しい手順です。",
+  description: "最新のPC画面で、Stripe本番登録、カード・PayPay決済、会費の入金確認までを説明します。",
 };
 
 export default function StripeManualPage() {
@@ -20,12 +22,13 @@ export default function StripeManualPage() {
         audience="代表役員・会計担当者向け"
         audienceIcon="fa-credit-card"
         title="Stripe連携 操作マニュアル"
-        summary="エルタウン町内会を例に、準備から本人確認、入金先口座、審査状況、会費請求、会員の支払い、運用後の確認までを順番に説明します。Stripe登録は途中保存されるため、確認事項が足りない場合は無理に進めず、準備後に再開できます。"
-        time="登録約20〜30分＋Stripeによる確認時間"
+        summary="最新のPC画面を使い、Connect本番登録、本人確認、入金先口座、会費設定、任意のPayPay申請、会員の支払い、運用後の確認までを順番に説明します。Stripe登録は途中保存されるため、準備後に再開できます。"
+        time="登録約25〜35分＋Stripe・el-town運営による確認時間"
         processTitle="本番登録から会費の入金確認まで"
-        processSubtitle="重要な個人情報はStripeの画面だけに入力し、各段階の状態を確認しながら進めます"
+        processSubtitle="全ステップをPC画面に統一し、重要な個人情報はStripeの画面だけに入力して進めます"
         returnHref="/admin"
         returnLabel="管理画面へ戻る"
+        desktopLayout
         preparation={[
           { icon: "fas fa-file-lines", title: "団体の確認資料", text: "規約・会則、正式名称、団体区分、Webサイトや活動内容" },
           { icon: "fas fa-id-card", title: "代表者の本人確認書類", text: "Stripe画面に表示される有効な書類を原本で準備" },
@@ -41,7 +44,7 @@ export default function StripeManualPage() {
               "利用条件や手数料は登録時にStripe画面の最新表示を確認します。",
             ],
             caution: "Stripeのパスワード、確認コード、カード番号、本人確認書類の画像を、el-townの問い合わせやAIヘルプへ送らないでください。",
-            visual: <AnimatedAction theme="purple" icon="fab fa-stripe-s" title="安全なオンライン会費" text="会員の支払いから団体口座への入金までを連携します。" action="仕組みを確認する" />,
+            visual: <StripeFlowDesktopPreview caption="PC版：会員の支払いから団体口座への入金までの全体像" />,
           },
           {
             title: "団体区分と登録担当者を決める",
@@ -52,7 +55,7 @@ export default function StripeManualPage() {
               "入金先は個人の生活口座ではなく、団体で管理する口座を用意します。",
             ],
             caution: "団体区分や代表者情報が実態と異なると、追加確認や入金保留の原因になります。不明な場合は会則・登記資料を確認してください。",
-            visual: <AnimatedFormPreview theme="purple" title="登録前の確認" fields={[{ label: "団体区分", value: "非営利団体（町内会・自治会・任意団体）", type: "select" }, { label: "団体名", value: "エルタウン町内会" }, { label: "登録担当", value: "代表者本人" }]} action="登録内容を確認" />,
+            visual: <StripeDesktopPreview focus="registration" caption="PC版・Stripe連携：団体区分と登録情報を資料に照らして確認します" />,
           },
           {
             title: "el-townで団体情報を入力する",
@@ -85,7 +88,7 @@ export default function StripeManualPage() {
               "入力内容の確認画面で誤字、番地、電話番号を見直します。",
             ],
             caution: "Stripeが求める項目は団体区分や確認状況により異なります。このマニュアルにない項目が出た場合は、画面の最新案内を優先してください。",
-            visual: <AnimatedFormPreview theme="purple" title="Stripe 本人情報" fields={[{ label: "代表者氏名", value: "本人確認書類と同じ表記" }, { label: "生年月日", value: "年／月／日" }, { label: "住所", value: "本人確認書類と同じ住所" }, { label: "電話番号", value: "連絡可能な番号" }]} action="内容を保存して続ける" />,
+            visual: <StripeHostedDesktopPreview stage="organization" caption="PC版・Stripe画面：組織と代表者情報を確認資料どおりに入力します" />,
           },
           {
             title: "本人確認書類と入金先口座を登録する",
@@ -96,7 +99,7 @@ export default function StripeManualPage() {
               "登録完了画面が表示されるまでブラウザの戻る操作を避けます。",
             ],
             caution: "本人確認書類と口座情報は必ずStripe画面へ直接入力します。スクリーンショットをメールやチャットへ添付しないでください。",
-            visual: <AnimatedAction theme="purple" icon="fas fa-id-card" title="本人確認・口座登録" text="書類を鮮明に提出し、団体口座の名義を照合します。" action="安全なStripe画面で登録" />,
+            visual: <StripeHostedDesktopPreview stage="verification" caption="PC版・Stripe画面：本人確認書類と団体管理口座を直接登録します" />,
           },
           {
             title: "el-townへ戻り「Stripe状態を更新」する",
@@ -110,26 +113,38 @@ export default function StripeManualPage() {
             visual: <StripeDesktopPreview focus="status" caption="現在のPC画面：左側の状態一覧と右側の「Stripe状態を更新」を照合します" />,
           },
           {
-            title: "会費管理でオンライン決済を有効にする",
-            text: "Stripe連携が有効になったら「基本機能」→「会費管理」を開き、受取方法でStripeカード決済を有効にして保存します。会費名称、標準額、年度開始月、会員向け支払い案内も同時に確認します。",
+            title: "会費管理でカード決済を有効にする",
+            text: "Stripe連携が有効になったら「基本機能」→「会費管理」を開き、「Stripeカード決済」を選択して「この団体の設定を保存」を押します。その後、会計年度、請求額、対象者を確認し「Stripe請求に設定」を押します。",
             points: [
-              "会計年度、金額、対象者を確認してStripe請求対象に設定します。",
+              "会費名称、標準会費額、年度開始月、会員向け支払い案内も同時に確認します。",
               "まず役員を含む少人数で表示と金額を確認してから全体へ案内します。",
               "手集金も併用する場合は、現金とStripeの金額が別欄で集計されることを確認します。",
             ],
             caution: "Stripe連携の有効化と会員への請求設定は別操作です。対象者や金額を確認せず一括設定しないでください。",
-            visual: <AnimatedAction theme="purple" icon="fas fa-file-invoice-dollar" title="会費管理" text="受取方法と金額を確認し、対象会員へ請求を設定します。" action="Stripe請求対象に設定" />,
+            visual: <FeeSettingsDesktopPreview caption="PC版・会費管理：決済方法を保存し、対象会員をStripe請求へ設定します" />,
+          },
+          {
+            title: "必要な団体だけPayPay利用を申請する",
+            text: "PayPayを利用する場合はStripe連携画面下部の「Stripe PayPayの申請」で公開情報を入力します。団体が申請した後、el-town運営の確認、特定商取引法ページの公開、Stripe審査を経て利用可能になります。",
+            points: [
+              "先にStripe Connectの本番登録と決済受付を完了します。",
+              "団体名、運営責任者、所在地、問い合わせ先、会費名称・金額、返金条件を確認します。",
+              "会長個人の自宅住所や個人メールではなく、団体の正式な公開連絡先を使用します。",
+              "承認後は会員のStripe決済画面へPayPayが自動表示されます。",
+            ],
+            caution: "PayPayは任意の団体別オプションです。申請しただけでは有効にならず、公開ページとStripe審査の完了が必要です。",
+            visual: <StripeDesktopPreview focus="paypay" caption="PC版・Stripe連携：公開情報を確認してPayPay利用を申請します" />,
           },
           {
             title: "会員の支払いと自動反映を確認する",
-            text: "会員は会員画面の会費案内から「オンラインで支払う」を押し、Stripeの決済画面で支払います。支払い完了後、役員は会費一覧を更新し、Stripe入金額と未入金額が正しく反映されたことを確認します。",
+            text: "会員は会員画面の会費案内から「オンラインで支払う」を押し、Stripeの安全な決済画面でカードまたは有効化済みのPayPayを選びます。支払い完了後、役員は会費一覧を更新し、Stripe入金額と未入金額が正しく反映されたことを確認します。",
             points: [
               "会員へは支払う年度、金額、期限、支払い完了画面まで確認するよう案内します。",
               "二重支払いを避けるため、完了画面が出た後に同じボタンを繰り返し押さないよう案内します。",
               "反映に時間がかかる場合は画面を更新し、Stripe状態と決済結果を確認します。",
             ],
             caution: "役員が会員のカード番号や確認コードを聞き取って代理入力しないでください。会員本人がStripe画面へ入力します。",
-            visual: <AnimatedAction theme="purple" icon="fas fa-mobile-screen-button" title="会員のオンライン支払い" text="会員本人が安全な決済画面で支払いを完了します。" action="オンラインで支払う" />,
+            visual: <MemberPaymentDesktopPreview caption="PC版・会員画面：カード・PayPayのオンライン支払い導線を確認します" />,
           },
           {
             title: "運用開始後の確認とトラブル対応",
@@ -141,7 +156,7 @@ export default function StripeManualPage() {
               "解決しない：エラー文、発生時刻、操作箇所を控えます。個人情報や書類画像は添付しません。",
             ],
             caution: "団体区分、代表者、本人確認、銀行口座に関するStripeの判断は、Stripe画面とStripeからの通知を優先してください。",
-            visual: <StripeDesktopPreview focus="paypay" caption="現在のPC画面：本番連携状態を確認し、必要な団体だけPayPay申請へ進みます" />,
+            visual: <StripeDesktopPreview focus="status" caption="PC版・Stripe連携：決済受付、入金／振込、追加入力の有無を定期確認します" />,
           },
         ]}
       />

@@ -296,6 +296,7 @@ export function StripeDesktopPreview({
                 <label><span>Stripeへ登録する団体名</span><b>エルタウン町内会</b></label>
                 <label><span>Stripe連絡先メール</span><b>accounting@example.jp</b></label>
                 <label><span>問い合わせ電話番号</span><b>例：03-1234-5678</b></label>
+                <label><span>Webサイト</span><b>https://example.jp</b></label>
               </div>
               <label className={styles.stripeServiceField}><span>サービス内容</span><b>町内会費・自治会費のオンライン受付</b></label>
               <div className={styles.stripeChecks}><span>□ 団体区分を確認しました</span><span>□ 代表者の本人確認書類を準備しました</span><span>□ 団体が管理する入金先口座を準備しました</span></div>
@@ -309,6 +310,98 @@ export function StripeDesktopPreview({
             <div className={styles.stripePaypayFlow}><span>1. 団体が入力・申請</span><span>2. el-town運営が確認</span><span>3. 法定ページ公開</span><span>4. Stripe審査</span></div>
             <div className={styles.stripePaypayFields}><span>団体名　エルタウン町内会</span><span>運営責任者　例：会長 山田太郎</span><span>郵便番号　123-4567</span><span>会費名称　年会費</span></div>
           </section>
+        </div>
+      </div>
+      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
+    </figure>
+  );
+}
+
+export function StripeFlowDesktopPreview({ caption }: { caption: string }) {
+  return (
+    <figure className={styles.pcGuideFigure}>
+      <div className={styles.pcGuideFrame}>
+        <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / Stripe連携</span></div>
+        <div className={styles.stripeFlowScreen}>
+          <div className={styles.stripeFlowTitle}><small>Stripe Connect</small><strong>オンライン会費の流れ</strong><span>カード情報はel-townへ保存されません</span></div>
+          <div className={styles.stripeFlowNodes}>
+            <div><i className="fas fa-users" /><strong>会員</strong><span>カード・PayPayで支払う</span></div>
+            <i className="fas fa-arrow-right" />
+            <div className={styles.stripeFlowStripe}><i className="fab fa-stripe-s" /><strong>Stripe</strong><span>決済・本人確認・振込</span></div>
+            <i className="fas fa-arrow-right" />
+            <div><i className="fas fa-building-columns" /><strong>団体口座</strong><span>売上を受け取る</span></div>
+          </div>
+          <div className={styles.stripeFlowChecks}><span><i className="fas fa-check" /> 1団体1 Connect account</span><span><i className="fas fa-check" /> 決済受付と入金／振込を確認</span><span><i className="fas fa-check" /> 会費一覧へ自動反映</span></div>
+        </div>
+      </div>
+      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
+    </figure>
+  );
+}
+
+export function StripeHostedDesktopPreview({
+  stage,
+  caption,
+}: {
+  stage: "organization" | "verification";
+  caption: string;
+}) {
+  const verification = stage === "verification";
+  return (
+    <figure className={styles.pcGuideFigure}>
+      <div className={styles.pcGuideFrame}>
+        <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>connect.stripe.com</span></div>
+        <div className={styles.stripeHostedScreen}>
+          <aside><i className="fab fa-stripe-s" /><strong>Stripe</strong><span className={!verification ? styles.pcStepActive : ""}>1　組織情報</span><span className={!verification ? styles.pcStepActive : ""}>2　代表者情報</span><span className={verification ? styles.pcStepActive : ""}>3　本人確認</span><span className={verification ? styles.pcStepActive : ""}>4　入金先口座</span><small>表示項目は登録状況により異なります</small></aside>
+          <section>
+            <h4>{verification ? "本人確認と入金先口座" : "組織と代表者について"}</h4>
+            <p>{verification ? "画面に表示された有効な書類と、団体が管理する口座を登録します。" : "会則・登記資料と本人確認書類に一致する内容を入力します。"}</p>
+            {verification ? (
+              <div className={styles.stripeHostedCards}>
+                <div className={styles.pcFocusPanel}><i className="fas fa-id-card" /><strong>代表者の本人確認</strong><span>書類全体が鮮明に写る画像を提出</span><button type="button">書類を選択</button></div>
+                <div><i className="fas fa-building-columns" /><strong>入金先口座</strong><span>金融機関・支店・口座番号・名義</span><button type="button">口座情報を入力</button></div>
+              </div>
+            ) : (
+              <div className={styles.stripeHostedForm}>
+                <label><span>事業形態</span><b>非営利団体</b></label><label><span>組織の正式名称</span><b>エルタウン町内会</b></label><label><span>所在地</span><b>会則・確認資料と同じ住所</b></label><label><span>代表者氏名</span><b>本人確認書類と同じ表記</b></label><label><span>生年月日</span><b>年／月／日</b></label><label><span>電話番号</span><b>連絡可能な番号</b></label>
+              </div>
+            )}
+            <button className={styles.stripeHostedContinue} type="button">保存して続ける</button>
+          </section>
+        </div>
+      </div>
+      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
+    </figure>
+  );
+}
+
+export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
+  return (
+    <figure className={styles.pcGuideFigure}>
+      <div className={styles.pcGuideFrame}>
+        <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / 管理画面 / 会費管理</span></div>
+        <div className={styles.feeDesktopScreen}>
+          <header><small>基本機能</small><strong>会費管理</strong><span>会費設定、請求額、入金状況、手集金</span></header>
+          <nav>{['基本情報', '会員管理', '会費管理', 'システム利用料', '役員管理', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
+          <div className={styles.feeDesktopGrid}>
+            <section className={styles.pcFocusPanel}><h4>会費・決済方法の個別設定</h4><div className={styles.feeDesktopFields}><span>会費名称　年会費</span><span>標準会費額　5,000円</span><span>年度開始月　4月</span></div><div className={styles.feeDesktopMethods}><b>☑ 手集金</b><b className={styles.feeDesktopStripe}>☑ Stripeカード決済</b><b>□ 口座振込</b></div><button type="button">この団体の設定を保存</button></section>
+            <section><h4>会費請求設定</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span><span>請求対象　全会員世帯</span></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button><button type="button">Stripe請求に設定</button></div><small>PayPayは団体の申請・審査完了後にStripe決済画面へ自動表示されます。</small></section>
+          </div>
+        </div>
+      </div>
+      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
+    </figure>
+  );
+}
+
+export function MemberPaymentDesktopPreview({ caption }: { caption: string }) {
+  return (
+    <figure className={styles.pcGuideFigure}>
+      <div className={styles.pcGuideFrame}>
+        <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / 会員画面 / 会費</span></div>
+        <div className={styles.memberPaymentDesktop}>
+          <aside><strong>エルタウン町内会</strong><span>回覧板</span><span className={styles.pcStepActive}>会費</span><span>Live</span><span>設定</span></aside>
+          <section><small>会費</small><h4>2026年度</h4><p>この会費は世帯共通です。世帯主または家族が支払うと全員へ反映されます。</p><div className={styles.memberFeeSummary}><span><small>請求額</small><strong>5,000円</strong></span><span><small>入金額</small><strong>0円</strong></span><span><small>状態</small><strong>未納</strong></span></div><div className={styles.memberPaymentMethods}><span><i className="fas fa-hand-holding-yen" /> 手集金</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> オンラインで支払う（カード・PayPay）</button><small>PayPayはStripeの安全な決済画面で選択できます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div></section>
         </div>
       </div>
       <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
