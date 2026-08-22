@@ -1928,7 +1928,7 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                     <span>人数</span>
                     <input value={facilityReservationDraft.participantCount} onChange={(event) => setFacilityReservationDraft((current) => ({ ...current, participantCount: event.target.value }))} inputMode="numeric" />
                   </label>
-                  <label>
+                  <label className="el-reservation-date-field">
                     <span>年月日</span>
                     <input type="date" value={facilityReservationDraft.reservationDate} onChange={(event) => { setSelectedFacilityDate(event.target.value); setFacilityReservationDraft((current) => ({ ...current, reservationDate: event.target.value })); }} />
                   </label>

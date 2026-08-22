@@ -173,8 +173,8 @@ button { cursor: pointer; border: 0; }
 .el-reply-panel { display: grid; gap: 12px; margin-top: 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; padding: 14px; }
 .el-reply-panel h3 { margin: 0; color: #111827; font-size: 16px; font-weight: 900; }
 .el-reply-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.el-reply-grid label, .el-proxy-tools label { display: grid; gap: 7px; color: #374151; font-size: 12px; font-weight: 900; }
-.el-reply-grid input, .el-reply-grid select, .el-proxy-tools input, .el-proxy-tools textarea { min-height: 46px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; padding: 0 12px; font-weight: 900; }
+.el-reply-grid label, .el-proxy-tools label { min-width: 0; display: grid; gap: 7px; color: #374151; font-size: 12px; font-weight: 900; }
+.el-reply-grid input, .el-reply-grid select, .el-proxy-tools input, .el-proxy-tools textarea { width: 100%; min-width: 0; max-width: 100%; min-height: 46px; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; padding: 0 12px; font-weight: 900; }
 .el-proxy-tools textarea { min-height: 138px; padding: 12px; line-height: 1.7; resize: vertical; }
 .el-live-switch, .el-view-switch, .el-subtabs { display: none; }
 .el-view-switch button, .el-subtabs button { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #475569; font-weight: 900; }
@@ -343,11 +343,12 @@ button { cursor: pointer; border: 0; }
 .help-center-chat-message.user p { border-radius: 11px 3px 11px 11px; background: #e0f2fe; color: #075985; }
 .help-center-form label { display: block; margin-bottom: 7px; color: #475569; font-size: 15px; font-weight: 900; }
 .help-center-form > div { display: grid; grid-template-columns: 1fr 44px; gap: 7px; }
-.help-center-form input { min-width: 0; min-height: 48px; border: 1px solid #cbd5e1; border-radius: 9px; padding: 10px 12px; color: #1f2937; background: #fff; font-size: 16px; }
-.help-center-form button { min-height: 44px; border: 0; border-radius: 9px; background: #0284c7; color: #fff; }
+.help-center-form textarea { width: 100%; min-width: 0; min-height: 96px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 9px; padding: 11px 12px; resize: vertical; color: #1f2937; background: #fff; font: inherit; font-size: 16px; line-height: 1.6; }
+.help-center-form button { min-height: 48px; align-self: end; border: 0; border-radius: 9px; background: #0284c7; color: #fff; }
 .help-center-form button:disabled { opacity: .45; cursor: not-allowed; }
 .help-center-note { display: block; margin-top: 9px; color: #64748b; font-size: 12px; font-weight: 700; }
 @media (max-width: 420px) {
+  .el-facility-booking-card .el-reservation-date-field { grid-column: 1 / -1; }
   .help-center-suggestions.is-operation-grid { grid-template-columns: 1fr; }
 }
 

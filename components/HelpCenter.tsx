@@ -165,7 +165,7 @@ function answerHelpQuestion(audience: HelpAudience, question: string) {
   return "このヘルプでは確認できないため、操作マニュアルを確認してください。";
 }
 
-const initialChat: ChatMessage[] = [{ role: "assistant", content: "操作について分からないことを質問してください。続けて質問することもできます。" }];
+const initialChat: ChatMessage[] = [];
 const initialOperationAnswer = "知りたい操作を選んでください。";
 
 export default function HelpCenter({ audience, showLabel = true, className = "" }: HelpCenterProps) {
@@ -181,7 +181,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   const operationCategories = audience === "portal" ? portalCategories : audience === "admin" ? adminCategories : memberCategories;
   const selectedCategory = operationCategories.find((category) => category.id === selectedCategoryId);
   const title = audience === "member" ? "会員の方のヘルプ" : audience === "portal" ? "マイel-townのヘルプ" : "役員の方のヘルプ";
-  const isAiChatActive = chatMessages.length > 1 || asking;
+  const isAiChatActive = chatMessages.length > 0 || asking;
 
   const resetHelpState = useCallback(() => {
     helpSessionRef.current += 1;
@@ -304,13 +304,15 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
                   <div><i className="fas fa-comments" /><span><strong id={`help-ai-title-${audience}`}>AIチャットで質問</strong><small>続けて質問できます</small></span></div>
                   {isAiChatActive && <button type="button" onClick={resetHelpState}>操作メニューへ戻る</button>}
                 </div>
-                <div className="help-center-chat-log" ref={chatLogRef} aria-live="polite">
-                  {chatMessages.map((message, index) => <div key={`${message.role}-${index}`} className={`help-center-chat-message ${message.role}`}><span>{message.role === "assistant" ? "AI" : "あなた"}</span><p>{message.content}</p></div>)}
-                  {asking && <div className="help-center-chat-message assistant"><span>AI</span><p><i className="fas fa-spinner fa-spin" /> 回答を考えています…</p></div>}
-                </div>
+                {(chatMessages.length > 0 || asking) && (
+                  <div className="help-center-chat-log" ref={chatLogRef} aria-live="polite">
+                    {chatMessages.map((message, index) => <div key={`${message.role}-${index}`} className={`help-center-chat-message ${message.role}`}><span>{message.role === "assistant" ? "AI" : "あなた"}</span><p>{message.content}</p></div>)}
+                    {asking && <div className="help-center-chat-message assistant"><span>AI</span><p><i className="fas fa-spinner fa-spin" /> 回答を考えています…</p></div>}
+                  </div>
+                )}
                 <form className="help-center-form" onSubmit={handleSubmit}>
                   <label htmlFor={`help-question-${audience}`}>質問を入力</label><div>
-                    <input id={`help-question-${audience}`} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={audience === "portal" ? "例：おすすめ情報はどう投稿しますか？" : audience === "admin" ? "例：電子回覧板はどう配信しますか？" : "例：会費の領収書はどこですか？"} maxLength={300} disabled={asking} />
+                    <textarea id={`help-question-${audience}`} value={question} onChange={(event) => setQuestion(event.target.value)} placeholder={audience === "portal" ? "例：おすすめ情報はどう投稿しますか？" : audience === "admin" ? "例：電子回覧板はどう配信しますか？" : "例：会費の領収書はどこですか？"} rows={3} maxLength={300} disabled={asking} />
                     <button type="submit" aria-label="質問を送る" disabled={asking || !question.trim()}><i className="fas fa-paper-plane" /></button>
                   </div>
                 </form>
