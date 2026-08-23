@@ -114,10 +114,11 @@ export function OnboardingGuide({
           </div>
         </section>
 
-        <section>
-          <SectionTitle title={processTitle} subtitle={processSubtitle} />
-          <ol className={`${styles.stepList} ${desktopLayout ? styles.stepListDesktop : ""}`}>
-            {steps.map((step, index) => {
+        {steps.length > 0 && (
+          <section>
+            <SectionTitle title={processTitle} subtitle={processSubtitle} />
+            <ol className={`${styles.stepList} ${desktopLayout ? styles.stepListDesktop : ""}`}>
+              {steps.map((step, index) => {
               const visualFirst = index % 2 === 1;
               return (
                 <li
@@ -156,9 +157,10 @@ export function OnboardingGuide({
                   <div className={styles.stepVisual}>{step.visual}</div>
                 </li>
               );
-            })}
-          </ol>
-        </section>
+              })}
+            </ol>
+          </section>
+        )}
 
       </article>
 
