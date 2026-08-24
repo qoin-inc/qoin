@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function AdminManualPage() {
   return (
-    <ManualAccessGate>
+    <ManualAccessGate scope="admin">
       <OnboardingGuide
         theme="blue"
         audience="町内会・自治会の役員向け"
@@ -22,7 +22,7 @@ export default function AdminManualPage() {
         summary="役員管理画面を利用する前に用意するものを確認します。"
         time="約1分"
         returnHref="/admin"
-        returnLabel="町内会の管理画面に戻る"
+        returnLabel="管理機能に戻る"
         desktopLayout
         preparation={[
           { icon: "fas fa-mobile-screen-button", title: "スマホまたはパソコン", text: "役員アカウントで管理画面を開ける端末" },
@@ -51,12 +51,8 @@ export default function AdminManualPage() {
           },
           {
             title: "基本情報を設定する",
-            text: "団体の正式名称、決算月、会員世帯数、郵便番号を入力し、「保存して反映」を押します。決算月は会費年度や予算・決算の区切りに使われるため、会計運用を始める前に設定してください。",
-            points: [
-              "団体名は会員画面や帳票にも表示されます。略称ではなく正式名称を入力します。",
-              "代表者表示と登録内容を確認し、変更後は画面を開き直して反映を確かめます。",
-            ],
-            caution: "決算月の変更は会費管理と総会会計の対象年度に影響します。年度途中の変更は会計担当者と確認してから行ってください。",
+            text: "町内会・自治会の決算月を入力します。決算月は会費年度や会計の予算・決算に使われるため必ず設定してください。また、町内会・自治会の正式名称や会員世帯数、郵便番号も再度確認して、よろしければ「保存して反映」を押下します。",
+            caution: "・決算月の変更は会費管理や会計の対象年度に影響します。年度途中の変更は会計担当者と確認してから行ってください。",
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/02-basic-info.png" alt="基本情報のPC管理画面" caption="PC版・基本情報：団体情報を確認して保存します" hotspots={[{ left: "69%", top: "46%", label: "保存して反映" }]} />,
           },
           {

@@ -2,17 +2,21 @@
 
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
 
 type ManualAccessState = 'loading' | 'granted' | 'denied';
+type ManualAccessScope = 'registered' | 'admin';
 
-export function useManualAccess(): ManualAccessState {
+export function useManualAccess(scope: ManualAccessScope = 'registered'): ManualAccessState {
   const [state, setState] = useState<ManualAccessState>('loading');
 
   useEffect(() => {
     let active = true;
 
-    const checkAccess = async () => {
+    const checkAccess = async (knownSession?: Session | null) => {
+      setState('loading');
+
       if (
         process.env.NODE_ENV !== 'production' &&
         typeof window !== 'undefined' &&
@@ -22,61 +26,83 @@ export function useManualAccess(): ManualAccessState {
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!active) return;
-      if (!session?.user?.id) {
-        setState('denied');
-        return;
-      }
+      try {
+        const session = knownSession === undefined
+          ? (await supabase.auth.getSession()).data.session
+          : knownSession;
+        if (!active) return;
+        if (!session?.user?.id) {
+          setState('denied');
+          return;
+        }
 
-      const userId = session.user.id;
-      const [adminResult, legacyAdminResult, memberResult] = await Promise.all([
-        supabase
-          .from('neighborhood_admins')
-          .select('status')
-          .eq('admin_auth_id', userId)
-          .eq('status', 'active')
-          .limit(1),
-        supabase
-          .from('neighborhoods')
-          .select('id')
-          .eq('admin_auth_id', userId)
-          .limit(1),
-        supabase
+        const userId = session.user.id;
+        const [adminResult, legacyAdminResult] = await Promise.all([
+          supabase
+            .from('neighborhood_admins')
+            .select('status')
+            .eq('admin_auth_id', userId)
+            .eq('status', 'active')
+            .limit(1),
+          supabase
+            .from('neighborhoods')
+            .select('id')
+            .eq('admin_auth_id', userId)
+            .limit(1),
+        ]);
+
+        if (!active) return;
+
+        const isAdmin = Boolean(adminResult.data?.length || legacyAdminResult.data?.length);
+        if (isAdmin || scope === 'admin') {
+          setState(isAdmin ? 'granted' : 'denied');
+          return;
+        }
+
+        const memberResult = await supabase
           .from('resident_rosters')
           .select('id,status,withdrawal_status,user_auth_id,family_user_auth_id_1,family_user_auth_id_2,family_withdrawal_status_1,family_withdrawal_status_2')
           .or(`user_auth_id.eq.${userId},family_user_auth_id_1.eq.${userId},family_user_auth_id_2.eq.${userId}`)
           .not('neighborhood_id', 'is', null)
-          .limit(20),
-      ]);
+          .limit(20);
 
-      if (!active) return;
+        if (!active) return;
 
-      const isAdmin = Boolean(adminResult.data?.length || legacyAdminResult.data?.length);
-      const isMember = Boolean(memberResult.data?.some((roster: any) => {
-        if (roster.status === 'withdrawn' || roster.withdrawal_status === 'withdrawn') return false;
-        if (roster.family_user_auth_id_1 === userId && roster.family_withdrawal_status_1 === 'withdrawn') return false;
-        if (roster.family_user_auth_id_2 === userId && roster.family_withdrawal_status_2 === 'withdrawn') return false;
-        return true;
-      }));
+        const isMember = Boolean(memberResult.data?.some((roster: any) => {
+          if (roster.status === 'withdrawn' || roster.withdrawal_status === 'withdrawn') return false;
+          if (roster.family_user_auth_id_1 === userId && roster.family_withdrawal_status_1 === 'withdrawn') return false;
+          if (roster.family_user_auth_id_2 === userId && roster.family_withdrawal_status_2 === 'withdrawn') return false;
+          return true;
+        }));
 
-      setState(isAdmin || isMember ? 'granted' : 'denied');
+        setState(isMember ? 'granted' : 'denied');
+      } catch {
+        if (active) setState('denied');
+      }
     };
 
-    checkAccess();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => checkAccess());
+    void checkAccess();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      window.setTimeout(() => void checkAccess(session), 0);
+    });
 
     return () => {
       active = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [scope]);
 
   return state;
 }
 
-export function ManualAccessGate({ children }: { children: React.ReactNode }) {
-  const access = useManualAccess();
+export function ManualAccessGate({
+  children,
+  scope = 'registered',
+}: {
+  children: React.ReactNode;
+  scope?: ManualAccessScope;
+}) {
+  const access = useManualAccess(scope);
 
   if (access === 'loading') {
     return (
