@@ -20,7 +20,6 @@ export default function AdminManualPage() {
         audienceIcon="fa-people-roof"
         title="役員管理画面 基本機能編"
         summary="役員管理画面を利用する前に用意するものを確認します。"
-        time="約1分"
         returnHref="/admin"
         returnLabel="管理機能に戻る"
         desktopLayout
@@ -42,7 +41,7 @@ export default function AdminManualPage() {
               <DesktopScreenPreview
                 src="/manual/screens/admin-basic/01-basic-menu.png"
                 alt="管理トップの基本機能メニュー"
-                caption="PC版・管理トップ：基本機能から操作画面を選びます"
+                caption=""
                 width={1264}
                 height={1026}
                 hotspots={[{ left: "14%", top: "35%", label: "基本機能を開く" }]}
@@ -53,7 +52,7 @@ export default function AdminManualPage() {
             title: "基本情報を設定する",
             text: "町内会・自治会の決算月を入力します。決算月は会費年度や会計の予算・決算に使われるため必ず設定してください。また、町内会・自治会の正式名称や会員世帯数、郵便番号も再度確認して、よろしければ「保存して反映」を押下します。",
             caution: "・決算月の変更は会費管理や会計の対象年度に影響します。年度途中の変更は会計担当者と確認してから行ってください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/02-basic-info.png" alt="基本情報のPC管理画面" caption="PC版・基本情報：団体情報を確認して保存します" hotspots={[{ left: "69%", top: "46%", label: "保存して反映" }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/02-basic-info.png" alt="基本情報のPC管理画面" caption="" width={1664} height={922} hotspots={[{ left: "69%", top: "46%", label: "保存して反映" }]} />,
           },
           {
             title: "会員名簿とLINE連携を管理する",
@@ -64,7 +63,7 @@ export default function AdminManualPage() {
               "本人または家族がLINE連携した世帯がシステム利用料の対象です。",
             ],
             caution: "退会承認を行うとその世帯のLINE連携が解除されます。氏名と住所を確認してから実行してください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/03-member-management.png" alt="会員管理のPC管理画面" caption="PC版・会員管理：登録方法と会員一覧を同じ画面で確認します" hotspots={[{ left: "10%", top: "55%", label: "会員を登録" }, { left: "68%", top: "69%", label: "一覧を確認", delay: 1.2 }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/03-member-management.png" alt="会員管理のPC管理画面" caption="" hotspots={[{ left: "10%", top: "55%", label: "会員を登録" }, { left: "68%", top: "69%", label: "一覧を確認", delay: 1.2 }]} />,
           },
           {
             title: "会費の請求と入金を管理する",
@@ -75,7 +74,7 @@ export default function AdminManualPage() {
               "退会済み会員の過去の会費記録も年度集計に残ります。",
             ],
             caution: "会費設定を変更しても、作成済みの請求や入金実績は自動変更されません。金額・年度・対象者を請求前に確認してください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management.png" alt="会費管理のPC管理画面" caption="PC版・会費管理：会費設定、請求額、入金内訳を確認します" hotspots={[{ left: "12%", top: "52%", label: "会費設定" }, { left: "62%", top: "70%", label: "請求・入金一覧", delay: 1.2 }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management.png" alt="会費管理のPC管理画面" caption="" hotspots={[{ left: "12%", top: "52%", label: "会費設定" }, { left: "62%", top: "70%", label: "請求・入金一覧", delay: 1.2 }]} />,
           },
           {
             title: "システム利用料を確認する",
@@ -86,7 +85,7 @@ export default function AdminManualPage() {
               "料金対象世帯数は会員管理のLINE連携状況から確認できます。",
             ],
             caution: "支払い方法が未選択のままでは自動決済されません。運用開始前にカードまたは銀行振込を選択してください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee.png" alt="システム利用料のPC管理画面" caption="PC版・システム利用料：今月の利用数と請求見込みを確認します" hotspots={[{ left: "20%", top: "53%", label: "支払い方法" }, { left: "66%", top: "54%", label: "請求見込み", delay: 1.2 }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee.png" alt="システム利用料のPC管理画面" caption="" hotspots={[{ left: "20%", top: "53%", label: "支払い方法" }, { left: "66%", top: "54%", label: "請求見込み", delay: 1.2 }]} />,
           },
           {
             title: "役員を招待・管理する",
@@ -97,7 +96,7 @@ export default function AdminManualPage() {
               "招待した相手が登録を完了したことを「在任中」で確認します。",
             ],
             caution: "最後の管理者は退任できません。先に別の役員の登録完了を確認してから担当を変更してください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" caption="PC版・役員管理：招待フォームと役員の状態を確認します" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" caption="" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
           },
           {
             title: "Stripe連携を開始・確認する",
@@ -109,7 +108,7 @@ export default function AdminManualPage() {
             ],
             caution: "本人確認書類、銀行口座、カード情報、パスワードをel-townの問い合わせやAIヘルプへ送らないでください。",
             link: { href: "/manual/stripe", label: "Stripe連携の詳しい別冊マニュアルを開く" },
-            visual: <StripeDesktopPreview focus="registration" caption="PC版・Stripe連携：本番登録、状態更新、PayPay申請の新画面を確認します" />,
+            visual: <StripeDesktopPreview focus="registration" caption="" />,
           },
         ]}
       />

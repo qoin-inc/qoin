@@ -29,7 +29,7 @@ const fetchAdminMemberships = async (accessToken: string): Promise<AdminMembersh
 };
 
 export default function AdminPage() {
-  const [view, setView] = useState<'login' | 'signup' | 'join' | 'invite' | 'select_town' | 'dashboard' | 'forgot_password' | 'update_password'>('login');
+  const [view, setView] = useState<'loading' | 'login' | 'signup' | 'join' | 'invite' | 'select_town' | 'dashboard' | 'forgot_password' | 'update_password'>('loading');
   const [town, setTown] = useState<{id: number, name: string} | null>(null);
   const [adminMemberships, setAdminMemberships] = useState<AdminMembership[]>([]);
 
@@ -215,6 +215,8 @@ export default function AdminPage() {
           setLoginError(error.message || '所属する町内会・自治会を確認できません。');
           setView('login');
         }
+      } else {
+        setView('login');
       }
     };
     init();
@@ -546,6 +548,17 @@ export default function AdminPage() {
       setIsLoggingIn(false);
     }
   };
+
+  if (view === 'loading') {
+    return (
+      <main className="min-h-screen bg-[#f0f2f5] flex items-center justify-center p-6" aria-busy="true">
+        <div className="text-center text-gray-500 font-bold">
+          <i className="fas fa-spinner fa-spin text-3xl text-qoin-main mb-4" aria-hidden="true" />
+          <p>管理機能へ戻っています</p>
+        </div>
+      </main>
+    );
+  }
 
   if (view === 'signup') {
     return <SignupTown onComplete={handleSignupComplete} onCancel={() => setView('login')} />;

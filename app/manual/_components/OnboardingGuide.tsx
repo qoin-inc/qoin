@@ -65,7 +65,7 @@ export function OnboardingGuide({
   audienceIcon: string;
   title: string;
   summary: string;
-  time: string;
+  time?: string;
   preparation: Array<{ icon: string; title: string; text: string }>;
   steps: GuideStep[];
   processTitle?: string;
@@ -88,10 +88,12 @@ export function OnboardingGuide({
           </div>
           <h1 className="text-3xl font-black leading-tight text-[#203947] md:text-4xl">{title}</h1>
           <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-8 text-[#506b78]">{summary}</p>
-          <p className="mt-5 text-xs font-black text-[#607b89]">
-            <i className="far fa-clock mr-2" aria-hidden="true" />
-            所要時間の目安：{time}
-          </p>
+          {time && (
+            <p className="mt-5 text-xs font-black text-[#607b89]">
+              <i className="far fa-clock mr-2" aria-hidden="true" />
+              所要時間の目安：{time}
+            </p>
+          )}
         </div>
       </section>
 
@@ -244,10 +246,12 @@ export function DesktopScreenPreview({
           </span>
         ))}
       </div>
-      <figcaption>
-        <i className="fas fa-desktop" aria-hidden="true" />
-        {caption}
-      </figcaption>
+      {caption && (
+        <figcaption>
+          <i className="fas fa-desktop" aria-hidden="true" />
+          {caption}
+        </figcaption>
+      )}
     </figure>
   );
 }
@@ -314,7 +318,7 @@ export function StripeDesktopPreview({
           </section>
         </div>
       </div>
-      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
+      {caption && <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>}
     </figure>
   );
 }
