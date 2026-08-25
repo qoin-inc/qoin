@@ -192,6 +192,25 @@ type AssemblyAccountingData = {
   settlements: any[];
 };
 
+type AssemblyYearClosure = {
+  id: number | string;
+  neighborhood_id: number;
+  fiscal_year: number;
+  status: "locked" | "unlocked";
+  revision: number;
+  locked_at?: string | null;
+  unlocked_at?: string | null;
+  unlock_reason?: string | null;
+};
+
+type AssemblyYearSnapshot = {
+  categories?: unknown;
+  budgets?: unknown;
+  settlements?: unknown;
+  fee_rows?: unknown;
+  fee_revenue?: number | string | null;
+};
+
 type AssemblyCategoryDraft = {
   type: AssemblyCategoryType;
   parentId: string;
@@ -1061,15 +1080,21 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   const [assemblyReceiptFile, setAssemblyReceiptFile] = useState<File | null>(null);
   const [assemblyBusy, setAssemblyBusy] = useState(false);
   const [assemblyMessage, setAssemblyMessage] = useState("");
+  const [assemblyYearClosure, setAssemblyYearClosure] = useState<AssemblyYearClosure | null>(null);
+  const [assemblyClosureAvailable, setAssemblyClosureAvailable] = useState<boolean | null>(null);
+  const [assemblySnapshotFeeRows, setAssemblySnapshotFeeRows] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   const month = useMemo(() => thisMonthRange(), []);
   const assemblyFeeRevenue = useMemo(
-    () => basicData.fees
+    () => (assemblySnapshotFeeRows || basicData.fees)
       .filter((fee) => getFeeYear(fee) === assemblyFiscalYear)
       .reduce((sum, fee) => sum + getFeePaidAmount(fee), 0),
-    [assemblyFiscalYear, basicData.fees],
+    [assemblyFiscalYear, assemblySnapshotFeeRows, basicData.fees],
   );
+  const assemblyYearLocked = assemblyYearClosure?.status === "locked";
+  const assemblyYearCorrectionOpen = assemblyYearClosure?.status === "unlocked";
+  const canEditAssemblyYear = assemblyClosureAvailable !== null && !assemblyYearLocked && (!assemblyYearCorrectionOpen || isRepresentative);
 
   const refreshFeeYearClosures = useCallback(async () => {
     if (!townId) return;
@@ -1090,8 +1115,55 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   const fetchAssemblyAccounting = async (successMessage = "") => {
     if (!townId) return;
     setAssemblyBusy(true);
+    setAssemblyYearClosure(null);
+    setAssemblyClosureAvailable(null);
+    setAssemblySnapshotFeeRows(null);
     if (!successMessage) setAssemblyMessage("");
     try {
+      let closure: AssemblyYearClosure | null = null;
+      let snapshot: AssemblyYearSnapshot | null = null;
+      const closureResult = await supabase
+        .from("assembly_year_closures")
+        .select("id,neighborhood_id,fiscal_year,status,revision,locked_at,unlocked_at,unlock_reason")
+        .eq("neighborhood_id", townId)
+        .eq("fiscal_year", assemblyFiscalYear)
+        .maybeSingle();
+
+      if (closureResult.error) {
+        const closureError = String(closureResult.error.message || "").toLowerCase();
+        const missingClosureSchema = closureResult.error.code === "PGRST205" || closureError.includes("schema cache") || closureError.includes("does not exist");
+        if (!missingClosureSchema) throw closureResult.error;
+        setAssemblyClosureAvailable(false);
+      } else {
+        closure = (closureResult.data || null) as AssemblyYearClosure | null;
+        setAssemblyClosureAvailable(true);
+        setAssemblyYearClosure(closure);
+        if (closure?.status === "locked") {
+          const snapshotResult = await supabase
+            .from("assembly_year_snapshots")
+            .select("categories,budgets,settlements,fee_rows,fee_revenue")
+            .eq("closure_id", closure.id)
+            .eq("revision", closure.revision)
+            .maybeSingle();
+          if (snapshotResult.error) throw snapshotResult.error;
+          snapshot = (snapshotResult.data || null) as AssemblyYearSnapshot | null;
+          if (!snapshot) throw new Error("確定済み総会会計の固定データを取得できませんでした。");
+        }
+      }
+
+      if (snapshot) {
+        const categories = Array.isArray(snapshot.categories) ? snapshot.categories : [];
+        const budgets = Array.isArray(snapshot.budgets) ? snapshot.budgets : [];
+        const settlements = Array.isArray(snapshot.settlements) ? snapshot.settlements : [];
+        const feeRows = Array.isArray(snapshot.fee_rows) ? snapshot.fee_rows : [];
+        setAssemblyData({ categories: sortAssemblyCategories(categories), budgets, settlements });
+        setAssemblyBudgetDrafts(buildAssemblyBudgetDrafts(categories, budgets));
+        setAssemblySnapshotFeeRows(feeRows);
+        if (successMessage) setAssemblyMessage(successMessage);
+        return;
+      }
+
+      setAssemblySnapshotFeeRows(null);
       const [categoriesResult, budgetsResult, settlementsResult] = await Promise.all([
         supabase
           .from("assembly_categories")
@@ -1138,6 +1210,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
       const isMissingSchema = message.includes("assembly_categories") || message.includes("assembly_budgets") || message.includes("assembly_settlements") || message.includes("schema cache");
       setAssemblyData({ categories: [], budgets: [], settlements: [] });
       setAssemblyBudgetDrafts({});
+      setAssemblySnapshotFeeRows(null);
       setAssemblyMessage(isMissingSchema ? "総会会計DBが未作成です。docs/sql/assembly_accounting_columns_2026-07-09.sql をSupabase SQL Editorで実行してください。" : error?.message || "総会会計データを取得できませんでした。");
     } finally {
       setAssemblyBusy(false);
@@ -2155,6 +2228,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   };
 
   const startAssemblyCategoryEdit = (category: any) => {
+    if (!ensureAssemblyYearEditable()) return;
     setEditingAssemblyCategoryId(category.id);
     setAssemblyCategoryDraft({
       type: category.type === "expense" ? "expense" : "income",
@@ -2168,6 +2242,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
 
   const handleAssemblyCategorySubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!ensureAssemblyYearEditable()) return;
     const name = assemblyCategoryDraft.name.trim();
     if (!name) {
       setAssemblyMessage("科目名を入力してください。");
@@ -2205,6 +2280,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   };
 
   const handleInitializeStandardAssemblyCategories = async () => {
+    if (!ensureAssemblyYearEditable()) return;
     let standardRows = standardAssemblyCategories;
     try {
       const { data } = await supabase
@@ -2258,6 +2334,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   };
 
   const handleAssemblyCategoryDelete = async (category: any) => {
+    if (!ensureAssemblyYearEditable()) return;
     const collectCategoryIds = (target: any): Array<number | string> => {
       const childIds = assemblyData.categories
         .filter((item) => String(item.parent_id) === String(target.id))
@@ -2314,6 +2391,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   };
 
   const handleAssemblyBudgetSave = async () => {
+    if (!ensureAssemblyYearEditable()) return;
     const categories = assemblyData.categories.filter(isActiveAssemblyCategory);
     if (categories.length === 0) {
       setAssemblyMessage("先に科目を作成してください。");
@@ -2356,6 +2434,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
 
   const handleAssemblySettlementSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!ensureAssemblyYearEditable()) return;
     const category = assemblyData.categories.find((item) => String(item.id) === String(assemblySettlementDraft.categoryId));
     const amount = amountFromInput(assemblySettlementDraft.amount);
     if (!category) {
@@ -2398,6 +2477,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   };
 
   const handleAssemblySettlementDelete = async (settlement: any) => {
+    if (!ensureAssemblyYearEditable()) return;
     const confirmed = typeof window === "undefined" || window.confirm(`「${settlement.description || "決算明細"}」を削除します。よろしいですか？`);
     if (!confirmed) return;
 
@@ -3016,6 +3096,68 @@ export default function AdminView({ townId, townName, isRepresentative = false }
     if (!emailResponse.ok) {
       throw new Error(emailResult?.error || "招待メールを送信できませんでした。URLをコピーして送ってください。");
     }
+  };
+
+  const finalizeSelectedAssemblyYear = async () => {
+    if (assemblyClosureAvailable !== true) {
+      setAssemblyMessage("総会会計の年度確定用DB更新が未適用です。管理者へ連絡してください。");
+      return;
+    }
+    const actionLabel = assemblyYearCorrectionOpen ? "再確定" : "確定";
+    if (typeof window !== "undefined" && !window.confirm(`${assemblyFiscalYear}年度の総会会計を${actionLabel}します。${actionLabel}後は予算・決算明細を変更できません。よろしいですか？`)) return;
+
+    setAssemblyBusy(true);
+    setAssemblyMessage("");
+    try {
+      const { data, error } = await supabase.rpc("finalize_assembly_year", {
+        p_neighborhood_id: townId,
+        p_fiscal_year: assemblyFiscalYear,
+      });
+      if (error) throw error;
+      const revision = Number(data?.revision || (assemblyYearClosure?.revision || 0) + 1);
+      await fetchAssemblyAccounting(`${assemblyFiscalYear}年度の総会会計を${actionLabel}し、固定データを改訂${revision}版として保存しました。`);
+    } catch (error: any) {
+      setAssemblyMessage(error?.message || `${assemblyFiscalYear}年度の総会会計を${actionLabel}できませんでした。`);
+      setAssemblyBusy(false);
+    }
+  };
+
+  const unlockSelectedAssemblyYear = async () => {
+    if (!isRepresentative) {
+      setAssemblyMessage("総会会計の確定を解除できるのは代表者だけです。");
+      return;
+    }
+    const reason = typeof window !== "undefined"
+      ? window.prompt(`${assemblyFiscalYear}年度の総会会計確定を解除する理由を入力してください（3文字以上）。`, "訂正のため")
+      : null;
+    if (reason === null) return;
+    if (reason.trim().length < 3) {
+      setAssemblyMessage("確定を解除する理由を3文字以上で入力してください。");
+      return;
+    }
+
+    setAssemblyBusy(true);
+    setAssemblyMessage("");
+    try {
+      const { error } = await supabase.rpc("unlock_assembly_year", {
+        p_neighborhood_id: townId,
+        p_fiscal_year: assemblyFiscalYear,
+        p_reason: reason.trim(),
+      });
+      if (error) throw error;
+      await fetchAssemblyAccounting(`${assemblyFiscalYear}年度の確定を解除しました。代表者が固定化した年度データを訂正した後、再確定してください。`);
+    } catch (error: any) {
+      setAssemblyMessage(error?.message || `${assemblyFiscalYear}年度の確定を解除できませんでした。`);
+      setAssemblyBusy(false);
+    }
+  };
+
+  const ensureAssemblyYearEditable = () => {
+    if (canEditAssemblyYear) return true;
+    setAssemblyMessage(assemblyYearCorrectionOpen
+      ? "確定解除中の総会会計を訂正できるのは代表者だけです。"
+      : "確定済み年度の総会会計データは変更できません。代表者が確定を解除してください。");
+    return false;
   };
 
   const handleAdminInviteCreate = async () => {
@@ -4024,11 +4166,11 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   );
   const filteredAssemblyFeeRevenue = useMemo(() => {
     if (assemblySettlementMonth === "all") return assemblyFeeRevenue;
-    return basicData.fees
+    return (assemblySnapshotFeeRows || basicData.fees)
       .filter((fee) => getFeeYear(fee) === assemblyFiscalYear)
       .filter((fee) => getAssemblyMonthKey(fee.paid_at || fee.payment_date || fee.updated_at || fee.created_at) === assemblySettlementMonth)
       .reduce((sum, fee) => sum + getFeePaidAmount(fee), 0);
-  }, [assemblyFeeRevenue, assemblyFiscalYear, assemblySettlementMonth, basicData.fees]);
+  }, [assemblyFeeRevenue, assemblyFiscalYear, assemblySettlementMonth, assemblySnapshotFeeRows, basicData.fees]);
   const monthlyAssemblyReportRows = useMemo(
     () => buildAssemblyReportRows(assemblyCategories, assemblyData.budgets, filteredAssemblySettlements, filteredAssemblyFeeRevenue),
     [assemblyCategories, assemblyData.budgets, filteredAssemblySettlements, filteredAssemblyFeeRevenue],
@@ -5369,8 +5511,8 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                       <small>{category.is_standard ? "標準科目" : "追加科目"} / 表示順 {category.sort_order ?? 0}</small>
                     </span>
                     <div className="admin-list-actions">
-                      <button type="button" onClick={() => startAssemblyCategoryEdit(category)} disabled={assemblyBusy}>編集</button>
-                      <button type="button" className="delete" onClick={() => handleAssemblyCategoryDelete(category)} disabled={assemblyBusy}>削除</button>
+                      <button type="button" onClick={() => startAssemblyCategoryEdit(category)} disabled={assemblyBusy || !canEditAssemblyYear}>編集</button>
+                      <button type="button" className="delete" onClick={() => handleAssemblyCategoryDelete(category)} disabled={assemblyBusy || !canEditAssemblyYear}>削除</button>
                     </div>
                   </div>
                   {children.map((child) => (
@@ -5380,8 +5522,8 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                         <small>補助科目 / 表示順 {child.sort_order ?? 0}</small>
                       </span>
                       <div className="admin-list-actions">
-                        <button type="button" onClick={() => startAssemblyCategoryEdit(child)} disabled={assemblyBusy}>編集</button>
-                        <button type="button" className="delete" onClick={() => handleAssemblyCategoryDelete(child)} disabled={assemblyBusy}>削除</button>
+                        <button type="button" onClick={() => startAssemblyCategoryEdit(child)} disabled={assemblyBusy || !canEditAssemblyYear}>編集</button>
+                        <button type="button" className="delete" onClick={() => handleAssemblyCategoryDelete(child)} disabled={assemblyBusy || !canEditAssemblyYear}>削除</button>
                       </div>
                     </div>
                   ))}
@@ -5434,7 +5576,12 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 min="2000"
                 max="2100"
                 value={assemblyFiscalYear}
-                onChange={(event) => setAssemblyFiscalYear(Number(event.target.value) || new Date().getFullYear())}
+                onChange={(event) => {
+                  setAssemblyYearClosure(null);
+                  setAssemblyClosureAvailable(null);
+                  setAssemblySnapshotFeeRows(null);
+                  setAssemblyFiscalYear(Number(event.target.value) || new Date().getFullYear());
+                }}
               />
             </label>
             <button type="button" onClick={() => fetchAssemblyAccounting()} disabled={assemblyBusy}>
@@ -5443,6 +5590,44 @@ export default function AdminView({ townId, townName, isRepresentative = false }
             </button>
           </div>
         </div>
+
+        <section className={`admin-basic-card admin-fee-closure ${assemblyYearLocked ? "locked" : assemblyYearCorrectionOpen ? "unlocked" : "open"}`}>
+          <div>
+            <span className="admin-fee-closure-status">
+              <i className={`fas ${assemblyYearLocked ? "fa-lock" : assemblyYearCorrectionOpen ? "fa-lock-open" : "fa-pen-to-square"}`} />
+              {assemblyYearLocked ? "確定済み" : assemblyYearCorrectionOpen ? "確定解除・訂正中" : "未確定"}
+            </span>
+            <h3>{assemblyFiscalYear}年度の総会会計</h3>
+            <p>
+              {assemblyYearLocked
+                ? "確定時点の科目・予算・決算明細・会費連携額を固定データとして表示しています。変更はできません。"
+                : assemblyYearCorrectionOpen
+                  ? `代表者だけが固定化した年度データを訂正できます。訂正後は必ず再確定してください。${assemblyYearClosure?.unlock_reason ? ` 解除理由：${assemblyYearClosure.unlock_reason}` : ""}`
+                  : "内容を確認して年度を確定すると、改版スナップショットとして保存され変更不可になります。"}
+            </p>
+            {assemblyYearClosure && <small>改訂 {assemblyYearClosure.revision}版</small>}
+          </div>
+          <div className="admin-fee-closure-actions">
+            {!assemblyYearClosure && (
+              <button type="button" onClick={() => void finalizeSelectedAssemblyYear()} disabled={assemblyBusy || assemblyClosureAvailable !== true || assemblyCategories.length === 0}>
+                <i className="fas fa-lock" /> 年度を確定
+              </button>
+            )}
+            {assemblyYearLocked && isRepresentative && (
+              <button type="button" className="unlock" onClick={() => void unlockSelectedAssemblyYear()} disabled={assemblyBusy}>
+                <i className="fas fa-lock-open" /> 確定を解除
+              </button>
+            )}
+            {assemblyYearCorrectionOpen && isRepresentative && (
+              <button type="button" onClick={() => void finalizeSelectedAssemblyYear()} disabled={assemblyBusy || assemblyCategories.length === 0}>
+                <i className="fas fa-lock" /> 訂正後に再確定
+              </button>
+            )}
+            {assemblyYearLocked && !isRepresentative && <small>確定解除は代表者だけが行えます。</small>}
+            {assemblyYearCorrectionOpen && !isRepresentative && <small>訂正と再確定は代表者だけが行えます。</small>}
+          </div>
+          {assemblyClosureAvailable === false && <div className="admin-basic-message error">総会会計の年度確定用DB更新が未適用です。</div>}
+        </section>
 
         <div className="admin-view-tabs admin-accounting-tabs">
           {assemblyTabs.map((tab) => (
@@ -5468,7 +5653,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                   <p>親科目または補助科目として登録します。</p>
                 </div>
                 <div className="admin-heading-actions">
-                  <button type="button" className="secondary" onClick={handleInitializeStandardAssemblyCategories} disabled={assemblyBusy}>
+                  <button type="button" className="secondary" onClick={handleInitializeStandardAssemblyCategories} disabled={assemblyBusy || !canEditAssemblyYear}>
                     <i className="fas fa-wand-magic-sparkles" />
                     <span>標準科目を作成</span>
                   </button>
@@ -5478,7 +5663,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                       <span>新規に戻る</span>
                     </button>
                   )}
-                  <button type="submit" disabled={assemblyBusy}>
+                  <button type="submit" disabled={assemblyBusy || !canEditAssemblyYear}>
                     <i className={`fas ${assemblyBusy ? "fa-spinner fa-spin" : "fa-floppy-disk"}`} />
                     <span>{editingAssemblyCategoryId ? "更新" : "追加"}</span>
                   </button>
@@ -5487,14 +5672,14 @@ export default function AdminView({ townId, townName, isRepresentative = false }
               <div className="admin-basic-form">
                 <label>
                   <span>区分</span>
-                  <select value={assemblyCategoryDraft.type} onChange={(event) => handleAssemblyCategoryDraftChange("type", event.target.value as AssemblyCategoryType)}>
+                  <select value={assemblyCategoryDraft.type} onChange={(event) => handleAssemblyCategoryDraftChange("type", event.target.value as AssemblyCategoryType)} disabled={!canEditAssemblyYear}>
                     <option value="income">収入</option>
                     <option value="expense">支出</option>
                   </select>
                 </label>
                 <label>
                   <span>親科目</span>
-                  <select value={assemblyCategoryDraft.parentId} onChange={(event) => handleAssemblyCategoryDraftChange("parentId", event.target.value)}>
+                  <select value={assemblyCategoryDraft.parentId} onChange={(event) => handleAssemblyCategoryDraftChange("parentId", event.target.value)} disabled={!canEditAssemblyYear}>
                     <option value="">親科目として登録</option>
                     {assemblyParentOptions.map((category) => (
                       <option key={category.id} value={category.id}>{category.name}</option>
@@ -5503,11 +5688,11 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 </label>
                 <label>
                   <span>科目名</span>
-                  <input value={assemblyCategoryDraft.name} onChange={(event) => handleAssemblyCategoryDraftChange("name", event.target.value)} placeholder="例: 会費、事務費、印刷費" />
+                  <input value={assemblyCategoryDraft.name} onChange={(event) => handleAssemblyCategoryDraftChange("name", event.target.value)} placeholder="例: 会費、事務費、印刷費" disabled={!canEditAssemblyYear} />
                 </label>
                 <label>
                   <span>表示順</span>
-                  <input type="number" value={assemblyCategoryDraft.sortOrder} onChange={(event) => handleAssemblyCategoryDraftChange("sortOrder", event.target.value)} placeholder="例: 10" />
+                  <input type="number" value={assemblyCategoryDraft.sortOrder} onChange={(event) => handleAssemblyCategoryDraftChange("sortOrder", event.target.value)} placeholder="例: 10" disabled={!canEditAssemblyYear} />
                 </label>
               </div>
             </form>
@@ -5526,7 +5711,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 <div className="admin-heading-actions">
                   <button type="button" className="secondary" onClick={exportAssemblyBudgetCsv} disabled={assemblyCategories.length === 0}>CSV</button>
                   <button type="button" className="secondary" onClick={printAssemblyBudget} disabled={assemblyCategories.length === 0}>PDF/印刷</button>
-                  <button type="button" onClick={handleAssemblyBudgetSave} disabled={assemblyBusy || assemblyCategories.length === 0}>
+                  <button type="button" onClick={handleAssemblyBudgetSave} disabled={assemblyBusy || assemblyCategories.length === 0 || !canEditAssemblyYear}>
                     <i className={`fas ${assemblyBusy ? "fa-spinner fa-spin" : "fa-floppy-disk"}`} />
                     <span>予算を保存</span>
                   </button>
@@ -5553,10 +5738,10 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                         <tr key={category.id}>
                           <td>{assemblyCategoryTypeLabel[category.type === "expense" ? "expense" : "income"]}</td>
                           <td>{formatAssemblyChildName(category.name || "科目未設定", Boolean(category.parent_id))}</td>
-                          <td><input type="number" value={draft.previousBudgetAmount} onChange={(event) => handleAssemblyBudgetDraftChange(category.id, "previousBudgetAmount", event.target.value)} /></td>
-                          <td><input type="number" value={draft.budgetAmount} onChange={(event) => handleAssemblyBudgetDraftChange(category.id, "budgetAmount", event.target.value)} /></td>
+                          <td><input type="number" value={draft.previousBudgetAmount} onChange={(event) => handleAssemblyBudgetDraftChange(category.id, "previousBudgetAmount", event.target.value)} disabled={!canEditAssemblyYear} /></td>
+                          <td><input type="number" value={draft.budgetAmount} onChange={(event) => handleAssemblyBudgetDraftChange(category.id, "budgetAmount", event.target.value)} disabled={!canEditAssemblyYear} /></td>
                           <td className={`num ${budget - previousBudget < 0 ? "minus" : "plus"}`}>{yen(budget - previousBudget)}</td>
-                          <td><input value={draft.note} onChange={(event) => handleAssemblyBudgetDraftChange(category.id, "note", event.target.value)} /></td>
+                          <td><input value={draft.note} onChange={(event) => handleAssemblyBudgetDraftChange(category.id, "note", event.target.value)} disabled={!canEditAssemblyYear} /></td>
                         </tr>
                       );
                     })}
@@ -5608,7 +5793,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                   <h3>決算明細入力</h3>
                   <p>{assemblyFiscalYear}年度の領収書・明細を登録します。</p>
                 </div>
-                <button type="submit" disabled={assemblyBusy || settlementCategoryOptions.length === 0}>
+                <button type="submit" disabled={assemblyBusy || settlementCategoryOptions.length === 0 || !canEditAssemblyYear}>
                   <i className={`fas ${assemblyBusy ? "fa-spinner fa-spin" : "fa-receipt"}`} />
                   <span>明細を追加</span>
                 </button>
@@ -5616,14 +5801,14 @@ export default function AdminView({ townId, townName, isRepresentative = false }
               <div className="admin-basic-form">
                 <label>
                   <span>区分</span>
-                  <select value={assemblySettlementDraft.type} onChange={(event) => handleAssemblySettlementDraftChange("type", event.target.value as AssemblyCategoryType)}>
+                  <select value={assemblySettlementDraft.type} onChange={(event) => handleAssemblySettlementDraftChange("type", event.target.value as AssemblyCategoryType)} disabled={!canEditAssemblyYear}>
                     <option value="income">収入</option>
                     <option value="expense">支出</option>
                   </select>
                 </label>
                 <label>
                   <span>科目</span>
-                  <select value={assemblySettlementDraft.categoryId} onChange={(event) => handleAssemblySettlementDraftChange("categoryId", event.target.value)}>
+                  <select value={assemblySettlementDraft.categoryId} onChange={(event) => handleAssemblySettlementDraftChange("categoryId", event.target.value)} disabled={!canEditAssemblyYear}>
                     <option value="">選択してください</option>
                     {settlementCategoryOptions.map((category) => (
                       <option key={category.id} value={category.id}>{formatAssemblyChildName(category.name || "科目未設定", Boolean(category.parent_id))}</option>
@@ -5632,19 +5817,19 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 </label>
                 <label>
                   <span>日付</span>
-                  <input type="date" value={assemblySettlementDraft.paidDate} onChange={(event) => handleAssemblySettlementDraftChange("paidDate", event.target.value)} />
+                  <input type="date" value={assemblySettlementDraft.paidDate} onChange={(event) => handleAssemblySettlementDraftChange("paidDate", event.target.value)} disabled={!canEditAssemblyYear} />
                 </label>
                 <label>
                   <span>金額</span>
-                  <input type="number" value={assemblySettlementDraft.amount} onChange={(event) => handleAssemblySettlementDraftChange("amount", event.target.value)} placeholder="0" />
+                  <input type="number" value={assemblySettlementDraft.amount} onChange={(event) => handleAssemblySettlementDraftChange("amount", event.target.value)} placeholder="0" disabled={!canEditAssemblyYear} />
                 </label>
                 <label className="admin-basic-wide">
                   <span>摘要</span>
-                  <input value={assemblySettlementDraft.description} onChange={(event) => handleAssemblySettlementDraftChange("description", event.target.value)} placeholder="例: コピー用紙購入、会場使用料" />
+                  <input value={assemblySettlementDraft.description} onChange={(event) => handleAssemblySettlementDraftChange("description", event.target.value)} placeholder="例: コピー用紙購入、会場使用料" disabled={!canEditAssemblyYear} />
                 </label>
                 <label className="admin-basic-wide">
                   <span>領収書画像/PDF</span>
-                  <input type="file" accept="image/*,application/pdf" onChange={(event) => setAssemblyReceiptFile(event.target.files?.[0] || null)} />
+                  <input type="file" accept="image/*,application/pdf" onChange={(event) => setAssemblyReceiptFile(event.target.files?.[0] || null)} disabled={!canEditAssemblyYear} />
                 </label>
               </div>
             </form>
@@ -5715,7 +5900,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                         <td>{settlement.description || "-"}</td>
                         <td className="num">{yen(Number(settlement.amount || 0))}</td>
                         <td>{settlement.receipt_url ? <a href={settlement.receipt_url} target="_blank" rel="noreferrer">表示</a> : "-"}</td>
-                        <td><button type="button" className="danger-text" onClick={() => handleAssemblySettlementDelete(settlement)} disabled={assemblyBusy}>削除</button></td>
+                        <td><button type="button" className="danger-text" onClick={() => handleAssemblySettlementDelete(settlement)} disabled={assemblyBusy || !canEditAssemblyYear}>削除</button></td>
                       </tr>
                     ))}
                     {filteredAssemblySettlements.length === 0 && (

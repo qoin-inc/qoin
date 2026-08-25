@@ -77,6 +77,24 @@ export default function AdminManualPage() {
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management.png" alt="会費管理のPC管理画面" caption="" hotspots={[{ left: "12%", top: "52%", label: "会費設定" }, { left: "62%", top: "70%", label: "請求・入金一覧", delay: 1.2 }]} />,
           },
           {
+            title: "総会会計を年度確定する",
+            text: "総会会計で科目、予算、決算明細、会費連携額を確認し、「年度を確定」を押します。確定時点のデータが固定保存され、予算や決算明細を変更できなくなります。",
+            points: [
+              "確定後の決算書は、科目や会費データが後から変わっても確定時点の内容で表示されます。",
+              "訂正が必要な場合は代表者が理由を入力して確定を解除します。",
+              "確定解除中は代表者だけが固定化した年度データを訂正でき、訂正後は再確定します。",
+            ],
+            caution: "年度確定前に、収入・支出・領収書・会費連携額を確認してください。確定解除と訂正内容は履歴に記録されます。",
+            visual: (
+              <div style={{ padding: "28px", borderRadius: "18px", background: "#f0f7fb", border: "1px solid #c9e4f2" }}>
+                <p style={{ margin: 0, color: "#087ca7", fontWeight: 800 }}>未確定</p>
+                <h3 style={{ margin: "8px 0" }}>2026年度の総会会計</h3>
+                <p style={{ margin: "0 0 18px", color: "#526577" }}>科目・予算・決算明細・会費連携額を確認して固定保存します。</p>
+                <span style={{ display: "inline-block", padding: "10px 18px", borderRadius: "10px", background: "#087ca7", color: "white", fontWeight: 800 }}>🔒 年度を確定</span>
+              </div>
+            ),
+          },
+          {
             title: "システム利用料を確認する",
             text: "支払い方法を選び、当月のLINE接続世帯数、無料プッシュ枠、超過配信数、税込請求見込みを確認します。月別請求一覧では請求日、金額、入金状態を確認し、入金後に領収書を出力できます。",
             points: [
