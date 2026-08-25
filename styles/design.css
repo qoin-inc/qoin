@@ -3305,16 +3305,97 @@ button { cursor: pointer; border: 0; }
   }
 }
 
+.admin-fee-closure,
 .admin-fee-command,
 .admin-fee-summary,
 .admin-fee-list {
   min-width: 0;
 }
 
+.admin-fee-closure,
 .admin-fee-command,
 .admin-fee-summary,
 .admin-fee-list {
   grid-column: 1 / -1;
+}
+
+.admin-fee-closure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px 24px;
+  align-items: center;
+  border-left: 6px solid #0284c7;
+}
+
+.admin-fee-closure.locked {
+  border-left-color: #475569;
+  background: #f8fafc;
+}
+
+.admin-fee-closure.unlocked {
+  border-left-color: #d97706;
+  background: #fffbeb;
+}
+
+.admin-fee-closure h3 {
+  margin: 7px 0 4px;
+}
+
+.admin-fee-closure p,
+.admin-fee-closure small {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.65;
+  font-weight: 700;
+}
+
+.admin-fee-closure-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #0369a1;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-fee-closure.locked .admin-fee-closure-status { color: #334155; }
+.admin-fee-closure.unlocked .admin-fee-closure-status { color: #b45309; }
+
+.admin-fee-closure-actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.admin-fee-closure-actions button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #fff;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-fee-closure-actions button.unlock { background: #b45309; }
+
+.admin-fee-closure-actions button:disabled,
+.admin-fee-target-mode button:disabled,
+.admin-fee-roster-buttons button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.admin-fee-closure > .admin-basic-message {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .admin-fee-closure { grid-template-columns: 1fr; }
+  .admin-fee-closure-actions { justify-items: stretch; }
 }
 
 .admin-fee-form {

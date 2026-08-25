@@ -407,6 +407,37 @@ export async function POST(req: Request) {
         .eq('id', feeRecordId)
         .maybeSingle();
 
+      const feeFiscalYear = Number(currentFee?.fiscal_year ?? currentFee?.year);
+      const closureResult = currentFee?.neighborhood_id && Number.isFinite(feeFiscalYear)
+        ? await supabase
+          .from('fee_year_closures')
+          .select('id')
+          .eq('neighborhood_id', currentFee.neighborhood_id)
+          .eq('fiscal_year', feeFiscalYear)
+          .maybeSingle()
+        : { data: null, error: null };
+      if (closureResult.error && closureResult.error.code !== '42P01' && closureResult.error.code !== 'PGRST205') {
+        throw closureResult.error;
+      }
+      if (closureResult.data?.id) {
+        const latePayment = await supabase.from('fee_year_post_lock_payments').upsert({
+          closure_id: closureResult.data.id,
+          neighborhood_id: currentFee.neighborhood_id,
+          fiscal_year: feeFiscalYear,
+          fee_record_id: String(feeRecordId),
+          stripe_checkout_session_id: session.id,
+          stripe_payment_intent_id: paymentIntentId,
+          amount: session.amount_total || 0,
+          status: 'pending_review',
+          payment_data: {
+            payment_status: session.payment_status,
+            payment_source: session.metadata?.payment_source || null,
+          },
+        }, { onConflict: 'stripe_checkout_session_id' });
+        if (latePayment.error) throw latePayment.error;
+        return NextResponse.json({ received: true, finalizedFeePaymentStored: true });
+      }
+
       const paidAt = new Date().toISOString();
       const alreadyRecorded = Boolean(paymentIntentId && currentFee?.stripe_payment_intent_id === paymentIntentId);
       const cashPaid = Number(currentFee?.paid_amount_cash || 0);

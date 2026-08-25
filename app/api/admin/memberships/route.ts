@@ -6,7 +6,7 @@ const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(
   headers: { 'Cache-Control': 'no-store' },
 });
 
-const membershipColumns = 'id,admin_auth_id,admin_email,admin_role,neighborhood_id,neighborhoods(id,name)';
+const membershipColumns = 'id,admin_auth_id,admin_email,admin_role,neighborhood_id,neighborhoods(id,name,admin_auth_id,admin_email)';
 
 export async function GET(request: Request) {
   const accessToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim() || '';
@@ -113,6 +113,10 @@ export async function GET(request: Request) {
       return {
         adminId: String(record.id),
         role: String(record.admin_role || '役員'),
+        isRepresentative: Boolean(
+          neighborhood.admin_auth_id === user.id
+          || String(neighborhood.admin_email || '').trim().toLowerCase() === userEmail
+        ),
         town: {
           id: Number(neighborhood.id),
           name: String(neighborhood.name),

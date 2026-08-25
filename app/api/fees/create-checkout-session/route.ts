@@ -47,6 +47,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "この会費請求を支払う権限がありません。" }, { status: 403 });
     }
 
+    const closureResult = await supabase
+      .from("fee_year_closures")
+      .select("status")
+      .eq("neighborhood_id", townId)
+      .eq("fiscal_year", Number(fee.fiscal_year ?? fee.year))
+      .maybeSingle();
+    if (closureResult.error && closureResult.error.code !== "42P01" && closureResult.error.code !== "PGRST205") {
+      throw closureResult.error;
+    }
+    if (closureResult.data) {
+      return NextResponse.json({ error: "この年度の会費は確定済みのため、オンライン決済を開始できません。" }, { status: 409 });
+    }
+
     const [{ data: town }, { data: feeSetting }] = await Promise.all([
       supabase
         .from("neighborhoods")

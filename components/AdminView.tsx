@@ -8,6 +8,7 @@ import PayPayApplicationPanel from "@/components/PayPayApplicationPanel";
 type AdminViewProps = {
   townId: number;
   townName: string;
+  isRepresentative?: boolean;
 };
 
 type Summary = {
@@ -31,6 +32,17 @@ type BasicData = {
   systemPaymentProfile: any | null;
   admins: any[];
   setting: any | null;
+};
+
+type FeeYearClosure = {
+  id: number | string;
+  neighborhood_id: number;
+  fiscal_year: number;
+  status: "locked" | "unlocked";
+  revision: number;
+  locked_at?: string | null;
+  unlocked_at?: string | null;
+  unlock_reason?: string | null;
 };
 
 type BasicInfoDraft = {
@@ -688,7 +700,7 @@ const getAdminStatusLabel = (admin: any) => {
 };
 const isDeletableAdminInvite = (admin: any) => ["pending", "waiting_approval"].includes(admin.status);
 const isSystemAdminRecord = (admin: any) => String(admin?.admin_email || "").trim().toLowerCase() === systemAdminEmail;
-const getFeeRosterId = (fee: any) => fee.roster_id ?? fee.resident_roster_id ?? fee.member_id ?? null;
+const getFeeRosterId = (fee: any) => fee.roster_id ?? fee.roster_id_snapshot ?? fee.resident_roster_id ?? fee.member_id ?? null;
 const getFeeYear = (fee: any) => Number(fee.fiscal_year ?? fee.year ?? new Date().getFullYear());
 const getFeeBillingAmount = (fee: any) => Number(fee.expected_amount ?? fee.billing_amount ?? fee.amount ?? 0);
 const getFeeCashPaid = (fee: any) => Number(fee.paid_amount_cash ?? (fee.payment_method === "cash" ? fee.paid_amount : 0) ?? 0);
@@ -960,7 +972,7 @@ const normalizeMemberScale = (value?: number | string | null) => {
   return memberScaleOptions[3];
 };
 
-export default function AdminView({ townId, townName }: AdminViewProps) {
+export default function AdminView({ townId, townName, isRepresentative = false }: AdminViewProps) {
   const [summary, setSummary] = useState<Summary>({
     linkedMembers: 0,
     monthlyPushes: 0,
@@ -994,8 +1006,13 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const [feeSelectedMembers, setFeeSelectedMembers] = useState<Record<string, boolean>>({});
   const [feeRosterSearch, setFeeRosterSearch] = useState("");
   const [feeCashDrafts, setFeeCashDrafts] = useState<Record<string, string>>({});
+  const [feeBillingDrafts, setFeeBillingDrafts] = useState<Record<string, string>>({});
   const [feeBusy, setFeeBusy] = useState(false);
   const [feeMessage, setFeeMessage] = useState("");
+  const [feeYearClosures, setFeeYearClosures] = useState<FeeYearClosure[]>([]);
+  const [feeClosureAvailable, setFeeClosureAvailable] = useState<boolean | null>(null);
+  const [feeClosureBusy, setFeeClosureBusy] = useState(false);
+  const [feeClosureMessage, setFeeClosureMessage] = useState("");
   const [feeSettingsDraft, setFeeSettingsDraft] = useState<FeeSettingsDraft>(defaultFeeSettingsDraft);
   const [feeSettingsSaving, setFeeSettingsSaving] = useState(false);
   const [feeSettingsMessage, setFeeSettingsMessage] = useState("");
@@ -1047,6 +1064,22 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       .reduce((sum, fee) => sum + getFeePaidAmount(fee), 0),
     [assemblyFiscalYear, basicData.fees],
   );
+
+  const refreshFeeYearClosures = useCallback(async () => {
+    if (!townId) return;
+    const result = await supabase
+      .from("fee_year_closures")
+      .select("id,neighborhood_id,fiscal_year,status,revision,locked_at,unlocked_at,unlock_reason")
+      .eq("neighborhood_id", townId)
+      .order("fiscal_year", { ascending: false });
+    if (result.error) {
+      setFeeYearClosures([]);
+      setFeeClosureAvailable(false);
+      return;
+    }
+    setFeeYearClosures((result.data || []) as FeeYearClosure[]);
+    setFeeClosureAvailable(true);
+  }, [townId]);
 
   const fetchAssemblyAccounting = async (successMessage = "") => {
     if (!townId) return;
@@ -1348,6 +1381,10 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   useEffect(() => {
     if (townId) fetchAssemblyAccounting();
   }, [townId, assemblyFiscalYear]);
+
+  useEffect(() => {
+    void refreshFeeYearClosures();
+  }, [refreshFeeYearClosures]);
 
   useEffect(() => {
     setAssemblySettlementMonth("all");
@@ -3102,6 +3139,11 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
 
   const feeFiscalYear = Number(feeDraft.fiscalYear || currentFiscalYear(basicData.town?.fiscal_start_month));
   const feeRecordsForYear = basicData.fees.filter((fee) => getFeeYear(fee) === feeFiscalYear);
+  const feeYearClosure = feeYearClosures.find((closure) => Number(closure.fiscal_year) === feeFiscalYear) || null;
+  const feeYearLocked = feeYearClosure?.status === "locked";
+  const feeYearCorrectionOpen = feeYearClosure?.status === "unlocked";
+  const canEditSelectedFeeYear = !feeYearLocked && (!feeYearCorrectionOpen || isRepresentative);
+  const canBatchEditSelectedFeeYear = !feeYearLocked && !feeYearCorrectionOpen;
   const memberById = new Map(basicData.members.map((member) => [String(member.id), member]));
   const activeFeeMembers = basicData.members.filter((member) => !isWithdrawnMember(member));
   const getFeeForMember = (member: any) => feeRecordsForYear.find((fee) => String(getFeeRosterId(fee)) === String(member.id));
@@ -3142,6 +3184,64 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
   const feeSelectedCount = activeFeeMembers.filter((member) => feeSelectedMembers[String(member.id)]).length;
   const feeVisibleSelectedCount = feeRosterMembers.filter((member) => feeSelectedMembers[String(member.id)]).length;
   const feeTargetCount = feeDraft.targetMode === "all" ? activeFeeMembers.length : feeSelectedCount;
+
+  const finalizeSelectedFeeYear = async () => {
+    if (!feeClosureAvailable) {
+      setFeeClosureMessage("年度確定用のDB更新が未適用です。管理者へ連絡してください。");
+      return;
+    }
+    const actionLabel = feeYearCorrectionOpen ? "再確定" : "確定";
+    if (typeof window !== "undefined" && !window.confirm(`${feeFiscalYear}年度の会費データを${actionLabel}します。${actionLabel}後は変更できません。よろしいですか？`)) return;
+
+    setFeeClosureBusy(true);
+    setFeeClosureMessage("");
+    try {
+      const { data, error } = await supabase.rpc("finalize_fee_year", {
+        p_neighborhood_id: townId,
+        p_fiscal_year: feeFiscalYear,
+      });
+      if (error) throw error;
+      await refreshFeeYearClosures();
+      const snapshotCount = Number(data?.snapshotCount || data?.snapshot_count || feeRecordsForYear.length);
+      setFeeClosureMessage(`${feeFiscalYear}年度を${actionLabel}し、${snapshotCount.toLocaleString()}件を独立データとして保存しました。`);
+    } catch (error: any) {
+      setFeeClosureMessage(error?.message || `${feeFiscalYear}年度を${actionLabel}できませんでした。`);
+    } finally {
+      setFeeClosureBusy(false);
+    }
+  };
+
+  const unlockSelectedFeeYear = async () => {
+    if (!isRepresentative) {
+      setFeeClosureMessage("確定を解除できるのは代表者だけです。");
+      return;
+    }
+    const reason = typeof window !== "undefined"
+      ? window.prompt(`${feeFiscalYear}年度の確定を解除する理由を入力してください（3文字以上）。`, "訂正のため")
+      : null;
+    if (reason === null) return;
+    if (reason.trim().length < 3) {
+      setFeeClosureMessage("確定を解除する理由を3文字以上で入力してください。");
+      return;
+    }
+
+    setFeeClosureBusy(true);
+    setFeeClosureMessage("");
+    try {
+      const { error } = await supabase.rpc("unlock_fee_year", {
+        p_neighborhood_id: townId,
+        p_fiscal_year: feeFiscalYear,
+        p_reason: reason.trim(),
+      });
+      if (error) throw error;
+      await refreshFeeYearClosures();
+      setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。代表者が個別データを訂正した後、必ず再確定してください。`);
+    } catch (error: any) {
+      setFeeClosureMessage(error?.message || `${feeFiscalYear}年度の確定を解除できませんでした。`);
+    } finally {
+      setFeeClosureBusy(false);
+    }
+  };
 
   const findExistingFeeRecord = async (payload: Record<string, any>) => {
     const rosterId = payload.roster_id ?? payload.resident_roster_id ?? payload.member_id;
@@ -3379,12 +3479,29 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     return feeCashDrafts[feeId] ?? String(getFeeCashPaid(fee) || "");
   };
 
+  const getFeeBillingDraftValue = (fee: any) => {
+    if (!fee?.id || fee.id === "empty") return "";
+    const feeId = String(fee.id);
+    return feeBillingDrafts[feeId] ?? String(getFeeBillingAmount(fee));
+  };
+
   const handleFeeCashDraftChange = (feeId: number | string, value: string) => {
     setFeeCashDrafts((current) => ({ ...current, [String(feeId)]: value }));
     setFeeMessage("");
   };
 
+  const handleFeeBillingDraftChange = (feeId: number | string, value: string) => {
+    setFeeBillingDrafts((current) => ({ ...current, [String(feeId)]: value }));
+    setFeeMessage("");
+  };
+
   const applyFeeBilling = async (channel: "manual" | "stripe") => {
+    if (!canBatchEditSelectedFeeYear) {
+      setFeeMessage(feeYearCorrectionOpen
+        ? "確定解除後は、代表者が会費一覧から個別データを訂正してください。"
+        : "確定済み年度の会費は変更できません。代表者が確定を解除してください。");
+      return;
+    }
     const amount = Number(feeDraft.amount);
     if (!Number.isFinite(feeFiscalYear) || feeFiscalYear < 2000) {
       setFeeMessage("会計年度を正しく入力してください。");
@@ -3440,12 +3557,22 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
     const feeId = String(fee?.id || "");
     const amountText = getFeeCashDraftValue(fee).trim();
     const amount = Number(amountText);
+    const billingText = getFeeBillingDraftValue(fee).trim();
+    const correctedBillingAmount = Number(billingText);
+    if (!canEditSelectedFeeYear) {
+      setFeeMessage("確定済み年度の会費は変更できません。代表者が確定を解除してください。");
+      return;
+    }
     if (!feeId || feeId === "empty") {
       setFeeMessage("入金修正できる会費レコードがありません。先に請求額を設定してください。");
       return;
     }
     if (amountText === "" || !Number.isFinite(amount) || amount < 0) {
       setFeeMessage("手集金額を0円以上で入力してください。");
+      return;
+    }
+    if (billingText === "" || !Number.isFinite(correctedBillingAmount) || correctedBillingAmount < 0) {
+      setFeeMessage("請求額を0円以上で入力してください。");
       return;
     }
 
@@ -3456,15 +3583,17 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
       const cash = amount;
       const stripe = getFeeStripePaid(fee);
       const paidAmount = cash + stripe;
-      const billingAmount = getFeeBillingAmount(fee);
       const paymentMethod = cash > 0 && stripe > 0 ? "mixed" : stripe > 0 ? "stripe" : cash > 0 ? "cash" : null;
       const payload = {
+        expected_amount: correctedBillingAmount,
+        billing_amount: correctedBillingAmount,
+        amount: correctedBillingAmount,
         paid_amount_cash: cash,
         paid_amount_stripe: stripe,
         paid_amount: paidAmount,
         payment_method: paymentMethod,
         last_payment_method: cash > 0 ? "cash" : stripe > 0 ? "stripe" : null,
-        status: paidAmount <= 0 ? "unpaid" : paidAmount >= billingAmount ? "paid" : "partial",
+        status: paidAmount <= 0 ? "unpaid" : paidAmount >= correctedBillingAmount ? "paid" : "partial",
         paid_at: paidAmount > 0 ? new Date().toISOString() : null,
       };
       const saved = await saveFeeRecord(payload, fee.id);
@@ -3477,7 +3606,12 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
         delete next[feeId];
         return next;
       });
-      setFeeMessage("手集金額を更新しました。Stripe入金額とは別に集計します。");
+      setFeeBillingDrafts((current) => {
+        const next = { ...current };
+        delete next[feeId];
+        return next;
+      });
+      setFeeMessage("個別の請求額と手集金額を更新しました。Stripe入金額とは別に集計します。");
     } catch (error: any) {
       setFeeMessage(error?.message || "入金情報の保存に失敗しました。");
     } finally {
@@ -4511,6 +4645,45 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             )}
           </section>
 
+          <section className={`admin-basic-card admin-fee-closure ${feeYearLocked ? "locked" : feeYearCorrectionOpen ? "unlocked" : "open"}`}>
+            <div>
+              <span className="admin-fee-closure-status">
+                <i className={`fas ${feeYearLocked ? "fa-lock" : feeYearCorrectionOpen ? "fa-lock-open" : "fa-pen-to-square"}`} />
+                {feeYearLocked ? "確定済み" : feeYearCorrectionOpen ? "確定解除・訂正中" : "未確定"}
+              </span>
+              <h3>{feeFiscalYear}年度の会費データ</h3>
+              <p>
+                {feeYearLocked
+                  ? "会員の退会・削除に影響されない独立データとして保存され、請求額・入金額とも変更できません。"
+                  : feeYearCorrectionOpen
+                    ? `代表者だけが個別データを訂正できます。訂正後は必ず再確定してください。${feeYearClosure?.unlock_reason ? ` 解除理由：${feeYearClosure.unlock_reason}` : ""}`
+                    : "内容を確認して年度を確定すると、会員情報とは独立して保存され変更不可になります。"}
+              </p>
+              {feeYearClosure && <small>改訂 {feeYearClosure.revision}版</small>}
+            </div>
+            <div className="admin-fee-closure-actions">
+              {!feeYearClosure && (
+                <button type="button" onClick={() => void finalizeSelectedFeeYear()} disabled={feeClosureBusy || feeClosureAvailable !== true || feeRecordsForYear.length === 0}>
+                  <i className="fas fa-lock" /> 年度を確定
+                </button>
+              )}
+              {feeYearLocked && isRepresentative && (
+                <button type="button" className="unlock" onClick={() => void unlockSelectedFeeYear()} disabled={feeClosureBusy}>
+                  <i className="fas fa-lock-open" /> 確定を解除
+                </button>
+              )}
+              {feeYearCorrectionOpen && isRepresentative && (
+                <button type="button" onClick={() => void finalizeSelectedFeeYear()} disabled={feeClosureBusy || feeRecordsForYear.length === 0}>
+                  <i className="fas fa-lock" /> 訂正後に再確定
+                </button>
+              )}
+              {feeYearLocked && !isRepresentative && <small>確定解除は代表者だけが行えます。</small>}
+              {feeYearCorrectionOpen && !isRepresentative && <small>訂正と再確定は代表者だけが行えます。</small>}
+            </div>
+            {feeClosureAvailable === false && <div className="admin-basic-message error">年度確定用のDB更新が未適用です。</div>}
+            {feeClosureMessage && <div className={`admin-basic-message ${feeClosureMessage.includes("できません") || feeClosureMessage.includes("未適用") || feeClosureMessage.includes("入力") ? "error" : "success"}`}>{feeClosureMessage}</div>}
+          </section>
+
           <section className="admin-basic-card admin-fee-command">
             <div className="admin-basic-card-heading">
               <div>
@@ -4531,20 +4704,20 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
               </label>
               <label>
                 <span>会費請求額</span>
-                <input value={feeDraft.amount} onChange={(event) => handleFeeDraftChange("amount", event.target.value)} inputMode="numeric" placeholder="例: 3000" />
+                <input value={feeDraft.amount} onChange={(event) => handleFeeDraftChange("amount", event.target.value)} inputMode="numeric" placeholder="例: 3000" disabled={!canBatchEditSelectedFeeYear} />
               </label>
               <div className="admin-fee-target-mode" role="group" aria-label="請求対象">
                 <span>請求対象</span>
-                <button type="button" className={feeDraft.targetMode === "all" ? "active" : ""} onClick={useAllFeeTargets}>全会員世帯</button>
-                <button type="button" className={feeDraft.targetMode === "selected" ? "active" : ""} onClick={() => setFeeDraft((current) => ({ ...current, targetMode: "selected" }))}>名簿で選択</button>
+                <button type="button" className={feeDraft.targetMode === "all" ? "active" : ""} onClick={useAllFeeTargets} disabled={!canBatchEditSelectedFeeYear}>全会員世帯</button>
+                <button type="button" className={feeDraft.targetMode === "selected" ? "active" : ""} onClick={() => setFeeDraft((current) => ({ ...current, targetMode: "selected" }))} disabled={!canBatchEditSelectedFeeYear}>名簿で選択</button>
                 <small>対象 {feeTargetCount.toLocaleString()}件</small>
               </div>
               <div className="admin-fee-actions">
-                <button type="button" onClick={() => applyFeeBilling("manual")} disabled={feeBusy}>
+                <button type="button" onClick={() => applyFeeBilling("manual")} disabled={feeBusy || !canBatchEditSelectedFeeYear}>
                   <i className="fas fa-file-invoice-yen" />
                   <span>請求額を設定</span>
                 </button>
-                <button type="button" onClick={() => applyFeeBilling("stripe")} disabled={feeBusy || !stripeReadyForFeeBilling}>
+                <button type="button" onClick={() => applyFeeBilling("stripe")} disabled={feeBusy || !stripeReadyForFeeBilling || !canBatchEditSelectedFeeYear}>
                   <i className="fas fa-credit-card" />
                   <span>Stripe請求に設定</span>
                 </button>
@@ -4557,9 +4730,9 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                 <input value={feeRosterSearch} onChange={(event) => setFeeRosterSearch(event.target.value)} placeholder="氏名・カナ・郵便番号・住所で検索" />
               </label>
               <div className="admin-fee-roster-buttons">
-                <button type="button" onClick={useAllFeeTargets}>全会員を対象</button>
-                <button type="button" onClick={() => setVisibleFeeTargets(true)}>表示中を選択</button>
-                <button type="button" onClick={() => setVisibleFeeTargets(false)}>表示中を解除</button>
+                <button type="button" onClick={useAllFeeTargets} disabled={!canBatchEditSelectedFeeYear}>全会員を対象</button>
+                <button type="button" onClick={() => setVisibleFeeTargets(true)} disabled={!canBatchEditSelectedFeeYear}>表示中を選択</button>
+                <button type="button" onClick={() => setVisibleFeeTargets(false)} disabled={!canBatchEditSelectedFeeYear}>表示中を解除</button>
               </div>
               <small>
                 表示 {feeRosterMembers.length.toLocaleString()}件 / 選択 {feeDraft.targetMode === "all" ? activeFeeMembers.length.toLocaleString() : feeSelectedCount.toLocaleString()}件
@@ -4576,7 +4749,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                     <input
                       type="checkbox"
                       checked={checked}
-                      disabled={member.id === "empty"}
+                      disabled={member.id === "empty" || !canBatchEditSelectedFeeYear}
                       onChange={(event) => handleFeeMemberToggle(member.id, event.target.checked)}
                     />
                     <span>
@@ -4590,7 +4763,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
             </div>
 
             {feeMessage && (
-              <div className={`admin-basic-message ${feeMessage.includes("失敗") || feeMessage.includes("正しく") || feeMessage.includes("選択") ? "error" : "success"}`}>
+              <div className={`admin-basic-message ${feeMessage.includes("失敗") || feeMessage.includes("正しく") || feeMessage.includes("選択") || feeMessage.includes("できません") ? "error" : "success"}`}>
                 {feeMessage}
               </div>
             )}
@@ -4638,14 +4811,23 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                       <small>{getFeeYear(fee)}年度</small>
                       {withdrawnFee && <small>退会済み・集計対象</small>}
                     </span>
-                    <span>{yen(getFeeBillingAmount(fee))}</span>
+                    <span className="admin-fee-payment-cell">
+                      <input
+                        value={getFeeBillingDraftValue(fee)}
+                        onChange={(event) => handleFeeBillingDraftChange(fee.id, event.target.value)}
+                        inputMode="numeric"
+                        placeholder="0"
+                        aria-label={`${name}の請求額`}
+                        disabled={fee.id === "empty" || !canEditSelectedFeeYear}
+                      />
+                    </span>
                     <span className="admin-fee-payment-cell">
                       <input
                         value={getFeeCashDraftValue(fee)}
                         onChange={(event) => handleFeeCashDraftChange(fee.id, event.target.value)}
                         inputMode="numeric"
                         placeholder="0"
-                        disabled={fee.id === "empty"}
+                        disabled={fee.id === "empty" || !canEditSelectedFeeYear}
                       />
                     </span>
                     <span>
@@ -4657,7 +4839,7 @@ export default function AdminView({ townId, townName }: AdminViewProps) {
                       <small>入金合計 {yen(getFeePaidAmount(fee))} / {getPaymentMethodLabel(fee)}</small>
                     </span>
                     <span className="admin-fee-row-actions">
-                      <button type="button" onClick={() => handleFeeCashPaymentSave(fee)} disabled={feeBusy || fee.id === "empty"}>手集金を修正</button>
+                      <button type="button" onClick={() => handleFeeCashPaymentSave(fee)} disabled={feeBusy || fee.id === "empty" || !canEditSelectedFeeYear}>個別データを保存</button>
                     </span>
                   </div>
                 );

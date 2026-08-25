@@ -11,6 +11,7 @@ type InviteStatus = 'loading' | 'valid' | 'used' | 'expired' | 'invalid' | 'revo
 type AdminMembership = {
   adminId: string;
   role: string;
+  isRepresentative: boolean;
   town: { id: number; name: string };
 };
 
@@ -97,8 +98,8 @@ export default function AdminPage() {
         }
         if (window.location.search.includes('test_town_switch=1')) {
           setAdminMemberships([
-            { adminId: 'demo-admin-1', role: '副会長', town: { id: 1, name: 'エルタウン町内会' } },
-            { adminId: 'demo-admin-2', role: '会計', town: { id: 2, name: '青空自治会' } },
+            { adminId: 'demo-admin-1', role: '副会長', isRepresentative: false, town: { id: 1, name: 'エルタウン町内会' } },
+            { adminId: 'demo-admin-2', role: '会計', isRepresentative: false, town: { id: 2, name: '青空自治会' } },
           ]);
           setTown({ id: 1, name: 'エルタウン町内会' });
           setView('dashboard');
@@ -111,8 +112,8 @@ export default function AdminPage() {
         window.location.search.includes('test_memberships=2')
       ) {
         setAdminMemberships([
-          { adminId: 'demo-admin-1', role: '会長', town: { id: 1, name: '青空町内会' } },
-          { adminId: 'demo-admin-2', role: '会計', town: { id: 2, name: 'さくら自治会' } },
+          { adminId: 'demo-admin-1', role: '会長', isRepresentative: true, town: { id: 1, name: '青空町内会' } },
+          { adminId: 'demo-admin-2', role: '会計', isRepresentative: false, town: { id: 2, name: 'さくら自治会' } },
         ]);
         setView('select_town');
         return;
@@ -909,6 +910,7 @@ export default function AdminPage() {
   }
 
   if (view === 'dashboard' && town) {
+    const selectedMembership = adminMemberships.find((membership) => membership.town.id === town.id);
     return (
       <div className="bg-[#e4e4e4] min-h-screen font-sans flex flex-col">
         <div className="admin-session-bar bg-qoin-gray_dark text-center text-white text-sm z-50 relative shadow-md">
@@ -946,7 +948,11 @@ export default function AdminPage() {
 
         <div className="flex-1 flex justify-center items-start pt-0 md:pt-10 pb-10 relative">
           <div className="w-full max-w-5xl">
-            <AdminView townId={town.id} townName={town.name} />
+            <AdminView
+              townId={town.id}
+              townName={town.name}
+              isRepresentative={Boolean(selectedMembership?.isRepresentative)}
+            />
             <div className="fixed bottom-6 right-8 z-50 opacity-70 hidden md:flex flex-col items-end pointer-events-none">
                {/* eslint-disable-next-line @next/next/no-img-element */}
                
