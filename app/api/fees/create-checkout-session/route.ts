@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const feeRecordId = String(body?.feeRecordId || "");
     if (!feeRecordId) return NextResponse.json({ error: "会費請求を指定してください。" }, { status: 400 });
 
-    // 金額・団体・Stripeアカウントはブラウザから受け取らず、会員権限で参照できる請求から確定する。
+    // 金額・町内会/自治会情報・Stripeアカウントはブラウザから受け取らず、会員権限で参照できる請求から確定する。
     const { data: fee, error: feeError } = await supabase
       .from("fee_records")
       .select("*")
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         .maybeSingle(),
     ]);
     if (!town?.stripe_account_id || town.stripe_charges_enabled === false) {
-      return NextResponse.json({ error: "この団体のオンライン決済は現在利用できません。" }, { status: 400 });
+      return NextResponse.json({ error: "この町内会・自治会のオンライン決済は現在利用できません。" }, { status: 400 });
     }
 
     const amount = Math.max(billingAmount(fee) - paidAmount(fee), 0);
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     const stripe = createPayPayStripeClient();
     const connectedAccount = await stripe.accounts.retrieve(town.stripe_account_id);
     if (!connectedAccount.charges_enabled) {
-      return NextResponse.json({ error: "この団体のStripe決済は確認中です。" }, { status: 400 });
+      return NextResponse.json({ error: "この町内会・自治会のStripe決済は確認中です。" }, { status: 400 });
     }
 
     const paypayActive = Boolean(

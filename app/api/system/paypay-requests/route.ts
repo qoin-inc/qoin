@@ -95,7 +95,7 @@ export async function POST(req: Request) {
       const operationError = operations.find((result) => result.error)?.error;
       if (operationError) throw operationError;
     } else {
-      if (!town.stripe_account_id) throw new Error("この団体はStripe Connectに未登録です。");
+      if (!town.stripe_account_id) throw new Error("この町内会・自治会はStripe Connectに未登録です。");
       const payload = normalizeDisclosurePayload(requestRow.requested_payload, {
         sellerName: town.name,
         feeName: "年会費",

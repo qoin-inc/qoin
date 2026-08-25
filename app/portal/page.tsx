@@ -559,7 +559,7 @@ const renderPostCard = (post: any) => {
                 {/* 共通項目: ニックネーム */}
                 <div className="portal-post-field">
                   <label className="block text-xs font-bold text-gray-500 mb-1">
-                    {postCategory === 'food' ? 'ニックネーム' : 'ニックネーム（団体名や役職名でも可）'} <span className="text-red-500">*</span>
+                    {postCategory === 'food' ? 'ニックネーム' : 'ニックネーム（町内会・自治会名や役職名でも可）'} <span className="text-red-500">*</span>
                   </label>
                   <input 
                     type="text" 

@@ -41,7 +41,7 @@ const initialForm = (townName: string): FormState => ({
   payment_timing: "申込時に決済されます。",
   service_timing: "対象年度の町内会・自治会活動および会員向けサービスとして提供します。",
   application_period: "町内会・自治会が案内する会費納入期限まで。",
-  cancellation_refund: "会費の性質上、納入後の返金は原則として行いません。ただし、重複決済・誤決済その他団体が相当と認めた場合は個別に対応します。",
+  cancellation_refund: "会費の性質上、納入後の返金は原則として行いません。ただし、重複決済・誤決済その他町内会・自治会が相当と認めた場合は個別に対応します。",
   business_hours: "お問い合わせには原則として3営業日以内に返信します。",
 });
 
@@ -146,9 +146,9 @@ export default function PayPayApplicationPanel({ townId, townName, stripeConnect
     <section className="admin-basic-card paypay-application">
       <div className="admin-basic-card-heading">
         <div>
-          <p className="el-kicker">団体別オプション</p>
+          <p className="el-kicker">町内会・自治会別オプション</p>
           <h3>Stripe PayPayの申請</h3>
-          <p>利用する団体だけ申請します。el-town自身の決済方法には影響しません。</p>
+          <p>利用する町内会・自治会だけ申請します。el-town自身の決済方法には影響しません。</p>
         </div>
         <span className={`admin-stripe-badge ${stripeStatus === "active" ? "ready" : stripeStatus === "pending" ? "pending" : ""}`}>
           {statusLabel(stripeStatus)}
@@ -164,17 +164,17 @@ export default function PayPayApplicationPanel({ townId, townName, stripeConnect
       {application?.town?.stripe_paypay_last_error && <div className="admin-basic-message error">{application.town.stripe_paypay_last_error}</div>}
 
       <div className="paypay-workflow">
-        <span>1. 団体が入力・申請</span><i>→</i><span>2. el-town運営が確認</span><i>→</i><span>3. 法定ページ公開</span><i>→</i><span>4. Stripe審査</span>
+        <span>1. 町内会・自治会が入力・申請</span><i>→</i><span>2. el-town運営が確認</span><i>→</i><span>3. 法定ページ公開</span><i>→</i><span>4. Stripe審査</span>
       </div>
 
       <h4>「特定商取引法に基づく表記」の公開情報</h4>
-      <p className="admin-basic-note">承認後、以下の内容から公開ページを自動作成します。会長個人の自宅住所・個人メールではなく、団体の正式な連絡先を入力してください。</p>
+      <p className="admin-basic-note">承認後、以下の内容から公開ページを自動作成します。会長個人の自宅住所・個人メールではなく、町内会・自治会の正式な連絡先を入力してください。</p>
 
       <div className="admin-basic-form paypay-form">
-        <label><span>団体名</span><input value={form.seller_name} onChange={(e) => setForm({ ...form, seller_name: e.target.value })} /></label>
+        <label><span>町内会・自治会名</span><input value={form.seller_name} onChange={(e) => setForm({ ...form, seller_name: e.target.value })} /></label>
         <label><span>運営責任者</span><input value={form.representative_name} onChange={(e) => setForm({ ...form, representative_name: e.target.value })} placeholder="例：会長 山田 太郎" /></label>
         <label><span>郵便番号</span><input value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} placeholder="123-4567" /></label>
-        <label className="admin-basic-wide"><span>所在地</span><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="団体事務所・集会場などの正式な所在地" /></label>
+        <label className="admin-basic-wide"><span>所在地</span><input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="町内会・自治会の事務所・集会場などの正式な所在地" /></label>
         <label><span>問い合わせ電話番号</span><input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} inputMode="tel" /></label>
         <label><span>問い合わせメール</span><input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} type="email" /></label>
         <label><span>会費名称</span><input value={form.fee_name} onChange={(e) => setForm({ ...form, fee_name: e.target.value })} /></label>
@@ -197,7 +197,7 @@ export default function PayPayApplicationPanel({ townId, townName, stripeConnect
 
       {application?.publicUrl && (
         <p className="paypay-public-link">
-          <a href={application.businessPublicUrl} target="_blank" rel="noopener noreferrer">団体の公開ページを確認</a>
+          <a href={application.businessPublicUrl} target="_blank" rel="noopener noreferrer">町内会・自治会の公開ページを確認</a>
           {" ／ "}
           <a href={application.publicUrl} target="_blank" rel="noopener noreferrer">特定商取引法ページを確認</a>
         </p>

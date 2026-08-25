@@ -44,7 +44,7 @@ export default function PayPayApprovalPanel() {
       decision === "approve" ? "" : "入力内容または確認書類を修正してください。",
     );
     if (note === null || (decision === "reject" && !note.trim())) return;
-    if (!window.confirm(`${request.town?.name || "この団体"}の${requestLabel(request.request_type)}申請を${decision === "approve" ? "承認" : "差し戻し"}ます。よろしいですか？`)) return;
+    if (!window.confirm(`${request.town?.name || "この町内会・自治会"}の${requestLabel(request.request_type)}申請を${decision === "approve" ? "承認" : "差し戻し"}ます。よろしいですか？`)) return;
     setBusyId(request.id);
     setMessage("");
     try {
@@ -82,7 +82,7 @@ export default function PayPayApprovalPanel() {
           <span>{pendingCount}件確認待ち</span>
         </div>
         <div className="paypay-workflow">
-          <span>団体が申請</span><i>→</i><span>運営が確認</span><i>→</i><span>法定ページ公開・変更</span><i>→</i><span>Stripeへ反映</span>
+          <span>町内会・自治会が申請</span><i>→</i><span>運営が確認</span><i>→</i><span>法定ページ公開・変更</span><i>→</i><span>Stripeへ反映</span>
         </div>
         <button type="button" className="system-admin-primary" onClick={() => setShowHistory((value) => !value)}>
           {showHistory ? "確認待ちだけ表示" : "処理履歴も表示"}
@@ -103,7 +103,7 @@ export default function PayPayApprovalPanel() {
                 <div className="admin-basic-card-heading">
                   <div>
                     <p className="el-kicker">{requestLabel(request.request_type)}</p>
-                    <h2>{request.town?.name || `団体ID ${request.neighborhood_id}`}</h2>
+                    <h2>{request.town?.name || `町内会・自治会ID ${request.neighborhood_id}`}</h2>
                     <p>{new Date(request.created_at).toLocaleString("ja-JP")}</p>
                   </div>
                   <span className={`admin-stripe-badge ${request.status === "approved" ? "ready" : request.status === "pending" ? "pending" : ""}`}>
@@ -113,7 +113,7 @@ export default function PayPayApprovalPanel() {
 
                 {request.request_type !== "disable_paypay" && (
                   <dl className="admin-definition-list">
-                    <div><dt>団体名</dt><dd>{payload.seller_name}</dd></div>
+                    <div><dt>町内会・自治会名</dt><dd>{payload.seller_name}</dd></div>
                     <div><dt>運営責任者</dt><dd>{payload.representative_name}</dd></div>
                     <div><dt>所在地</dt><dd>〒{payload.postal_code} {payload.address}</dd></div>
                     <div><dt>電話</dt><dd>{payload.phone}</dd></div>

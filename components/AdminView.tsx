@@ -73,7 +73,6 @@ type FeeDraft = {
 type FeeSettingsDraft = {
   feeName: string;
   amount: string;
-  fiscalYearStartMonth: string;
   cashEnabled: boolean;
   stripeCardEnabled: boolean;
   bankTransferEnabled: boolean;
@@ -266,7 +265,7 @@ const functionGroups: Array<{ key: DashboardMenu; title: string; icon: string; d
 const basicFeatures: Array<{ key: BasicFeature; icon: string; desc: string }> = [
   { key: "基本情報", icon: "fa-house-flag", desc: "名称、決算月、会員数規模、郵便番号、代表者表示" },
   { key: "会員管理", icon: "fa-users", desc: "連携済み会員、未連携名簿、退会状態、家族アカウント" },
-  { key: "会費管理", icon: "fa-yen-sign", desc: "団体別の会費・決済方法、年間請求額、納入額、領収書管理" },
+  { key: "会費管理", icon: "fa-yen-sign", desc: "町内会・自治会別の会費・決済方法、年間請求額、納入額、領収書管理" },
   { key: "システム利用料", icon: "fa-file-invoice-dollar", desc: "月額世帯単価、無料プッシュ枠、超過単価、請求額" },
   { key: "役員管理", icon: "fa-user-shield", desc: "役員招待、権限、承認待ち、停止状態" },
   { key: "Stripe連携", icon: "fa-credit-card", desc: "Connectアカウント、オンボーディング、決済受付状態" },
@@ -460,7 +459,6 @@ const defaultStripeOnboardingDraft: StripeOnboardingDraft = {
 const defaultFeeSettingsDraft: FeeSettingsDraft = {
   feeName: "年会費",
   amount: "5000",
-  fiscalYearStartMonth: "4",
   cashEnabled: true,
   stripeCardEnabled: true,
   bankTransferEnabled: false,
@@ -473,18 +471,18 @@ const defaultFeeSettingsDraft: FeeSettingsDraft = {
 };
 
 const stripeRequirementLabels: Record<string, string> = {
-  business_type: "団体区分",
-  "business_profile.name": "団体名",
+  business_type: "組織区分",
+  "business_profile.name": "町内会・自治会名",
   "business_profile.url": "Webサイト",
   "business_profile.product_description": "サービス内容",
   "business_profile.support_email": "問い合わせメール",
   "business_profile.support_phone": "問い合わせ電話番号",
-  "company.name": "登記・規約上の団体名",
-  "company.address.city": "団体所在地（市区町村）",
-  "company.address.line1": "団体所在地（町名・番地）",
-  "company.address.postal_code": "団体所在地（郵便番号）",
-  "company.address.state": "団体所在地（都道府県）",
-  "company.phone": "団体電話番号",
+  "company.name": "登記・規約上の町内会・自治会名",
+  "company.address.city": "町内会・自治会所在地（市区町村）",
+  "company.address.line1": "町内会・自治会所在地（町名・番地）",
+  "company.address.postal_code": "町内会・自治会所在地（郵便番号）",
+  "company.address.state": "町内会・自治会所在地（都道府県）",
+  "company.phone": "町内会・自治会電話番号",
   "company.tax_id": "法人番号・税務情報",
   external_account: "入金先銀行口座",
   "tos_acceptance.date": "Stripe利用規約への同意",
@@ -726,6 +724,14 @@ const currentFiscalYear = (startMonth?: number | string | null) => {
   const now = new Date();
   const start = Number(startMonth) || 4;
   return now.getMonth() + 1 >= start ? now.getFullYear() : now.getFullYear() - 1;
+};
+
+const fiscalYearPeriodLabel = (fiscalYear: number, endMonth?: number | string | null) => {
+  const parsedEndMonth = Number(endMonth);
+  const normalizedEndMonth = Number.isInteger(parsedEndMonth) && parsedEndMonth >= 1 && parsedEndMonth <= 12 ? parsedEndMonth : 3;
+  const startMonth = fiscalStartMonthFromEnd(normalizedEndMonth);
+  const endYear = startMonth === 1 ? fiscalYear : fiscalYear + 1;
+  return `${fiscalYear}年${startMonth}月1日〜${endYear}年${normalizedEndMonth}月末（${fiscalYear + 1}年${startMonth}月1日に${fiscalYear + 1}年度へ切替）`;
 };
 
 const escapeCsvCell = (value: unknown, forceExcelText = false) => {
@@ -1434,7 +1440,6 @@ export default function AdminView({ townId, townName, isRepresentative = false }
     setFeeSettingsDraft({
       feeName: String(setting?.fee_name || "年会費"),
       amount: String(setting?.amount ?? basicData.setting?.annual_fee_amount ?? 5000),
-      fiscalYearStartMonth: String(setting?.fiscal_year_start_month ?? basicData.town?.fiscal_start_month ?? 4),
       cashEnabled: setting?.cash_enabled !== false,
       stripeCardEnabled: setting?.stripe_card_enabled !== false,
       bankTransferEnabled: Boolean(setting?.bank_transfer_enabled),
@@ -1445,7 +1450,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
       bankAccountHolder: String(setting?.bank_account_holder || ""),
       paymentInstructions: String(setting?.payment_instructions || ""),
     });
-  }, [basicData.feeSetting, basicData.setting?.annual_fee_amount, basicData.town?.fiscal_start_month]);
+  }, [basicData.feeSetting, basicData.setting?.annual_fee_amount]);
 
   const handlePublishDraftChange = <K extends keyof PublishDraft>(field: K, value: PublishDraft[K]) => {
     setPublishDraft((current) => ({ ...current, [field]: value }));
@@ -3330,7 +3335,6 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   const handleFeeSettingsSave = async () => {
     const feeName = feeSettingsDraft.feeName.trim();
     const amount = Number(feeSettingsDraft.amount);
-    const fiscalYearStartMonth = Number(feeSettingsDraft.fiscalYearStartMonth);
     const enabledMethods = [
       feeSettingsDraft.cashEnabled,
       feeSettingsDraft.stripeCardEnabled,
@@ -3340,9 +3344,6 @@ export default function AdminView({ townId, townName, isRepresentative = false }
 
     if (!feeName) return setFeeSettingsMessage("会費名称を入力してください。");
     if (!Number.isInteger(amount) || amount < 0) return setFeeSettingsMessage("標準会費額を0円以上の整数で入力してください。");
-    if (!Number.isInteger(fiscalYearStartMonth) || fiscalYearStartMonth < 1 || fiscalYearStartMonth > 12) {
-      return setFeeSettingsMessage("年度開始月を1月から12月の範囲で選択してください。");
-    }
     if (!enabledMethods) return setFeeSettingsMessage("利用する受取方法を1つ以上選択してください。");
 
     const bankName = feeSettingsDraft.bankName.trim();
@@ -3357,7 +3358,6 @@ export default function AdminView({ townId, townName, isRepresentative = false }
       ...(basicData.feeSetting?.overridden_fields || {}),
       fee_name: true,
       amount: true,
-      fiscal_year_start_month: true,
       cash_enabled: true,
       stripe_card_enabled: true,
       bank_transfer_enabled: true,
@@ -3367,7 +3367,6 @@ export default function AdminView({ townId, townName, isRepresentative = false }
       standard_version_id: basicData.feeSetting?.standard_version_id || null,
       fee_name: feeName,
       amount,
-      fiscal_year_start_month: fiscalYearStartMonth,
       billing_frequency: basicData.feeSetting?.billing_frequency || "annual",
       billing_target: basicData.feeSetting?.billing_target || "active_households",
       cash_enabled: feeSettingsDraft.cashEnabled,
@@ -3818,7 +3817,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
       setBasicData((current) => ({ ...current, systemPaymentProfile: data.profile }));
       setSystemBillingMessage(paymentMethod === "card"
         ? "カード自動決済を選択しました。続けてカードを登録してください。"
-        : "Stripe銀行振込を選択しました。請求書に団体専用の振込口座が表示されます。");
+        : "Stripe銀行振込を選択しました。請求書に町内会・自治会専用の振込口座が表示されます。");
     } catch (error: any) {
       setSystemBillingMessage(error?.message || "決済方法を保存できませんでした。");
     } finally {
@@ -3932,7 +3931,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
     const website = stripeOnboardingDraft.website.trim();
     const productDescription = stripeOnboardingDraft.productDescription.trim();
 
-    if (!organizationName) return setStripeMessage("Stripeへ登録する団体名を入力してください。");
+    if (!organizationName) return setStripeMessage("Stripeへ登録する町内会・自治会名を入力してください。");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) return setStripeMessage("Stripe連絡先メールアドレスを正しく入力してください。");
     if (supportPhone && !/^[0-9+() -]{8,20}$/.test(supportPhone)) return setStripeMessage("電話番号を正しく入力してください。");
     try {
@@ -4553,7 +4552,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 <h3>会費・決済方法の個別設定</h3>
                 <p>この町内会・自治会だけの会費と受取方法を設定します。保存しても既存の請求・入金実績やStripe登録内容は変更しません。</p>
               </div>
-              <span className="admin-member-count">団体別設定</span>
+              <span className="admin-member-count">町内会・自治会別設定</span>
             </div>
 
             {rawStripeAccountId && (
@@ -4584,17 +4583,13 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 <span>標準会費額</span>
                 <input value={feeSettingsDraft.amount} onChange={(event) => handleFeeSettingsDraftChange("amount", event.target.value)} inputMode="numeric" placeholder="5000" />
               </label>
-              <label>
-                <span>年度開始月</span>
-                <select value={feeSettingsDraft.fiscalYearStartMonth} onChange={(event) => handleFeeSettingsDraftChange("fiscalYearStartMonth", event.target.value)}>
-                  {monthOptions.map((monthNumber) => <option key={monthNumber} value={monthNumber}>{monthNumber}月</option>)}
-                </select>
-              </label>
               <label className="admin-basic-wide">
                 <span>会員向け支払い案内（任意）</span>
                 <textarea value={feeSettingsDraft.paymentInstructions} onChange={(event) => handleFeeSettingsDraftChange("paymentInstructions", event.target.value)} rows={3} placeholder="例：毎年5月末までにお支払いください。" />
               </label>
             </div>
+
+            <p className="admin-basic-note">会計年度は「基本情報」の決算月から自動計算します。年度開始月を会費設定で入力する必要はありません。</p>
 
             <div className="admin-fee-method-options">
               <label className={feeSettingsDraft.cashEnabled ? "selected" : ""}>
@@ -4605,12 +4600,12 @@ export default function AdminView({ townId, townName, isRepresentative = false }
               <label className={feeSettingsDraft.stripeCardEnabled ? "selected" : ""}>
                 <input type="checkbox" checked={feeSettingsDraft.stripeCardEnabled} onChange={(event) => handleFeeSettingsDraftChange("stripeCardEnabled", event.target.checked)} />
                 <i className="fas fa-credit-card" />
-                <span><strong>Stripeカード決済</strong><small>団体のConnect登録が有効な場合に利用します。</small></span>
+                <span><strong>Stripeカード決済</strong><small>町内会・自治会のConnect登録が有効な場合に利用します。</small></span>
               </label>
               <label className={feeSettingsDraft.bankTransferEnabled ? "selected" : ""}>
                 <input type="checkbox" checked={feeSettingsDraft.bankTransferEnabled} onChange={(event) => handleFeeSettingsDraftChange("bankTransferEnabled", event.target.checked)} />
                 <i className="fas fa-building-columns" />
-                <span><strong>口座振込</strong><small>団体が管理する会費受取口座を案内します。</small></span>
+                <span><strong>口座振込</strong><small>町内会・自治会が管理する会費受取口座を案内します。</small></span>
               </label>
             </div>
 
@@ -4636,7 +4631,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
             <p className="admin-basic-note">代表者本人情報・本人確認書類・Stripeの実際の入金先口座は、引き続き「Stripe連携」からStripeの安全な画面で入力します。</p>
             <button type="button" className="admin-fee-settings-save" onClick={() => void handleFeeSettingsSave()} disabled={feeSettingsSaving}>
               <i className={`fas ${feeSettingsSaving ? "fa-spinner fa-spin" : "fa-floppy-disk"}`} />
-              <span>{feeSettingsSaving ? "保存中" : "この団体の設定を保存"}</span>
+              <span>{feeSettingsSaving ? "保存中" : "この町内会・自治会の設定を保存"}</span>
             </button>
             {feeSettingsMessage && (
               <div className={`admin-basic-message ${feeSettingsMessage.includes("失敗") || feeSettingsMessage.includes("入力") || feeSettingsMessage.includes("選択") || feeSettingsMessage.includes("未適用") ? "error" : "success"}`}>
@@ -4688,7 +4683,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会費請求設定</h3>
-                <p>会計年度ごとに全会員世帯、またはチェックした会員へ請求額を設定します。退会済み会員は新規請求対象から外しますが、作成済みの年度会費は退会後も集計に含めます。</p>
+                <p>会計年度ごとに全会員世帯、またはチェックした会員へ請求額を設定します。前年度を確定していなくても次年度の請求を作成できます。退会済み会員は新規請求対象から外しますが、作成済みの年度会費は退会後も集計に含めます。</p>
               </div>
               <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
             </div>
@@ -4723,6 +4718,8 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 </button>
               </div>
             </div>
+
+            <p className="admin-basic-note">{feeFiscalYear}年度：{fiscalYearPeriodLabel(feeFiscalYear, basicInfoDraft.fiscalEndMonth)}。年度確定は保存・監査のための任意の締め処理で、次年度請求の開始条件ではありません。</p>
 
             <div className="admin-fee-roster-tools">
               <label>
@@ -4857,10 +4854,11 @@ export default function AdminView({ townId, townName, isRepresentative = false }
             <div className="admin-basic-card-heading">
               <div>
                 <h3>システム利用料の決済方法</h3>
-                <p>団体ごとにカード自動決済またはStripe銀行振込を選択します。</p>
+                <p>町内会・自治会ごとにカード自動決済またはStripe銀行振込を選択します。</p>
               </div>
               <span className="admin-member-count">{systemPaymentMethodLabel}</span>
             </div>
+
             <div className="admin-system-payment-options">
               <button
                 type="button"
@@ -4878,7 +4876,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 disabled={systemBillingBusy}
               >
                 <i className="fas fa-building-columns" />
-                <span><strong>Stripe銀行振込</strong><small>請求書に団体専用の仮想口座を表示し、入金を自動消し込みします。</small></span>
+                <span><strong>Stripe銀行振込</strong><small>請求書に町内会・自治会専用の仮想口座を表示し、入金を自動消し込みします。</small></span>
               </button>
             </div>
             {systemPaymentMethod === "card" && (
@@ -4890,7 +4888,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
               </div>
             )}
             {systemPaymentMethod === "bank_transfer" && (
-              <p className="admin-basic-note">団体専用口座は毎月1日に発行されるStripe請求書と決済ページに表示されます。振込後はStripeが自動で消し込みます。</p>
+              <p className="admin-basic-note">町内会・自治会専用口座は毎月1日に発行されるStripe請求書と決済ページに表示されます。振込後はStripeが自動で消し込みます。</p>
             )}
           </section>
           <section className="admin-basic-card">
@@ -5113,21 +5111,21 @@ export default function AdminView({ townId, townName, isRepresentative = false }
         </section>
         <section className="admin-basic-card accent admin-stripe-onboarding">
           <h3>{rawStripeAccountId ? "本番登録を再開・確認" : "本番Stripe登録を開始"}</h3>
-          <p className="admin-basic-note">Stripeへ移る前に、el-townで団体情報を確認・入力します。既にStripeへ登録済みの内容は取得して表示し、空欄で上書きしません。</p>
+          <p className="admin-basic-note">Stripeへ移る前に、el-townで町内会・自治会情報を確認・入力します。既にStripeへ登録済みの内容は取得して表示し、空欄で上書きしません。</p>
           {rawStripeAccountId && !stripeProfileLoaded && <div className="admin-basic-message">Stripeに登録済みの入力内容を読み込んでいます。</div>}
           <div className="admin-basic-form">
             <label>
-              <span>団体区分</span>
+              <span>組織区分</span>
               <select value={stripeOnboardingDraft.businessType} onChange={(event) => handleStripeOnboardingDraftChange("businessType", event.target.value as StripeBusinessType)} disabled={Boolean(rawStripeAccountId)}>
-                <option value="non_profit">非営利団体（町内会・自治会・任意団体）</option>
+                <option value="non_profit">非営利組織（町内会・自治会・任意組織）</option>
                 <option value="company">法人（株式会社・一般社団法人など）</option>
                 <option value="individual">個人</option>
                 <option value="government_entity">行政機関</option>
               </select>
-              {rawStripeAccountId && <small>登録済みアカウントの団体区分はStripe画面で確認します。</small>}
+              {rawStripeAccountId && <small>登録済みアカウントの組織区分はStripe画面で確認します。</small>}
             </label>
             <label>
-              <span>Stripeへ登録する団体名</span>
+              <span>Stripeへ登録する町内会・自治会名</span>
               <input value={stripeOnboardingDraft.organizationName} readOnly />
               <small>「基本情報」の町内会・自治会名をStripeへ同期します。</small>
             </label>
@@ -5160,9 +5158,9 @@ export default function AdminView({ townId, townName, isRepresentative = false }
           )}
           <p className="admin-basic-note">法人区分、代表者本人情報、本人確認書類、銀行口座はStripeの本人確認項目のため自動入力できません。画面の案内に従い、実態と一致する内容を入力してください。</p>
           <div className="admin-stripe-checklist">
-            <label><input type="checkbox" checked={stripeOnboardingDraft.legalDetailsReady} onChange={(event) => handleStripeOnboardingDraftChange("legalDetailsReady", event.target.checked)} /> <i className="fas fa-file-lines" /> 規約・登記上の団体区分を確認しました</label>
+            <label><input type="checkbox" checked={stripeOnboardingDraft.legalDetailsReady} onChange={(event) => handleStripeOnboardingDraftChange("legalDetailsReady", event.target.checked)} /> <i className="fas fa-file-lines" /> 規約・登記上の組織区分を確認しました</label>
             <label><input type="checkbox" checked={stripeOnboardingDraft.identityDocumentReady} onChange={(event) => handleStripeOnboardingDraftChange("identityDocumentReady", event.target.checked)} /> <i className="fas fa-id-card" /> 代表者の本人確認書類を準備しました</label>
-            <label><input type="checkbox" checked={stripeOnboardingDraft.bankAccountReady} onChange={(event) => handleStripeOnboardingDraftChange("bankAccountReady", event.target.checked)} /> <i className="fas fa-building-columns" /> 団体が管理する入金先口座を準備しました</label>
+            <label><input type="checkbox" checked={stripeOnboardingDraft.bankAccountReady} onChange={(event) => handleStripeOnboardingDraftChange("bankAccountReady", event.target.checked)} /> <i className="fas fa-building-columns" /> 町内会・自治会が管理する入金先口座を準備しました</label>
           </div>
           <button type="button" className="admin-stripe-primary" onClick={handleStripeOnboardingStart} disabled={stripeBusy || stripeSyncing || (Boolean(rawStripeAccountId) && !stripeProfileLoaded)}>
             <i className={`fas ${stripeBusy ? "fa-spinner fa-spin" : "fa-arrow-up-right-from-square"}`} />

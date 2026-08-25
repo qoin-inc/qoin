@@ -88,10 +88,10 @@ export async function POST(req: Request) {
     const productDescription = String(onboarding.productDescription || stripeAccount?.business_profile?.product_description || '町内会・自治会の会員世帯から、年度ごとの会費を受け付けます。').trim();
 
     if (!allowedBusinessTypes.has(requestedBusinessType)) {
-      return NextResponse.json({ error: '団体区分の選択が正しくありません。' }, { status: 400 });
+      return NextResponse.json({ error: '組織区分の選択が正しくありません。' }, { status: 400 });
     }
     if (!organizationName) {
-      return NextResponse.json({ error: 'Stripeへ登録する団体名を入力してください。' }, { status: 400 });
+      return NextResponse.json({ error: 'Stripeへ登録する町内会・自治会名を入力してください。' }, { status: 400 });
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportEmail)) {
       return NextResponse.json({ error: 'Stripe連絡先メールアドレスを正しく入力してください。' }, { status: 400 });
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 5. el-townで確定できる団体情報を事前入力する。
+    // 5. el-townで確定できる町内会・自治会情報を事前入力する。
     await stripe.accounts.update(stripeAccountId, {
       business_profile: {
         name: organizationName,

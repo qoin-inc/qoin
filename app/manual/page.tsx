@@ -36,7 +36,7 @@ const manualSections: Array<{
         label: "代表役員向け",
         time: "約5分",
         title: "町内会・自治会を新規登録する",
-        description: "団体と最初の役員代表者を登録し、管理画面の利用を開始します。",
+        description: "町内会・自治会と最初の役員代表者を登録し、管理画面の利用を開始します。",
         icon: "fa-house",
       },
       {

@@ -62,7 +62,7 @@ export default async function CommercialTransactionsPage({ params }: { params: {
       </header>
 
       <section className={styles.notice}>
-        このページは、団体からの申請内容をel-town運営が確認したうえで公開しています。
+        このページは、町内会・自治会からの申請内容をel-town運営が確認したうえで公開しています。
       </section>
 
       <section className={styles.card}>
@@ -78,11 +78,11 @@ export default async function CommercialTransactionsPage({ params }: { params: {
 
       <section className={styles.security}>
         <h2>決済について</h2>
-        <p>オンライン決済はStripeの決済画面で行います。el-townおよび団体は、会員のカード番号やPayPay認証情報を直接取得・保存しません。</p>
+        <p>オンライン決済はStripeの決済画面で行います。el-townおよび町内会・自治会は、会員のカード番号やPayPay認証情報を直接取得・保存しません。</p>
       </section>
 
       <footer className={styles.footer}>
-        <p>掲載内容については、上記の団体窓口へお問い合わせください。</p>
+        <p>掲載内容については、上記の町内会・自治会窓口へお問い合わせください。</p>
         <Link href="/">el-townへ戻る</Link>
       </footer>
     </main>

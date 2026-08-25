@@ -42,7 +42,7 @@ export default function MemberSignupManualPage() {
           ),
         },
         {
-          title: "会員名簿に登録された団体と住所を入力する",
+          title: "会員名簿に登録された町内会・自治会と住所を入力する",
           text: "「会員情報を連携」画面で、町内会名・郵便番号・住所を入力します。ここで入力する内容は、役員が事前に登録した会員名簿の内容と一致する必要があります。",
           visual: (
             <ActualScreenImage

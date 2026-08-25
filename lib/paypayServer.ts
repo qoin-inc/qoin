@@ -37,7 +37,7 @@ export const normalizeDisclosurePayload = (value: any, fallback: { sellerName: s
   if (!/^[0-9+() -]{8,30}$/.test(phone)) throw new Error("電話番号を正しく入力してください。");
 
   return {
-    seller_name: requiredText(value?.seller_name || fallback.sellerName, "団体名", 200),
+    seller_name: requiredText(value?.seller_name || fallback.sellerName, "町内会・自治会名", 200),
     representative_name: requiredText(value?.representative_name, "運営責任者", 100),
     postal_code: postalCode,
     address: requiredText(value?.address, "所在地", 300),
