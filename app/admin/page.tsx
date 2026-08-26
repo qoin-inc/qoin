@@ -12,6 +12,7 @@ type AdminMembership = {
   adminId: string;
   role: string;
   isRepresentative: boolean;
+  isSystemAdmin?: boolean;
   town: { id: number; name: string };
 };
 
@@ -952,6 +953,7 @@ export default function AdminPage() {
               townId={town.id}
               townName={town.name}
               isRepresentative={Boolean(selectedMembership?.isRepresentative)}
+              isSystemAdmin={Boolean(selectedMembership?.isSystemAdmin)}
             />
             <div className="fixed bottom-6 right-8 z-50 opacity-70 hidden md:flex flex-col items-end pointer-events-none">
                {/* eslint-disable-next-line @next/next/no-img-element */}

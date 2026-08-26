@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
+const SYSTEM_ADMIN_EMAIL = 'admin@el-town.jp';
+
 const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(body, {
   status,
   headers: { 'Cache-Control': 'no-store' },
@@ -117,6 +119,7 @@ export async function GET(request: Request) {
           neighborhood.admin_auth_id === user.id
           || String(neighborhood.admin_email || '').trim().toLowerCase() === userEmail
         ),
+        isSystemAdmin: userEmail === SYSTEM_ADMIN_EMAIL,
         town: {
           id: Number(neighborhood.id),
           name: String(neighborhood.name),

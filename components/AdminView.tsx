@@ -9,6 +9,7 @@ type AdminViewProps = {
   townId: number;
   townName: string;
   isRepresentative?: boolean;
+  isSystemAdmin?: boolean;
 };
 
 type Summary = {
@@ -997,7 +998,7 @@ const normalizeMemberScale = (value?: number | string | null) => {
   return memberScaleOptions[3];
 };
 
-export default function AdminView({ townId, townName, isRepresentative = false }: AdminViewProps) {
+export default function AdminView({ townId, townName, isRepresentative = false, isSystemAdmin = false }: AdminViewProps) {
   const [summary, setSummary] = useState<Summary>({
     linkedMembers: 0,
     monthlyPushes: 0,
@@ -1094,7 +1095,8 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   );
   const assemblyYearLocked = assemblyYearClosure?.status === "locked";
   const assemblyYearCorrectionOpen = assemblyYearClosure?.status === "unlocked";
-  const canEditAssemblyYear = assemblyClosureAvailable !== null && !assemblyYearLocked && (!assemblyYearCorrectionOpen || isRepresentative);
+  const canManageYearClosure = isRepresentative || isSystemAdmin;
+  const canEditAssemblyYear = assemblyClosureAvailable !== null && !assemblyYearLocked && (!assemblyYearCorrectionOpen || canManageYearClosure);
 
   const refreshFeeYearClosures = useCallback(async () => {
     if (!townId) return;
@@ -3123,8 +3125,8 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   };
 
   const unlockSelectedAssemblyYear = async () => {
-    if (!isRepresentative) {
-      setAssemblyMessage("総会会計の確定を解除できるのは代表者だけです。");
+    if (!canManageYearClosure) {
+      setAssemblyMessage("総会会計の確定を解除できるのは代表者またはシステム権限者だけです。");
       return;
     }
     const reason = typeof window !== "undefined"
@@ -3145,7 +3147,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
         p_reason: reason.trim(),
       });
       if (error) throw error;
-      await fetchAssemblyAccounting(`${assemblyFiscalYear}年度の確定を解除しました。代表者が固定化した年度データを訂正した後、再確定してください。`);
+      await fetchAssemblyAccounting(`${assemblyFiscalYear}年度の確定を解除しました。代表者またはシステム権限者が固定化した年度データを訂正した後、再確定してください。`);
     } catch (error: any) {
       setAssemblyMessage(error?.message || `${assemblyFiscalYear}年度の確定を解除できませんでした。`);
       setAssemblyBusy(false);
@@ -3155,8 +3157,8 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   const ensureAssemblyYearEditable = () => {
     if (canEditAssemblyYear) return true;
     setAssemblyMessage(assemblyYearCorrectionOpen
-      ? "確定解除中の総会会計を訂正できるのは代表者だけです。"
-      : "確定済み年度の総会会計データは変更できません。代表者が確定を解除してください。");
+      ? "確定解除中の総会会計を訂正できるのは代表者またはシステム権限者だけです。"
+      : "確定済み年度の総会会計データは変更できません。代表者またはシステム権限者が確定を解除してください。");
     return false;
   };
 
@@ -3289,7 +3291,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   const feeYearClosure = feeYearClosures.find((closure) => Number(closure.fiscal_year) === feeFiscalYear) || null;
   const feeYearLocked = feeYearClosure?.status === "locked";
   const feeYearCorrectionOpen = feeYearClosure?.status === "unlocked";
-  const canEditSelectedFeeYear = !feeYearLocked && (!feeYearCorrectionOpen || isRepresentative);
+  const canEditSelectedFeeYear = !feeYearLocked && (!feeYearCorrectionOpen || canManageYearClosure);
   const canBatchEditSelectedFeeYear = !feeYearLocked && !feeYearCorrectionOpen;
   const memberById = new Map(basicData.members.map((member) => [String(member.id), member]));
   const activeFeeMembers = basicData.members.filter((member) => !isWithdrawnMember(member));
@@ -3359,8 +3361,8 @@ export default function AdminView({ townId, townName, isRepresentative = false }
   };
 
   const unlockSelectedFeeYear = async () => {
-    if (!isRepresentative) {
-      setFeeClosureMessage("確定を解除できるのは代表者だけです。");
+    if (!canManageYearClosure) {
+      setFeeClosureMessage("確定を解除できるのは代表者またはシステム権限者だけです。");
       return;
     }
     const reason = typeof window !== "undefined"
@@ -3382,7 +3384,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
       });
       if (error) throw error;
       await refreshFeeYearClosures();
-      setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。代表者が個別データを訂正した後、必ず再確定してください。`);
+      setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。代表者またはシステム権限者が個別データを訂正した後、必ず再確定してください。`);
     } catch (error: any) {
       setFeeClosureMessage(error?.message || `${feeFiscalYear}年度の確定を解除できませんでした。`);
     } finally {
@@ -3640,7 +3642,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
     if (!canBatchEditSelectedFeeYear) {
       setFeeMessage(feeYearCorrectionOpen
         ? "確定解除後は、代表者が会費一覧から個別データを訂正してください。"
-        : "確定済み年度の会費は変更できません。代表者が確定を解除してください。");
+        : "確定済み年度の会費は変更できません。代表者またはシステム権限者が確定を解除してください。");
       return;
     }
     const amount = Number(feeDraft.amount);
@@ -3701,7 +3703,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
     const billingText = getFeeBillingDraftValue(fee).trim();
     const correctedBillingAmount = Number(billingText);
     if (!canEditSelectedFeeYear) {
-      setFeeMessage("確定済み年度の会費は変更できません。代表者が確定を解除してください。");
+      setFeeMessage("確定済み年度の会費は変更できません。代表者またはシステム権限者が確定を解除してください。");
       return;
     }
     if (!feeId || feeId === "empty") {
@@ -4793,7 +4795,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 {feeYearLocked
                   ? "会員の退会・削除に影響されない独立データとして保存され、請求額・入金額とも変更できません。"
                   : feeYearCorrectionOpen
-                    ? `代表者だけが個別データを訂正できます。訂正後は必ず再確定してください。${feeYearClosure?.unlock_reason ? ` 解除理由：${feeYearClosure.unlock_reason}` : ""}`
+                    ? `代表者またはシステム権限者だけが個別データを訂正できます。訂正後は必ず再確定してください。${feeYearClosure?.unlock_reason ? ` 解除理由：${feeYearClosure.unlock_reason}` : ""}`
                     : "内容を確認して年度を確定すると、会員情報とは独立して保存され変更不可になります。"}
               </p>
               {feeYearClosure && <small>改訂 {feeYearClosure.revision}版</small>}
@@ -4804,18 +4806,18 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                   <i className="fas fa-lock" /> 年度を確定
                 </button>
               )}
-              {feeYearLocked && isRepresentative && (
+              {feeYearLocked && canManageYearClosure && (
                 <button type="button" className="unlock" onClick={() => void unlockSelectedFeeYear()} disabled={feeClosureBusy}>
                   <i className="fas fa-lock-open" /> 確定を解除
                 </button>
               )}
-              {feeYearCorrectionOpen && isRepresentative && (
+              {feeYearCorrectionOpen && canManageYearClosure && (
                 <button type="button" onClick={() => void finalizeSelectedFeeYear()} disabled={feeClosureBusy || feeRecordsForYear.length === 0}>
                   <i className="fas fa-lock" /> 訂正後に再確定
                 </button>
               )}
-              {feeYearLocked && !isRepresentative && <small>確定解除は代表者だけが行えます。</small>}
-              {feeYearCorrectionOpen && !isRepresentative && <small>訂正と再確定は代表者だけが行えます。</small>}
+              {feeYearLocked && !canManageYearClosure && <small>確定解除は代表者またはシステム権限者だけが行えます。</small>}
+              {feeYearCorrectionOpen && !canManageYearClosure && <small>訂正と再確定は代表者またはシステム権限者だけが行えます。</small>}
             </div>
             {feeClosureAvailable === false && <div className="admin-basic-message error">年度確定用のDB更新が未適用です。</div>}
             {feeClosureMessage && <div className={`admin-basic-message ${feeClosureMessage.includes("できません") || feeClosureMessage.includes("未適用") || feeClosureMessage.includes("入力") ? "error" : "success"}`}>{feeClosureMessage}</div>}
@@ -5602,7 +5604,7 @@ export default function AdminView({ townId, townName, isRepresentative = false }
               {assemblyYearLocked
                 ? "確定時点の科目・予算・決算明細・会費連携額を固定データとして表示しています。変更はできません。"
                 : assemblyYearCorrectionOpen
-                  ? `代表者だけが固定化した年度データを訂正できます。訂正後は必ず再確定してください。${assemblyYearClosure?.unlock_reason ? ` 解除理由：${assemblyYearClosure.unlock_reason}` : ""}`
+                  ? `代表者またはシステム権限者だけが固定化した年度データを訂正できます。訂正後は必ず再確定してください。${assemblyYearClosure?.unlock_reason ? ` 解除理由：${assemblyYearClosure.unlock_reason}` : ""}`
                   : "内容を確認して年度を確定すると、改版スナップショットとして保存され変更不可になります。"}
             </p>
             {assemblyYearClosure && <small>改訂 {assemblyYearClosure.revision}版</small>}
@@ -5613,18 +5615,18 @@ export default function AdminView({ townId, townName, isRepresentative = false }
                 <i className="fas fa-lock" /> 年度を確定
               </button>
             )}
-            {assemblyYearLocked && isRepresentative && (
+            {assemblyYearLocked && canManageYearClosure && (
               <button type="button" className="unlock" onClick={() => void unlockSelectedAssemblyYear()} disabled={assemblyBusy}>
                 <i className="fas fa-lock-open" /> 確定を解除
               </button>
             )}
-            {assemblyYearCorrectionOpen && isRepresentative && (
+            {assemblyYearCorrectionOpen && canManageYearClosure && (
               <button type="button" onClick={() => void finalizeSelectedAssemblyYear()} disabled={assemblyBusy || assemblyCategories.length === 0}>
                 <i className="fas fa-lock" /> 訂正後に再確定
               </button>
             )}
-            {assemblyYearLocked && !isRepresentative && <small>確定解除は代表者だけが行えます。</small>}
-            {assemblyYearCorrectionOpen && !isRepresentative && <small>訂正と再確定は代表者だけが行えます。</small>}
+            {assemblyYearLocked && !canManageYearClosure && <small>確定解除は代表者またはシステム権限者だけが行えます。</small>}
+            {assemblyYearCorrectionOpen && !canManageYearClosure && <small>訂正と再確定は代表者またはシステム権限者だけが行えます。</small>}
           </div>
           {assemblyClosureAvailable === false && <div className="admin-basic-message error">総会会計の年度確定用DB更新が未適用です。</div>}
         </section>
