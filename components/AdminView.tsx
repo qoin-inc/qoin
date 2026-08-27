@@ -4569,11 +4569,11 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </label>
               <label>
                 <span>住所２</span>
-                <input value={memberDraft.addressLine2} onChange={(event) => handleMemberDraftChange("addressLine2", event.target.value)} placeholder="例: 七日町1-2-3" />
+                <input value={memberDraft.addressLine2} onChange={(event) => handleMemberDraftChange("addressLine2", event.target.value)} placeholder="例: 七日町1丁目2番3号" />
               </label>
               <label>
                 <span>住所３</span>
-                <input value={memberDraft.addressLine3} onChange={(event) => handleMemberDraftChange("addressLine3", event.target.value)} placeholder="例: 101号 / 班名" />
+                <input value={memberDraft.addressLine3} onChange={(event) => handleMemberDraftChange("addressLine3", event.target.value)} placeholder="例: エルタウンマンション101号室" />
               </label>
               <label>
                 <span>家族１</span>

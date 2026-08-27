@@ -137,7 +137,7 @@ export function OnboardingGuide({
                       <ul className={`${styles.pointList} mt-5 space-y-2 text-sm font-bold leading-7 text-[#46606d]`}>
                         {step.points.map((point) => (
                           <li className="flex items-start gap-2" key={point}>
-                            <i className={`fas fa-check-circle mt-1.5 ${colors.text}`} aria-hidden="true" />
+                            <span className={`mt-0.5 font-black ${colors.text}`} aria-hidden="true">☑</span>
                             <span>{point}</span>
                           </li>
                         ))}
