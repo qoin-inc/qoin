@@ -4569,7 +4569,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </label>
               <label>
                 <span>住所２</span>
-                <input value={memberDraft.addressLine2} onChange={(event) => handleMemberDraftChange("addressLine2", event.target.value)} placeholder="例: 七日町1丁目2番3号" />
+                <input value={memberDraft.addressLine2} onChange={(event) => handleMemberDraftChange("addressLine2", event.target.value)} placeholder="番地　例：２－３６" />
               </label>
               <label>
                 <span>住所３</span>
@@ -4577,7 +4577,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </label>
               <label>
                 <span>家族１</span>
-                <input value={memberDraft.familyName1} onChange={(event) => handleMemberDraftChange("familyName1", event.target.value)} placeholder="任意" />
+                <input value={memberDraft.familyName1} onChange={(event) => handleMemberDraftChange("familyName1", event.target.value)} placeholder="例：山田 花子" />
               </label>
               <label>
                 <span>家族１カタカナ</span>
@@ -4585,7 +4585,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </label>
               <label>
                 <span>家族２</span>
-                <input value={memberDraft.familyName2} onChange={(event) => handleMemberDraftChange("familyName2", event.target.value)} placeholder="任意" />
+                <input value={memberDraft.familyName2} onChange={(event) => handleMemberDraftChange("familyName2", event.target.value)} placeholder="例：山田 次郎" />
               </label>
               <label>
                 <span>家族２カタカナ</span>
