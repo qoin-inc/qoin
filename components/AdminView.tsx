@@ -1027,6 +1027,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [memberBusy, setMemberBusy] = useState(false);
   const [memberMessage, setMemberMessage] = useState("");
   const [memberReply, setMemberReply] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
   const [editingMemberId, setEditingMemberId] = useState<number | string | null>(null);
   const [feeDraft, setFeeDraft] = useState<FeeDraft>({ fiscalYear: "", amount: "", targetMode: "all" });
   const [feeSelectedMembers, setFeeSelectedMembers] = useState<Record<string, boolean>>({});
@@ -3762,13 +3763,32 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     }
   };
 
-  const totalMembers = basicData.members.length;
   const activeMembers = basicData.members.filter((member) => !isWithdrawnMember(member));
-  const linkedPreviewMembers = activeMembers.reduce((sum, member) => sum + getMemberLinkedAccountCount(member), 0);
-  const linkedPreviewHouseholds = activeMembers.filter(isLineLinkedMember).length;
-  const unlinkedPreviewMembers = activeMembers.filter((member) => !isLineLinkedMember(member)).length;
+  const currentHouseholds = activeMembers.length;
+  const primaryLinkedMembers = activeMembers.filter((member) => Boolean(member.user_auth_id)).length;
+  const familyLinkedMembers = activeMembers.reduce((sum, member) => sum + ([1, 2] as const).filter((slot) => (
+    member[`family_withdrawal_status_${slot}`] !== "withdrawn" && Boolean(member[`family_user_auth_id_${slot}`])
+  )).length, 0);
   const withdrawalRequestMembers = basicData.members.reduce((sum, member) => sum + (withdrawalRequested(member.withdrawal_status || member.status) ? 1 : 0) + getFamilyWithdrawalRequestSlots(member).length, 0);
-  const withdrawnMembers = basicData.members.filter(isWithdrawnMember);
+  const normalizedMemberSearch = memberSearch.trim().toLocaleLowerCase("ja-JP").replace(/\s+/g, "");
+  const filteredMembers = basicData.members.filter((member) => {
+    if (!normalizedMemberSearch) return true;
+    const searchable = [
+      getMemberFullName(member),
+      getMemberKana(member),
+      member.family_name_1,
+      member.family_kana_name_1,
+      member.family_name_2,
+      member.family_kana_name_2,
+      getMemberPostalCode(member),
+      getMemberAddressLine2(member),
+      getMemberAddressLine3(member),
+      getMemberStatusLabel(member),
+      isWithdrawalRequestedMember(member) ? "退会申請" : "",
+      isWithdrawnMember(member) ? "退会済み" : "",
+    ].filter(Boolean).join(" ").toLocaleLowerCase("ja-JP").replace(/\s+/g, "");
+    return searchable.includes(normalizedMemberSearch);
+  });
   const unpaidFees = summaryFeeRecords.filter((fee) => getFeePaidAmount(fee) < getFeeBillingAmount(fee));
   const rawStripeAccountId = basicData.town?.stripe_account_id || "";
   const stripeAccountId = rawStripeAccountId || "未連携";
@@ -4569,7 +4589,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </label>
               <label>
                 <span>住所２</span>
-                <input value={memberDraft.addressLine2} onChange={(event) => handleMemberDraftChange("addressLine2", event.target.value)} placeholder="番地　例：２－３６" />
+                <input value={memberDraft.addressLine2} onChange={(event) => handleMemberDraftChange("addressLine2", event.target.value)} placeholder="例：２－３６" />
               </label>
               <label>
                 <span>住所３</span>
@@ -4617,23 +4637,33 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           </section>
 
           <section className="admin-basic-card admin-member-status">
-            <h3>連携と料金</h3>
+            <h3>連携数</h3>
             <div className="admin-mini-metrics">
-              <span><strong>{totalMembers.toLocaleString()}</strong>名簿登録</span>
-              <span><strong>{linkedPreviewMembers.toLocaleString()}</strong>料金対象アカウント</span>
-              <span><strong>{unlinkedPreviewMembers.toLocaleString()}</strong>未連携 / 対象外</span>
+              <span><strong>{currentHouseholds.toLocaleString()}</strong>世帯数</span>
+              <span><strong>{primaryLinkedMembers.toLocaleString()}</strong>接続数</span>
+              <span><strong>{familyLinkedMembers.toLocaleString()}</strong>家族接続数</span>
             </div>
-            <p className="admin-basic-note">本人または家族がLINE連携した数をシステム利用料の対象として数えます。連携済み世帯は {linkedPreviewHouseholds.toLocaleString()} 件です。</p>
+            <p className="admin-basic-note">本人または家族がLINE連携した数をシステム利用料の対象として数えます。</p>
           </section>
 
           <section className="admin-basic-card admin-member-list">
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会員一覧</h3>
-                <p>退会承認時にすべてのLINE連携を解除します。退会済み状態は通常操作では元に戻せません。</p>
+                <p>退会承認時にすべてのLINE連携を解除します。退会済み状態を元に戻すには、システム管理者による本人確認を含む正式な再入会手続きが必要です。</p>
               </div>
-              <span className="admin-member-count">退会申請 {withdrawalRequestMembers.toLocaleString()}件 / 退会済み {withdrawnMembers.length.toLocaleString()}件</span>
+              <span className={`admin-member-count ${withdrawalRequestMembers > 0 ? "has-requests" : ""}`}>退会申請 {withdrawalRequestMembers.toLocaleString()}件</span>
             </div>
+
+            <label className="admin-member-search">
+              <span>会員検索</span>
+              <input
+                type="search"
+                value={memberSearch}
+                onChange={(event) => setMemberSearch(event.target.value)}
+                placeholder="退会申請・退会済み・氏名・郵便番号・住所2・住所3で検索"
+              />
+            </label>
 
             <div className="admin-member-table">
               <div className="admin-member-row admin-member-head">
@@ -4644,7 +4674,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 <span>状態</span>
                 <span>操作</span>
               </div>
-              {(basicData.members.length ? basicData.members : [{ id: "empty", full_name: "会員名簿は未取得です", status: "未設定" }]).map((member, index) => {
+              {(filteredMembers.length ? filteredMembers : [{ id: "empty", full_name: basicData.members.length ? "検索条件に一致する会員はいません" : "会員名簿は未取得です", status: "未設定" }]).map((member, index) => {
                 const linked = isLineLinkedMember(member);
                 const billingTargetCount = getMemberLinkedAccountCount(member);
                 const withdrawn = isWithdrawnMember(member);
