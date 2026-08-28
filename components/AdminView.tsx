@@ -690,12 +690,15 @@ const getMemberLinkedAccountCount = (member: any) => {
 };
 const withdrawalRequested = (value: any) => ["requested", "pending", "withdrawal_requested"].includes(value);
 const getFamilyWithdrawalRequestSlots = (member: any) => ([1, 2] as const).filter((slot) => withdrawalRequested(member[`family_withdrawal_status_${slot}`]));
+const getFamilyWithdrawnSlots = (member: any) => ([1, 2] as const).filter((slot) => member[`family_withdrawal_status_${slot}`] === "withdrawn");
 const isWithdrawalRequestedMember = (member: any) => withdrawalRequested(member.withdrawal_status || member.status) || getFamilyWithdrawalRequestSlots(member).length > 0;
 const getMemberStatusLabel = (member: any) => {
   if (isWithdrawnMember(member)) return "退会済み";
   const familyRequests = getFamilyWithdrawalRequestSlots(member);
+  const familyWithdrawn = getFamilyWithdrawnSlots(member);
   if (withdrawalRequested(member.withdrawal_status || member.status)) return "世帯退会申請中";
   if (familyRequests.length) return `家族${familyRequests.join("・")}退会申請中`;
+  if (familyWithdrawn.length) return `家族${familyWithdrawn.join("・")}退会済み`;
   return "利用中";
 };
 const getAdminInviteExpiresAt = (admin: any) => {
@@ -3026,6 +3029,53 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     } finally { setMemberBusy(false); }
   };
 
+  const handleMemberRestore = async (member: any) => {
+    const fullName = getMemberFullName(member);
+    if (typeof window !== "undefined" && !window.confirm(`${fullName}様の退会状態を解除します。LINE連携は自動では戻らないため、本人と家族の再連携が必要です。よろしいですか？`)) return;
+
+    const reply = `${fullName}様の退会状態を解除しました。el-townを利用するには、LINEから会員名簿との照合をもう一度行ってください。`;
+    setMemberBusy(true);
+    setMemberMessage("");
+    setMemberReply("");
+    try {
+      const payload = { withdrawal_status: "active", withdrawal_reply_message: reply };
+      const saved = await updateRowWithFallback("resident_rosters", member.id, payload, "退会状態の解除に失敗しました。");
+      const updated = { ...member, ...payload, ...saved };
+      setBasicData((current) => ({
+        ...current,
+        members: current.members.map((item) => item.id === member.id ? updated : item),
+      }));
+      setMemberReply(reply);
+      setMemberMessage("退会状態を解除しました。本人と家族はLINE連携をやり直してください。");
+    } catch (error: any) {
+      setMemberMessage(error?.message || "退会状態の解除に失敗しました。");
+    } finally {
+      setMemberBusy(false);
+    }
+  };
+
+  const handleFamilyRestore = async (member: any, slot: 1 | 2) => {
+    const familyName = member[`family_name_${slot}`] || `家族${slot}`;
+    if (typeof window !== "undefined" && !window.confirm(`${familyName}様の退会状態を解除します。LINE連携は自動では戻らないため、再連携が必要です。よろしいですか？`)) return;
+
+    setMemberBusy(true);
+    setMemberMessage("");
+    try {
+      const payload = { [`family_withdrawal_status_${slot}`]: "active" };
+      const saved = await updateRowWithFallback("resident_rosters", member.id, payload, "家族の退会状態の解除に失敗しました。");
+      const updated = { ...member, ...payload, ...saved };
+      setBasicData((current) => ({
+        ...current,
+        members: current.members.map((item) => item.id === member.id ? updated : item),
+      }));
+      setMemberMessage(`${familyName}様の退会状態を解除しました。LINE連携をやり直してください。`);
+    } catch (error: any) {
+      setMemberMessage(error?.message || "家族の退会状態の解除に失敗しました。");
+    } finally {
+      setMemberBusy(false);
+    }
+  };
+
   const buildAdminInviteUrl = (token: string) => {
     if (typeof window === "undefined") return `/admin?mode=invite&token=${encodeURIComponent(token)}`;
     return `${window.location.origin}/admin?mode=invite&token=${encodeURIComponent(token)}`;
@@ -4650,7 +4700,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会員一覧</h3>
-                <p>退会承認時にすべてのLINE連携を解除します。退会済み状態を元に戻すには、システム管理者による本人確認を含む正式な再入会手続きが必要です。</p>
+                <p>退会承認時にLINE連携を解除します。退会済みの世帯または家族は、役員が「復帰」を押すと利用可能な状態へ戻せます。復帰後はLINE連携をやり直してください。</p>
               </div>
               <span className={`admin-member-count ${withdrawalRequestMembers > 0 ? "has-requests" : ""}`}>退会申請 {withdrawalRequestMembers.toLocaleString()}件</span>
             </div>
@@ -4680,6 +4730,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 const withdrawn = isWithdrawnMember(member);
                 const requested = isWithdrawalRequestedMember(member);
                 const familyRequestSlots = getFamilyWithdrawalRequestSlots(member);
+                const familyWithdrawnSlots = getFamilyWithdrawnSlots(member);
                 const familyNames = getMemberFamilyNames(member);
                 return (
                   <div key={member.id || index} className={`admin-member-row ${withdrawn ? "withdrawn" : requested ? "requested" : ""}`}>
@@ -4699,11 +4750,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                     <span className="admin-member-row-actions">
                       <button type="button" className="edit" onClick={() => handleMemberEditStart(member)} disabled={memberBusy || member.id === "empty"}>編集</button>
                       {withdrawn ? (
-                        <span className="admin-member-no-action">退会確定</span>
+                        <button type="button" className="restore" onClick={() => handleMemberRestore(member)} disabled={memberBusy || member.id === "empty"}>復帰</button>
                       ) : withdrawalRequested(member.withdrawal_status || member.status) ? (
                         <button type="button" onClick={() => handleMemberWithdrawal(member)} disabled={memberBusy || member.id === "empty"}>退会承認</button>
                       ) : familyRequestSlots.length ? (
                         <>{familyRequestSlots.map((slot) => <button key={slot} type="button" onClick={() => handleFamilyWithdrawal(member, slot)} disabled={memberBusy || member.id === "empty"}>家族{slot}退会承認</button>)}</>
+                      ) : familyWithdrawnSlots.length ? (
+                        <>{familyWithdrawnSlots.map((slot) => <button key={slot} type="button" className="restore" onClick={() => handleFamilyRestore(member, slot)} disabled={memberBusy || member.id === "empty"}>家族{slot}復帰</button>)}</>
                       ) : (
                         <span className="admin-member-no-action">申請なし</span>
                       )}

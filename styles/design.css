@@ -2598,6 +2598,13 @@ button { cursor: pointer; border: 0; }
   color: #1d4ed8;
 }
 
+.admin-member-row-actions button.restore,
+.admin-member-row.withdrawn .admin-member-row-actions button.restore {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
 .admin-member-no-action {
   min-height: 34px;
   display: inline-flex;
