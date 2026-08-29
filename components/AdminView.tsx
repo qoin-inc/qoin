@@ -22,6 +22,8 @@ type Summary = {
 
 type BasicFeature = "基本情報" | "会員管理" | "会費管理" | "システム利用料" | "役員管理" | "Stripe連携";
 type AdminScreenMode = "dashboard" | "basicFeature" | "publishFeature";
+type MemberStatusSearch = "" | "requested" | "withdrawn" | "other";
+type FamilyLinkedSearch = "" | "linked" | "unlinked";
 type AdminListStatus = "active" | "invited" | "retired";
 
 type BasicData = {
@@ -516,7 +518,7 @@ const stripeRequirementLabel = (requirement: string) => {
   return requirement;
 };
 
-const memberCsvHeaders = ["氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族１カタカナ", "家族２", "家族２カタカナ"];
+const memberCsvHeaders = ["名簿ID", "氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族１カタカナ", "家族２", "家族２カタカナ"];
 const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所３"]);
 const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message", "family_withdrawal_status_1", "family_withdrawal_status_2"];
 const adminDetailColumns = ["admin_role", "admin_invite_token", "invite_token", "invited_at", "retired_at"];
@@ -678,6 +680,22 @@ const getMemberFamilyNames = (member: any) => [
 ]
   .filter(([name]) => Boolean(name))
   .map(([name, kana]) => kana ? `${name}（${kana}）` : name);
+const normalizeRosterIdentityText = (value?: string | null) => String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim().toLocaleLowerCase("ja-JP");
+const normalizeRosterPostalCode = (value?: string | null) => normalizeRosterIdentityText(value).replace(/[^0-9]/g, "");
+const getRosterIdentityKey = (values: { fullName: string; kanaName: string; postalCode: string; addressLine2: string; addressLine3: string }) => [
+  normalizeRosterIdentityText(values.fullName),
+  normalizeRosterIdentityText(values.kanaName),
+  normalizeRosterPostalCode(values.postalCode),
+  normalizeRosterIdentityText(values.addressLine2),
+  normalizeRosterIdentityText(values.addressLine3),
+].join("|");
+const getMemberIdentityKey = (member: any) => getRosterIdentityKey({
+  fullName: getMemberFullName(member) === "氏名未設定" ? "" : getMemberFullName(member),
+  kanaName: getMemberKana(member),
+  postalCode: getMemberPostalCode(member),
+  addressLine2: getMemberAddressLine2(member),
+  addressLine3: getMemberAddressLine3(member),
+});
 const isLineLinkedMember = (member: any) => Boolean(member.user_auth_id || member.family_user_auth_id_1 || member.family_user_auth_id_2);
 const isWithdrawnMember = (member: any) => member.withdrawal_status === "withdrawn" || member.status === "withdrawn";
 const getMemberLinkedAccountCount = (member: any) => {
@@ -1030,7 +1048,12 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [memberBusy, setMemberBusy] = useState(false);
   const [memberMessage, setMemberMessage] = useState("");
   const [memberReply, setMemberReply] = useState("");
-  const [memberSearch, setMemberSearch] = useState("");
+  const [memberStatusSearch, setMemberStatusSearch] = useState<MemberStatusSearch>("");
+  const [memberNameSearch, setMemberNameSearch] = useState("");
+  const [memberPostalCodeSearch, setMemberPostalCodeSearch] = useState("");
+  const [memberAddressLine2Search, setMemberAddressLine2Search] = useState("");
+  const [memberAddressLine3Search, setMemberAddressLine3Search] = useState("");
+  const [memberFamilyLinkedSearch, setMemberFamilyLinkedSearch] = useState<FamilyLinkedSearch>("");
   const [editingMemberId, setEditingMemberId] = useState<number | string | null>(null);
   const [feeDraft, setFeeDraft] = useState<FeeDraft>({ fiscalYear: "", amount: "", targetMode: "all" });
   const [feeSelectedMembers, setFeeSelectedMembers] = useState<Record<string, boolean>>({});
@@ -2895,22 +2918,95 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       const rows = parseCsvRows(text);
       if (rows.length < 2) throw new Error("CSVに登録対象の会員行がありません。");
 
-      const headers = rows[0];
-      const imported: any[] = [];
-      for (const row of rows.slice(1)) {
+      const headers = rows[0].map((header) => header.trim());
+      const csvEntries = rows.slice(1).map((row, rowIndex) => {
         const record = headers.reduce<Record<string, string>>((acc, header, index) => {
           acc[header] = row[index] || "";
           return acc;
         }, {});
         const draft = draftFromCsvRecord(record);
-        if (!draft.fullName.trim()) continue;
-        imported.push(await insertRosterMember(draft));
+        return {
+          rowNumber: rowIndex + 2,
+          rosterId: String(record["名簿ID"] || record["roster_id"] || record["id"] || "").trim(),
+          draft,
+          identityKey: getRosterIdentityKey(draft),
+        };
+      }).filter((entry) => entry.draft.fullName.trim());
+
+      if (!csvEntries.length) throw new Error("CSVから登録できる会員が見つかりませんでした。");
+
+      const duplicateRosterIds = csvEntries
+        .filter((entry) => entry.rosterId)
+        .filter((entry, index, entries) => entries.findIndex((candidate) => candidate.rosterId === entry.rosterId) !== index);
+      if (duplicateRosterIds.length) throw new Error(`CSV内で名簿ID「${duplicateRosterIds[0].rosterId}」が重複しています。`);
+
+      const duplicateIdentityKeys = csvEntries
+        .filter((entry) => !entry.rosterId)
+        .filter((entry, index, entries) => entries.findIndex((candidate) => !candidate.rosterId && candidate.identityKey === entry.identityKey) !== index);
+      if (duplicateIdentityKeys.length) throw new Error(`CSVの${duplicateIdentityKeys[0].rowNumber}行目と同じ世帯照合情報が重複しています。`);
+
+      const membersById = new Map(basicData.members.map((member) => [String(member.id), member]));
+      const membersByIdentity = new Map<string, any[]>();
+      basicData.members.forEach((member) => {
+        const key = getMemberIdentityKey(member);
+        membersByIdentity.set(key, [...(membersByIdentity.get(key) || []), member]);
+      });
+
+      const resolvedEntries = csvEntries.map((entry) => {
+        if (entry.rosterId) {
+          const existingMember = membersById.get(entry.rosterId) || null;
+          if (!existingMember) throw new Error(`CSVの${entry.rowNumber}行目にある名簿ID「${entry.rosterId}」は、この町内会・自治会の名簿に存在しません。新規世帯は名簿IDを空欄にしてください。`);
+          return { ...entry, existingMember };
+        }
+
+        const matches = membersByIdentity.get(entry.identityKey) || [];
+        if (matches.length > 1) throw new Error(`CSVの${entry.rowNumber}行目は既存名簿の複数世帯に一致します。名簿ID付きのCSVを出力してから編集してください。`);
+        return { ...entry, existingMember: matches[0] || null };
+      });
+      const duplicateUpdateTargets = resolvedEntries
+        .filter((entry) => entry.existingMember)
+        .filter((entry, index, entries) => entries.findIndex((candidate) => String(candidate.existingMember?.id) === String(entry.existingMember?.id)) !== index);
+      if (duplicateUpdateTargets.length) throw new Error(`CSV内の複数行が名簿ID「${duplicateUpdateTargets[0].existingMember.id}」へ一致しています。1世帯につき1行にしてください。`);
+
+      const imported: any[] = [];
+      const updated: any[] = [];
+      const skippedWithdrawn: any[] = [];
+      for (const entry of resolvedEntries) {
+        const existingMember = entry.existingMember;
+        if (existingMember) {
+          if (isWithdrawnMember(existingMember)) {
+            skippedWithdrawn.push(existingMember);
+            continue;
+          }
+          const updateDraft = {
+            ...entry.draft,
+            ...(existingMember.family_withdrawal_status_1 === "withdrawn" ? {
+              familyName1: existingMember.family_name_1 || "",
+              familyKanaName1: existingMember.family_kana_name_1 || "",
+            } : {}),
+            ...(existingMember.family_withdrawal_status_2 === "withdrawn" ? {
+              familyName2: existingMember.family_name_2 || "",
+              familyKanaName2: existingMember.family_kana_name_2 || "",
+            } : {}),
+          };
+          const saved = await updateRosterMember(existingMember.id, updateDraft);
+          const merged = { ...existingMember, ...saved };
+          updated.push(merged);
+          membersById.set(String(merged.id), merged);
+        } else {
+          const saved = await insertRosterMember(entry.draft);
+          imported.push(saved);
+          membersById.set(String(saved.id), saved);
+          membersByIdentity.set(entry.identityKey, [saved]);
+        }
       }
 
-      if (!imported.length) throw new Error("CSVから登録できる会員が見つかりませんでした。");
-
-      setBasicData((current) => ({ ...current, members: [...imported, ...current.members] }));
-      setMemberMessage(`${imported.length}件の会員をCSVから取り込みました。`);
+      const updatedById = new Map(updated.map((member) => [String(member.id), member]));
+      setBasicData((current) => ({
+        ...current,
+        members: [...imported, ...current.members.map((member) => updatedById.get(String(member.id)) || member)],
+      }));
+      setMemberMessage(`CSV取込みが完了しました。更新 ${updated.length}件、新規追加 ${imported.length}件、退会済みのため変更なし ${skippedWithdrawn.length}件です。退会状態とLINE連携情報は維持しています。`);
     } catch (error: any) {
       setMemberMessage(error?.message || "CSV取り込みに失敗しました。");
     } finally {
@@ -2922,6 +3018,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     const rows = [
       memberCsvHeaders,
       ...basicData.members.map((member) => [
+        member.id,
         getMemberFullName(member),
         getMemberKana(member),
         getMemberPostalCode(member),
@@ -3819,25 +3916,33 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const familyLinkedMembers = activeMembers.reduce((sum, member) => sum + ([1, 2] as const).filter((slot) => (
     member[`family_withdrawal_status_${slot}`] !== "withdrawn" && Boolean(member[`family_user_auth_id_${slot}`])
   )).length, 0);
+  const totalLinkedMembers = primaryLinkedMembers + familyLinkedMembers;
   const withdrawalRequestMembers = basicData.members.reduce((sum, member) => sum + (withdrawalRequested(member.withdrawal_status || member.status) ? 1 : 0) + getFamilyWithdrawalRequestSlots(member).length, 0);
-  const normalizedMemberSearch = memberSearch.trim().toLocaleLowerCase("ja-JP").replace(/\s+/g, "");
+  const normalizeMemberSearch = (value: any) => String(value || "").trim().toLocaleLowerCase("ja-JP").replace(/\s+/g, "");
+  const normalizedMemberNameSearch = normalizeMemberSearch(memberNameSearch);
+  const normalizedMemberPostalCodeSearch = normalizeMemberSearch(memberPostalCodeSearch);
+  const normalizedMemberAddressLine2Search = normalizeMemberSearch(memberAddressLine2Search);
+  const normalizedMemberAddressLine3Search = normalizeMemberSearch(memberAddressLine3Search);
   const filteredMembers = basicData.members.filter((member) => {
-    if (!normalizedMemberSearch) return true;
-    const searchable = [
-      getMemberFullName(member),
-      getMemberKana(member),
-      member.family_name_1,
-      member.family_kana_name_1,
-      member.family_name_2,
-      member.family_kana_name_2,
-      getMemberPostalCode(member),
-      getMemberAddressLine2(member),
-      getMemberAddressLine3(member),
-      getMemberStatusLabel(member),
-      isWithdrawalRequestedMember(member) ? "退会申請" : "",
-      isWithdrawnMember(member) ? "退会済み" : "",
-    ].filter(Boolean).join(" ").toLocaleLowerCase("ja-JP").replace(/\s+/g, "");
-    return searchable.includes(normalizedMemberSearch);
+    const requested = isWithdrawalRequestedMember(member);
+    const withdrawn = isWithdrawnMember(member) || getFamilyWithdrawnSlots(member).length > 0;
+    const familyLinked = !isWithdrawnMember(member) && ([1, 2] as const).some((slot) => (
+      member[`family_withdrawal_status_${slot}`] !== "withdrawn" && Boolean(member[`family_user_auth_id_${slot}`])
+    ));
+    const statusMatches = !memberStatusSearch
+      || (memberStatusSearch === "requested" && requested)
+      || (memberStatusSearch === "withdrawn" && !requested && withdrawn)
+      || (memberStatusSearch === "other" && !requested && !withdrawn);
+    const familyLinkedMatches = !memberFamilyLinkedSearch
+      || (memberFamilyLinkedSearch === "linked" && familyLinked)
+      || (memberFamilyLinkedSearch === "unlinked" && !familyLinked);
+
+    return statusMatches
+      && familyLinkedMatches
+      && (!normalizedMemberNameSearch || normalizeMemberSearch(`${getMemberFullName(member)} ${getMemberKana(member)}`).includes(normalizedMemberNameSearch))
+      && (!normalizedMemberPostalCodeSearch || normalizeMemberSearch(getMemberPostalCode(member)).includes(normalizedMemberPostalCodeSearch))
+      && (!normalizedMemberAddressLine2Search || normalizeMemberSearch(getMemberAddressLine2(member)).includes(normalizedMemberAddressLine2Search))
+      && (!normalizedMemberAddressLine3Search || normalizeMemberSearch(getMemberAddressLine3(member)).includes(normalizedMemberAddressLine3Search));
   });
   const unpaidFees = summaryFeeRecords.filter((fee) => getFeePaidAmount(fee) < getFeeBillingAmount(fee));
   const rawStripeAccountId = basicData.town?.stripe_account_id || "";
@@ -4609,7 +4714,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <div className="admin-basic-card-heading">
               <div>
                 <h3>{editingMemberId !== null ? "会員名簿編集" : "会員名簿登録"}</h3>
-                <p>{editingMemberId !== null ? "選択した会員の照合情報と家族情報を編集します。" : "CSV取込み、CSV出力、画面入力で名簿を管理します。会員の初回LINE連携時は、この名簿情報で照合します。"}</p>
+                <p>{editingMemberId !== null ? "選択した会員の照合情報と家族情報を編集します。" : "CSV取込みは名簿ID（従来CSVは氏名・カナ・郵便番号・住所）で一致する有効世帯を更新し、一致しない世帯を追加します。退会済み世帯・退会済み家族・LINE連携情報は変更しません。"}</p>
               </div>
               <div className="admin-member-actions">
                 <label>
@@ -4690,7 +4795,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <h3>連携数</h3>
             <div className="admin-mini-metrics">
               <span><strong>{currentHouseholds.toLocaleString()}</strong>世帯数</span>
-              <span><strong>{primaryLinkedMembers.toLocaleString()}</strong>接続数</span>
+              <span><strong>{totalLinkedMembers.toLocaleString()}</strong>接続数</span>
               <span><strong>{familyLinkedMembers.toLocaleString()}</strong>家族接続数</span>
             </div>
             <p className="admin-basic-note">本人または家族がLINE連携した数をシステム利用料の対象として数えます。</p>
@@ -4705,15 +4810,62 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               <span className={`admin-member-count ${withdrawalRequestMembers > 0 ? "has-requests" : ""}`}>退会申請 {withdrawalRequestMembers.toLocaleString()}件</span>
             </div>
 
-            <label className="admin-member-search">
-              <span>会員検索</span>
-              <input
-                type="search"
-                value={memberSearch}
-                onChange={(event) => setMemberSearch(event.target.value)}
-                placeholder="退会申請・退会済み・氏名・郵便番号・住所2・住所3で検索"
-              />
-            </label>
+            <section className="admin-member-search" aria-labelledby="admin-member-search-title">
+              <div className="admin-member-search-heading">
+                <div>
+                  <strong id="admin-member-search-title">会員検索</strong>
+                  <small>入力した項目をすべて満たす会員を表示します（AND検索）</small>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMemberStatusSearch("");
+                    setMemberNameSearch("");
+                    setMemberPostalCodeSearch("");
+                    setMemberAddressLine2Search("");
+                    setMemberAddressLine3Search("");
+                    setMemberFamilyLinkedSearch("");
+                  }}
+                >
+                  条件をクリア
+                </button>
+              </div>
+              <div className="admin-member-search-fields">
+                <label>
+                  <span>状態</span>
+                  <select value={memberStatusSearch} onChange={(event) => setMemberStatusSearch(event.target.value as MemberStatusSearch)}>
+                    <option value="">すべて</option>
+                    <option value="requested">退会申請</option>
+                    <option value="withdrawn">退会済み</option>
+                    <option value="other">それ以外</option>
+                  </select>
+                </label>
+                <label>
+                  <span>氏名</span>
+                  <input type="search" value={memberNameSearch} onChange={(event) => setMemberNameSearch(event.target.value)} placeholder="氏名・カタカナ" />
+                </label>
+                <label>
+                  <span>郵便番号</span>
+                  <input type="search" value={memberPostalCodeSearch} onChange={(event) => setMemberPostalCodeSearch(event.target.value)} placeholder="例: 100-0001" />
+                </label>
+                <label>
+                  <span>住所2</span>
+                  <input type="search" value={memberAddressLine2Search} onChange={(event) => setMemberAddressLine2Search(event.target.value)} placeholder="例: 2-36" />
+                </label>
+                <label>
+                  <span>住所3</span>
+                  <input type="search" value={memberAddressLine3Search} onChange={(event) => setMemberAddressLine3Search(event.target.value)} placeholder="建物名・部屋番号" />
+                </label>
+                <label>
+                  <span>家族接続</span>
+                  <select value={memberFamilyLinkedSearch} onChange={(event) => setMemberFamilyLinkedSearch(event.target.value as FamilyLinkedSearch)}>
+                    <option value="">すべて</option>
+                    <option value="linked">接続あり</option>
+                    <option value="unlinked">接続なし</option>
+                  </select>
+                </label>
+              </div>
+            </section>
 
             <div className="admin-member-table">
               <div className="admin-member-row admin-member-head">
