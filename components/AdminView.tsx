@@ -270,13 +270,13 @@ const functionGroups: Array<{ key: DashboardMenu; title: string; icon: string; d
   },
 ];
 
-const basicFeatures: Array<{ key: BasicFeature; icon: string }> = [
-  { key: "基本情報", icon: "fa-house-flag" },
-  { key: "会員管理", icon: "fa-users" },
-  { key: "会費管理", icon: "fa-yen-sign" },
-  { key: "システム利用料", icon: "fa-file-invoice-dollar" },
-  { key: "役員管理", icon: "fa-user-shield" },
-  { key: "Stripe連携", icon: "fa-credit-card" },
+const basicFeatures: Array<{ key: BasicFeature; icon: string; desc: string }> = [
+  { key: "基本情報", icon: "fa-house", desc: "町内会・自治会の基本情報登録" },
+  { key: "会員管理", icon: "fa-users", desc: "会員のLine連携のため会員名簿の登録" },
+  { key: "役員管理", icon: "fa-user-shield", desc: "役員登録のため招待、退会登録" },
+  { key: "会費管理", icon: "fa-yen-sign", desc: "会員への会費請求登録" },
+  { key: "システム利用料", icon: "fa-file-invoice-dollar", desc: "el-town利用料の支払、請求履歴" },
+  { key: "Stripe連携", icon: "fa-credit-card", desc: "会費のオンライン決済登録" },
 ];
 
 const typeLabel: Record<WorkItem["type"], string> = {
@@ -6045,6 +6045,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 <i className={`fas ${feature.icon}`} />
                 <span>
                   <strong>{feature.key}</strong>
+                  <small>{feature.desc}</small>
                 </span>
                 <em>開く</em>
               </button>
@@ -6113,6 +6114,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     );
   };
 
+  const activeFeatureMeta = basicFeatures.find((feature) => feature.key === activeBasicFeature) || basicFeatures[0];
+
   if (activeAdminScreen === "basicFeature") {
     return (
       <main className="admin-dashboard admin-dashboard-v2 admin-feature-screen">
@@ -6124,6 +6127,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           <div>
             <p className="el-kicker">基本機能</p>
             <h1>{activeBasicFeature}</h1>
+            <p>{activeFeatureMeta.desc}</p>
           </div>
         </section>
 
@@ -6134,6 +6138,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               type="button"
               className={activeBasicFeature === feature.key ? "active" : ""}
               onClick={() => openBasicFeature(feature.key)}
+              title={feature.desc}
             >
               <i className={`fas ${feature.icon}`} />
               <span>{feature.key}</span>
