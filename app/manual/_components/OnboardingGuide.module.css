@@ -78,6 +78,10 @@
   min-width: 0;
 }
 
+.stepSubtitle {
+  margin: 1rem 0 0;
+}
+
 .pointList {
   padding: 0;
   list-style: none;

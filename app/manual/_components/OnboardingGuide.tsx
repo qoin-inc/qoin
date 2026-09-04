@@ -8,11 +8,13 @@ type Theme = "blue" | "green" | "purple";
 
 type GuideStep = {
   title: string;
+  subtitle?: string;
   text: string;
   visual: ReactNode;
   points?: string[];
   caution?: string;
   link?: { href: string; label: string };
+  copyFirst?: boolean;
 };
 
 const themeStyles = {
@@ -121,7 +123,7 @@ export function OnboardingGuide({
             <SectionTitle title={processTitle} subtitle={processSubtitle} />
             <ol className={`${styles.stepList} ${desktopLayout ? styles.stepListDesktop : ""}`}>
               {steps.map((step, index) => {
-              const visualFirst = index % 2 === 1;
+              const visualFirst = !step.copyFirst && index % 2 === 1;
               return (
                 <li
                   key={step.title}
@@ -132,6 +134,9 @@ export function OnboardingGuide({
                       {index + 1}
                     </div>
                     <h3 className={`${styles.stepTitle} text-xl font-black leading-8 text-[#203947]`}>{step.title}</h3>
+                    {step.subtitle && (
+                      <h4 className={`${styles.stepSubtitle} mt-4 text-lg font-black leading-8 text-[#203947]`}>{step.subtitle}</h4>
+                    )}
                     <p className={`${styles.stepText} mt-4 text-sm font-semibold leading-8 text-[#607b89]`}>{step.text}</p>
                     {step.points && (
                       <ul className={`${styles.pointList} mt-5 space-y-2 text-sm font-bold leading-7 text-[#46606d]`}>
@@ -279,7 +284,7 @@ export function StripeDesktopPreview({
             <div><small>基本機能</small><strong>Stripe連携</strong><em>Connectアカウント、オンボーディング、決済受付状態</em></div>
           </div>
           <div className={styles.stripeScreenTabs}>
-            {['基本情報', '会員管理', '会費管理', 'システム利用料', '役員管理', 'Stripe連携'].map((tab) => <span className={tab === 'Stripe連携' ? styles.stripeScreenTabActive : ''} key={tab}>{tab}</span>)}
+            {['基本情報', '会員管理', '役員管理', '会費管理', 'システム利用料', 'Stripe連携'].map((tab) => <span className={tab === 'Stripe連携' ? styles.stripeScreenTabActive : ''} key={tab}>{tab}</span>)}
           </div>
           <div className={styles.stripeScreenGrid}>
             <section className={`${styles.stripeScreenPanel} ${focus === "status" ? focusClass : ""}`}>
@@ -388,7 +393,7 @@ export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
         <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / 管理画面 / 会費管理</span></div>
         <div className={styles.feeDesktopScreen}>
           <header><small>基本機能</small><strong>会費管理</strong><span>会費設定、請求額、入金状況、手集金</span></header>
-          <nav>{['基本情報', '会員管理', '会費管理', 'システム利用料', '役員管理', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
+          <nav>{['基本情報', '会員管理', '役員管理', '会費管理', 'システム利用料', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
           <div className={styles.feeDesktopGrid}>
             <section className={styles.pcFocusPanel}><h4>会費・決済方法の個別設定</h4><div className={styles.feeDesktopFields}><span>会費名称　年会費</span><span>標準会費額　5,000円</span><span>年度　基本情報の決算月から自動計算</span></div><div className={styles.feeDesktopMethods}><b>☑ 手集金</b><b className={styles.feeDesktopStripe}>☑ Stripeカード決済</b><b>□ 口座振込</b></div><button type="button">この町内会・自治会の設定を保存</button></section>
             <section><h4>会費請求設定</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span><span>請求対象　全会員世帯</span></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button><button type="button">Stripe請求に設定</button></div><small>PayPayは町内会・自治会の申請・審査完了後にStripe決済画面へ自動表示されます。</small></section>

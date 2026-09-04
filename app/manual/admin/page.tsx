@@ -32,7 +32,7 @@ export default function AdminManualPage() {
         steps={[
           {
             title: "「基本機能」を押下する",
-            text: "「基本機能」は基本情報、会員管理、会費管理、システム利用料、役員管理、Stripe連携が表示されるため、操作したい項目の「開く」を押下してください。",
+            text: "「基本機能」は基本情報、会員管理、役員管理、会費管理、システム利用料、Stripe連携が表示されるため、操作したい項目の「開く」を押下してください。",
             points: [
               "画面上部の町内会・自治会名をご確認してください。",
               "複数の町内会・自治会を管理している役員の場合は、作業前に該当の町内会・自治会に切り替えます。",
@@ -66,6 +66,18 @@ export default function AdminManualPage() {
               "退会済みの世帯または家族は、役員が会員一覧の「復帰」を押すと利用可能な状態へ戻せます。退会時に解除されたLINE連携は自動では戻らないため、復帰後に本人または家族がLINEから会員名簿との照合をやり直してください。",
             ],
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/03-member-management.png" alt="会員管理のPC管理画面" caption="" hotspots={[{ left: "10%", top: "55%", label: "会員を登録" }, { left: "68%", top: "69%", label: "一覧を確認", delay: 1.2 }]} />,
+          },
+          {
+            title: "役員管理",
+            subtitle: "役員登録のため招待、退会登録",
+            text: "役員名、メールアドレス、役職を入力し、「招待メールを送信」を押します。役員にメールが通知され招待URLからログインが可能となり、ログインすると役員に追加されます。",
+            points: [
+              "招待URLの有効期限は発行から7日間です。期限切れの場合は再送します。",
+              "複数の町内会・自治会へ参加する役員は、同じメールアドレスとパスワードで町内会・自治会を切り替えられます。",
+              "最後の管理者は退任できません。先に別の役員の登録してから担当を退任させてください。",
+            ],
+            copyFirst: true,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" caption="" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
           },
           {
             title: "会費の請求と入金を管理する",
@@ -106,17 +118,6 @@ export default function AdminManualPage() {
             ],
             caution: "支払い方法が未選択のままでは自動決済されません。運用開始前にカードまたは銀行振込を選択してください。",
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee.png" alt="システム利用料のPC管理画面" caption="" hotspots={[{ left: "20%", top: "53%", label: "支払い方法" }, { left: "66%", top: "54%", label: "請求見込み", delay: 1.2 }]} />,
-          },
-          {
-            title: "役員を招待・管理する",
-            text: "候補者名、メールアドレス、役職を入力し、「招待メールを送信」を押します。招待後は「在任中」「招待中」「退任済み」のタブで状態を確認し、必要に応じて再送、退任、復活を行います。",
-            points: [
-              "招待URLの有効期限は発行から7日間です。期限切れの場合は再送します。",
-              "複数の町内会・自治会へ参加する役員は、同じメールアドレスとパスワードで町内会・自治会を切り替えられます。",
-              "招待した相手が登録を完了したことを「在任中」で確認します。",
-            ],
-            caution: "最後の管理者は退任できません。先に別の役員の登録完了を確認してから担当を変更してください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" caption="" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
           },
           {
             title: "Stripe連携を開始・確認する",
