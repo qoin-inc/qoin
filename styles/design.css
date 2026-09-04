@@ -2654,6 +2654,12 @@ button { cursor: pointer; border: 0; }
   color: #15803d;
 }
 
+.admin-member-row-actions button.withdraw {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 .admin-member-no-action {
   min-height: 34px;
   display: inline-flex;
