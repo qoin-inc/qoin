@@ -3837,16 +3837,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const stripeAccountMode = basicData.town?.stripe_account_mode || "live";
   const stripeChargesEnabled = basicData.town?.stripe_charges_enabled === true;
   const stripePayoutsEnabled = basicData.town?.stripe_payouts_enabled === true;
-  const stripeDetailsSubmitted = basicData.town?.stripe_details_submitted === true;
   const stripeOnboardingStatus = basicData.town?.stripe_onboarding_status || "";
   const stripeReadyForFeeBilling = Boolean(rawStripeAccountId) && (stripeOnboardingStatus === "active" || (stripeChargesEnabled && stripePayoutsEnabled));
   const stripeRegistrationStatusLabel = !rawStripeAccountId
-    ? "未連携"
+    ? "Stripe未連係"
     : stripeReadyForFeeBilling
-      ? "有効"
-      : stripeDetailsSubmitted
-        ? "Stripe審査中"
-        : "本番登録の完了待ち";
+      ? "Stripe有効"
+      : "Stripe審査中";
   const representativeName = basicData.town?.admin_name || organizationAdmins[0]?.admin_name || "未設定";
   const representativeEmail = basicData.town?.admin_email || organizationAdmins[0]?.admin_email || "未設定";
   const systemConnectionUnitPrice = Number(basicData.setting?.monthly_household_price ?? 0);
@@ -4861,7 +4858,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               <div className="admin-fee-heading-status">
                 <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
                 <span className={stripeReadyForFeeBilling ? "admin-stripe-badge ready" : rawStripeAccountId ? "admin-stripe-badge pending" : "admin-stripe-badge"}>
-                  <i className="fab fa-stripe-s" /> Stripe：{stripeRegistrationStatusLabel}
+                  <i className="fab fa-stripe-s" /> {stripeRegistrationStatusLabel}
                 </span>
               </div>
             </div>
@@ -4893,13 +4890,37 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </div>
             </div>
 
-            <p className="admin-basic-note">{stripeReadyForFeeBilling ? "Stripeは有効です。会員画面でカード・PayPayなど利用可能なオンライン決済を選べます。" : rawStripeAccountId ? "Stripeは登録・審査中です。有効になるまで会員画面のオンライン決済は利用できません。" : "Stripeは未連携です。オンライン決済を利用する場合は「Stripe連携」から登録してください。"}</p>
+            {feeMessage && (
+              <div className={`admin-basic-message ${feeMessage.includes("失敗") || feeMessage.includes("正しく") || feeMessage.includes("選択") || feeMessage.includes("できません") ? "error" : "success"}`}>
+                {feeMessage}
+              </div>
+            )}
+          </section>
 
-            <p className="admin-basic-note">{feeFiscalYear}年度：{fiscalYearPeriodLabel(feeFiscalYear, basicInfoDraft.fiscalEndMonth)}。年度確定は保存・監査のための任意の締め処理で、次年度請求の開始条件ではありません。</p>
+          <section className="admin-basic-card admin-fee-summary">
+            <h3>{feeFiscalYear}年度 集計</h3>
+            <div className="admin-mini-metrics">
+              <span><strong>{yen(feeBillingTotal)}</strong>請求額</span>
+              <span><strong>{yen(feePaidTotal)}</strong>入金額合計</span>
+              <span><strong>{yen(feeCashPaidTotal)}</strong>手集金</span>
+              <span><strong>{yen(feeStripePaidTotal)}</strong>Stripe入金</span>
+              <span><strong>{yen(feeBalanceTotal)}</strong>未入金額</span>
+              <span><strong>{feeUnpaidCount.toLocaleString()}</strong>未納/一部</span>
+            </div>
+            <p className="admin-basic-note">手集金は会費一覧の金額欄で修正します。Stripe入金はWebhookで自動反映され、手集金とは別に集計します。Stripe請求は本番登録が完了してから利用できます。</p>
+          </section>
+
+          <section className="admin-basic-card admin-fee-list">
+            <div className="admin-basic-card-heading">
+              <div>
+                <h3>会費一覧</h3>
+                <p>退会済み会員の過去情報も年度ごとに残し、会計期内に作成された会費は入金状態にかかわらず年度集計に含めます。</p>
+              </div>
+            </div>
 
             <div className="admin-fee-roster-tools">
               <label>
-                <span>会費名簿検索</span>
+                <span>会費一覧検索</span>
                 <input value={feeRosterSearch} onChange={(event) => setFeeRosterSearch(event.target.value)} placeholder="氏名・カナ・郵便番号・住所で検索" />
               </label>
               <div className="admin-fee-roster-buttons">
@@ -4933,34 +4954,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                   </label>
                 );
               })}
-            </div>
-
-            {feeMessage && (
-              <div className={`admin-basic-message ${feeMessage.includes("失敗") || feeMessage.includes("正しく") || feeMessage.includes("選択") || feeMessage.includes("できません") ? "error" : "success"}`}>
-                {feeMessage}
-              </div>
-            )}
-          </section>
-
-          <section className="admin-basic-card admin-fee-summary">
-            <h3>{feeFiscalYear}年度 集計</h3>
-            <div className="admin-mini-metrics">
-              <span><strong>{yen(feeBillingTotal)}</strong>請求額</span>
-              <span><strong>{yen(feePaidTotal)}</strong>入金額合計</span>
-              <span><strong>{yen(feeCashPaidTotal)}</strong>手集金</span>
-              <span><strong>{yen(feeStripePaidTotal)}</strong>Stripe入金</span>
-              <span><strong>{yen(feeBalanceTotal)}</strong>未入金額</span>
-              <span><strong>{feeUnpaidCount.toLocaleString()}</strong>未納/一部</span>
-            </div>
-            <p className="admin-basic-note">手集金は会費一覧の金額欄で修正します。Stripe入金はWebhookで自動反映され、手集金とは別に集計します。Stripe請求は本番登録が完了してから利用できます。</p>
-          </section>
-
-          <section className="admin-basic-card admin-fee-list">
-            <div className="admin-basic-card-heading">
-              <div>
-                <h3>会費一覧</h3>
-                <p>退会済み会員の過去情報も年度ごとに残し、会計期内に作成された会費は入金状態にかかわらず年度集計に含めます。</p>
-              </div>
             </div>
 
             <div className="admin-fee-table">
