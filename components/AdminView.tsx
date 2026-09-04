@@ -1038,6 +1038,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [feeClosureAvailable, setFeeClosureAvailable] = useState<boolean | null>(null);
   const [feeClosureBusy, setFeeClosureBusy] = useState(false);
   const [feeClosureMessage, setFeeClosureMessage] = useState("");
+  const [feeClosureError, setFeeClosureError] = useState(false);
   const [adminInviteDraft, setAdminInviteDraft] = useState<AdminInviteDraft>({ name: "", email: "", role: "" });
   const [adminInviteUrl, setAdminInviteUrl] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
@@ -3436,6 +3437,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
   const finalizeSelectedFeeYear = async () => {
     if (!feeClosureAvailable) {
+      setFeeClosureError(true);
       setFeeClosureMessage("年度確定用のDB更新が未適用です。管理者へ連絡してください。");
       return;
     }
@@ -3443,6 +3445,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     if (typeof window !== "undefined" && !window.confirm(`${feeFiscalYear}年度の会費データを${actionLabel}します。${actionLabel}後は変更できません。よろしいですか？`)) return;
 
     setFeeClosureBusy(true);
+    setFeeClosureError(false);
     setFeeClosureMessage("");
     try {
       const { data, error } = await supabase.rpc("finalize_fee_year", {
@@ -3452,8 +3455,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       if (error) throw error;
       await refreshFeeYearClosures();
       const snapshotCount = Number(data?.snapshotCount || data?.snapshot_count || feeRecordsForYear.length);
+      setFeeClosureError(false);
       setFeeClosureMessage(`${feeFiscalYear}年度を${actionLabel}し、${snapshotCount.toLocaleString()}件を独立データとして保存しました。`);
     } catch (error: any) {
+      setFeeClosureError(true);
       setFeeClosureMessage(error?.message || `${feeFiscalYear}年度を${actionLabel}できませんでした。`);
     } finally {
       setFeeClosureBusy(false);
@@ -3462,6 +3467,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
   const unlockSelectedFeeYear = async () => {
     if (!canManageYearClosure) {
+      setFeeClosureError(true);
       setFeeClosureMessage("確定を解除できるのは代表者またはシステム権限者だけです。");
       return;
     }
@@ -3470,11 +3476,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       : null;
     if (reason === null) return;
     if (reason.trim().length < 3) {
+      setFeeClosureError(true);
       setFeeClosureMessage("確定を解除する理由を3文字以上で入力してください。");
       return;
     }
 
     setFeeClosureBusy(true);
+    setFeeClosureError(false);
     setFeeClosureMessage("");
     try {
       const { error } = await supabase.rpc("unlock_fee_year", {
@@ -3484,8 +3492,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       });
       if (error) throw error;
       await refreshFeeYearClosures();
+      setFeeClosureError(false);
       setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。代表者またはシステム権限者が個別データを訂正した後、必ず再確定してください。`);
     } catch (error: any) {
+      setFeeClosureError(true);
       setFeeClosureMessage(error?.message || `${feeFiscalYear}年度の確定を解除できませんでした。`);
     } finally {
       setFeeClosureBusy(false);
@@ -4832,7 +4842,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               {feeYearCorrectionOpen && !canManageYearClosure && <small>訂正と再確定は代表者またはシステム権限者だけが行えます。</small>}
             </div>
             {feeClosureAvailable === false && <div className="admin-basic-message error">年度確定用のDB更新が未適用です。</div>}
-            {feeClosureMessage && <div className={`admin-basic-message ${feeClosureMessage.includes("できません") || feeClosureMessage.includes("未適用") || feeClosureMessage.includes("入力") ? "error" : "success"}`}>{feeClosureMessage}</div>}
+            {feeClosureMessage && <div className={`admin-basic-message ${feeClosureError ? "error" : "success"}`}>{feeClosureMessage}</div>}
           </section>
 
           <section className="admin-basic-card admin-fee-command">
