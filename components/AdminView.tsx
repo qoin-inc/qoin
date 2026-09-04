@@ -3556,7 +3556,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     throw new Error("会費レコードの保存に失敗しました。");
   };
 
-  const feePayloadForMember = (member: any, amount: number, channel: "manual" | "stripe") => {
+  const feePayloadForMember = (member: any, amount: number) => {
     const existing = getFeeForMember(member);
     const paidCash = existing ? getFeeCashPaid(existing) : 0;
     const paidStripe = existing ? getFeeStripePaid(existing) : 0;
@@ -3573,7 +3573,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       paid_amount_cash: paidCash,
       paid_amount_stripe: paidStripe,
       paid_amount: paidAmount,
-      billing_channel: channel,
+      billing_channel: "manual",
       billing_status: "billed",
       status: paidAmount >= amount ? "paid" : "unpaid",
       is_billed: true,
@@ -3673,7 +3673,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setFeeMessage("");
   };
 
-  const applyFeeBilling = async (channel: "manual" | "stripe") => {
+  const applyFeeBilling = async () => {
     if (!canBatchEditSelectedFeeYear) {
       setFeeMessage(feeYearCorrectionOpen
         ? "確定解除後は、代表者が会費一覧から個別データを訂正してください。"
@@ -3703,7 +3703,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       const savedRecords: any[] = [];
       for (const member of targets) {
         const existing = getFeeForMember(member);
-        const payload = feePayloadForMember(member, amount, channel);
+        const payload = feePayloadForMember(member, amount);
         savedRecords.push(await saveFeeRecord(payload, existing?.id));
       }
 
@@ -3723,7 +3723,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         }
         return { ...current, fees: nextFees };
       });
-      setFeeMessage(channel === "stripe" ? `${targets.length}件をStripe請求対象に設定しました。` : `${targets.length}件の会費請求額を設定しました。`);
+      setFeeMessage(`${targets.length}件の会費請求額を設定しました。会員は利用可能な支払い方法から選択できます。`);
     } catch (error: any) {
       setFeeMessage(error?.message || "会費請求の保存に失敗しました。");
     } finally {
@@ -3843,7 +3843,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const stripeRegistrationStatusLabel = !rawStripeAccountId
     ? "未連携"
     : stripeReadyForFeeBilling
-      ? "本番決済受付中"
+      ? "有効"
       : stripeDetailsSubmitted
         ? "Stripe審査中"
         : "本番登録の完了待ち";
@@ -4856,9 +4856,14 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会費請求設定</h3>
-                <p>会計年度ごとに全会員世帯、またはチェックした会員へ請求額を設定します。前年度を確定していなくても次年度の請求を作成できます。退会済み会員は新規請求対象から外しますが、作成済みの年度会費は退会後も集計に含めます。</p>
+                <p>会計年度ごとに全会員世帯、またはチェックした会員へ請求額を設定します。会員は町内会・自治会で利用可能な手集金、口座振込、Stripeから支払い方法を選べます。前年度を確定していなくても次年度の請求を作成できます。</p>
               </div>
-              <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
+              <div className="admin-fee-heading-status">
+                <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
+                <span className={stripeReadyForFeeBilling ? "admin-stripe-badge ready" : rawStripeAccountId ? "admin-stripe-badge pending" : "admin-stripe-badge"}>
+                  <i className="fab fa-stripe-s" /> Stripe：{stripeRegistrationStatusLabel}
+                </span>
+              </div>
             </div>
 
             <div className="admin-fee-form">
@@ -4881,16 +4886,14 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 <small>対象 {feeTargetCount.toLocaleString()}件</small>
               </div>
               <div className="admin-fee-actions">
-                <button type="button" onClick={() => applyFeeBilling("manual")} disabled={feeBusy || !canBatchEditSelectedFeeYear}>
+                <button type="button" onClick={() => applyFeeBilling()} disabled={feeBusy || !canBatchEditSelectedFeeYear}>
                   <i className="fas fa-file-invoice-yen" />
                   <span>請求額を設定</span>
                 </button>
-                <button type="button" onClick={() => applyFeeBilling("stripe")} disabled={feeBusy || !stripeReadyForFeeBilling || !canBatchEditSelectedFeeYear}>
-                  <i className="fas fa-credit-card" />
-                  <span>Stripe請求に設定</span>
-                </button>
               </div>
             </div>
+
+            <p className="admin-basic-note">{stripeReadyForFeeBilling ? "Stripeは有効です。会員画面でカード・PayPayなど利用可能なオンライン決済を選べます。" : rawStripeAccountId ? "Stripeは登録・審査中です。有効になるまで会員画面のオンライン決済は利用できません。" : "Stripeは未連携です。オンライン決済を利用する場合は「Stripe連携」から登録してください。"}</p>
 
             <p className="admin-basic-note">{feeFiscalYear}年度：{fiscalYearPeriodLabel(feeFiscalYear, basicInfoDraft.fiscalEndMonth)}。年度確定は保存・監査のための任意の締め処理で、次年度請求の開始条件ではありません。</p>
 

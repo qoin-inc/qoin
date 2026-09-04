@@ -2026,14 +2026,14 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                         </span>
                       </div>
                     )}
-                    {(feeSetting?.stripe_card_enabled !== false || feeSetting?.stripe_paypay_enabled) && ((latestFee.billing_channel === "stripe" || stripeAccountId) && stripeReady ? (
+                    {(feeSetting?.stripe_card_enabled !== false || feeSetting?.stripe_paypay_enabled) && (stripeAccountId && stripeReady ? (
                       <button className="el-primary-action" onClick={() => handleOnlinePayment(latestFee)}>
                         <i className="fas fa-credit-card" />
                         {feeSetting?.stripe_paypay_enabled && feeSetting?.stripe_card_enabled !== false
                           ? "オンラインで支払う（カード・PayPay）"
                           : feeSetting?.stripe_paypay_enabled ? "オンラインで支払う（PayPay）" : "オンラインで支払う（カード）"}
                       </button>
-                    ) : latestFee.billing_channel === "stripe" || stripeAccountId ? (
+                    ) : stripeAccountId ? (
                       <div className="el-empty">Stripe本番連携の確認中です。役員からの案内をお待ちください。</div>
                     ) : null)}
                     {feeSetting?.stripe_paypay_enabled && (

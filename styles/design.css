@@ -3564,6 +3564,13 @@ button { cursor: pointer; border: 0; }
   cursor: not-allowed;
 }
 
+.admin-fee-heading-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .admin-fee-target-mode {
   align-self: start;
   display: grid;

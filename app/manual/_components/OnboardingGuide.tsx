@@ -395,8 +395,8 @@ export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
           <header><small>基本機能</small><strong>会費管理</strong><span>会費設定、請求額、入金状況、手集金</span></header>
           <nav>{['基本情報', '会員管理', '役員管理', '会費管理', 'システム利用料', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
           <div className={styles.feeDesktopGrid}>
-            <section className={styles.pcFocusPanel}><h4>会費・決済方法の個別設定</h4><div className={styles.feeDesktopFields}><span>会費名称　年会費</span><span>標準会費額　5,000円</span><span>年度　基本情報の決算月から自動計算</span></div><div className={styles.feeDesktopMethods}><b>☑ 手集金</b><b className={styles.feeDesktopStripe}>☑ Stripeカード決済</b><b>□ 口座振込</b></div><button type="button">この町内会・自治会の設定を保存</button></section>
-            <section><h4>会費請求設定</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span><span>請求対象　全会員世帯</span></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button><button type="button">Stripe請求に設定</button></div><small>PayPayは町内会・自治会の申請・審査完了後にStripe決済画面へ自動表示されます。</small></section>
+            <section className={styles.pcFocusPanel}><h4>会費請求設定</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span><span>請求対象　全会員世帯</span><span>Stripe　有効</span></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div><small>請求設定後、会員は利用可能な支払い方法を選べます。</small></section>
+            <section><h4>会員の支払い方法</h4><div className={styles.feeDesktopMethods}><b>手集金</b><b>口座振込</b><b className={styles.feeDesktopStripe}>Stripe</b></div><small>カード・PayPayはStripeの安全な決済画面に表示されます。</small></section>
           </div>
         </div>
       </div>
