@@ -70,7 +70,7 @@ type MemberDraft = {
 type FeeDraft = {
   fiscalYear: string;
   amount: string;
-  targetMode: "all" | "selected";
+  targetMode: "all" | "selected" | "unbilled";
 };
 
 type AdminInviteDraft = {
@@ -3414,17 +3414,42 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   )
     .filter((year) => Number.isFinite(year) && year >= 2000)
     .sort((a, b) => b - a);
+  const activeFeeMemberById = new Map(activeFeeMembers.map((member) => [String(member.id), member]));
+  const unbilledFeeMembers = activeFeeMembers.filter((member) => {
+    const fee = getFeeForMember(member);
+    return !fee || getFeeBillingAmount(fee) === 0;
+  });
   const feeRosterQuery = feeRosterSearch.trim().toLowerCase();
-  const feeRosterMembers = activeFeeMembers.filter((member) => {
+  const feeListRows = [
+    ...activeFeeMembers.map((member) => ({
+      key: `member-${member.id}`,
+      member,
+      fee: getFeeForMember(member) || null,
+    })),
+    ...feeRecordsForYear
+      .filter((fee) => {
+        const rosterId = getFeeRosterId(fee);
+        return rosterId === null || !activeFeeMemberById.has(String(rosterId));
+      })
+      .map((fee) => ({
+        key: `fee-${fee.id}`,
+        member: getFeeRosterId(fee) === null ? null : memberById.get(String(getFeeRosterId(fee))) || null,
+        fee,
+      })),
+  ].filter(({ member, fee }) => {
+    if (feeDraft.targetMode === "unbilled" && (!member || isWithdrawnMember(member) || (fee && getFeeBillingAmount(fee) !== 0))) return false;
     if (!feeRosterQuery) return true;
     return [
-      getMemberFullName(member),
-      getMemberKana(member),
-      getMemberPostalCode(member),
-      getMemberAddressLine2(member),
-      getMemberAddressLine3(member),
-      ...getMemberFamilyNames(member),
+      fee?.resident_name,
+      fee?.full_name,
+      member ? getMemberFullName(member) : "",
+      member ? getMemberKana(member) : "",
+      member ? getMemberPostalCode(member) : "",
+      member ? getMemberAddressLine2(member) : "",
+      member ? getMemberAddressLine3(member) : "",
+      ...(member ? getMemberFamilyNames(member) : []),
     ]
+      .filter(Boolean)
       .join(" ")
       .toLowerCase()
       .includes(feeRosterQuery);
@@ -3437,8 +3462,12 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const feeBalanceTotal = Math.max(feeBillingTotal - feePaidTotal, 0);
   const feeUnpaidCount = summaryFeeRecords.filter((fee) => getFeePaidAmount(fee) < getFeeBillingAmount(fee)).length;
   const feeSelectedCount = activeFeeMembers.filter((member) => feeSelectedMembers[String(member.id)]).length;
-  const feeVisibleSelectedCount = feeRosterMembers.filter((member) => feeSelectedMembers[String(member.id)]).length;
-  const feeTargetCount = feeDraft.targetMode === "all" ? activeFeeMembers.length : feeSelectedCount;
+  const feeVisibleSelectedCount = feeListRows.filter(({ member }) => member && feeSelectedMembers[String(member.id)]).length;
+  const feeTargetCount = feeDraft.targetMode === "all"
+    ? activeFeeMembers.length
+    : feeDraft.targetMode === "unbilled"
+      ? unbilledFeeMembers.length
+      : feeSelectedCount;
 
   const finalizeSelectedFeeYear = async () => {
     if (!feeClosureAvailable) {
@@ -3583,6 +3612,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
   const selectedFeeTargetMembers = () => {
     if (feeDraft.targetMode === "all") return activeFeeMembers;
+    if (feeDraft.targetMode === "unbilled") return unbilledFeeMembers;
     return activeFeeMembers.filter((member) => feeSelectedMembers[String(member.id)]);
   };
 
@@ -3617,6 +3647,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       const next =
         feeDraft.targetMode === "all"
           ? Object.fromEntries(activeFeeMembers.map((member) => [String(member.id), true]))
+          : feeDraft.targetMode === "unbilled"
+            ? Object.fromEntries(unbilledFeeMembers.map((member) => [String(member.id), true]))
           : { ...current };
       if (checked) {
         next[selectedId] = true;
@@ -3637,8 +3669,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const setVisibleFeeTargets = (checked: boolean) => {
     setFeeDraft((current) => ({ ...current, targetMode: "selected" }));
     setFeeSelectedMembers((current) => {
-      const next = { ...current };
-      for (const member of feeRosterMembers) {
+      const next = feeDraft.targetMode === "all"
+        ? Object.fromEntries(activeFeeMembers.map((member) => [String(member.id), true]))
+        : feeDraft.targetMode === "unbilled"
+          ? Object.fromEntries(unbilledFeeMembers.map((member) => [String(member.id), true]))
+          : { ...current };
+      for (const { member } of feeListRows) {
+        if (!member || isWithdrawnMember(member)) continue;
         const memberId = String(member.id);
         if (checked) {
           next[memberId] = true;
@@ -4849,11 +4886,24 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             {feeClosureMessage && <div className={`admin-basic-message ${feeClosureError ? "error" : "success"}`}>{feeClosureMessage}</div>}
           </section>
 
+          <section className="admin-basic-card admin-fee-summary">
+            <h3>{feeFiscalYear}年度 集計</h3>
+            <div className="admin-mini-metrics">
+              <span><strong>{yen(feeBillingTotal)}</strong>請求額</span>
+              <span><strong>{yen(feePaidTotal)}</strong>入金額合計</span>
+              <span><strong>{yen(feeCashPaidTotal)}</strong>手集金</span>
+              <span><strong>{yen(feeStripePaidTotal)}</strong>Stripe入金</span>
+              <span><strong>{yen(feeBalanceTotal)}</strong>未入金額</span>
+              <span><strong>{feeUnpaidCount.toLocaleString()}</strong>未納/一部</span>
+            </div>
+            <p className="admin-basic-note">手集金は会費一覧の金額欄で修正します。Stripe入金はWebhookで自動反映され、手集金とは別に集計します。Stripe請求は本番登録が完了してから利用できます。</p>
+          </section>
+
           <section className="admin-basic-card admin-fee-command">
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会費請求設定</h3>
-                <p>会計年度ごとに全会員世帯、またはチェックした会員へ請求額を設定します。会員は町内会・自治会で利用可能な手集金、口座振込、Stripeから支払い方法を選べます。前年度を確定していなくても次年度の請求を作成できます。</p>
+                <p>会計年度ごとに全会員世帯、会費一覧で選択した会員、または請求額0円の会員へ請求額を設定します。会員は町内会・自治会で利用可能な手集金、口座振込、Stripeから支払い方法を選べます。前年度を確定していなくても次年度の請求を作成できます。</p>
               </div>
               <div className="admin-fee-heading-status">
                 <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
@@ -4879,7 +4929,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               <div className="admin-fee-target-mode" role="group" aria-label="請求対象">
                 <span>請求対象</span>
                 <button type="button" className={feeDraft.targetMode === "all" ? "active" : ""} onClick={useAllFeeTargets} disabled={!canBatchEditSelectedFeeYear}>全会員世帯</button>
-                <button type="button" className={feeDraft.targetMode === "selected" ? "active" : ""} onClick={() => setFeeDraft((current) => ({ ...current, targetMode: "selected" }))} disabled={!canBatchEditSelectedFeeYear}>名簿で選択</button>
+                <button type="button" className={feeDraft.targetMode === "selected" ? "active" : ""} onClick={() => setFeeDraft((current) => ({ ...current, targetMode: "selected" }))} disabled={!canBatchEditSelectedFeeYear}>会費一覧で選択</button>
+                <button type="button" className={feeDraft.targetMode === "unbilled" ? "active" : ""} onClick={() => setFeeDraft((current) => ({ ...current, targetMode: "unbilled" }))} disabled={!canBatchEditSelectedFeeYear}>請求未設定</button>
                 <small>対象 {feeTargetCount.toLocaleString()}件</small>
               </div>
               <div className="admin-fee-actions">
@@ -4897,19 +4948,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             )}
           </section>
 
-          <section className="admin-basic-card admin-fee-summary">
-            <h3>{feeFiscalYear}年度 集計</h3>
-            <div className="admin-mini-metrics">
-              <span><strong>{yen(feeBillingTotal)}</strong>請求額</span>
-              <span><strong>{yen(feePaidTotal)}</strong>入金額合計</span>
-              <span><strong>{yen(feeCashPaidTotal)}</strong>手集金</span>
-              <span><strong>{yen(feeStripePaidTotal)}</strong>Stripe入金</span>
-              <span><strong>{yen(feeBalanceTotal)}</strong>未入金額</span>
-              <span><strong>{feeUnpaidCount.toLocaleString()}</strong>未納/一部</span>
-            </div>
-            <p className="admin-basic-note">手集金は会費一覧の金額欄で修正します。Stripe入金はWebhookで自動反映され、手集金とは別に集計します。Stripe請求は本番登録が完了してから利用できます。</p>
-          </section>
-
           <section className="admin-basic-card admin-fee-list">
             <div className="admin-basic-card-heading">
               <div>
@@ -4924,76 +4962,63 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 <input value={feeRosterSearch} onChange={(event) => setFeeRosterSearch(event.target.value)} placeholder="氏名・カナ・郵便番号・住所で検索" />
               </label>
               <div className="admin-fee-roster-buttons">
-                <button type="button" onClick={useAllFeeTargets} disabled={!canBatchEditSelectedFeeYear}>全会員を対象</button>
+                <button type="button" onClick={useAllFeeTargets} disabled={!canBatchEditSelectedFeeYear}>全会員を選択</button>
                 <button type="button" onClick={() => setVisibleFeeTargets(true)} disabled={!canBatchEditSelectedFeeYear}>表示中を選択</button>
                 <button type="button" onClick={() => setVisibleFeeTargets(false)} disabled={!canBatchEditSelectedFeeYear}>表示中を解除</button>
               </div>
               <small>
-                表示 {feeRosterMembers.length.toLocaleString()}件 / 選択 {feeDraft.targetMode === "all" ? activeFeeMembers.length.toLocaleString() : feeSelectedCount.toLocaleString()}件
+                表示 {feeListRows.length.toLocaleString()}件 / 選択 {feeDraft.targetMode === "all" ? activeFeeMembers.length.toLocaleString() : feeDraft.targetMode === "unbilled" ? unbilledFeeMembers.length.toLocaleString() : feeSelectedCount.toLocaleString()}件
                 {feeDraft.targetMode === "selected" ? `（表示中 ${feeVisibleSelectedCount.toLocaleString()}件）` : ""}
               </small>
             </div>
 
-            <div className="admin-fee-targets admin-fee-roster">
-              {(feeRosterMembers.length ? feeRosterMembers : [{ id: "empty", full_name: "該当する会員がいません" }]).map((member) => {
-                const existingFee = member.id === "empty" ? null : getFeeForMember(member);
-                const checked = feeDraft.targetMode === "all" || Boolean(feeSelectedMembers[String(member.id)]);
-                return (
-                  <label key={member.id} className={checked ? "checked" : ""}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      disabled={member.id === "empty" || !canBatchEditSelectedFeeYear}
-                      onChange={(event) => handleFeeMemberToggle(member.id, event.target.checked)}
-                    />
-                    <span>
-                      <strong>{getMemberFullName(member)}</strong>
-                      <small>{member.id === "empty" ? "検索条件を変えてください" : [getMemberKana(member), getMemberPostalCode(member), getMemberAddressLine2(member)].filter(Boolean).join(" / ") || "照合情報未設定"}</small>
-                    </span>
-                    {existingFee && <em>{yen(getFeeBillingAmount(existingFee))}</em>}
-                  </label>
-                );
-              })}
-            </div>
-
             <div className="admin-fee-table">
               <div className="admin-fee-row admin-fee-head">
-                <span>対象</span>
+                <span>選択 / 対象</span>
                 <span>請求額</span>
                 <span>手集金</span>
                 <span>Stripe入金</span>
                 <span>状態</span>
                 <span>修正</span>
               </div>
-              {(feeRecordsForYear.length ? feeRecordsForYear : [{ id: "empty", resident_name: "会費レコードは未取得です", expected_amount: 0, paid_amount: 0 }]).map((fee, index) => {
-                const rosterId = getFeeRosterId(fee);
-                const member = rosterId === null ? null : memberById.get(String(rosterId));
-                const name = fee.resident_name || fee.full_name || (member ? getMemberFullName(member) : `会費 #${fee.id || "-"}`);
+              {(feeListRows.length ? feeListRows : [{ key: "empty", member: null, fee: null }]).map(({ key, member, fee }, index) => {
+                const isEmpty = key === "empty";
+                const selectable = Boolean(member && !isWithdrawnMember(member));
+                const checked = selectable && (feeDraft.targetMode === "all" || (feeDraft.targetMode === "unbilled" && (!fee || getFeeBillingAmount(fee) === 0)) || Boolean(feeSelectedMembers[String(member.id)]));
+                const name = isEmpty ? "検索条件に一致する会員はいません" : fee?.resident_name || fee?.full_name || (member ? getMemberFullName(member) : `会費 #${fee?.id || "-"}`);
                 const withdrawnFee = Boolean(member && isWithdrawnMember(member));
                 return (
-                  <div key={fee.id || index} className="admin-fee-row">
-                    <span>
-                      <strong>{name}</strong>
-                      <small>{getFeeYear(fee)}年度</small>
-                      {withdrawnFee && <small>退会済み・集計対象</small>}
-                    </span>
+                  <div key={key || index} className="admin-fee-row">
+                    <label className="admin-fee-row-member">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(checked)}
+                        disabled={!selectable || !canBatchEditSelectedFeeYear}
+                        onChange={(event) => member && handleFeeMemberToggle(member.id, event.target.checked)}
+                      />
+                      <span>
+                        <strong>{name}</strong>
+                        <small>{isEmpty ? "検索条件を変えてください" : member ? [getMemberKana(member), getMemberPostalCode(member), getMemberAddressLine2(member)].filter(Boolean).join(" / ") || `${feeFiscalYear}年度` : `${getFeeYear(fee)}年度`}</small>
+                        {withdrawnFee && <small>退会済み・集計対象</small>}
+                      </span>
+                    </label>
                     <span className="admin-fee-payment-cell">
                       <input
                         value={getFeeBillingDraftValue(fee)}
-                        onChange={(event) => handleFeeBillingDraftChange(fee.id, event.target.value)}
+                        onChange={(event) => fee && handleFeeBillingDraftChange(fee.id, event.target.value)}
                         inputMode="numeric"
                         placeholder="0"
                         aria-label={`${name}の請求額`}
-                        disabled={fee.id === "empty" || !canEditSelectedFeeYear}
+                        disabled={!fee?.id || !canEditSelectedFeeYear}
                       />
                     </span>
                     <span className="admin-fee-payment-cell">
                       <input
                         value={getFeeCashDraftValue(fee)}
-                        onChange={(event) => handleFeeCashDraftChange(fee.id, event.target.value)}
+                        onChange={(event) => fee && handleFeeCashDraftChange(fee.id, event.target.value)}
                         inputMode="numeric"
                         placeholder="0"
-                        disabled={fee.id === "empty" || !canEditSelectedFeeYear}
+                        disabled={!fee?.id || !canEditSelectedFeeYear}
                       />
                     </span>
                     <span>
@@ -5001,11 +5026,11 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                       <small>{getFeeStripePaid(fee) > 0 ? "Stripe入金あり" : "Stripe未入金"}</small>
                     </span>
                     <span>
-                      <em className={getFeeStatusLabel(fee) === "納入済" ? "paid" : "unpaid"}>{getFeeStatusLabel(fee)}</em>
-                      <small>入金合計 {yen(getFeePaidAmount(fee))} / {getPaymentMethodLabel(fee)}</small>
+                      <em className={fee && getFeeStatusLabel(fee) === "納入済" ? "paid" : "unpaid"}>{fee ? getFeeStatusLabel(fee) : "請求未設定"}</em>
+                      <small>入金合計 {yen(getFeePaidAmount(fee))} / {fee ? getPaymentMethodLabel(fee) : "未設定"}</small>
                     </span>
                     <span className="admin-fee-row-actions">
-                      <button type="button" onClick={() => handleFeeCashPaymentSave(fee)} disabled={feeBusy || fee.id === "empty" || !canEditSelectedFeeYear}>個別データを保存</button>
+                      <button type="button" onClick={() => handleFeeCashPaymentSave(fee)} disabled={feeBusy || !fee?.id || !canEditSelectedFeeYear}>個別データを保存</button>
                     </span>
                   </div>
                 );
