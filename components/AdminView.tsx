@@ -4864,7 +4864,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                   ? "会員の退会・削除に影響されない独立データとして保存され、請求額・入金額とも変更できません。"
                   : feeYearCorrectionOpen
                     ? `役員全員が個別データを訂正できます。訂正後は代表者またはシステム権限者が必ず再確定してください。${feeYearClosure?.unlock_reason ? ` 解除理由：${feeYearClosure.unlock_reason}` : ""}`
-                    : "内容を確認して年度を確定すると、会員情報とは独立して保存され変更不可になります。"}
+                    : "年度を確定すると、会費情報とは独立して保存され変更不可になります。"}
               </p>
               {feeYearClosure && <small>改訂 {feeYearClosure.revision}版</small>}
             </div>
@@ -4901,19 +4901,19 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               <span><strong>{yen(feeBalanceTotal)}</strong>未入金額</span>
               <span><strong>{feeUnpaidCount.toLocaleString()}</strong>未納/一部</span>
             </div>
-            <p className="admin-basic-note">手集金は会費一覧の金額欄で修正します。Stripe入金はWebhookで自動反映され、手集金とは別に集計します。Stripe請求は本番登録が完了してから利用できます。</p>
+            <p className="admin-basic-note">手集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</p>
           </section>
 
           <section className="admin-basic-card admin-fee-command">
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会費請求設定</h3>
-                <p>会計年度ごとに全会員世帯、会費一覧で選択した会員、または請求額0円の会員へ請求額を設定します。会員は町内会・自治会で利用可能な手集金、口座振込、Stripeから支払い方法を選べます。前年度を確定していなくても次年度の請求を作成できます。</p>
+                <p>会計年度ごとに全会員世帯、会費一覧で選択した会員、請求未設定の会員へ、請求額0円の会員へ請求額を設定します。会員は町内会・自治会で利用可能な手集金やStripeから支払い方法を選べます。前年度を確定していなくても次年度の請求を作成できます。</p>
               </div>
               <div className="admin-fee-heading-status">
                 <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
                 <span className={stripeReadyForFeeBilling ? "admin-stripe-badge ready" : rawStripeAccountId ? "admin-stripe-badge pending" : "admin-stripe-badge"}>
-                  <i className="fab fa-stripe-s" /> {stripeRegistrationStatusLabel}
+                  {stripeRegistrationStatusLabel}
                 </span>
               </div>
             </div>
