@@ -3688,16 +3688,16 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setFeeMessage("");
   };
 
-  const getFeeCashDraftValue = (fee: any) => {
-    if (!fee?.id || fee.id === "empty") return "";
-    const feeId = String(fee.id);
-    return feeCashDrafts[feeId] ?? String(getFeeCashPaid(fee) || "");
+  const getFeeCashDraftValue = (fee: any, draftKey?: number | string | null) => {
+    const feeKey = String(draftKey ?? fee?.id ?? "");
+    if (!feeKey || feeKey === "empty") return "";
+    return feeCashDrafts[feeKey] ?? String(getFeeCashPaid(fee) || 0);
   };
 
-  const getFeeBillingDraftValue = (fee: any) => {
-    if (!fee?.id || fee.id === "empty") return "";
-    const feeId = String(fee.id);
-    return feeBillingDrafts[feeId] ?? String(getFeeBillingAmount(fee));
+  const getFeeBillingDraftValue = (fee: any, draftKey?: number | string | null) => {
+    const feeKey = String(draftKey ?? fee?.id ?? "");
+    if (!feeKey || feeKey === "empty") return "";
+    return feeBillingDrafts[feeKey] ?? String(getFeeBillingAmount(fee));
   };
 
   const handleFeeCashDraftChange = (feeId: number | string, value: string) => {
@@ -3768,18 +3768,18 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     }
   };
 
-  const handleFeeCashPaymentSave = async (fee: any) => {
-    const feeId = String(fee?.id || "");
-    const amountText = getFeeCashDraftValue(fee).trim();
+  const handleFeeCashPaymentSave = async (fee: any, member?: any, draftKey?: number | string | null) => {
+    const feeId = String(fee?.id || draftKey || "");
+    const amountText = getFeeCashDraftValue(fee, feeId).trim();
     const amount = Number(amountText);
-    const billingText = getFeeBillingDraftValue(fee).trim();
+    const billingText = getFeeBillingDraftValue(fee, feeId).trim();
     const correctedBillingAmount = Number(billingText);
     if (!canEditSelectedFeeYear) {
       setFeeMessage("確定済み年度の会費は変更できません。代表者またはシステム権限者が確定を解除してください。");
       return;
     }
-    if (!feeId || feeId === "empty") {
-      setFeeMessage("入金修正できる会費レコードがありません。先に請求額を設定してください。");
+    if (!fee?.id && !member) {
+      setFeeMessage("保存対象の会員情報を確認できません。");
       return;
     }
     if (amountText === "" || !Number.isFinite(amount) || amount < 0) {
@@ -3800,6 +3800,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       const paidAmount = cash + stripe;
       const paymentMethod = cash > 0 && stripe > 0 ? "mixed" : stripe > 0 ? "stripe" : cash > 0 ? "cash" : null;
       const payload = {
+        ...(member ? feePayloadForMember(member, correctedBillingAmount) : {}),
         expected_amount: correctedBillingAmount,
         billing_amount: correctedBillingAmount,
         amount: correctedBillingAmount,
@@ -3811,10 +3812,12 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         status: paidAmount <= 0 ? "unpaid" : paidAmount >= correctedBillingAmount ? "paid" : "partial",
         paid_at: paidAmount > 0 ? new Date().toISOString() : null,
       };
-      const saved = await saveFeeRecord(payload, fee.id);
+      const saved = await saveFeeRecord(payload, fee?.id);
       setBasicData((current) => ({
         ...current,
-        fees: current.fees.map((item) => (String(item.id) === String(fee.id) ? { ...item, ...saved } : item)),
+        fees: fee?.id
+          ? current.fees.map((item) => (String(item.id) === String(fee.id) ? { ...item, ...saved } : item))
+          : [...current.fees, saved],
       }));
       setFeeCashDrafts((current) => {
         const next = { ...current };
@@ -3826,7 +3829,9 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         delete next[feeId];
         return next;
       });
-      setFeeMessage("個別の請求額と手集金額を更新しました。Stripe入金額とは別に集計します。");
+      setFeeMessage(fee?.id
+        ? "個別の請求額と手集金額を更新しました。Stripe入金額とは別に集計します。"
+        : "個別の請求額と手集金額を登録しました。Stripe入金額とは別に集計します。");
     } catch (error: any) {
       setFeeMessage(error?.message || "入金情報の保存に失敗しました。");
     } finally {
@@ -4983,6 +4988,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </div>
               {(feeListRows.length ? feeListRows : [{ key: "empty", member: null, fee: null }]).map(({ key, member, fee }, index) => {
                 const isEmpty = key === "empty";
+                const rowDraftKey = fee?.id ? String(fee.id) : key;
                 const selectable = Boolean(member && !isWithdrawnMember(member));
                 const checked = selectable && (feeDraft.targetMode === "all" || (feeDraft.targetMode === "unbilled" && (!fee || getFeeBillingAmount(fee) === 0)) || Boolean(feeSelectedMembers[String(member.id)]));
                 const name = isEmpty ? "検索条件に一致する会員はいません" : fee?.resident_name || fee?.full_name || (member ? getMemberFullName(member) : `会費 #${fee?.id || "-"}`);
@@ -5004,21 +5010,21 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                     </label>
                     <span className="admin-fee-payment-cell">
                       <input
-                        value={getFeeBillingDraftValue(fee)}
-                        onChange={(event) => fee && handleFeeBillingDraftChange(fee.id, event.target.value)}
+                        value={getFeeBillingDraftValue(fee, rowDraftKey)}
+                        onChange={(event) => handleFeeBillingDraftChange(rowDraftKey, event.target.value)}
                         inputMode="numeric"
                         placeholder="0"
                         aria-label={`${name}の請求額`}
-                        disabled={!fee?.id || !canEditSelectedFeeYear}
+                        disabled={isEmpty || (!fee?.id && !selectable) || !canEditSelectedFeeYear}
                       />
                     </span>
                     <span className="admin-fee-payment-cell">
                       <input
-                        value={getFeeCashDraftValue(fee)}
-                        onChange={(event) => fee && handleFeeCashDraftChange(fee.id, event.target.value)}
+                        value={getFeeCashDraftValue(fee, rowDraftKey)}
+                        onChange={(event) => handleFeeCashDraftChange(rowDraftKey, event.target.value)}
                         inputMode="numeric"
                         placeholder="0"
-                        disabled={!fee?.id || !canEditSelectedFeeYear}
+                        disabled={isEmpty || (!fee?.id && !selectable) || !canEditSelectedFeeYear}
                       />
                     </span>
                     <span>
@@ -5030,7 +5036,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                       <small>入金合計 {yen(getFeePaidAmount(fee))} / {fee ? getPaymentMethodLabel(fee) : "未設定"}</small>
                     </span>
                     <span className="admin-fee-row-actions">
-                      <button type="button" onClick={() => handleFeeCashPaymentSave(fee)} disabled={feeBusy || !fee?.id || !canEditSelectedFeeYear}>個別データを保存</button>
+                      <button type="button" onClick={() => handleFeeCashPaymentSave(fee, member, rowDraftKey)} disabled={feeBusy || isEmpty || (!fee?.id && !selectable) || !canEditSelectedFeeYear}>個別データを保存</button>
                     </span>
                   </div>
                 );
