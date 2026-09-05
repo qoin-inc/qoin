@@ -3397,7 +3397,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const feeYearClosure = feeYearClosures.find((closure) => Number(closure.fiscal_year) === feeFiscalYear) || null;
   const feeYearLocked = feeYearClosure?.status === "locked";
   const feeYearCorrectionOpen = feeYearClosure?.status === "unlocked";
-  const canEditSelectedFeeYear = !feeYearLocked && (!feeYearCorrectionOpen || canManageYearClosure);
+  const canEditSelectedFeeYear = !feeYearLocked;
   const canBatchEditSelectedFeeYear = !feeYearLocked && !feeYearCorrectionOpen;
   const memberById = new Map(basicData.members.map((member) => [String(member.id), member]));
   const activeFeeMembers = basicData.members.filter((member) => !isWithdrawnMember(member));
@@ -3527,7 +3527,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       if (error) throw error;
       await refreshFeeYearClosures();
       setFeeClosureError(false);
-      setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。代表者またはシステム権限者が個別データを訂正した後、必ず再確定してください。`);
+      setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。役員が個別データを訂正した後、代表者またはシステム権限者が必ず再確定してください。`);
     } catch (error: any) {
       setFeeClosureError(true);
       setFeeClosureMessage(error?.message || `${feeFiscalYear}年度の確定を解除できませんでした。`);
@@ -3713,7 +3713,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const applyFeeBilling = async () => {
     if (!canBatchEditSelectedFeeYear) {
       setFeeMessage(feeYearCorrectionOpen
-        ? "確定解除後は、代表者が会費一覧から個別データを訂正してください。"
+        ? "確定解除後は、会費一覧から個別データを訂正してください。"
         : "確定済み年度の会費は変更できません。代表者またはシステム権限者が確定を解除してください。");
       return;
     }
@@ -4863,7 +4863,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 {feeYearLocked
                   ? "会員の退会・削除に影響されない独立データとして保存され、請求額・入金額とも変更できません。"
                   : feeYearCorrectionOpen
-                    ? `代表者またはシステム権限者だけが個別データを訂正できます。訂正後は必ず再確定してください。${feeYearClosure?.unlock_reason ? ` 解除理由：${feeYearClosure.unlock_reason}` : ""}`
+                    ? `役員全員が個別データを訂正できます。訂正後は代表者またはシステム権限者が必ず再確定してください。${feeYearClosure?.unlock_reason ? ` 解除理由：${feeYearClosure.unlock_reason}` : ""}`
                     : "内容を確認して年度を確定すると、会員情報とは独立して保存され変更不可になります。"}
               </p>
               {feeYearClosure && <small>改訂 {feeYearClosure.revision}版</small>}
@@ -4885,7 +4885,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 </button>
               )}
               {feeYearLocked && !canManageYearClosure && <small>確定解除は代表者またはシステム権限者だけが行えます。</small>}
-              {feeYearCorrectionOpen && !canManageYearClosure && <small>訂正と再確定は代表者またはシステム権限者だけが行えます。</small>}
+              {feeYearCorrectionOpen && !canManageYearClosure && <small>個別データを訂正できます。再確定は代表者またはシステム権限者が行います。</small>}
             </div>
             {feeClosureAvailable === false && <div className="admin-basic-message error">年度確定用のDB更新が未適用です。</div>}
             {feeClosureMessage && <div className={`admin-basic-message ${feeClosureError ? "error" : "success"}`}>{feeClosureMessage}</div>}

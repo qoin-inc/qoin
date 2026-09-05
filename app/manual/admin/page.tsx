@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import {
   DesktopScreenPreview,
+  FeeSettingsDesktopPreview,
   OnboardingGuide,
   StripeDesktopPreview,
 } from "../_components/OnboardingGuide";
@@ -49,7 +50,8 @@ export default function AdminManualPage() {
             ),
           },
           {
-            title: "基本情報を設定する",
+            title: "基本情報",
+            subtitle: "町内会・自治会の基本情報登録",
             text: "町内会・自治会の決算月を入力します。決算月は会費年度や会計の予算・決算に使われるため必ず設定してください。また、町内会・自治会の正式名称や会員世帯数、郵便番号も再度確認して、よろしければ「保存して反映」を押下します。",
             points: [
               "決算月の変更は会費管理や会計の対象年度に影響します。締め処理についてはマニュアルを確認してください。",
@@ -57,7 +59,8 @@ export default function AdminManualPage() {
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/02-basic-info.png" alt="基本情報のPC管理画面" caption="" width={1664} height={922} hotspots={[{ left: "69%", top: "46%", label: "保存して反映" }]} />,
           },
           {
-            title: "会員管理にて会員名簿を管理",
+            title: "会員管理",
+            subtitle: "会員のLine連携のため会員名簿の登録",
             text: "会員がLineから世帯情報を照合しel-townを利用するため、町内会・自治会の会員名簿をCSV取込みで取込んでおきます。取込みする会員名簿CSVの項目はCSV出力し確認してください。郵便番号、住所２は番地まで、住所３はアパート・マンション名部屋番号とし作成してください。家族は世帯主の情報で登録が可能となりますので、Lineから登録になります。家族は特に退会などの希望がなければそのまま名簿に記載のままにしてください。",
             points: [
               "連携数には、現在の世帯数、世帯主の接続数、家族接続数が表示されます。本人または家族がLINE連携した数をシステム利用料の対象として数えます。",
@@ -80,33 +83,23 @@ export default function AdminManualPage() {
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" caption="" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
           },
           {
-            title: "会費の請求と入金を管理する",
-            text: "対象年度、請求額、対象会員を選び、「請求額を設定」を押します。会員は町内会・自治会で利用可能な手集金、口座振込、Stripeから支払い方法を選べます。Stripeの有効状態は会費請求設定に表示され、オンライン決済の完了後は入金額が自動反映されます。前年度が未確定でも次年度の請求を作成できます。",
+            title: "会費管理",
+            subtitle: "会員への会費請求登録",
+            text: "会費請求設定にて対象年度、請求額を入力し、対象会員を選び、「請求額を設定」を押下すると会員に会費が設定されます。会費は「全会員世帯」「会費一覧で選択」で個別設定し、追加された会員は「請求未設定」を選んで設定してください。「Stripe有効」の場合はオンラインで支払いが可能となります。オンラインで支払われた会費はStripe入金に自動反映され、集計されます。",
             points: [
-              "全世帯への一括設定と、選択した会員だけへの設定を使い分けます。",
-              "一覧では請求額、手集金、Stripe入金、未入金額を別々に確認できます。",
-              "退会済み会員の過去の会費記録も年度集計に残ります。",
+              "退会済み会員の会費実績も集計されます。",
+              "入金済みの請求や入金実績は、会費請求設定を行っても自動変更されません。",
             ],
-            caution: "会費設定を変更しても、作成済みの請求や入金実績は自動変更されません。金額・年度・対象者を請求前に確認してください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management.png" alt="会費管理のPC管理画面" caption="" hotspots={[{ left: "12%", top: "52%", label: "会費設定" }, { left: "62%", top: "70%", label: "請求・入金一覧", delay: 1.2 }]} />,
-          },
-          {
-            title: "総会会計を年度確定する",
-            text: "総会会計で科目、予算、決算明細、会費連携額を確認し、「年度を確定」を押します。確定時点のデータが固定保存され、予算や決算明細を変更できなくなります。",
-            points: [
-              "確定後の決算書は、科目や会費データが後から変わっても確定時点の内容で表示されます。",
-              "訂正が必要な場合は代表者またはシステム権限者が理由を入力して確定を解除します。",
-              "確定解除中は代表者またはシステム権限者だけが固定化した年度データを訂正でき、訂正後は再確定します。",
-            ],
-            caution: "年度確定前に、収入・支出・領収書・会費連携額を確認してください。確定解除と訂正内容は履歴に記録されます。",
-            visual: (
-              <div style={{ padding: "28px", borderRadius: "18px", background: "#f0f7fb", border: "1px solid #c9e4f2" }}>
-                <p style={{ margin: 0, color: "#087ca7", fontWeight: 800 }}>未確定</p>
-                <h3 style={{ margin: "8px 0" }}>2026年度の総会会計</h3>
-                <p style={{ margin: "0 0 18px", color: "#526577" }}>科目・予算・決算明細・会費連携額を確認して固定保存します。</p>
-                <span style={{ display: "inline-block", padding: "10px 18px", borderRadius: "10px", background: "#087ca7", color: "white", fontWeight: 800 }}>🔒 年度を確定</span>
-              </div>
-            ),
+            additionalSection: {
+              title: "年度を確定した場合",
+              text: "会計年度の会費が確定した場合は、「年度を確定」を押下すると、その年度の会費収入が確定し、会計の実績に反映します。総会会計では確定時点のデータが固定保存され、予算や決算明細を変更できなくなります。前年度が未確定でも次年度の請求を作成できます。",
+              points: [
+                "確定後の決算書は、科目や会費データが後から変わっても確定時点の内容で表示されます。",
+                "確定後、会費実績の訂正が必要な場合は代表者が理由を入力して確定を解除、再設定可能です。",
+                "確定解除後は、役員全員が個別データを修正できます。",
+              ],
+            },
+            visual: <FeeSettingsDesktopPreview caption="" />,
           },
           {
             title: "システム利用料を確認する",

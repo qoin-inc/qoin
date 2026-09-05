@@ -12,6 +12,11 @@ type GuideStep = {
   text: string;
   visual: ReactNode;
   points?: string[];
+  additionalSection?: {
+    title: string;
+    text: string;
+    points?: string[];
+  };
   caution?: string;
   link?: { href: string; label: string };
   copyFirst?: boolean;
@@ -147,6 +152,22 @@ export function OnboardingGuide({
                           </li>
                         ))}
                       </ul>
+                    )}
+                    {step.additionalSection && (
+                      <section className="mt-7 border-t border-[#dce8ed] pt-6">
+                        <h4 className={`${styles.stepSubtitle} text-lg font-black leading-8 text-[#203947]`}>{step.additionalSection.title}</h4>
+                        <p className={`${styles.stepText} mt-4 text-sm font-semibold leading-8 text-[#607b89]`}>{step.additionalSection.text}</p>
+                        {step.additionalSection.points && (
+                          <ul className={`${styles.pointList} mt-5 space-y-2 text-sm font-bold leading-7 text-[#46606d]`}>
+                            {step.additionalSection.points.map((point) => (
+                              <li className="flex items-start gap-2" key={point}>
+                                <span className={`mt-0.5 font-black ${colors.text}`} aria-hidden="true">☑</span>
+                                <span>{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </section>
                     )}
                     {step.caution && (
                       <p className={`${styles.caution} mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-6 text-amber-900`}>
@@ -393,10 +414,10 @@ export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
         <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / 管理画面 / 会費管理</span></div>
         <div className={styles.feeDesktopScreen}>
           <header><small>基本機能</small><strong>会費管理</strong><span>会費設定、請求額、入金状況、手集金</span></header>
-          <nav>{['基本情報', '会員管理', '役員管理', '会費管理', 'システム利用料', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
+          <nav>{['基本情報', '会員管理', '会費管理', 'システム利用料', '役員管理', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
           <div className={styles.feeDesktopGrid}>
-            <section className={styles.pcFocusPanel}><h4>会費請求設定</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span><span>請求対象　全会員世帯</span><span>Stripe　有効</span></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div><small>請求設定後、会員は利用可能な支払い方法を選べます。</small></section>
-            <section><h4>会員の支払い方法</h4><div className={styles.feeDesktopMethods}><b>手集金</b><b>口座振込</b><b className={styles.feeDesktopStripe}>Stripe</b></div><small>カード・PayPayはStripeの安全な決済画面に表示されます。</small></section>
+            <section className={styles.pcFocusPanel}><h4>会費請求設定</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span><span>請求対象　全会員世帯</span><span>会費一覧で選択</span><span>請求未設定</span><span>Stripe有効</span></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div><small>対象年度・請求額・対象会員を確認して設定します。</small></section>
+            <section><h4>2026年度 集計・会費一覧</h4><div className={styles.feeDesktopFields}><span>請求額　5,000円</span><span>入金額合計　0円</span><span>手集金　0円</span><span>Stripe入金　0円</span></div><div className={styles.feeDesktopMethods}><b>☑ 会員名　請求額 5,000円</b><b>会員名　請求未設定</b><b className={styles.feeDesktopStripe}>検索・選択・個別データを保存</b></div><small>年度確定後は固定保存され、代表者の解除後は役員全員が個別修正できます。</small></section>
           </div>
         </div>
       </div>
