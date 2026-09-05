@@ -711,26 +711,26 @@ const getAdminStatusLabel = (admin: any) => {
 };
 const isDeletableAdminInvite = (admin: any) => ["pending", "waiting_approval"].includes(admin.status);
 const isSystemAdminRecord = (admin: any) => String(admin?.admin_email || "").trim().toLowerCase() === systemAdminEmail;
-const getFeeRosterId = (fee: any) => fee.roster_id ?? fee.roster_id_snapshot ?? fee.resident_roster_id ?? fee.member_id ?? null;
-const getFeeYear = (fee: any) => Number(fee.fiscal_year ?? fee.year ?? new Date().getFullYear());
-const getFeeBillingAmount = (fee: any) => Number(fee.expected_amount ?? fee.billing_amount ?? fee.amount ?? 0);
-const getFeeCashPaid = (fee: any) => Number(fee.paid_amount_cash ?? (fee.payment_method === "cash" ? fee.paid_amount : 0) ?? 0);
-const getFeeStripePaid = (fee: any) => Number(fee.paid_amount_stripe ?? (fee.payment_method === "stripe" ? fee.paid_amount : 0) ?? 0);
-const getFeePaidAmount = (fee: any) => Number(fee.paid_amount ?? (getFeeCashPaid(fee) + getFeeStripePaid(fee)));
+const getFeeRosterId = (fee: any) => fee?.roster_id ?? fee?.roster_id_snapshot ?? fee?.resident_roster_id ?? fee?.member_id ?? null;
+const getFeeYear = (fee: any) => Number(fee?.fiscal_year ?? fee?.year ?? new Date().getFullYear());
+const getFeeBillingAmount = (fee: any) => Number(fee?.expected_amount ?? fee?.billing_amount ?? fee?.amount ?? 0);
+const getFeeCashPaid = (fee: any) => Number(fee?.paid_amount_cash ?? (fee?.payment_method === "cash" ? fee?.paid_amount : 0) ?? 0);
+const getFeeStripePaid = (fee: any) => Number(fee?.paid_amount_stripe ?? (fee?.payment_method === "stripe" ? fee?.paid_amount : 0) ?? 0);
+const getFeePaidAmount = (fee: any) => Number(fee?.paid_amount ?? (getFeeCashPaid(fee) + getFeeStripePaid(fee)));
 const getFeeStatusLabel = (fee: any) => {
   const billing = getFeeBillingAmount(fee);
   const paid = getFeePaidAmount(fee);
   if (billing > 0 && paid >= billing) return "納入済";
   if (paid > 0) return "一部入金";
-  return fee.is_billed || fee.status === "unpaid" || fee.billing_status === "billed" ? "請求中" : "未請求";
+  return fee?.is_billed || fee?.status === "unpaid" || fee?.billing_status === "billed" ? "請求中" : "未請求";
 };
 const getPaymentMethodLabel = (fee: any) => {
   const cash = getFeeCashPaid(fee);
   const stripe = getFeeStripePaid(fee);
   const paid = getFeePaidAmount(fee);
   if (cash > 0 && stripe > 0) return "Stripe + 手集金";
-  if (stripe > 0 || (paid > 0 && (fee.payment_method === "stripe" || fee.last_payment_method === "stripe"))) return "Stripe";
-  if (cash > 0 || (paid > 0 && (fee.payment_method === "cash" || fee.last_payment_method === "cash"))) return "手集金";
+  if (stripe > 0 || (paid > 0 && (fee?.payment_method === "stripe" || fee?.last_payment_method === "stripe"))) return "Stripe";
+  if (cash > 0 || (paid > 0 && (fee?.payment_method === "cash" || fee?.last_payment_method === "cash"))) return "手集金";
   return "未入金";
 };
 const currentFiscalYear = (startMonth?: number | string | null) => {
