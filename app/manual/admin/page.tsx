@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import {
   DesktopScreenPreview,
-  FeeSettingsDesktopPreview,
   OnboardingGuide,
   StripeDesktopPreview,
 } from "../_components/OnboardingGuide";
@@ -98,7 +97,7 @@ export default function AdminManualPage() {
                 "確定解除後は、役員が会費データを修正できます。",
               ],
             },
-            visual: <FeeSettingsDesktopPreview caption="" />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management-20260906.png" alt="現在の会費管理画面：年度確定、年度集計、会費請求設定、会費一覧" caption="" width={762} height={867} />,
           },
           {
             title: "システム利用料を確認する",
