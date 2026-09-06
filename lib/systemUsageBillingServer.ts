@@ -260,7 +260,7 @@ const ensureSnapshotForInvoice = async (client: SupabaseClient, billingMonth: st
   await client.from("system_usage_billings").update({ snapshot_source: "invoice_fallback" }).eq("billing_month", billingMonth);
 };
 
-export const issueSystemUsageInvoices = async (billingMonth: string) => {
+export const issueSystemUsageInvoices = async (billingMonth: string, options: { bankTransferOnly?: boolean } = {}) => {
   parseBillingMonth(billingMonth);
   const client = createWebhookSupabaseClient();
   await ensureSnapshotForInvoice(client, billingMonth);
@@ -283,6 +283,10 @@ export const issueSystemUsageInvoices = async (billingMonth: string) => {
       continue;
     }
     const profile = (profilesResult.data || []).find((row: any) => String(row.neighborhood_id) === String(billing.neighborhood_id));
+    if (options.bankTransferOnly && profile?.payment_method !== "bank_transfer") {
+      results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: profile?.payment_method === "card" ? "card_billing_disabled" : "payment_method_required" });
+      continue;
+    }
     const town = (townsResult.data || []).find((row: any) => String(row.id) === String(billing.neighborhood_id));
     const pushCount = (pushesResult.data || []).filter((row: any) => String(row.neighborhood_id) === String(billing.neighborhood_id)).length;
     const pushOverage = Math.max(pushCount - Number(billing.free_push_limit || 0), 0);

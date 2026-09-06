@@ -56,6 +56,39 @@ function fixture(withAccount = true) {
   await missing.server.issueSystemUsageInvoices('2026-08');
   assert.equal(missing.tables.system_usage_billings[0].status, 'bank_account_required');
   assert.equal(missing.stripeCalls(), 0);
+  const manual = fixture();
+  await manual.server.issueSystemUsageInvoices('2026-08', { bankTransferOnly: true });
+  assert.equal(manual.tables.system_usage_billings[0].status, 'open');
+  assert.equal(manual.stripeCalls(), 0);
+  for (const price of [100, 0]) {
+    const card = fixture();
+    card.tables.system_usage_payment_profiles[0].payment_method = 'card';
+    card.tables.system_usage_billings[0].monthly_household_price = price;
+    const cardResult = await card.server.issueSystemUsageInvoices('2026-08', { bankTransferOnly: true });
+    assert.equal(cardResult.results[0].status, 'card_billing_disabled');
+    assert.equal(card.tables.system_usage_billings[0].status, 'draft');
+    assert.equal(card.stripeCalls(), 0);
+  }
+  const noMethod = fixture(); noMethod.tables.system_usage_payment_profiles.length = 0;
+  const noMethodResult = await noMethod.server.issueSystemUsageInvoices('2026-08', { bankTransferOnly: true });
+  assert.equal(noMethodResult.results[0].status, 'payment_method_required');
+  assert.equal(noMethod.stripeCalls(), 0);
+  for (const auth of ['admin', 'cron', 'none']) {
+    const calls = [];
+    const route = load('app/api/system-usage/billing-run/route.ts', {
+      'next/server': { NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) } },
+      '@/lib/systemAdminServer': { isSystemAdminRequest: () => auth === 'admin', isSystemBillingCronRequest: () => auth === 'cron', isSystemBillingEnabled: () => false },
+      '@/lib/systemUsageBillingServer': { defaultSystemUsageBillingMonth: () => '2026-08', snapshotSystemUsage: async () => { calls.push('snapshot'); return {}; }, issueSystemUsageInvoices: async (month, options) => { calls.push(options); return {}; } },
+    });
+    const result = await route.POST({ json: async () => ({ mode: 'invoice', billingMonth: '2026-08', bankTransferOnly: false }) });
+    assert.equal(result.status, auth === 'admin' ? 200 : auth === 'cron' ? 503 : 401);
+    if (auth === 'admin') {
+      assert.equal(calls[0].bankTransferOnly, true);
+      const snapshot = await route.POST({ json: async () => ({ mode: 'snapshot', billingMonth: '2026-08' }) });
+      assert.equal(snapshot.status, 200);
+      assert.equal(calls[1], 'snapshot');
+    } else assert.equal(calls.length, 0);
+  }
   const paid = fixture(); paid.tables.system_usage_billings[0].status = 'paid';
   const result = await paid.server.issueSystemUsageInvoices('2026-08');
   assert.equal(result.results[0].status, 'skipped');

@@ -32,8 +32,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "決済方法が正しくありません。" }, { status: 400 });
     }
     const { writeClient } = await requireNeighborhoodAdmin(req, townId);
-    if (!isSystemBillingEnabled()) {
-      return NextResponse.json({ error: "システム利用料の決済方法変更は本番運用開始まで停止中です。" }, { status: 503 });
+    if (paymentMethod === "card" && !isSystemBillingEnabled()) {
+      return NextResponse.json({ error: "カード自動決済は停止中です。銀行口座振込は選択できます。" }, { status: 503 });
     }
     const profile = await setSystemUsagePaymentMethod(writeClient, townId, paymentMethod);
     return NextResponse.json({ profile });

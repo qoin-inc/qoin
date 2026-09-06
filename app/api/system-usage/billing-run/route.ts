@@ -12,14 +12,15 @@ export async function GET(req: Request) {
   if (!isSystemAdminRequest(req)) {
     return NextResponse.json({ error: "システム管理者権限を確認できませんでした。" }, { status: 401 });
   }
-  return NextResponse.json({ enabled: isSystemBillingEnabled() });
+  return NextResponse.json({ enabled: isSystemBillingEnabled(), manualEnabled: true });
 }
 
 export async function POST(req: Request) {
-  if (!isSystemAdminRequest(req) && !isSystemBillingCronRequest(req)) {
+  const manualRequest = isSystemAdminRequest(req);
+  if (!manualRequest && !isSystemBillingCronRequest(req)) {
     return NextResponse.json({ error: "システム管理者権限を確認できません。" }, { status: 401 });
   }
-  if (!isSystemBillingEnabled()) {
+  if (!manualRequest && !isSystemBillingEnabled()) {
     return NextResponse.json({ error: "システム利用料の請求処理は本番運用開始まで停止中です。" }, { status: 503 });
   }
   try {
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
     const billingMonth = String(body.billingMonth || defaultSystemUsageBillingMonth(mode));
     const result = mode === "snapshot"
       ? await snapshotSystemUsage(billingMonth)
-      : await issueSystemUsageInvoices(billingMonth);
+      : await issueSystemUsageInvoices(billingMonth, { bankTransferOnly: !isSystemBillingEnabled() });
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("System usage billing run failed", error);

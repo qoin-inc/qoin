@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { isSystemAdminRequest, isSystemBillingEnabled } from "@/lib/systemAdminServer";
+import { isSystemAdminRequest } from "@/lib/systemAdminServer";
 import { createWebhookSupabaseClient } from "@/lib/stripeConnectServer";
 
 export async function POST(req: Request) {
   if (!isSystemAdminRequest(req)) return NextResponse.json({ error: "システム管理者権限が必要です。" }, { status: 401 });
-  if (!isSystemBillingEnabled()) return NextResponse.json({ error: "システム利用料の入金登録は本番運用開始まで停止中です。" }, { status: 503 });
   const body = await req.json().catch(() => ({}));
   if (!body.billingId) return NextResponse.json({ error: "請求を指定してください。" }, { status: 400 });
   try {
