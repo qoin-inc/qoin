@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 import { createStripeClient, createWebhookSupabaseClient } from "@/lib/stripeConnectServer";
+import { validateBankAccount } from "@/lib/systemUsageBankAccount";
 
 export type SystemUsagePaymentMethod = "card" | "bank_transfer";
 
@@ -134,15 +135,15 @@ export const setSystemUsagePaymentMethod = async (
   townId: string | number,
   paymentMethod: SystemUsagePaymentMethod,
 ) => {
-  const ensured = await ensureSystemUsageStripeCustomer(client, townId);
+  const ensured = paymentMethod === "card" ? await ensureSystemUsageStripeCustomer(client, townId) : null;
   const now = new Date().toISOString();
   const result = await client
     .from("system_usage_payment_profiles")
     .upsert({
       neighborhood_id: townId,
-      stripe_customer_id: ensured.customer.id,
+      ...(ensured ? { stripe_customer_id: ensured.customer.id } : {}),
       payment_method: paymentMethod,
-      bank_transfer_status: paymentMethod === "bank_transfer" ? "ready" : ensured.profile?.bank_transfer_status || null,
+      bank_transfer_status: paymentMethod === "bank_transfer" ? "ready" : ensured?.profile?.bank_transfer_status || null,
       automatic_collection_consent_at: paymentMethod === "card" ? now : null,
       updated_at: now,
     }, { onConflict: "neighborhood_id" })
@@ -195,7 +196,7 @@ export const snapshotSystemUsage = async (billingMonth: string) => {
   for (const town of townsResult.data || []) {
     const existingResult = await client.from("system_usage_billings").select("id,status,stripe_invoice_id").eq("neighborhood_id", town.id).eq("billing_month", billingMonth).maybeSingle();
     throwIfError(existingResult.error);
-    if (existingResult.data?.stripe_invoice_id || existingResult.data?.status === "paid") {
+    if (existingResult.data?.stripe_invoice_id || existingResult.data?.status === "paid" || existingResult.data?.status === "open") {
       results.push({ townId: town.id, status: "skipped", reason: "already_invoiced" });
       continue;
     }
@@ -272,13 +273,12 @@ export const issueSystemUsageInvoices = async (billingMonth: string) => {
   ]);
   throwIfError(billingsResult.error || pushesResult.error || profilesResult.error || townsResult.error);
 
-  const { stripe } = createStripeClient();
   const dates = invoiceDates(billingMonth);
   const taxRateCache = new Map<string, string>();
   const results: Array<Record<string, any>> = [];
 
   for (const billing of billingsResult.data || []) {
-    if (billing.stripe_invoice_id || billing.status === "paid") {
+    if (billing.stripe_invoice_id || billing.status === "paid" || billing.status === "open") {
       results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "skipped", reason: "already_invoiced" });
       continue;
     }
@@ -311,6 +311,28 @@ export const issueSystemUsageInvoices = async (billingMonth: string) => {
       continue;
     }
 
+    if (profile?.payment_method === "bank_transfer") {
+      const accountResult = await client.from("system_usage_bank_account").select("*").eq("id", 1).maybeSingle();
+      throwIfError(accountResult.error);
+      if (!accountResult.data) {
+        await updateBilling(client, billing.id, { status: "bank_account_required" });
+        results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "bank_account_required" });
+        continue;
+      }
+      const bankAccount = validateBankAccount(accountResult.data);
+      const { year, month } = parseBillingMonth(billingMonth);
+      await updateBilling(client, billing.id, {
+        status: "open",
+        payment_method: "bank_transfer",
+        bank_account_snapshot: bankAccount,
+        invoice_number: `SYS-${billingMonth.replace("-", "")}-${billing.neighborhood_id}`,
+        invoice_issued_at: dates.nominalIssueAt,
+        due_date: new Date(Date.UTC(year, month, 11) - JST_OFFSET_MS - 1000).toISOString(),
+      });
+      results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "open", paymentMethod: "bank_transfer" });
+      continue;
+    }
+
     if (!profile?.payment_method || !profile?.stripe_customer_id) {
       await updateBilling(client, billing.id, { status: "payment_method_required" });
       results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "payment_method_required" });
@@ -323,11 +345,10 @@ export const issueSystemUsageInvoices = async (billingMonth: string) => {
     }
 
     try {
-      const isBankTransfer = profile.payment_method === "bank_transfer";
+      const { stripe } = createStripeClient();
       const invoice = await stripe.invoices.create({
         customer: profile.stripe_customer_id,
-        collection_method: isBankTransfer ? "send_invoice" : "charge_automatically",
-        ...(isBankTransfer ? { days_until_due: dates.daysUntilDue } : {}),
+        collection_method: "charge_automatically",
         auto_advance: true,
         description: `el-town システム利用料 ${billingMonth}利用分`,
         footer: "システム利用料のお支払いありがとうございます。",
@@ -338,15 +359,7 @@ export const issueSystemUsageInvoices = async (billingMonth: string) => {
           neighborhood_id: String(billing.neighborhood_id),
           billing_month: billingMonth,
         },
-        payment_settings: isBankTransfer ? {
-          payment_method_types: ["customer_balance"],
-          payment_method_options: {
-            customer_balance: {
-              funding_type: "bank_transfer",
-              bank_transfer: { type: "jp_bank_transfer" },
-            },
-          },
-        } : { payment_method_types: ["card"] },
+        payment_settings: { payment_method_types: ["card"] },
       } as Stripe.InvoiceCreateParams, { idempotencyKey: `el-town-system-usage-invoice-${billing.id}` });
 
       const taxRateId = await findOrCreateTaxRate(stripe, Number(billing.tax_rate || 0), taxRateCache);
@@ -375,8 +388,7 @@ export const issueSystemUsageInvoices = async (billingMonth: string) => {
         }, { idempotencyKey: `el-town-system-usage-push-${billing.id}` });
       }
 
-      let finalized = await stripe.invoices.finalizeInvoice(invoice.id, { auto_advance: true });
-      if (isBankTransfer) finalized = await stripe.invoices.sendInvoice(invoice.id);
+      const finalized = await stripe.invoices.finalizeInvoice(invoice.id, { auto_advance: true });
       await updateBilling(client, billing.id, {
         status: finalized.status === "paid" ? "paid" : "open",
         invoice_number: finalized.number,

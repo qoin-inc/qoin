@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { BankAccount, bankAccountText } from "@/lib/systemUsageBankAccount";
 import PayPayApplicationPanel from "@/components/PayPayApplicationPanel";
 
 type AdminViewProps = {
@@ -1044,6 +1045,24 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminMessage, setAdminMessage] = useState("");
   const [activeAdminListStatus, setActiveAdminListStatus] = useState<AdminListStatus>("active");
+  const [systemBankAccount, setSystemBankAccount] = useState<BankAccount | null>(null);
+  const [systemBankAccountError, setSystemBankAccountError] = useState("");
+  useEffect(() => {
+    let active = true;
+    setSystemBankAccount(null);
+    setSystemBankAccountError("");
+    const loadAccount = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch(`/api/system-usage/bank-account?townId=${townId}`, { headers: { Authorization: `Bearer ${session?.access_token || ""}` } });
+        const data = await response.json();
+        if (!response.ok) throw new Error("振込先口座を確認できませんでした。");
+        if (active) setSystemBankAccount(data.account);
+      } catch (error: any) { if (active) setSystemBankAccountError(error.message); }
+    };
+    void loadAccount();
+    return () => { active = false; };
+  }, [townId]);
   const [systemBillingMonth, setSystemBillingMonth] = useState("");
   const [systemBillingMessage, setSystemBillingMessage] = useState("");
   const [systemBillingBusy, setSystemBillingBusy] = useState(false);
@@ -3907,7 +3926,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const systemPaymentMethodLabel = systemPaymentMethod === "card"
     ? "クレジットカード自動決済"
     : systemPaymentMethod === "bank_transfer"
-      ? "Stripe銀行振込"
+      ? "銀行口座振込"
       : "未選択";
   const systemCardReady = systemPaymentProfile?.card_setup_status === "ready" && Boolean(systemPaymentProfile?.stripe_default_payment_method_id);
   const systemCardLabel = systemCardReady
@@ -3921,6 +3940,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     if (billing.status === "cancelled") return "取消";
     if (billing.status === "draft") return "16日実績確定";
     if (billing.status === "payment_method_required") return "決済方法未選択";
+    if (billing.status === "bank_account_required") return "振込先口座未登録";
     if (billing.status === "card_setup_required") return "カード登録待ち";
     if (billing.status === "payment_failed") return "カード決済失敗";
     if (billing.status === "payment_action_required") return "カード認証待ち";
@@ -3936,6 +3956,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       ? billing.receipt_number || `RCPT-${billing.billing_month}-${billing.id}`
       : billing.invoice_number || `SYS-${String(billing.billing_month || "").replace("-", "")}-${billing.neighborhood_id}`;
     const dateText = new Date(issueDate).toLocaleDateString("ja-JP");
+    const escapeBankText = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char] || char));
+    const bankNote = !isReceipt && billing.payment_method === "bank_transfer" && billing.bank_account_snapshot ? `<p class="note">振込先：${escapeBankText(bankAccountText(billing.bank_account_snapshot))}</p>` : "";
     return `<!doctype html>
 <html lang="ja">
 <head>
@@ -3986,7 +4008,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       <div><span>消費税 (${Number(billing.tax_rate || 0)}%)</span><strong>${yen(Number(billing.tax_amount || 0))}</strong></div>
       <div class="grand"><span>${isReceipt ? "領収額" : "請求額"}</span><strong>${yen(Number(billing.total_amount || 0))}</strong></div>
     </div>
-    <p class="note">${isReceipt ? "上記金額を正に領収いたしました。" : "上記金額をStripeにてお支払いください。入金確認後、領収書を出力できます。"}</p>
+    ${bankNote}
+    <p class="note">${isReceipt ? "上記金額を正に領収いたしました。" : billing.payment_method === "bank_transfer" ? "翌月10日までに直接銀行口座から請求額を振り込んでください。入金確認後、領収書を出力できます。" : "上記金額をStripeにてお支払いください。入金確認後、領収書を出力できます。"}</p>
   </div>
 </body>
 </html>`;
@@ -4062,7 +4085,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       setBasicData((current) => ({ ...current, systemPaymentProfile: data.profile }));
       setSystemBillingMessage(paymentMethod === "card"
         ? "カード自動決済を選択しました。続けてカードを登録してください。"
-        : "Stripe銀行振込を選択しました。請求書に町内会・自治会専用の振込口座が表示されます。");
+        : "銀行口座振込を選択しました。翌月10日までに直接銀行口座から請求額を振り込んでください");
     } catch (error: any) {
       setSystemBillingMessage(error?.message || "決済方法を保存できませんでした。");
     } finally {
@@ -5054,7 +5077,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <div className="admin-basic-card-heading">
               <div>
                 <h3>システム利用料の決済方法</h3>
-                <p>町内会・自治会ごとにカード自動決済またはStripe銀行振込を選択します。</p>
+                <p>町内会・自治会ごとにカード自動決済または銀行口座振込を選択します。</p>
               </div>
               <span className="admin-member-count">{systemPaymentMethodLabel}</span>
             </div>
@@ -5076,7 +5099,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 disabled={systemBillingBusy}
               >
                 <i className="fas fa-building-columns" />
-                <span><strong>Stripe銀行振込</strong><small>請求書に町内会・自治会専用の仮想口座を表示し、入金を自動消し込みします。</small></span>
+                <span><strong>銀行口座振込</strong><small>翌月10日までに直接銀行口座から請求額を振り込んでください</small></span>
               </button>
             </div>
             {systemPaymentMethod === "card" && (
@@ -5088,7 +5111,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </div>
             )}
             {systemPaymentMethod === "bank_transfer" && (
-              <p className="admin-basic-note">町内会・自治会専用口座は毎月1日に発行されるStripe請求書と決済ページに表示されます。振込後はStripeが自動で消し込みます。</p>
+              <div className="admin-basic-note"><p>翌月10日までに直接銀行口座から請求額を振り込んでください。入金状況は運営側で確認します。</p><p>{systemBankAccount ? `振込先：${bankAccountText(systemBankAccount)}` : systemBankAccountError || "振込先口座は運営側で登録準備中です。"}</p><p>発行済みの請求については、請求書に記載された振込先をご確認ください。</p></div>
             )}
           </section>
           <section className="admin-basic-card">
@@ -5109,12 +5132,14 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               <span><strong>{yen(Number(selectedSystemBilling?.tax_amount ?? systemUsageTax))}</strong>消費税</span>
               <span><strong>{yen(Number(selectedSystemBilling?.total_amount ?? systemUsageTotal))}</strong>税込請求額</span>
             </div>
-            <p className="admin-basic-note">毎月1日付で請求されます。未入金の月はStripeで支払い、入金後に領収書を出力できます。</p>
+            <p className="admin-basic-note">利用月の翌月1日付で請求されます。銀行口座振込は翌月10日までにお振り込みください。入金確認後に領収書を出力できます。</p>
             {selectedSystemBilling && (
               <div className="admin-system-billing-actions">
                 <button type="button" onClick={() => openSystemBillingPdf(selectedSystemBilling, "invoice")}>請求書PDF</button>
                 {(selectedSystemBilling.status === "paid" || selectedSystemBilling.paid_at) ? (
                   <button type="button" onClick={() => openSystemBillingPdf(selectedSystemBilling, "receipt")}>領収書PDF</button>
+                ) : selectedSystemBilling.payment_method === "bank_transfer" && !selectedSystemBilling.stripe_invoice_id ? (
+                  <span>銀行口座への入金確認待ち</span>
                 ) : selectedSystemBilling.stripe_hosted_invoice_url ? (
                   <button type="button" onClick={() => window.open(selectedSystemBilling.stripe_hosted_invoice_url, "_blank", "noopener,noreferrer")}>Stripe請求書を開く</button>
                 ) : (

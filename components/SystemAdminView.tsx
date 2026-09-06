@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminView from "@/components/AdminView";
+import SystemUsageBankAccountPanel from "@/components/SystemUsageBankAccountPanel";
 import PayPayApprovalPanel from "@/components/PayPayApprovalPanel";
 
 type Tab = "towns" | "feeStandards" | "billing" | "paypay";
@@ -165,6 +166,18 @@ export default function SystemAdminView() {
     setLoading(false);
   };
 
+  const confirmBankPayment = async (billing: any) => {
+    if (!window.confirm(`${billing.billing_month}利用分 ${yen(Number(billing.total_amount))}の銀行口座への入金を確認済みですか？全額入金済みとして登録します。`)) return;
+    setBusy(true);
+    try {
+      const response = await fetch("/api/system-usage/confirm-bank-payment", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ billingId: billing.id }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "入金登録に失敗しました。");
+      await load();
+      setMessage("銀行口座への入金を登録しました。");
+    } catch (error: any) { setMessage(error.message); } finally { setBusy(false); }
+  };
+
   const loadBillingStatus = async () => {
     const response = await fetch("/api/system-usage/billing-run");
     const data = await response.json().catch(() => ({}));
@@ -270,9 +283,9 @@ export default function SystemAdminView() {
   };
 
   const runSystemUsageBilling = async (mode: "snapshot" | "invoice") => {
-    const label = mode === "snapshot" ? "16日時点の接続数を確定" : "Stripe請求書を発行";
+    const label = mode === "snapshot" ? "16日時点の接続数を確定" : "請求書を発行";
     if (mode === "invoice") {
-      const typed = window.prompt(`${billingMonth}利用分の本番Stripe請求書を発行します。確認のため「${billingMonth}」と入力してください。`);
+      const typed = window.prompt(`${billingMonth}利用分の本番請求書を発行します。確認のため「${billingMonth}」と入力してください。`);
       if (typed !== billingMonth) return;
     } else if (!window.confirm(`${billingMonth}利用分について、${label}します。よろしいですか？`)) return;
     setBusy(true);
@@ -286,7 +299,7 @@ export default function SystemAdminView() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || `${label}できませんでした。`);
       const failed = (data.results || []).filter((row: any) => String(row.status).includes("failed")).length;
-      const attention = (data.results || []).filter((row: any) => ["payment_method_required", "card_setup_required"].includes(row.status)).length;
+      const attention = (data.results || []).filter((row: any) => ["payment_method_required", "card_setup_required", "bank_account_required"].includes(row.status)).length;
       setMessage(`${billingMonth}利用分: ${data.processed || 0}件の町内会・自治会を処理しました。${failed ? ` 失敗${failed}件。` : ""}${attention ? ` 決済設定待ち${attention}件。` : ""}`);
       await load();
     } catch (error: any) {
@@ -400,9 +413,10 @@ export default function SystemAdminView() {
       {tab === "paypay" && <PayPayApprovalPanel />}
 
       {tab === "billing" && <>
+        <SystemUsageBankAccountPanel />
         <section className="system-admin-grid"><section className="system-admin-card"><h2>料金単価</h2><div className="system-admin-form"><label><span>請求対象月</span><input type="month" value={billingMonth} onChange={(e) => setBillingMonth(e.target.value)} /></label><label><span>接続数1件あたり単価</span><input value={draft.monthlyHouseholdPrice} onChange={(e) => setDraft({ ...draft, monthlyHouseholdPrice: e.target.value })} /></label><label><span>無料プッシュ件数</span><input value={draft.freePushLimit} onChange={(e) => setDraft({ ...draft, freePushLimit: e.target.value })} /></label><label><span>プッシュ超過単価</span><input value={draft.pushUnitPrice} onChange={(e) => setDraft({ ...draft, pushUnitPrice: e.target.value })} /></label><label><span>消費税率</span><input value={draft.taxRate} onChange={(e) => setDraft({ ...draft, taxRate: e.target.value })} /></label></div><div className="system-admin-actions"><button onClick={saveSettings} disabled={busy}>全町内会へ反映</button></div></section>
-        <section className="system-admin-card accent"><h2>{month.label} 利用分</h2><p>毎月16日9時に接続数を固定し、{month.invoice} 9時にStripe請求書を発行します。</p>{!billingEnabled && <p className="system-admin-message">本番運用開始前のため、実績確定・請求書発行・自動決済は停止中です。</p>}<div className="system-admin-metrics"><span><strong>{totals.linked}</strong>接続数</span><span><strong>{totals.pushes}</strong>プッシュ件数</span><span><strong>{yen(totals.subtotal)}</strong>税抜</span><span><strong>{yen(totals.tax)}</strong>消費税</span><span><strong>{yen(totals.total)}</strong>税込請求額</span></div><div className="system-admin-billing-commands"><button onClick={() => void runSystemUsageBilling("snapshot")} disabled={busy || !billingEnabled}>16日実績を手動確定</button><button className="primary" onClick={() => void runSystemUsageBilling("invoice")} disabled={busy || !billingEnabled}>Stripe請求書を発行・再処理</button></div></section></section>
-        <section className="system-admin-card"><div className="system-admin-heading"><div><h2>町内会・自治会別 請求計算</h2><p>町内会・自治会ごとの接続数とプッシュ件数から請求額を計算します。</p></div><span>{billingRows.length}件</span></div><div className="system-admin-table"><div className="system-admin-row system-admin-head"><span>町内会・自治会</span><span>接続数</span><span>プッシュ</span><span>超過</span><span>税抜</span><span>消費税</span><span>税込</span><span>状態</span></div>{billingRows.map((row) => <div className="system-admin-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.billing?.linked_account_count ?? row.linked}</span><span>{row.billing?.push_count ?? row.pushCount}</span><span>{row.billing?.push_overage_count ?? row.overage}</span><span>{yen(Number(row.billing?.subtotal_amount ?? row.subtotal))}</span><span>{yen(Number(row.billing?.tax_amount ?? row.tax))}</span><span><strong>{yen(Number(row.billing?.total_amount ?? row.total))}</strong></span><span><strong>{row.billing ? row.billing.status === "paid" ? "入金済み" : row.billing.stripe_invoice_id ? "Stripe請求済み" : row.billing.status === "draft" ? "16日実績確定" : "処理待ち" : "未確定"}</strong><small>{row.paymentProfile?.payment_method === "card" ? `カード${row.paymentProfile.card_setup_status === "ready" ? "登録済み" : "登録待ち"}` : row.paymentProfile?.payment_method === "bank_transfer" ? "銀行振込" : "決済方法未選択"}</small></span></div>)}</div></section>
+        <section className="system-admin-card accent"><h2>{month.label} 利用分</h2><p>毎月16日9時に接続数を固定し、{month.invoice} 9時に請求書を発行します。</p>{!billingEnabled && <p className="system-admin-message">本番運用開始前のため、実績確定・請求書発行・自動決済は停止中です。</p>}<div className="system-admin-metrics"><span><strong>{totals.linked}</strong>接続数</span><span><strong>{totals.pushes}</strong>プッシュ件数</span><span><strong>{yen(totals.subtotal)}</strong>税抜</span><span><strong>{yen(totals.tax)}</strong>消費税</span><span><strong>{yen(totals.total)}</strong>税込請求額</span></div><div className="system-admin-billing-commands"><button onClick={() => void runSystemUsageBilling("snapshot")} disabled={busy || !billingEnabled}>16日実績を手動確定</button><button className="primary" onClick={() => void runSystemUsageBilling("invoice")} disabled={busy || !billingEnabled}>請求書を発行・再処理</button></div></section></section>
+        <section className="system-admin-card"><div className="system-admin-heading"><div><h2>町内会・自治会別 請求計算</h2><p>町内会・自治会ごとの接続数とプッシュ件数から請求額を計算します。</p></div><span>{billingRows.length}件</span></div><div className="system-admin-table"><div className="system-admin-row system-admin-head"><span>町内会・自治会</span><span>接続数</span><span>プッシュ</span><span>超過</span><span>税抜</span><span>消費税</span><span>税込</span><span>状態</span></div>{billingRows.map((row) => <div className="system-admin-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.billing?.linked_account_count ?? row.linked}</span><span>{row.billing?.push_count ?? row.pushCount}</span><span>{row.billing?.push_overage_count ?? row.overage}</span><span>{yen(Number(row.billing?.subtotal_amount ?? row.subtotal))}</span><span>{yen(Number(row.billing?.tax_amount ?? row.tax))}</span><span><strong>{yen(Number(row.billing?.total_amount ?? row.total))}</strong></span><span><strong>{row.billing ? row.billing.status === "paid" ? "入金済み" : row.billing.stripe_invoice_id ? "Stripe請求済み" : row.billing.status === "draft" ? "16日実績確定" : row.billing.payment_method === "bank_transfer" && row.billing.status === "open" ? "銀行入金待ち" : "処理待ち" : "未確定"}</strong><small>{row.paymentProfile?.payment_method === "card" ? `カード${row.paymentProfile.card_setup_status === "ready" ? "登録済み" : "登録待ち"}` : row.paymentProfile?.payment_method === "bank_transfer" ? "銀行振込" : "決済方法未選択"}</small>{row.billing?.payment_method === "bank_transfer" && row.billing.status === "open" && !row.billing.stripe_invoice_id && <button type="button" disabled={busy || !billingEnabled} onClick={() => void confirmBankPayment(row.billing)}>入金確認済みにする</button>}</span></div>)}</div></section>
       </>}
     </main>
   );

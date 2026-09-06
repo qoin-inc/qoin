@@ -5218,7 +5218,8 @@ button { cursor: pointer; border: 0; }
   font-weight: 900;
 }
 
-.system-admin-form input {
+.system-admin-form input,
+.system-admin-form select {
   width: 100%;
   min-height: 50px;
   border: 1px solid #d1d5db;
@@ -5231,7 +5232,8 @@ button { cursor: pointer; border: 0; }
   outline: none;
 }
 
-.system-admin-form input:focus {
+.system-admin-form input:focus,
+.system-admin-form select:focus {
   border-color: var(--qoin-main);
   box-shadow: 0 0 0 3px rgba(88, 174, 222, .18);
 }

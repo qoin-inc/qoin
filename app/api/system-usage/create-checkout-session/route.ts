@@ -88,6 +88,10 @@ const createCheckoutResponse = async (
     return NextResponse.json({ error: "This system usage billing is already paid." }, { status: 400 });
   }
 
+  if (billing.payment_method === "bank_transfer" && !billing.stripe_invoice_id) {
+    return NextResponse.json({ error: "銀行口座振込の請求は、指定の銀行口座へ直接お振り込みください。" }, { status: 400 });
+  }
+
   const amount = Number(billing.total_amount || 0);
   if (!Number.isFinite(amount) || amount <= 0) {
     return NextResponse.json({ error: "Payment amount is missing." }, { status: 400 });
