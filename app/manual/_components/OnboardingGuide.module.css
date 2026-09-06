@@ -898,3 +898,7 @@
     grid-template-columns: 1fr;
   }
 }
+
+.feeDesktopCurrent { grid-template-columns: 1fr; }
+.feeDesktopCurrent section { min-height: 0; }
+.feeDesktopCurrent .feeDesktopFields { grid-template-columns: repeat(2, minmax(0, 1fr)); }

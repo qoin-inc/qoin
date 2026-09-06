@@ -413,19 +413,20 @@ export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
       <div className={styles.pcGuideFrame}>
         <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / 管理画面 / 会費管理</span></div>
         <div className={styles.feeDesktopScreen}>
-          <header><small>基本機能</small><strong>会費管理</strong><span>会費設定、請求額、入金状況、手集金</span></header>
-          <nav>{['基本情報', '会員管理', '会費管理', 'システム利用料', '役員管理', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
-          <div className={styles.feeDesktopGrid}>
-            <section className={styles.pcFocusPanel}><h4>会費請求設定</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span><span>請求対象　全会員世帯</span><span>会費一覧で選択</span><span>請求未設定</span><span>Stripe有効</span></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div><small>対象年度・請求額・対象会員を確認して設定します。</small></section>
-            <section><h4>2026年度 集計・会費一覧</h4><div className={styles.feeDesktopFields}><span>請求額　5,000円</span><span>入金額合計　0円</span><span>手集金　0円</span><span>Stripe入金　0円</span></div><div className={styles.feeDesktopMethods}><b>☑ 会員名　請求額 5,000円</b><b>会員名　請求未設定</b><b className={styles.feeDesktopStripe}>検索・選択・個別データを保存</b></div><small>年度確定後は固定保存され、代表者の解除後は役員全員が個別修正できます。</small></section>
+          <header><small>基本機能</small><strong>会費管理</strong><span>会員への会費請求登録</span></header>
+          <nav>{['基本情報', '会員管理', '役員管理', '会費管理', 'システム利用料', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
+          <div className={`${styles.feeDesktopGrid} ${styles.feeDesktopCurrent}`}>
+            <section><h4>未確定　2026年度の会費データ</h4><small>年度を確定すると、会費情報とは独立して保存され変更不可になります。</small><div className={styles.feeDesktopActions}><button type="button">年度を確定</button></div></section>
+            <section><h4>2026年度 集計</h4><div className={styles.feeDesktopFields}><span>請求額　5,000円</span><span>入金額合計　0円</span><span>手集金　0円</span><span>Stripe入金　0円</span><span>未入金額　5,000円</span><span>未納/一部　1</span></div><small>手集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</small></section>
+            <section className={styles.pcFocusPanel}><h4>会費請求設定　Stripe有効</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span></div><div className={styles.feeDesktopMethods}><b>全会員世帯　／　会費一覧で選択　／　請求未設定</b></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div></section>
+            <section><h4>会費一覧</h4><div className={styles.feeDesktopMethods}><b>会費一覧検索　氏名・住所など</b><b>選択　会員名　請求額　手集金　Stripe入金　修正</b><b>☑ 会員名　5,000円　0円　0円　個別データを保存</b><b>□ 会員名　請求未設定　0円　0円　個別データを保存</b></div><small>請求未設定の会員も請求額・手集金を入力して個別に保存できます。</small></section>
           </div>
         </div>
       </div>
-      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
+      {caption && <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>}
     </figure>
   );
 }
-
 export function MemberPaymentDesktopPreview({ caption }: { caption: string }) {
   return (
     <figure className={styles.pcGuideFigure}>
