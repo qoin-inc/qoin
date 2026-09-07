@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 
-import type { BankAccount } from "@/lib/systemUsageBankAccount";
+import { BankAccount, withBankCodes } from "@/lib/systemUsageBankAccount";
 
 export default function BankAccountForm({ initial, onSave, onClose }: {
   initial: BankAccount;
   onSave: (account: BankAccount) => Promise<void>;
   onClose: () => void;
 }) {
-  const [draft, setDraft] = useState(initial);
+  const [draft, setDraft] = useState(() => withBankCodes(initial));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const update = (key: keyof BankAccount, value: string) => setDraft((current) => ({ ...current, [key]: value }));
@@ -28,7 +28,9 @@ export default function BankAccountForm({ initial, onSave, onClose }: {
     <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0 }}>
       <div className="system-admin-form">
         <label><span>銀行名</span><input required maxLength={100} value={draft.bank_name} onChange={(e) => update("bank_name", e.target.value)} /></label>
+        <label><span>金融機関コード（4桁）</span><input required inputMode="numeric" pattern="[0-9]{4}" maxLength={4} value={draft.bank_code || ""} onChange={(e) => update("bank_code", e.target.value.normalize("NFKC").replace(/[^0-9]/g, "").slice(0, 4))} /></label>
         <label><span>支店名</span><input required maxLength={100} value={draft.bank_branch_name} onChange={(e) => update("bank_branch_name", e.target.value)} /></label>
+        <label><span>支店コード（3桁）</span><input required inputMode="numeric" pattern="[0-9]{3}" maxLength={3} value={draft.bank_branch_code || ""} onChange={(e) => update("bank_branch_code", e.target.value.normalize("NFKC").replace(/[^0-9]/g, "").slice(0, 3))} /></label>
         <label><span>口座種別</span><select required value={draft.bank_account_type} onChange={(e) => update("bank_account_type", e.target.value)}><option value="ordinary">普通</option><option value="checking">当座</option></select></label>
         <label><span>口座番号（7桁）</span><input required inputMode="numeric" pattern="[0-9]{7}" maxLength={7} value={draft.bank_account_number} onChange={(e) => update("bank_account_number", e.target.value.normalize("NFKC").replace(/[^0-9]/g, "").slice(0, 7))} /><small>先頭の0を含めて入力してください。</small></label>
         <label><span>口座名義（カナ）</span><input required maxLength={200} value={draft.bank_account_holder} onChange={(e) => update("bank_account_holder", e.target.value)} /></label>

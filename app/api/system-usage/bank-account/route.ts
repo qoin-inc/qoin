@@ -10,7 +10,7 @@ export async function GET(req: Request) {
       if (!townId) return NextResponse.json({ error: "管理者ログインが必要です。" }, { status: 401 });
       await requireNeighborhoodAdmin(req, townId);
     }
-    const { data, error } = await createWebhookSupabaseClient().from("system_usage_bank_account").select("bank_name,bank_branch_name,bank_account_type,bank_account_number,bank_account_holder").eq("id", 1).maybeSingle();
+    const { data, error } = await createWebhookSupabaseClient().from("system_usage_bank_account").select("bank_name,bank_code,bank_branch_name,bank_branch_code,bank_account_type,bank_account_number,bank_account_holder").eq("id", 1).maybeSingle();
     if (error) throw error;
     return NextResponse.json({ account: data });
   } catch (error: any) {

@@ -10,7 +10,7 @@ function load(file, mocks = {}) {
   return module.exports;
 }
 const bank = load('lib/systemUsageBankAccount.ts');
-const account = { bank_name: 'テスト銀行', bank_branch_name: '本店', bank_account_type: 'ordinary', bank_account_number: '0012345', bank_account_holder: 'テスト' };
+const account = { bank_name: 'テスト銀行', bank_code: '0001', bank_branch_code: '001', bank_branch_name: '本店', bank_account_type: 'ordinary', bank_account_number: '0012345', bank_account_holder: 'テスト' };
 function fixture(withAccount = true) {
   const tables = {
     system_usage_billings: [{ id: 1, neighborhood_id: 1, billing_month: '2026-08', status: 'draft', linked_account_count: 2, monthly_household_price: 100, free_push_limit: 0, push_unit_price: 10, tax_rate: 10 }],
@@ -40,6 +40,12 @@ function fixture(withAccount = true) {
   assert.equal(bank.validateBankAccount({ ...account, bank_account_number: '００１２３４５' }).bank_account_number, '0012345');
   assert.throws(() => bank.validateBankAccount({ ...account, bank_account_number: '123' }));
   assert.throws(() => bank.validateBankAccount({ ...account, bank_account_type: 'invalid' }));
+  assert.throws(() => bank.validateBankAccount({ ...account, bank_code: '12' }));
+  assert.throws(() => bank.validateBankAccount({ ...account, bank_branch_code: '1234' }));
+  assert.equal(bank.validateBankAccount({ ...account, bank_code: '０３１０', bank_branch_code: '１０２' }).bank_code, '0310');
+  const legacy = { ...account, bank_name: 'ＧＭＯあおぞらネット銀行', bank_branch_name: '法人第二営業部', bank_code: undefined, bank_branch_code: undefined };
+  assert.match(bank.bankAccountText(legacy), /金融機関コード：0310/);
+  assert.match(bank.bankAccountText(legacy), /支店コード：102/);
   const f = fixture();
   await f.server.setSystemUsagePaymentMethod(f.client, 1, 'bank_transfer');
   await f.server.issueSystemUsageInvoices('2026-08');
@@ -49,6 +55,8 @@ function fixture(withAccount = true) {
   assert.equal(bill.total_amount, 231);
   assert.equal(bill.due_date, '2026-09-10T14:59:59.000Z');
   assert.equal(bill.bank_account_snapshot.bank_account_number, '0012345');
+  assert.equal(bill.bank_account_snapshot.bank_code, '0001');
+  assert.equal(bill.bank_account_snapshot.bank_branch_code, '001');
   f.tables.system_usage_bank_account[0].bank_account_number = '9999999';
   await f.server.issueSystemUsageInvoices('2026-08');
   assert.equal(bill.bank_account_snapshot.bank_account_number, '0012345');
