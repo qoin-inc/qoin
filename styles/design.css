@@ -2676,7 +2676,22 @@ button { cursor: pointer; border: 0; }
 
 .admin-admin-screen {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
+}
+
+/* Keep wide lists inside their own scroll area, rather than sizing the page. */
+.admin-admin-screen,
+.admin-system-billing-screen,
+.admin-admin-screen > .admin-basic-card,
+.admin-system-billing-screen > .admin-basic-card {
+  min-width: 0;
+}
+
+.admin-admin-form > label,
+.admin-admin-invite-url > input,
+.admin-system-payment-options > button > span {
+  min-width: 0;
 }
 
 .admin-admin-form {
@@ -5388,7 +5403,27 @@ button { cursor: pointer; border: 0; }
   }
 
   .admin-system-billing-screen {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-admin-screen .admin-basic-card-heading,
+  .admin-system-billing-screen .admin-basic-card-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-admin-screen .admin-basic-card-heading,
+  .admin-system-billing-screen .admin-basic-note,
+  .admin-system-payment-detail {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-admin-tabs {
+    flex-wrap: wrap;
+  }
+
+  .admin-system-payment-detail {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .admin-system-payment-options {
@@ -5437,7 +5472,7 @@ button { cursor: pointer; border: 0; }
 
   .admin-admin-form,
   .admin-admin-invite-url {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .admin-admin-actions {
