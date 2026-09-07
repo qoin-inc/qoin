@@ -5,17 +5,20 @@ const ts = require('typescript');
 
 function load(file, mocks = {}) {
   const module = { exports: {} };
-  const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
+  const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX } }).outputText;
   vm.runInNewContext(code, { module, exports: module.exports, require: (name) => mocks[name] || require(name), Date, console });
   return module.exports;
 }
 const bank = load('lib/systemUsageBankAccount.ts');
+const rates = load('lib/systemUsageRates.ts');
 const account = { bank_name: 'テスト銀行', bank_code: '0001', bank_branch_code: '001', bank_branch_name: '本店', bank_account_type: 'ordinary', bank_account_number: '0012345', bank_account_holder: 'テスト' };
 function fixture(withAccount = true) {
   const tables = {
-    system_usage_billings: [{ id: 1, neighborhood_id: 1, billing_month: '2026-08', status: 'draft', linked_account_count: 2, monthly_household_price: 100, free_push_limit: 0, push_unit_price: 10, tax_rate: 10 }],
+    system_usage_billings: [{ id: 1, neighborhood_id: 1, billing_month: '2026-08', status: 'draft', snapshot_at: '2026-08-16T00:00:00Z', linked_account_count: 2, monthly_household_price: 100, free_push_limit: 0, push_unit_price: 10, tax_rate: 10 }],
     system_usage_payment_profiles: [{ neighborhood_id: 1, payment_method: 'bank_transfer' }],
     neighborhoods: [{ id: 1, name: 'テスト町' }], circulars: [{ neighborhood_id: 1, created_at: '2026-08-02T00:00:00Z', is_pushed: true }],
+    resident_rosters: [{ neighborhood_id: 1, user_auth_id: 'user' }],
+    system_usage_rate_versions: [{ id: 1, effective_month: '2026-08', monthly_household_price: 60, free_push_limit: 200, push_unit_price: 3, tax_rate: 10 }, { id: 2, effective_month: '2026-10', monthly_household_price: 80, free_push_limit: 200, push_unit_price: 3, tax_rate: 10 }],
     system_usage_bank_account: withAccount ? [{ id: 1, ...account }] : [],
   };
   const client = { from(table) {
@@ -25,13 +28,14 @@ function fixture(withAccount = true) {
       gte(k, v) { filters.push(r => r[k] >= v); return q; }, lt(k, v) { filters.push(r => r[k] < v); return q; },
       order() { return q; }, limit() { return q; }, maybeSingle() { single = true; return q; }, single() { single = true; return q; },
       update(value) { mutation = rows => rows.forEach(r => Object.assign(r, value)); return q; },
-      upsert(value) { mutation = () => { const rows = tables[table]; let row = rows.find(r => r.neighborhood_id === value.neighborhood_id); if (!row) rows.push(row = {}); Object.assign(row, value); }; return q; },
-      then(resolve) { const rows = (tables[table] || []).filter(r => filters.every(f => f(r))); if (mutation) mutation(rows); return Promise.resolve({ data: single ? rows[0] || null : rows, error: null }).then(resolve); },
+      upsert(value) { filters.push(r => r.neighborhood_id === value.neighborhood_id && (!value.billing_month || r.billing_month === value.billing_month)); mutation = () => { const rows = tables[table]; let row = rows.find(r => r.neighborhood_id === value.neighborhood_id && (!value.billing_month || r.billing_month === value.billing_month)); if (!row) rows.push(row = { id: rows.length + 1 }); Object.assign(row, value); }; return q; },
+      then(resolve) { let rows = (tables[table] || []).filter(r => filters.every(f => f(r))); if (mutation) { mutation(rows); rows = (tables[table] || []).filter(r => filters.every(f => f(r))); } return Promise.resolve({ data: single ? rows[0] || null : rows, error: null }).then(resolve); },
     }; return q;
   } };
   let stripeCalls = 0;
   const server = load('lib/systemUsageBillingServer.ts', {
     '@/lib/systemUsageBankAccount': bank,
+    '@/lib/systemUsageRates': rates,
     '@/lib/stripeConnectServer': { createWebhookSupabaseClient: () => client, createStripeClient: () => { stripeCalls++; throw new Error('Unexpected Stripe call'); } },
   });
   return { server, client, tables, stripeCalls: () => stripeCalls };
@@ -46,6 +50,44 @@ function fixture(withAccount = true) {
   const legacy = { ...account, bank_name: 'ＧＭＯあおぞらネット銀行', bank_branch_name: '法人第二営業部', bank_code: undefined, bank_branch_code: undefined };
   assert.match(bank.bankAccountText(legacy), /金融機関コード：0310/);
   assert.match(bank.bankAccountText(legacy), /支店コード：102/);
+  const rateFixture = fixture();
+  assert.equal(rates.rateForMonth(rateFixture.tables.system_usage_rate_versions, '2026-09').monthly_household_price, 60);
+  assert.equal(rates.rateForMonth(rateFixture.tables.system_usage_rate_versions, '2026-10').monthly_household_price, 80);
+  assert.equal(rates.rateForMonth(rateFixture.tables.system_usage_rate_versions, '2026-07'), null);
+  assert.equal(rates.shiftUsageMonth('2026-12', 1), '2027-01');
+  assert.throws(() => rates.validateUsageRate({ effective_month: '2026-13' }));
+  await rateFixture.server.snapshotSystemUsage('2026-09', 'manual');
+  assert.equal(rateFixture.tables.system_usage_billings[0].monthly_household_price, 100);
+  const fresh = fixture(); fresh.tables.system_usage_billings = [];
+  await fresh.server.snapshotSystemUsage('2026-10', 'manual');
+  assert.equal(fresh.tables.system_usage_billings[0].monthly_household_price, 80);
+  assert.equal(fresh.tables.system_usage_billings[0].total_amount, 88);
+  assert.equal(fresh.tables.system_usage_billings[0].rate_version_id, 2);
+  assert.equal(fresh.tables.system_usage_billings[0].snapshot_source, 'manual');
+  fresh.tables.system_usage_rate_versions[1].monthly_household_price = 999;
+  await fresh.server.snapshotSystemUsage('2026-10', 'manual');
+  assert.equal(fresh.tables.system_usage_billings[0].monthly_household_price, 80);
+  const missingRate = fixture(); missingRate.tables.system_usage_billings = [];
+  await assert.rejects(() => missingRate.server.snapshotSystemUsage('2026-07', 'manual'), /料金単価が未登録/);
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const Report = load('components/SystemUsageMonthlyReport.tsx', { '@/lib/systemUsageRates': rates }).default;
+  const markup = renderToStaticMarkup(React.createElement(Report, { month: '2026-08', rows: [], loading: false, busy: false, enabled: false, manualEnabled: true, error: '', onMonth() {}, onRun() {}, onPaid() {} }));
+  assert.ok(markup.includes('2026年8月利用分'));
+  assert.ok(markup.includes('2026年9月請求'));
+  assert.ok(markup.includes('2026年9月10日'));
+  for (const auth of [true, false]) {
+    let inserted;
+    const route = load('app/api/system-usage/rates/route.ts', {
+      'next/server': { NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) } },
+      '@/lib/systemAdminServer': { isSystemAdminRequest: () => auth },
+      '@/lib/systemUsageRates': rates,
+      '@/lib/stripeConnectServer': { createWebhookSupabaseClient: () => ({ from: () => ({ insert: async value => { inserted = value; return { error: null }; } }) }) },
+    });
+    const result = await route.POST({ json: async () => ({ effective_month: '2026-10', monthly_household_price: '80', free_push_limit: '200', push_unit_price: '3', tax_rate: '10', change_reason: '単価改定' }) });
+    assert.equal(result.status, auth ? 200 : 401);
+    assert.equal(Boolean(inserted), auth);
+  }
   const f = fixture();
   await f.server.setSystemUsagePaymentMethod(f.client, 1, 'bank_transfer');
   await f.server.issueSystemUsageInvoices('2026-08');

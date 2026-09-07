@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     if (!mode) return NextResponse.json({ error: "mode must be snapshot or invoice" }, { status: 400 });
     const billingMonth = String(body.billingMonth || defaultSystemUsageBillingMonth(mode));
     const result = mode === "snapshot"
-      ? await snapshotSystemUsage(billingMonth)
+      ? await snapshotSystemUsage(billingMonth, manualRequest ? "manual" : "monthly_16th")
       : await issueSystemUsageInvoices(billingMonth, { bankTransferOnly: !isSystemBillingEnabled() });
     return NextResponse.json(result);
   } catch (error: any) {

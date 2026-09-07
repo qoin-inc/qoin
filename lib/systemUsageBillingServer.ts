@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 import { createStripeClient, createWebhookSupabaseClient } from "@/lib/stripeConnectServer";
+import { rateForMonth, usageAmounts } from "@/lib/systemUsageRates";
 import { validateBankAccount } from "@/lib/systemUsageBankAccount";
 
 export type SystemUsagePaymentMethod = "card" | "bank_transfer";
@@ -181,30 +182,40 @@ export const createSystemUsageCardSetupSession = async (
   return session;
 };
 
-export const snapshotSystemUsage = async (billingMonth: string) => {
+export const snapshotSystemUsage = async (billingMonth: string, source = "monthly_16th") => {
   parseBillingMonth(billingMonth);
   const client = createWebhookSupabaseClient();
-  const [townsResult, membersResult, settingsResult] = await Promise.all([
+  const range = monthRange(billingMonth);
+  const [townsResult, membersResult, settingsResult, pushesResult] = await Promise.all([
     client.from("neighborhoods").select("id,name").order("id", { ascending: true }).limit(1000),
     client.from("resident_rosters").select("neighborhood_id,withdrawal_status,user_auth_id,family_user_auth_id_1,family_user_auth_id_2,family_withdrawal_status_1,family_withdrawal_status_2").limit(20000),
-    client.from("system_settings").select("*").limit(1000),
+    client.from("system_usage_rate_versions").select("*").order("effective_month", { ascending: false }).limit(1000),
+    client.from("circulars").select("neighborhood_id").eq("is_pushed", true).gte("created_at", range.start).lt("created_at", range.end).limit(20000),
   ]);
-  throwIfError(townsResult.error || membersResult.error || settingsResult.error);
+  throwIfError(townsResult.error || membersResult.error || settingsResult.error || pushesResult.error);
 
   const now = new Date().toISOString();
   const results: Array<Record<string, any>> = [];
   for (const town of townsResult.data || []) {
-    const existingResult = await client.from("system_usage_billings").select("id,status,stripe_invoice_id").eq("neighborhood_id", town.id).eq("billing_month", billingMonth).maybeSingle();
+    const existingResult = await client.from("system_usage_billings").select("*").eq("neighborhood_id", town.id).eq("billing_month", billingMonth).maybeSingle();
     throwIfError(existingResult.error);
-    if (existingResult.data?.stripe_invoice_id || existingResult.data?.status === "paid" || existingResult.data?.status === "open") {
+    if (existingResult.data?.stripe_invoice_id || existingResult.data?.status === "paid" || existingResult.data?.status === "open" || existingResult.data?.snapshot_at) {
       results.push({ townId: town.id, status: "skipped", reason: "already_invoiced" });
       continue;
     }
-    const setting = (settingsResult.data || []).find((row: any) => String(row.neighborhood_id) === String(town.id)) || {};
+    const setting = rateForMonth(settingsResult.data || [], billingMonth);
+    if (!setting) throw new Error(`${billingMonth}利用分の料金単価が未登録です。適用開始月を指定して料金履歴を登録してください。`);
     const count = (membersResult.data || [])
       .filter((row: any) => String(row.neighborhood_id) === String(town.id))
       .reduce((sum: number, row: any) => sum + linkedCount(row), 0);
+    const pushCount = (pushesResult.data || []).filter((row: any) => String(row.neighborhood_id) === String(town.id)).length;
+    const amounts = usageAmounts(setting, count, pushCount);
     const payload = {
+      push_count: pushCount,
+      push_overage_count: amounts.overage,
+      subtotal_amount: amounts.subtotal,
+      tax_amount: amounts.tax,
+      total_amount: amounts.total,
       neighborhood_id: town.id,
       billing_month: billingMonth,
       linked_account_count: count,
@@ -213,7 +224,9 @@ export const snapshotSystemUsage = async (billingMonth: string) => {
       push_unit_price: Number(setting.push_unit_price || 0),
       tax_rate: Number(setting.tax_rate ?? setting.consumption_tax_rate ?? 10),
       snapshot_at: now,
-      snapshot_source: "monthly_16th",
+      snapshot_source: source,
+      rate_version_id: setting.id,
+      rate_effective_month: setting.effective_month,
       status: "draft",
       updated_at: now,
     };
@@ -253,11 +266,7 @@ const updateBilling = async (client: SupabaseClient, billingId: string | number,
 };
 
 const ensureSnapshotForInvoice = async (client: SupabaseClient, billingMonth: string) => {
-  const existing = await client.from("system_usage_billings").select("id").eq("billing_month", billingMonth).limit(1);
-  throwIfError(existing.error);
-  if (existing.data?.length) return;
-  await snapshotSystemUsage(billingMonth);
-  await client.from("system_usage_billings").update({ snapshot_source: "invoice_fallback" }).eq("billing_month", billingMonth);
+  await snapshotSystemUsage(billingMonth, "invoice_fallback");
 };
 
 export const issueSystemUsageInvoices = async (billingMonth: string, options: { bankTransferOnly?: boolean } = {}) => {

@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { rateForMonth, usageMonthLabel, shiftUsageMonth, billingIsIssued } from "@/lib/systemUsageRates";
 import { BankAccount, bankAccountText } from "@/lib/systemUsageBankAccount";
 import PayPayApplicationPanel from "@/components/PayPayApplicationPanel";
 
@@ -1239,7 +1240,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     const fetchDashboard = async () => {
       setLoading(true);
       try {
-        const [townInfo, billingRows, memberRows, adminRows, pushes, feeRecords, feeSetting, systemUsageBillings, systemPaymentProfile, settings, circulars, facilities, reservations, liveSessions, liveApplications] = await Promise.all([
+        const [townInfo, billingRows, memberRows, adminRows, pushes, feeRecords, feeSetting, systemUsageBillings, systemPaymentProfile, settings, circulars, facilities, reservations, liveSessions, liveApplications, rateVersions] = await Promise.all([
           supabase.from("neighborhoods").select("*").eq("id", townId).maybeSingle(),
           supabase
             .from("resident_rosters")
@@ -1265,6 +1266,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           supabase.from("facility_reservations").select("*").eq("neighborhood_id", townId).order("reservation_date", { ascending: false }).limit(500),
           supabase.from("live_sessions").select("*").eq("neighborhood_id", townId).order("starts_at", { ascending: false }).limit(6),
           supabase.from("live_session_applications").select("*").eq("neighborhood_id", townId).order("applied_at", { ascending: false }).limit(200),
+          supabase.from("system_usage_rate_versions").select("*").order("effective_month", { ascending: false }).limit(1000),
         ]);
 
         const memberListRows = memberRows.data || [];
@@ -1280,7 +1282,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           return sum + getFeePaidAmount(row);
         }, 0);
 
-        const setting = settings.data as any;
+        const currentMonth = new Date(new Date(month.start).getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 7);
+        const setting = rateForMonth(rateVersions.data || [], currentMonth);
         const freePushLimit = setting?.free_push_limit || 0;
         const pushUnitPrice = setting?.push_unit_price || 0;
         const monthlyHouseholdPrice = setting?.monthly_household_price || 0;
@@ -3907,10 +3910,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       : "Stripe審査中";
   const representativeName = basicData.town?.admin_name || organizationAdmins[0]?.admin_name || "未設定";
   const representativeEmail = basicData.town?.admin_email || organizationAdmins[0]?.admin_email || "未設定";
-  const systemConnectionUnitPrice = Number(basicData.setting?.monthly_household_price ?? 0);
-  const systemFreePushLimit = Number(basicData.setting?.free_push_limit ?? 0);
-  const systemPushUnitPrice = Number(basicData.setting?.push_unit_price ?? 0);
-  const systemTaxRate = Number(basicData.setting?.tax_rate ?? basicData.setting?.consumption_tax_rate ?? 10);
+  const systemBillings = basicData.systemBillings || [];
+  const selectedSystemBilling = systemBillings.find((billing) => billing.billing_month === systemBillingMonth) || systemBillings[0] || null;
+  const displayedRate = selectedSystemBilling || basicData.setting;
+  const systemConnectionUnitPrice = Number(displayedRate?.monthly_household_price ?? 0);
+  const systemFreePushLimit = Number(displayedRate?.free_push_limit ?? 0);
+  const systemPushUnitPrice = Number(displayedRate?.push_unit_price ?? 0);
+  const systemTaxRate = Number(displayedRate?.tax_rate ?? displayedRate?.consumption_tax_rate ?? 10);
   const systemPushOverage = Math.max(summary.monthlyPushes - systemFreePushLimit, 0);
   const systemUsageSubtotal = summary.linkedMembers * systemConnectionUnitPrice + systemPushOverage * systemPushUnitPrice;
   const systemUsageTax = Math.round(systemUsageSubtotal * (systemTaxRate / 100));
@@ -3932,13 +3938,12 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const systemCardLabel = systemCardReady
     ? `${String(systemPaymentProfile?.card_brand || "カード").toUpperCase()} 下4桁 ${systemPaymentProfile?.card_last4 || "----"}`
     : "カード未登録";
-  const systemBillings = basicData.systemBillings || [];
-  const selectedSystemBilling = systemBillings.find((billing) => billing.billing_month === systemBillingMonth) || systemBillings[0] || null;
+
   const systemBillingStatusLabel = (billing: any) => {
     if (!billing) return "未確定";
     if (billing.status === "paid" || billing.paid_at) return "入金済み";
     if (billing.status === "cancelled") return "取消";
-    if (billing.status === "draft") return "16日実績確定";
+    if (billing.status === "draft") return "実績保存済み・未発行";
     if (billing.status === "payment_method_required") return "決済方法未選択";
     if (billing.status === "bank_account_required") return "振込先口座未登録";
     if (billing.status === "card_setup_required") return "カード登録待ち";
@@ -4016,6 +4021,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   };
   const openSystemBillingPdf = (billing: any, type: "invoice" | "receipt") => {
     if (!billing || typeof window === "undefined") return;
+    if (!billingIsIssued(billing)) { setSystemBillingMessage("請求書は発行後に出力できます。"); return; }
     if (type === "receipt" && !(billing.status === "paid" || billing.paid_at)) {
       setSystemBillingMessage("領収書は入金後に出力できます。");
       return;
@@ -5115,7 +5121,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             )}
           </section>
           <section className="admin-basic-card">
-            <h3>システム利用料</h3>
+            <h3>{selectedSystemBilling ? `${usageMonthLabel(selectedSystemBilling.billing_month)}利用分の保存単価` : `${month.label}利用分の料金単価`}</h3>
+            <p>{displayedRate ? displayedRate.rate_effective_month || displayedRate.effective_month ? `${usageMonthLabel(displayedRate.rate_effective_month || displayedRate.effective_month)}から適用` : "保存済み単価（適用開始月は未記録）" : "この利用月の料金単価は未登録です。"}</p>
             <dl className="admin-definition-list">
               {systemSettingRows.map(([label, value]) => (
                 <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
@@ -5123,14 +5130,14 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             </dl>
           </section>
           <section className="admin-basic-card accent">
-            <h3>{selectedSystemBilling ? `${selectedSystemBilling.billing_month} 請求` : `${month.label} 請求見込み`}</h3>
+            <h3>{selectedSystemBilling ? `${usageMonthLabel(selectedSystemBilling.billing_month)}利用分 → ${usageMonthLabel(shiftUsageMonth(selectedSystemBilling.billing_month, 1))}請求${billingIsIssued(selectedSystemBilling) ? "" : "（未発行）"}` : `${month.label} 請求見込み`}</h3>
             <div className="admin-mini-metrics">
               <span><strong>{Number(selectedSystemBilling?.linked_account_count ?? summary.linkedMembers).toLocaleString()}</strong>接続数</span>
               <span><strong>{Number(selectedSystemBilling?.push_count ?? summary.monthlyPushes).toLocaleString()}</strong>プッシュ件数</span>
               <span><strong>{Number(selectedSystemBilling?.push_overage_count ?? systemPushOverage).toLocaleString()}</strong>超過プッシュ</span>
-              <span><strong>{yen(Number(selectedSystemBilling?.subtotal_amount ?? systemUsageSubtotal))}</strong>税抜</span>
-              <span><strong>{yen(Number(selectedSystemBilling?.tax_amount ?? systemUsageTax))}</strong>消費税</span>
-              <span><strong>{yen(Number(selectedSystemBilling?.total_amount ?? systemUsageTotal))}</strong>税込請求額</span>
+              <span><strong>{displayedRate ? yen(Number(selectedSystemBilling?.subtotal_amount ?? systemUsageSubtotal)) : "単価未登録"}</strong>税抜</span>
+              <span><strong>{displayedRate ? yen(Number(selectedSystemBilling?.tax_amount ?? systemUsageTax)) : "単価未登録"}</strong>消費税</span>
+              <span><strong>{displayedRate ? yen(Number(selectedSystemBilling?.total_amount ?? systemUsageTotal)) : "単価未登録"}</strong>税込請求額</span>
             </div>
             <p className="admin-basic-note">利用月の翌月1日付で請求されます。銀行口座振込は翌月10日までにお振り込みください。入金確認後に領収書を出力できます。</p>
             {selectedSystemBilling && (
@@ -5164,7 +5171,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             </div>
             <div className="admin-system-billing-table">
               <div className="admin-system-billing-row admin-system-billing-head">
-                <span>対象月</span>
+                <span>利用月／請求月</span>
                 <span>請求日</span>
                 <span>税込請求額</span>
                 <span>状態</span>
@@ -5172,8 +5179,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               </div>
               {(systemBillings.length ? systemBillings : [{ id: "empty", billing_month: "請求は未確定です", total_amount: 0, status: "none" }]).map((billing) => (
                 <div key={billing.id} className={`admin-system-billing-row ${selectedSystemBilling?.id === billing.id ? "selected" : ""}`}>
-                  <span><strong>{billing.billing_month}</strong><small>{billing.invoice_number || "請求番号未設定"}</small></span>
-                  <span>{billing.invoice_issued_at ? new Date(billing.invoice_issued_at).toLocaleDateString("ja-JP") : billing.billed_at ? new Date(billing.billed_at).toLocaleDateString("ja-JP") : "-"}</span>
+                  <span><strong>{billing.id === "empty" ? billing.billing_month : `${usageMonthLabel(billing.billing_month)}利用分`}</strong><small>{billing.id !== "empty" ? `${usageMonthLabel(shiftUsageMonth(billing.billing_month, 1))}請求` : ""}</small><small>{billing.invoice_number || "請求番号未設定"}</small></span>
+                  <span>{billing.invoice_issued_at ? new Date(billing.invoice_issued_at).toLocaleDateString("ja-JP") : "未発行"}</span>
                   <span>{yen(Number(billing.total_amount || 0))}</span>
                   <span><em>{systemBillingStatusLabel(billing)}</em></span>
                   <span className="admin-system-billing-actions inline">
