@@ -138,6 +138,28 @@ function fixture(withAccount = true) {
     assert.equal(html.includes('振込先：'), type === 'invoice');
   }
   const Report = load('components/SystemUsageMonthlyReport.tsx', { '@/lib/systemUsageRates': rates }).default;
+  const reportRows = ['open', 'paid', 'draft'].map((status, index) => ({
+    town: { id: index + 1, name: ['ＡＢＣ町内会', 'ABC自治会', '南町内会'][index] },
+    billing: { status }, linked: 0, pushCount: 0, total: 0,
+  }));
+  for (const [query, unpaid, names] of [
+    ['', false, ['ＡＢＣ町内会', 'ABC自治会', '南町内会']],
+    [' abc ', false, ['ＡＢＣ町内会', 'ABC自治会']],
+    ['', true, ['ＡＢＣ町内会']],
+    ['南', true, []],
+  ]) {
+    const filterState = [query, unpaid];
+    const FilteredReport = load('components/SystemUsageMonthlyReport.tsx', {
+      '@/lib/systemUsageRates': rates,
+      react: { ...React, useState: () => [filterState.shift(), () => {}] },
+    }).default;
+    const html = renderToStaticMarkup(React.createElement(FilteredReport, {
+      month: '2026-08', rows: reportRows, loading: false, busy: false,
+      enabled: false, manualEnabled: true, error: '', onMonth() {}, onRun() {}, onPaid() {},
+    }));
+    for (const row of reportRows) assert.equal(html.includes(row.town.name), names.includes(row.town.name));
+    assert.equal(html.includes('該当する町内会・自治会はありません。'), names.length === 0);
+  }
   const markup = renderToStaticMarkup(React.createElement(Report, { month: '2026-08', rows: [], loading: false, busy: false, enabled: false, manualEnabled: true, error: '', onMonth() {}, onRun() {}, onPaid() {} }));
   assert.ok(markup.includes('2026年8月利用分'));
   assert.ok(markup.includes('2026年9月請求'));
