@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 
-import { BankAccount, withBankCodes } from "@/lib/systemUsageBankAccount";
-import { emptyInvoiceIssuer, InvoiceIssuer } from "@/lib/systemUsageIssuer";
+import { BankAccount, withBankCodes, validateBankAccount } from "@/lib/systemUsageBankAccount";
+import { emptyInvoiceIssuer, InvoiceIssuer, validateInvoiceIssuer } from "@/lib/systemUsageIssuer";
 
 export default function BankAccountForm({ initial, onSave, onClose }: {
   initial: BankAccount;
@@ -20,13 +20,14 @@ export default function BankAccountForm({ initial, onSave, onClose }: {
     setBusy(true);
     setMessage("");
     try {
-      await onSave({ ...draft, bank_name: draft.bank_name.trim(), bank_branch_name: draft.bank_branch_name.trim(), bank_account_holder: draft.bank_account_holder.trim() });
+      const account = { ...validateBankAccount(draft), issuer: validateInvoiceIssuer(draft.issuer) };
+      await onSave(account);
       setMessage("銀行口座と発行元情報を保存しました。");
     } catch (error: any) {
       setMessage(error?.message || "銀行口座を保存できませんでした。");
     } finally { setBusy(false); }
   };
-  return <form onSubmit={submit}>
+  return <form noValidate onSubmit={submit}>
     <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0 }}>
       <div className="system-admin-form">
         <label><span>銀行名</span><input required maxLength={100} value={draft.bank_name} onChange={(e) => update("bank_name", e.target.value)} /></label>
@@ -43,7 +44,7 @@ export default function BankAccountForm({ initial, onSave, onClose }: {
         <label><span>住所</span><input required autoComplete="street-address" maxLength={300} value={draft.issuer?.address || ""} onChange={e => updateIssuer("address", e.target.value)} /></label>
         <label><span>会社名</span><input required autoComplete="organization" maxLength={200} value={draft.issuer?.company_name || ""} onChange={e => updateIssuer("company_name", e.target.value)} /></label>
         <label><span>電話番号</span><input required type="tel" autoComplete="tel" maxLength={30} value={draft.issuer?.phone || ""} onChange={e => updateIssuer("phone", e.target.value)} /></label>
-        <label><span>適格請求書発行事業者登録番号</span><input maxLength={14} placeholder="T1234567890123" value={draft.issuer?.registration_number || ""} onChange={e => updateIssuer("registration_number", e.target.value)} /><small>登録済みの場合はTと13桁の数字を入力してください。</small></label>
+        <label><span>適格請求書発行事業者登録番号</span><input maxLength={14} placeholder="T1234567890123" value={draft.issuer?.registration_number || ""} onChange={e => updateIssuer("registration_number", e.target.value)} /></label>
       </div>
       <div className="system-admin-actions"><button type="submit">{busy ? "保存中…" : "銀行口座・発行元情報を保存"}</button><button type="button" onClick={onClose}>閉じる</button></div>
     </fieldset>

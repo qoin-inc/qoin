@@ -102,6 +102,33 @@ function fixture(withAccount = true) {
   const Form = load('components/BankAccountForm.tsx', { '@/lib/systemUsageBankAccount': bank, '@/lib/systemUsageIssuer': issuerHelpers }).default;
   const formMarkup = renderToStaticMarkup(React.createElement(Form, { initial: { ...account, issuer }, onSave: async () => {}, onClose() {} }));
   for (const value of Object.values(issuer)) assert.ok(formMarkup.includes(value));
+  // Native constraint validation must not silently prevent the submit handler.
+  assert.match(formMarkup, /novalidate=""/i);
+  for (const scenario of [
+    { initial: { ...account, bank_code: '', issuer }, expected: '金融機関コードは4桁で入力してください。' },
+    { initial: { ...account, issuer: { ...issuer, company_name: '' } }, expected: '発行元の会社名を200文字以内で入力してください。' },
+    { initial: { ...account, issuer }, failure: '保存先に接続できません。', expected: '保存先に接続できません。' },
+    { initial: { ...account, issuer }, expected: '銀行口座と発行元情報を保存しました。' },
+  ]) {
+    const states = [];
+    const TestForm = load('components/BankAccountForm.tsx', {
+      '@/lib/systemUsageBankAccount': bank, '@/lib/systemUsageIssuer': issuerHelpers,
+      react: { ...React, useState: initial => {
+        const index = states.length;
+        states.push(typeof initial === 'function' ? initial() : initial);
+        return [states[index], value => { states[index] = value; }];
+      } },
+    }).default;
+    let saved;
+    const tree = TestForm({ initial: scenario.initial, onClose() {}, onSave: async value => {
+      if (scenario.failure) throw new Error(scenario.failure);
+      saved = value;
+    } });
+    await tree.props.onSubmit({ preventDefault() {} });
+    assert.equal(states[2], scenario.expected);
+    assert.equal(states[1], false);
+    assert.equal(Boolean(saved), scenario.expected.includes('保存しました'));
+  }
   const adminSource = fs.readFileSync('components/AdminView.tsx', 'utf8');
   const documentSource = adminSource.slice(adminSource.indexOf('  const systemBillingPdfHtml ='), adminSource.indexOf('  const openSystemBillingPdf ='));
   const renderDocument = vm.runInNewContext(ts.transpileModule(documentSource + '\nsystemBillingPdfHtml;', { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText, { invoiceIssuerHtml: issuerHelpers.invoiceIssuerHtml, bankAccountText: bank.bankAccountText, townName: 'テスト町', yen: value => `${value}円` });
