@@ -3999,7 +3999,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       <div class="box">
         <div>番号: ${number}</div>
         <div>発行日: ${dateText}</div>
-        ${invoiceIssuerHtml(billing.issuer_snapshot)}
+        ${invoiceIssuerHtml(billing.issuer_snapshot?.company_name ? billing.issuer_snapshot : systemBankAccount?.issuer)}
       </div>
     </div>
     <table>
@@ -4025,6 +4025,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     if (!billingIsIssued(billing)) { setSystemBillingMessage("請求書は発行後に出力できます。"); return; }
     if (type === "receipt" && !(billing.status === "paid" || billing.paid_at)) {
       setSystemBillingMessage("領収書は入金後に出力できます。");
+      return;
+    }
+    if (!billing.issuer_snapshot?.company_name && !systemBankAccount) {
+      setSystemBillingMessage(systemBankAccountError || "発行元情報を読み込み中です。少し待ってから再度出力してください。");
       return;
     }
     const doc = window.open("", "_blank");
@@ -4106,6 +4110,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       setSystemBillingMessage("カード登録画面を開くには、ポップアップを許可してください。");
       return;
     }
+
     stripeWindow.opener = null;
     setSystemBillingBusy(true);
     setSystemBillingMessage("");

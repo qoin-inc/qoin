@@ -19,7 +19,7 @@ export default function SystemUsageBankAccountPanel() {
   }, []);
   return <section className="system-admin-card">
     <h2>システム利用料の振込先銀行口座・発行元情報</h2>
-    <p>運営側が利用料を受け取る口座と、請求書・領収書の発行元を設定します。発行元情報は保存後に発行する請求書と、その領収書に使用します。発行済みの帳票は変更されません。</p>
+    <p>運営側が利用料を受け取る口座と、請求書・領収書の発行元を設定します。発行元情報が未登録の過去の帳票にも、現在の設定を表示します。発行時の発行元情報が保存されている帳票は、その情報を表示します。</p>
     {loading ? <p>読み込み中…</p> : error ? <p role="alert">振込先口座を読み込めませんでした。{error}</p> : editing ? <BankAccountForm initial={account || emptyBankAccount} onClose={() => setEditing(false)} onSave={async (next) => {
       const response = await fetch("/api/system-usage/bank-account", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next) });
       const data = await response.json();

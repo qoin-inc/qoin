@@ -137,11 +137,18 @@ function fixture(withAccount = true) {
   }
   const adminSource = fs.readFileSync('components/AdminView.tsx', 'utf8');
   const documentSource = adminSource.slice(adminSource.indexOf('  const systemBillingPdfHtml ='), adminSource.indexOf('  const openSystemBillingPdf ='));
-  const renderDocument = vm.runInNewContext(ts.transpileModule(documentSource + '\nsystemBillingPdfHtml;', { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText, { invoiceIssuerHtml: issuerHelpers.invoiceIssuerHtml, bankAccountText: bank.bankAccountText, townName: 'テスト町', yen: value => `${value}円` });
+  const renderDocument = vm.runInNewContext(ts.transpileModule(documentSource + '\nsystemBillingPdfHtml;', { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText, { systemBankAccount: { issuer }, invoiceIssuerHtml: issuerHelpers.invoiceIssuerHtml, bankAccountText: bank.bankAccountText, townName: 'テスト町', yen: value => `${value}円` });
   for (const type of ['invoice', 'receipt']) {
     const html = renderDocument({ id: 1, billing_month: '2026-08', issuer_snapshot: issuer, paid_at: '2026-09-08', bank_account_snapshot: account, payment_method: 'bank_transfer' }, type);
     for (const value of Object.values(issuer)) assert.ok(html.includes(value), `${type} missing ${value}`);
     assert.equal(html.includes('振込先：'), type === 'invoice');
+    for (const snapshot of [null, {}]) {
+      const legacyHtml = renderDocument({ id: 2, billing_month: '2026-08', issuer_snapshot: snapshot }, type);
+      for (const value of Object.values(issuer)) assert.ok(legacyHtml.includes(value), type + ' legacy issuer missing ' + value);
+    }
+    const historicalHtml = renderDocument({ id: 3, billing_month: '2026-08', issuer_snapshot: { ...issuer, company_name: '発行当時の会社' } }, type);
+    assert.ok(historicalHtml.includes('発行当時の会社'));
+    assert.ok(!historicalHtml.includes(issuer.company_name));
   }
   const Report = load('components/SystemUsageMonthlyReport.tsx', { '@/lib/systemUsageRates': rates }).default;
   const reportRows = ['open', 'paid', 'draft'].map((status, index) => ({
