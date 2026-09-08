@@ -1,4 +1,7 @@
+import { InvoiceIssuer } from "@/lib/systemUsageIssuer";
+
 export type BankAccount = {
+  issuer?: InvoiceIssuer;
   bank_name: string;
   bank_code?: string;
   bank_branch_code?: string;
@@ -16,7 +19,7 @@ export function withBankCodes(account: BankAccount): BankAccount {
 }
 
 export function validateBankAccount(value: any): BankAccount {
-  const account = withBankCodes(Object.fromEntries(Object.keys(emptyBankAccount).map((key) => [key, String(value?.[key] || "").trim()])) as BankAccount);
+  const account = withBankCodes({ ...emptyBankAccount, ...Object.fromEntries(Object.keys(emptyBankAccount).map((key) => [key, String(value?.[key] || "").trim()])) });
   account.bank_code = (account.bank_code || "").normalize("NFKC");
   account.bank_branch_code = (account.bank_branch_code || "").normalize("NFKC");
   if (!/^[0-9]{4}$/.test(account.bank_code)) throw new Error("金融機関コードは4桁で入力してください。");

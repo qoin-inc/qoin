@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { rateForMonth, usageMonthLabel, shiftUsageMonth, billingIsIssued } from "@/lib/systemUsageRates";
 import { BankAccount, bankAccountText } from "@/lib/systemUsageBankAccount";
 import PayPayApplicationPanel from "@/components/PayPayApplicationPanel";
+import { invoiceIssuerHtml } from "@/lib/systemUsageIssuer";
 
 type AdminViewProps = {
   townId: number;
@@ -3973,7 +3974,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     .sheet { max-width: 760px; margin: 0 auto; }
     h1 { margin: 0 0 18px; font-size: 30px; letter-spacing: 0; }
     .meta { display: grid; grid-template-columns: 1fr auto; gap: 18px; margin-bottom: 28px; }
-    .box { border: 1px solid #d1d5db; border-radius: 8px; padding: 14px; }
+    .box { border: 1px solid #d1d5db; border-radius: 8px; padding: 14px; max-width: 340px; overflow-wrap: anywhere; line-height: 1.6; }
     .to { font-size: 20px; font-weight: 900; border-bottom: 2px solid #111827; padding-bottom: 8px; margin-bottom: 14px; }
     table { width: 100%; border-collapse: collapse; margin-top: 18px; }
     th, td { border: 1px solid #d1d5db; padding: 11px; text-align: left; font-size: 13px; }
@@ -3998,7 +3999,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       <div class="box">
         <div>番号: ${number}</div>
         <div>発行日: ${dateText}</div>
-        <div>発行元: el-town</div>
+        ${invoiceIssuerHtml(billing.issuer_snapshot)}
       </div>
     </div>
     <table>

@@ -10,6 +10,8 @@ function load(file, mocks = {}) {
   return module.exports;
 }
 const bank = load('lib/systemUsageBankAccount.ts');
+const issuerHelpers = load('lib/systemUsageIssuer.ts');
+const issuer = { postal_code: '123-4567', address: '東京都テスト区1-2-3', company_name: 'テスト株式会社', phone: '03-1234-5678', registration_number: 'T1234567890123' };
 const rates = load('lib/systemUsageRates.ts');
 const account = { bank_name: 'テスト銀行', bank_code: '0001', bank_branch_code: '001', bank_branch_name: '本店', bank_account_type: 'ordinary', bank_account_number: '0012345', bank_account_holder: 'テスト' };
 function fixture(withAccount = true) {
@@ -19,7 +21,7 @@ function fixture(withAccount = true) {
     neighborhoods: [{ id: 1, name: 'テスト町' }], circulars: [{ neighborhood_id: 1, created_at: '2026-08-02T00:00:00Z', is_pushed: true }],
     resident_rosters: [{ neighborhood_id: 1, user_auth_id: 'user' }],
     system_usage_rate_versions: [{ id: 1, effective_month: '2026-08', monthly_household_price: 60, free_push_limit: 200, push_unit_price: 3, tax_rate: 10 }, { id: 2, effective_month: '2026-10', monthly_household_price: 80, free_push_limit: 200, push_unit_price: 3, tax_rate: 10 }],
-    system_usage_bank_account: withAccount ? [{ id: 1, ...account }] : [],
+    system_usage_bank_account: withAccount ? [{ id: 1, ...account, issuer: { ...issuer } }] : [],
   };
   const client = { from(table) {
     let filters = [], mutation, single = false;
@@ -41,6 +43,32 @@ function fixture(withAccount = true) {
   return { server, client, tables, stripeCalls: () => stripeCalls };
 }
 (async () => {
+  assert.equal(issuerHelpers.validateInvoiceIssuer({ ...issuer, postal_code: '１２３４５６７', registration_number: 'ｔ１２３４５６７８９０１２３' }).registration_number, issuer.registration_number);
+  for (const invalid of [{ postal_code: '123' }, { address: '' }, { company_name: '' }, { phone: 'abc' }, { registration_number: 'T123' }]) {
+    assert.throws(() => issuerHelpers.validateInvoiceIssuer({ ...issuer, ...invalid }));
+  }
+  assert.equal(issuerHelpers.validateInvoiceIssuer({ ...issuer, registration_number: '' }).registration_number, '');
+  const issuerMarkup = issuerHelpers.invoiceIssuerHtml(issuer);
+  for (const value of Object.values(issuer)) assert.ok(issuerMarkup.includes(value));
+  assert.ok(issuerHelpers.invoiceIssuerHtml({ ...issuer, company_name: '<script>alert(1)</script>' }).includes('&lt;script&gt;'));
+  assert.equal(issuerHelpers.invoiceIssuerHtml(null), '<div>発行元: el-town</div>');
+  for (const auth of [true, false]) {
+    let stored;
+    const route = load('app/api/system-usage/bank-account/route.ts', {
+      'next/server': { NextResponse: { json: (body, options) => ({ body, status: options?.status || 200 }) } },
+      '@/lib/systemAdminServer': { isSystemAdminRequest: () => auth },
+      '@/lib/systemUsageBankAccount': bank,
+      '@/lib/systemUsageIssuer': issuerHelpers,
+      '@/lib/stripeConnectServer': { createWebhookSupabaseClient: () => ({ from: () => ({ upsert: async value => { stored = value; return { error: null }; } }) }) },
+    });
+    const result = await route.POST({ json: async () => ({ ...account, issuer }) });
+    assert.equal(result.status, auth ? 200 : 401);
+    assert.equal(stored?.issuer?.company_name, auth ? issuer.company_name : undefined);
+    stored = undefined;
+    const invalid = await route.POST({ json: async () => ({ ...account, issuer: { ...issuer, postal_code: '123' } }) });
+    assert.equal(invalid.status, auth ? 400 : 401);
+    assert.equal(stored, undefined);
+  }
   assert.equal(bank.validateBankAccount({ ...account, bank_account_number: '００１２３４５' }).bank_account_number, '0012345');
   assert.throws(() => bank.validateBankAccount({ ...account, bank_account_number: '123' }));
   assert.throws(() => bank.validateBankAccount({ ...account, bank_account_type: 'invalid' }));
@@ -71,6 +99,17 @@ function fixture(withAccount = true) {
   await assert.rejects(() => missingRate.server.snapshotSystemUsage('2026-07', 'manual'), /料金単価が未登録/);
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
+  const Form = load('components/BankAccountForm.tsx', { '@/lib/systemUsageBankAccount': bank, '@/lib/systemUsageIssuer': issuerHelpers }).default;
+  const formMarkup = renderToStaticMarkup(React.createElement(Form, { initial: { ...account, issuer }, onSave: async () => {}, onClose() {} }));
+  for (const value of Object.values(issuer)) assert.ok(formMarkup.includes(value));
+  const adminSource = fs.readFileSync('components/AdminView.tsx', 'utf8');
+  const documentSource = adminSource.slice(adminSource.indexOf('  const systemBillingPdfHtml ='), adminSource.indexOf('  const openSystemBillingPdf ='));
+  const renderDocument = vm.runInNewContext(ts.transpileModule(documentSource + '\nsystemBillingPdfHtml;', { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText, { invoiceIssuerHtml: issuerHelpers.invoiceIssuerHtml, bankAccountText: bank.bankAccountText, townName: 'テスト町', yen: value => `${value}円` });
+  for (const type of ['invoice', 'receipt']) {
+    const html = renderDocument({ id: 1, billing_month: '2026-08', issuer_snapshot: issuer, paid_at: '2026-09-08', bank_account_snapshot: account, payment_method: 'bank_transfer' }, type);
+    for (const value of Object.values(issuer)) assert.ok(html.includes(value), `${type} missing ${value}`);
+    assert.equal(html.includes('振込先：'), type === 'invoice');
+  }
   const Report = load('components/SystemUsageMonthlyReport.tsx', { '@/lib/systemUsageRates': rates }).default;
   const markup = renderToStaticMarkup(React.createElement(Report, { month: '2026-08', rows: [], loading: false, busy: false, enabled: false, manualEnabled: true, error: '', onMonth() {}, onRun() {}, onPaid() {} }));
   assert.ok(markup.includes('2026年8月利用分'));
@@ -99,9 +138,19 @@ function fixture(withAccount = true) {
   assert.equal(bill.bank_account_snapshot.bank_account_number, '0012345');
   assert.equal(bill.bank_account_snapshot.bank_code, '0001');
   assert.equal(bill.bank_account_snapshot.bank_branch_code, '001');
+  assert.equal(bill.issuer_snapshot.company_name, issuer.company_name);
+  assert.equal(bill.issuer_snapshot.registration_number, issuer.registration_number);
+  f.tables.system_usage_bank_account[0].issuer = { ...issuer, company_name: '変更後の会社' };
   f.tables.system_usage_bank_account[0].bank_account_number = '9999999';
   await f.server.issueSystemUsageInvoices('2026-08');
   assert.equal(bill.bank_account_snapshot.bank_account_number, '0012345');
+  assert.equal(bill.issuer_snapshot.company_name, issuer.company_name);
+  const zero = fixture();
+  zero.tables.system_usage_billings[0].monthly_household_price = 0;
+  zero.tables.system_usage_billings[0].push_unit_price = 0;
+  await zero.server.issueSystemUsageInvoices('2026-08');
+  assert.equal(zero.tables.system_usage_billings[0].status, 'paid');
+  assert.equal(zero.tables.system_usage_billings[0].issuer_snapshot.company_name, issuer.company_name);
   const missing = fixture(false);
   await missing.server.issueSystemUsageInvoices('2026-08');
   assert.equal(missing.tables.system_usage_billings[0].status, 'bank_account_required');

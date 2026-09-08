@@ -282,6 +282,9 @@ export const issueSystemUsageInvoices = async (billingMonth: string, options: { 
   ]);
   throwIfError(billingsResult.error || pushesResult.error || profilesResult.error || townsResult.error);
 
+  const issuerResult = await client.from("system_usage_bank_account").select("issuer").eq("id", 1).maybeSingle();
+  throwIfError(issuerResult.error);
+
   const dates = invoiceDates(billingMonth);
   const taxRateCache = new Map<string, string>();
   const results: Array<Record<string, any>> = [];
@@ -310,6 +313,7 @@ export const issueSystemUsageInvoices = async (billingMonth: string, options: { 
       tax_amount: taxAmount,
       total_amount: total,
       due_date: dates.dueAt,
+      issuer_snapshot: billing.issuer_snapshot ?? issuerResult.data?.issuer ?? {},
     });
 
     if (total <= 0) {
