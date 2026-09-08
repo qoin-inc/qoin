@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 import { BankAccount, withBankCodes, validateBankAccount } from "@/lib/systemUsageBankAccount";
-import { emptyInvoiceIssuer, InvoiceIssuer, validateInvoiceIssuer } from "@/lib/systemUsageIssuer";
+import { emptyInvoiceIssuer, InvoiceIssuer, validateInvoiceIssuer, normalizeIssuerRegistrationNumber } from "@/lib/systemUsageIssuer";
 
 export default function BankAccountForm({ initial, onSave, onClose }: {
   initial: BankAccount;
@@ -44,7 +44,7 @@ export default function BankAccountForm({ initial, onSave, onClose }: {
         <label><span>住所</span><input required autoComplete="street-address" maxLength={300} value={draft.issuer?.address || ""} onChange={e => updateIssuer("address", e.target.value)} /></label>
         <label><span>会社名</span><input required autoComplete="organization" maxLength={200} value={draft.issuer?.company_name || ""} onChange={e => updateIssuer("company_name", e.target.value)} /></label>
         <label><span>電話番号</span><input required type="tel" autoComplete="tel" maxLength={30} value={draft.issuer?.phone || ""} onChange={e => updateIssuer("phone", e.target.value)} /></label>
-        <label><span>適格請求書発行事業者登録番号</span><input maxLength={14} placeholder="T1234567890123" value={draft.issuer?.registration_number || ""} onChange={e => updateIssuer("registration_number", e.target.value)} /></label>
+        <label><span>適格請求書発行事業者登録番号</span><input placeholder="T1234567890123" value={draft.issuer?.registration_number || ""} onChange={e => updateIssuer("registration_number", normalizeIssuerRegistrationNumber(e.target.value))} /></label>
       </div>
       <div className="system-admin-actions"><button type="submit">{busy ? "保存中…" : "銀行口座・発行元情報を保存"}</button><button type="button" onClick={onClose}>閉じる</button></div>
     </fieldset>

@@ -8,6 +8,8 @@ export type InvoiceIssuer = {
 
 export const emptyInvoiceIssuer: InvoiceIssuer = { postal_code: "", address: "", company_name: "", phone: "", registration_number: "" };
 
+export const normalizeIssuerRegistrationNumber = (value: string) => value.normalize("NFKC").toUpperCase().replace(/[\s\u200B\uFEFF]/g, "");
+
 export function validateInvoiceIssuer(value: any): InvoiceIssuer {
   const issuer = Object.fromEntries(Object.keys(emptyInvoiceIssuer).map(key => [key, String(value?.[key] ?? "").trim()])) as InvoiceIssuer;
   issuer.postal_code = issuer.postal_code.normalize("NFKC").replace(/[-ー－\s]/g, "");
@@ -17,7 +19,7 @@ export function validateInvoiceIssuer(value: any): InvoiceIssuer {
   if (!issuer.company_name || issuer.company_name.length > 200) throw new Error("発行元の会社名を200文字以内で入力してください。");
   issuer.phone = issuer.phone.normalize("NFKC");
   if (!/^[+\d()\s-]{10,30}$/.test(issuer.phone) || !/^\d{10,15}$/.test(issuer.phone.replace(/\D/g, ""))) throw new Error("発行元の電話番号を正しく入力してください。");
-  issuer.registration_number = issuer.registration_number.normalize("NFKC").toUpperCase();
+  issuer.registration_number = normalizeIssuerRegistrationNumber(issuer.registration_number);
   if (issuer.registration_number && !/^T\d{13}$/.test(issuer.registration_number)) throw new Error("登録番号はTと13桁の数字で入力してください。");
   return issuer;
 }

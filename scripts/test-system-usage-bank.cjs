@@ -48,6 +48,10 @@ function fixture(withAccount = true) {
     assert.throws(() => issuerHelpers.validateInvoiceIssuer({ ...issuer, ...invalid }));
   }
   assert.equal(issuerHelpers.validateInvoiceIssuer({ ...issuer, registration_number: '' }).registration_number, '');
+  for (const registration_number of ['T 8370001048069', 'Ｔ　８３７０００１０４８０６９', 't\u200b8370001048069\n']) {
+    assert.equal(issuerHelpers.validateInvoiceIssuer({ ...issuer, registration_number }).registration_number, 'T8370001048069');
+  }
+  assert.throws(() => issuerHelpers.validateInvoiceIssuer({ ...issuer, registration_number: 'T83700010480699' }));
   const issuerMarkup = issuerHelpers.invoiceIssuerHtml(issuer);
   for (const value of Object.values(issuer)) assert.ok(issuerMarkup.includes(value));
   assert.ok(issuerHelpers.invoiceIssuerHtml({ ...issuer, company_name: '<script>alert(1)</script>' }).includes('&lt;script&gt;'));
@@ -102,6 +106,8 @@ function fixture(withAccount = true) {
   const Form = load('components/BankAccountForm.tsx', { '@/lib/systemUsageBankAccount': bank, '@/lib/systemUsageIssuer': issuerHelpers }).default;
   const formMarkup = renderToStaticMarkup(React.createElement(Form, { initial: { ...account, issuer }, onSave: async () => {}, onClose() {} }));
   for (const value of Object.values(issuer)) assert.ok(formMarkup.includes(value));
+  const registrationInput = formMarkup.match(/<input[^>]*placeholder="T1234567890123"[^>]*>/)[0];
+  assert.ok(!/maxlength/i.test(registrationInput), 'Pasted spaces must not truncate the last digit before normalization');
   // Native constraint validation must not silently prevent the submit handler.
   assert.match(formMarkup, /novalidate=""/i);
   for (const scenario of [
