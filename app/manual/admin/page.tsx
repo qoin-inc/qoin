@@ -101,14 +101,14 @@ export default function AdminManualPage() {
           },
           {
             title: "システム利用料を確認する",
-            text: "支払い方法を選び、当月のLINE接続世帯数、無料プッシュ枠、超過配信数、税込請求見込みを確認します。月別請求一覧では請求日、金額、入金状態を確認し、入金後に領収書を出力できます。",
+            text: "クレジットカード自動決済または銀行口座振込の支払い方法を選びます。毎月のご利用料金のご請求書、ご入金受領後の領収書を出力できます。",
             points: [
               "カード自動決済は初回登録後、原則として毎月1日に処理されます。",
               "銀行口座振込：翌月10日までに直接銀行口座から請求額を振り込んでください",
-              "料金対象世帯数は会員管理のLINE連携状況から確認できます。",
+              "el-town利用接続数は会員管理の接続数から確認できます。",
             ],
-            caution: "支払い方法が未選択のままでは自動決済されません。運用開始前にカードまたは銀行振込を選択してください。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee.png" alt="システム利用料のPC管理画面" caption="" hotspots={[{ left: "20%", top: "53%", label: "支払い方法" }, { left: "66%", top: "54%", label: "請求見込み", delay: 1.2 }]} />,
+            caution: "システム利用料のお支払方法は運用開始前にクレジットカード自動決済または銀行口座振込をご選択願います。",
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260910.png" alt="システム利用料のお支払方法と月別請求一覧の画面例" caption="画面例（サンプルデータ）" width={850} height={720} />,
           },
           {
             title: "Stripe連携を開始・確認する",

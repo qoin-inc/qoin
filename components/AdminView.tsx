@@ -3999,7 +3999,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     <div class="meta">
       <div>
         <div class="to">${townName} 御中</div>
-        <div>el-town ${escapeBankText(String(billing.billing_month || "").replace(/^(\d{4})-(\d{2})$/, "$1 年 $2 月"))} 利用分 (接続数は15日時点)</div>
+        <div>el-town ${escapeBankText(String(billing.billing_month || "").replace(/^(\d{4})-(\d{2})$/, "$1 年 $2 月"))} 利用料 (接続数は15日時点)</div>
       </div>
       <div class="box">
         <div>${isReceipt ? "領収書番号" : "請求書番号"}：${number}</div>
@@ -4011,8 +4011,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     <table>
       <thead><tr><th>内容</th><th>数量</th><th>単価</th><th>金額</th></tr></thead>
       <tbody>
-        <tr><td>el-town接続数利用料</td><td class="num">${Number(billing.linked_account_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.monthly_household_price || 0))}</td><td class="num">${yen(Number(billing.linked_account_count || 0) * Number(billing.monthly_household_price || 0))}</td></tr>
-        <tr><td>Lineプッシュ通知超過料</td><td class="num">${Number(billing.push_overage_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.push_unit_price || 0))}</td><td class="num">${yen(Number(billing.push_overage_count || 0) * Number(billing.push_unit_price || 0))}</td></tr>
+        <tr><td>el-town利用接続数</td><td class="num">${Number(billing.linked_account_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.monthly_household_price || 0))}</td><td class="num">${yen(Number(billing.linked_account_count || 0) * Number(billing.monthly_household_price || 0))}</td></tr>
+        <tr><td>Lineプッシュ通知超過数</td><td class="num">${Number(billing.push_overage_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.push_unit_price || 0))}</td><td class="num">${yen(Number(billing.push_overage_count || 0) * Number(billing.push_unit_price || 0))}</td></tr>
       </tbody>
     </table>
     <div class="total">
@@ -5094,8 +5094,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           <section className="admin-basic-card admin-system-payment-card">
             <div className="admin-basic-card-heading">
               <div>
-                <h3>システム利用料の決済方法</h3>
-                <p>町内会・自治会ごとにカード自動決済または銀行口座振込を選択します。</p>
+                <h3>システム利用料のお支払方法</h3>
+                <p>カード自動決済または銀行口座振込を選択します。</p>
               </div>
               <span className="admin-member-count">{systemPaymentMethodLabel}</span>
             </div>

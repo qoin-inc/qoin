@@ -142,7 +142,7 @@ function fixture(withAccount = true) {
     const html = renderDocument({ id: 1, billing_month: '2026-08', issuer_snapshot: issuer, paid_at: '2026-09-08', bank_account_snapshot: account, payment_method: 'bank_transfer' }, type);
     for (const value of Object.values(issuer)) assert.ok(html.includes(value), `${type} missing ${value}`);
     assert.equal(html.includes('振込先：'), type === 'invoice');
-    assert.ok(html.includes('2026 年 08 月 利用分 (接続数は15日時点)'));
+    assert.ok(html.includes('el-town 2026 年 08 月 利用料 (接続数は15日時点)'));
     assert.ok(html.includes(type === 'receipt' ? '領収書番号：' : '請求書番号：'));
     assert.ok(html.includes(type === 'receipt' ? '領収書年月日：2026年9月8日' : '請求書発行日：'));
     assert.ok(html.includes(type === 'receipt' ? '発行元:' : '請求元:'));
