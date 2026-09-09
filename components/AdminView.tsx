@@ -3974,6 +3974,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   <meta charset="utf-8" />
   <title>${title}</title>
   <style>
+    @page { size: A4 portrait; margin: 12mm; }
     body { margin: 0; padding: 36px; font-family: "Noto Sans JP", Arial, sans-serif; color: #111827; }
     .sheet { max-width: 760px; margin: 0 auto; }
     h1 { margin: 0 0 18px; font-size: 30px; letter-spacing: 0; }
@@ -3998,7 +3999,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     <div class="meta">
       <div>
         <div class="to">${townName} 御中</div>
-        <div>${escapeBankText(String(billing.billing_month || "").replace(/^(\d{4})-(\d{2})$/, "$1 年 $2 月"))} 利用分 (接続数は15日時点)</div>
+        <div>el-town ${escapeBankText(String(billing.billing_month || "").replace(/^(\d{4})-(\d{2})$/, "$1 年 $2 月"))} 利用分 (接続数は15日時点)</div>
       </div>
       <div class="box">
         <div>${isReceipt ? "領収書番号" : "請求書番号"}：${number}</div>
@@ -4010,8 +4011,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     <table>
       <thead><tr><th>内容</th><th>数量</th><th>単価</th><th>金額</th></tr></thead>
       <tbody>
-        <tr><td>接続数利用料</td><td class="num">${Number(billing.linked_account_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.monthly_household_price || 0))}</td><td class="num">${yen(Number(billing.linked_account_count || 0) * Number(billing.monthly_household_price || 0))}</td></tr>
-        <tr><td>プッシュ通知超過料</td><td class="num">${Number(billing.push_overage_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.push_unit_price || 0))}</td><td class="num">${yen(Number(billing.push_overage_count || 0) * Number(billing.push_unit_price || 0))}</td></tr>
+        <tr><td>el-town接続数利用料</td><td class="num">${Number(billing.linked_account_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.monthly_household_price || 0))}</td><td class="num">${yen(Number(billing.linked_account_count || 0) * Number(billing.monthly_household_price || 0))}</td></tr>
+        <tr><td>Lineプッシュ通知超過料</td><td class="num">${Number(billing.push_overage_count || 0).toLocaleString()}</td><td class="num">${yen(Number(billing.push_unit_price || 0))}</td><td class="num">${yen(Number(billing.push_overage_count || 0) * Number(billing.push_unit_price || 0))}</td></tr>
       </tbody>
     </table>
     <div class="total">
