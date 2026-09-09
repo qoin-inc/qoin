@@ -163,13 +163,16 @@ function fixture(withAccount = true) {
   const Report = load('components/SystemUsageMonthlyReport.tsx', { '@/lib/systemUsageRates': rates }).default;
   const reportRows = ['open', 'paid', 'draft'].map((status, index) => ({
     town: { id: index + 1, name: ['ＡＢＣ町内会', 'ABC自治会', '南町内会'][index] },
-    billing: { status }, linked: 0, pushCount: 0, total: 0,
+    billing: { status, id: index + 1, neighborhood_id: index + 1, billing_month: "2026-08" }, issued: status !== "draft", linked: 0, pushCount: 0, total: 0,
   }));
   for (const [query, unpaid, names] of [
     ['', false, ['ＡＢＣ町内会', 'ABC自治会', '南町内会']],
     [' abc ', false, ['ＡＢＣ町内会', 'ABC自治会']],
     ['', true, ['ＡＢＣ町内会']],
     ['南', true, []],
+    ['SYS-202608-1', false, ['ＡＢＣ町内会']],
+    ['rcpt-2026-08-2', false, ['ABC自治会']],
+    ['RCPT-2026-08-2', true, []],
   ]) {
     const filterState = [query, unpaid];
     const FilteredReport = load('components/SystemUsageMonthlyReport.tsx', {
