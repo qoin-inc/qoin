@@ -26,13 +26,14 @@ export function validateInvoiceIssuer(value: any): InvoiceIssuer {
 
 export const escapeDocumentText = (value: unknown) => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]!));
 
-export function invoiceIssuerHtml(issuer?: Partial<InvoiceIssuer> | null) {
-  if (!issuer?.company_name) return "<div>発行元: el-town</div>";
+export function invoiceIssuerHtml(issuer?: Partial<InvoiceIssuer> | null, type: "invoice" | "receipt" = "invoice") {
+  const label = type === "receipt" ? "発行元" : "請求元";
+  if (!issuer?.company_name) return `<div>${label}: el-town</div>`;
   return [
-    `<div>発行元: ${escapeDocumentText(issuer.company_name)}</div>`,
+    `<div>${label}: ${escapeDocumentText(issuer.company_name)}</div>`,
     issuer.postal_code && `<div>〒${escapeDocumentText(issuer.postal_code)}</div>`,
     issuer.address && `<div>${escapeDocumentText(issuer.address)}</div>`,
-    issuer.phone && `<div>電話番号: ${escapeDocumentText(issuer.phone)}</div>`,
-    issuer.registration_number && `<div>適格請求書発行事業者登録番号: ${escapeDocumentText(issuer.registration_number)}</div>`,
+    issuer.phone && `<div>TEL：${escapeDocumentText(issuer.phone)}</div>`,
+    issuer.registration_number && `<div>登録番号：${escapeDocumentText(issuer.registration_number)}</div>`,
   ].filter(Boolean).join("\n");
 }

@@ -55,7 +55,7 @@ function fixture(withAccount = true) {
   const issuerMarkup = issuerHelpers.invoiceIssuerHtml(issuer);
   for (const value of Object.values(issuer)) assert.ok(issuerMarkup.includes(value));
   assert.ok(issuerHelpers.invoiceIssuerHtml({ ...issuer, company_name: '<script>alert(1)</script>' }).includes('&lt;script&gt;'));
-  assert.equal(issuerHelpers.invoiceIssuerHtml(null), '<div>発行元: el-town</div>');
+  assert.equal(issuerHelpers.invoiceIssuerHtml(null), '<div>請求元: el-town</div>');
   for (const auth of [true, false]) {
     let stored;
     const route = load('app/api/system-usage/bank-account/route.ts', {
@@ -142,6 +142,16 @@ function fixture(withAccount = true) {
     const html = renderDocument({ id: 1, billing_month: '2026-08', issuer_snapshot: issuer, paid_at: '2026-09-08', bank_account_snapshot: account, payment_method: 'bank_transfer' }, type);
     for (const value of Object.values(issuer)) assert.ok(html.includes(value), `${type} missing ${value}`);
     assert.equal(html.includes('振込先：'), type === 'invoice');
+    assert.ok(html.includes('2026 年 08 月 利用分 (接続数は15日時点)'));
+    assert.ok(html.includes(type === 'receipt' ? '領収書番号：' : '請求書番号：'));
+    assert.ok(html.includes(type === 'receipt' ? '領収書年月日：2026年9月8日' : '請求書発行日：'));
+    assert.ok(html.includes(type === 'receipt' ? '発行元:' : '請求元:'));
+    assert.ok(html.includes('TEL：'));
+    assert.ok(html.includes('登録番号：'));
+    assert.equal(html.includes('支払期限：2026 年 09 月 10 日迄'), type === 'invoice');
+    const yearEndHtml = renderDocument({ id: 4, billing_month: '2026-12', invoice_issued_at: '2026-12-31T15:00:00Z' }, type);
+    assert.equal(yearEndHtml.includes('支払期限：2027 年 01 月 10 日迄'), type === 'invoice');
+    if (type === 'invoice') assert.ok(yearEndHtml.includes('請求書発行日：2027年1月1日'));
     for (const snapshot of [null, {}]) {
       const legacyHtml = renderDocument({ id: 2, billing_month: '2026-08', issuer_snapshot: snapshot }, type);
       for (const value of Object.values(issuer)) assert.ok(legacyHtml.includes(value), type + ' legacy issuer missing ' + value);

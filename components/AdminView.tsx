@@ -3961,7 +3961,11 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     const number = isReceipt
       ? billing.receipt_number || `RCPT-${billing.billing_month}-${billing.id}`
       : billing.invoice_number || `SYS-${String(billing.billing_month || "").replace("-", "")}-${billing.neighborhood_id}`;
-    const dateText = new Date(issueDate).toLocaleDateString("ja-JP");
+    const dateText = new Date(issueDate).toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo", year: "numeric", month: "long", day: "numeric" });
+    const [usageYear, usageMonth] = String(billing.billing_month).split("-").map(Number);
+    const dueYear = usageMonth === 12 ? usageYear + 1 : usageYear;
+    const dueMonth = usageMonth === 12 ? 1 : usageMonth + 1;
+    const dueText = `${dueYear} 年 ${String(dueMonth).padStart(2, "0")} 月 10 日迄`;
     const escapeBankText = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char] || char));
     const bankNote = !isReceipt && billing.payment_method === "bank_transfer" && billing.bank_account_snapshot ? `<p class="note">振込先：${escapeBankText(bankAccountText(billing.bank_account_snapshot))}</p>` : "";
     return `<!doctype html>
@@ -3994,12 +3998,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     <div class="meta">
       <div>
         <div class="to">${townName} 御中</div>
-        <div>${billing.billing_month} 利用分</div>
+        <div>${escapeBankText(String(billing.billing_month || "").replace(/^(\d{4})-(\d{2})$/, "$1 年 $2 月"))} 利用分 (接続数は15日時点)</div>
       </div>
       <div class="box">
-        <div>番号: ${number}</div>
-        <div>発行日: ${dateText}</div>
-        ${invoiceIssuerHtml(billing.issuer_snapshot?.company_name ? billing.issuer_snapshot : systemBankAccount?.issuer)}
+        <div>${isReceipt ? "領収書番号" : "請求書番号"}：${number}</div>
+        <div>${isReceipt ? "領収書年月日" : "請求書発行日"}：${dateText}</div>
+        ${!isReceipt ? `<div>支払期限：${dueText}</div>` : ""}
+        ${invoiceIssuerHtml(billing.issuer_snapshot?.company_name ? billing.issuer_snapshot : systemBankAccount?.issuer, type)}
       </div>
     </div>
     <table>
