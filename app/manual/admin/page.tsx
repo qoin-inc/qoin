@@ -100,15 +100,15 @@ export default function AdminManualPage() {
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management-20260906.png" alt="現在の会費管理画面：年度確定、年度集計、会費請求設定、会費一覧" caption="" width={1177} height={1337} />,
           },
           {
-            title: "システム利用料を確認する",
+            title: "システム利用料",
+            subtitle: "el-town利用料の支払、請求履歴",
             text: "クレジットカード自動決済または銀行口座振込の支払い方法を選びます。毎月のご利用料金のご請求書、ご入金受領後の領収書を出力できます。",
             points: [
               "カード自動決済は初回登録後、原則として毎月1日に処理されます。",
-              "銀行口座振込：翌月10日までに直接銀行口座から請求額を振り込んでください",
+              "銀行口座振込：翌月10日までに直接銀行口座から請求額をお振込み下さい。",
               "el-town利用接続数は会員管理の接続数から確認できます。",
             ],
-            caution: "システム利用料のお支払方法は運用開始前にクレジットカード自動決済または銀行口座振込をご選択願います。",
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260910.png" alt="システム利用料のお支払方法と月別請求一覧の画面例" caption="画面例（サンプルデータ）" width={850} height={720} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260910-60yen.png" alt="システム利用料のお支払方法と月別請求一覧の画面例" caption="画面例（サンプルデータ）" width={850} height={720} />,
           },
           {
             title: "Stripe連携を開始・確認する",
