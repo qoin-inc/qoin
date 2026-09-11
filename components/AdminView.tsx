@@ -5328,8 +5328,9 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         <section className="admin-basic-card admin-stripe-status">
           <div className="admin-basic-card-heading">
             <div>
-              <h3>Stripe本番連携</h3>
-              <p>町内会・自治会とStripeの個別契約として、本番モードのConnect登録を行います。el-townは標準連携システムを提供します。</p>
+              <h3>Stripe連携</h3>
+              <p>el-townでは<strong>インターネット上で安全かつ簡単に決済システムを導入できる、世界標準のオンライン決済プラットフォーム</strong>であるStripeを標準採用しています。Stripeは世界で数百万社以上の企業に利用されております。</p>
+              <p><strong>町内会・自治会がStripeと登録し契約することにより、クレジットカード決済、Paypay QRコード決済を利用可能です。</strong></p>
             </div>
             <span className={stripeReadyForFeeBilling ? "admin-stripe-badge ready" : rawStripeAccountId ? "admin-stripe-badge pending" : "admin-stripe-badge"}>
               {stripeRegistrationStatusLabel}

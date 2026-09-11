@@ -105,7 +105,7 @@ export function OnboardingGuide({
       </section>
 
       <article className={`${styles.article} ${desktopLayout ? styles.articleDesktop : ""} space-y-12 px-4 py-12`}>
-        <section className="text-center">
+        {preparation.length > 0 && <section className="text-center">
           <SectionTitle title="始める前に用意するもの" />
           <div className={styles.preparationGrid}>
             {preparation.map((item) => (
@@ -121,7 +121,7 @@ export function OnboardingGuide({
               </div>
             ))}
           </div>
-        </section>
+        </section>}
 
         {steps.length > 0 && (
           <section>

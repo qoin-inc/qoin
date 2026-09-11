@@ -8,7 +8,7 @@ import { ManualAccessGate } from "../_components/ManualAccess";
 
 export const metadata: Metadata = {
   title: "役員管理画面 基本機能編 | el-town オンラインマニュアル",
-  description: "役員管理画面を利用する前に用意するものを確認します。",
+  description: "役員管理画面の各管理機能の操作方法を確認します。",
 };
 
 export default function AdminManualPage() {
@@ -19,14 +19,11 @@ export default function AdminManualPage() {
         audience="町内会・自治会の役員向け"
         audienceIcon="fa-people-roof"
         title="役員管理画面 基本機能編"
-        summary="役員管理画面を利用する前に用意するものを確認します。"
+        summary="役員管理画面の各管理機能の操作方法を確認します。"
         returnHref="/admin"
         returnLabel="管理機能に戻る"
         desktopLayout
-        preparation={[
-          { icon: "fas fa-mobile-screen-button", title: "スマホまたはパソコン", text: "役員アカウントで管理画面を開ける端末" },
-          { icon: "fas fa-address-book", title: "町内会・自治会の情報", text: "町内会・自治会の決算情報や会員名簿、会費、予算や決算情報など" },
-        ]}
+        preparation={[]}
         processTitle="各管理機能の操作説明"
         processSubtitle=""
         steps={[
