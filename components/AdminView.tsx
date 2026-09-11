@@ -7,6 +7,7 @@ import { rateForMonth, usageMonthLabel, shiftUsageMonth, billingIsIssued } from 
 import { BankAccount, bankAccountText } from "@/lib/systemUsageBankAccount";
 import PayPayApplicationPanel from "@/components/PayPayApplicationPanel";
 import { invoiceIssuerHtml } from "@/lib/systemUsageIssuer";
+import type { StripeStatusDisplay } from "@/lib/stripeStatusDisplay";
 
 type AdminViewProps = {
   townId: number;
@@ -1074,6 +1075,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [stripeOnboardingDraft, setStripeOnboardingDraft] = useState<StripeOnboardingDraft>(defaultStripeOnboardingDraft);
   const [stripeProfileLoaded, setStripeProfileLoaded] = useState(false);
   const [stripeRequiredFields, setStripeRequiredFields] = useState<string[]>([]);
+  const [stripeStatus, setStripeStatus] = useState<{ townId: number; display: StripeStatusDisplay } | null>(null);
   const [stripePayoutAccounts, setStripePayoutAccounts] = useState<StripePayoutAccount[]>([]);
   const stripeSyncAttemptRef = useRef("");
   const [publishDraft, setPublishDraft] = useState<PublishDraft>(defaultPublishDraft);
@@ -3903,12 +3905,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const stripeChargesEnabled = basicData.town?.stripe_charges_enabled === true;
   const stripePayoutsEnabled = basicData.town?.stripe_payouts_enabled === true;
   const stripeOnboardingStatus = basicData.town?.stripe_onboarding_status || "";
+  const currentStripeStatus = stripeStatus?.townId === townId ? stripeStatus.display : null;
   const stripeReadyForFeeBilling = Boolean(rawStripeAccountId) && (stripeOnboardingStatus === "active" || (stripeChargesEnabled && stripePayoutsEnabled));
   const stripeRegistrationStatusLabel = !rawStripeAccountId
     ? "Stripe未連係"
-    : stripeReadyForFeeBilling
+    : currentStripeStatus?.label || (stripeChargesEnabled && stripePayoutsEnabled
       ? "Stripe有効"
-      : "Stripe審査中";
+      : "Stripe状態未確認");
   const representativeName = basicData.town?.admin_name || organizationAdmins[0]?.admin_name || "未設定";
   const representativeEmail = basicData.town?.admin_email || organizationAdmins[0]?.admin_email || "未設定";
   const systemBillings = basicData.systemBillings || [];
@@ -4141,6 +4144,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const syncStripeStatus = useCallback(async (showSuccessMessage = true) => {
     setStripeSyncing(true);
     setStripeMessage("");
+    setStripeStatus(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error("管理者ログインを確認できません。再ログインしてください。");
@@ -4177,13 +4181,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         ...(data.requirements?.currentlyDue || []),
       ])));
       setStripeProfileLoaded(true);
+      setStripeStatus({ townId, display: data.statusDisplay });
       if (showSuccessMessage) {
         setStripeMessage(
-          data.status === "active"
-            ? "Stripe連携状態を更新しました。決済受付と入金・振込が有効です。"
-            : data.status === "reviewing"
-              ? "Stripe登録情報は提出済みです。現在、Stripe審査中です。"
-              : "Stripe連携状態を更新しました。Stripe画面で追加情報をご確認ください。",
+          "Stripe連携状態を更新しました。",
         );
       }
       return data;
@@ -5359,7 +5360,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           <p className="admin-basic-note">Stripeへ移る前に、el-townで町内会・自治会情報を確認・入力します。既にStripeへ登録済みの内容は取得して表示し、空欄で上書きしません。</p>
           {rawStripeAccountId && !stripeProfileLoaded && <div className="admin-basic-message">Stripeに登録済みの入力内容を読み込んでいます。</div>}
           <div className="admin-basic-form">
-            <label>
+            <label className="admin-basic-wide admin-stripe-business-type">
               <span>組織区分</span>
               <select value={stripeOnboardingDraft.businessType} onChange={(event) => handleStripeOnboardingDraftChange("businessType", event.target.value as StripeBusinessType)} disabled={Boolean(rawStripeAccountId)}>
                 <option value="non_profit">非営利組織（町内会・自治会・任意組織）</option>
@@ -5367,6 +5368,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 <option value="individual">個人</option>
                 <option value="government_entity">行政機関</option>
               </select>
+              <small className="admin-stripe-business-type-value">選択中：{{ non_profit: "非営利組織（町内会・自治会・任意組織）", company: "法人（株式会社・一般社団法人など）", individual: "個人", government_entity: "行政機関" }[stripeOnboardingDraft.businessType]}</small>
               {rawStripeAccountId && <small>登録済みアカウントの組織区分はStripe画面で確認します。</small>}
             </label>
             <label>
@@ -5411,13 +5413,19 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <i className={`fas ${stripeBusy ? "fa-spinner fa-spin" : "fa-arrow-up-right-from-square"}`} />
             <span>{stripeBusy ? "Stripe画面を準備中" : rawStripeAccountId ? "入力内容を反映して本番登録を再開" : "入力内容を確認して本番Stripe登録を開始"}</span>
           </button>
-          <button type="button" className="admin-stripe-sync" onClick={() => void syncStripeStatus(true)} disabled={stripeBusy || stripeSyncing}>
+          <button type="button" className="admin-stripe-sync" onClick={() => void syncStripeStatus(true).catch(() => {})} disabled={stripeBusy || stripeSyncing}>
             <i className={`fas ${stripeSyncing ? "fa-spinner fa-spin" : "fa-rotate"}`} />
             <span>{stripeSyncing ? "Stripe状態を確認中" : "Stripe状態を更新"}</span>
           </button>
           {stripeMessage && (
             <div className={`admin-basic-message ${stripeMessage.includes("失敗") || stripeMessage.includes("できません") || stripeMessage.includes("入力") || stripeMessage.includes("選択") || stripeMessage.includes("チェック") ? "error" : "success"}`}>
               {stripeMessage}
+            </div>
+          )}
+          {currentStripeStatus && (
+            <div className="admin-basic-message admin-stripe-status-detail" role="status">
+              <strong>{currentStripeStatus.message}</strong>
+              {currentStripeStatus.reasons.length > 0 && <ul>{currentStripeStatus.reasons.map((reason, index) => <li key={index}>{reason}</li>)}</ul>}
             </div>
           )}
         </section>

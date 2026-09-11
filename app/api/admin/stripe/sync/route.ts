@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { stripeStatusDisplay } from '@/lib/stripeStatusDisplay';
 import {
   createStripeClient,
   findRecoverableStripeAccount,
@@ -100,6 +101,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       town: statusPayload,
       status: statusPayload.stripe_onboarding_status,
+      statusDisplay: stripeStatusDisplay(account),
       onboardingProfile: {
         businessType: account.business_type || 'non_profit',
         organizationName: neighborhoodName,
@@ -114,6 +116,7 @@ export async function POST(req: Request) {
         pastDue: account.requirements?.past_due || [],
         eventuallyDue: account.requirements?.eventually_due || [],
         disabledReason: account.requirements?.disabled_reason || '',
+        pendingVerification: account.requirements?.pending_verification || [],
       },
     });
   } catch (err: any) {

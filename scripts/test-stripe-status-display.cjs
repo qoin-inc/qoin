@@ -1,0 +1,33 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const ts = require('typescript');
+const moduleUnderTest = { exports: {} };
+const code = ts.transpileModule(fs.readFileSync('lib/stripeStatusDisplay.ts', 'utf8'), {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+}).outputText;
+vm.runInNewContext(code, { module: moduleUnderTest, exports: moduleUnderTest.exports });
+const { stripeStatusDisplay: display } = moduleUnderTest.exports;
+const submitted = { charges_enabled: false, payouts_enabled: false, details_submitted: true };
+assert.equal(display(submitted).label, 'Stripe状態要確認', 'Submitted does not prove Stripe is reviewing');
+assert.equal(display({ ...submitted, details_submitted: false }).label, 'Stripe登録未完了');
+assert.equal(display({ ...submitted, requirements: { pending_verification: ['company.verification.document'] } }).label, 'Stripe審査中');
+const due = display({ ...submitted, requirements: { currently_due: ['external_account'], past_due: ['external_account'], pending_verification: ['company.verification.document'] } });
+assert.equal(due.label, 'Stripe要対応', 'Missing information takes priority over waiting');
+assert.equal(due.reasons.filter(reason => reason.includes('入金先銀行口座')).length, 1);
+assert.ok(due.reasons.some(reason => reason.includes('本人確認書類')));
+assert.equal(display({ ...submitted, requirements: { disabled_reason: 'under_review' } }).label, 'Stripe審査中');
+assert.equal(display({ ...submitted, requirements: { disabled_reason: 'requirements.past_due' } }).label, 'Stripe要対応');
+assert.equal(display({ ...submitted, requirements: { disabled_reason: 'rejected.other', currently_due: ['external_account'] } }).label, 'Stripe利用制限中');
+const active = { charges_enabled: true, payouts_enabled: true, details_submitted: true };
+assert.equal(display(active).label, 'Stripe有効');
+assert.equal(display({ ...active, requirements: { currently_due: ['business_profile.url'] } }).label, 'Stripe要対応');
+assert.equal(display({ ...active, payouts_enabled: false }).label, 'Stripe状態要確認');
+const error = display({ ...submitted, requirements: { errors: [{ requirement: 'company.verification.document', reason: '書類の文字が読み取れません' }] } });
+assert.equal(error.label, 'Stripe要対応');
+assert.ok(error.reasons.some(reason => reason.includes('書類の文字が読み取れません')));
+const unknown = display({ ...submitted, requirements: { disabled_reason: 'new_reason' } });
+assert.equal(unknown.label, 'Stripe利用制限中');
+assert.ok(unknown.reasons.some(reason => reason.includes('new_reason')));
+assert.equal(display({}).label, 'Stripe状態要確認', 'Unknown data must not imply review');
+console.log('Stripe status display: 14 scenarios passed');
