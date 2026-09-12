@@ -5362,8 +5362,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           </dl>
         </section>
         <section className="admin-basic-card accent admin-stripe-onboarding">
-          <h3>{rawStripeAccountId ? "本番登録を再開・確認" : "本番Stripe登録を開始"}</h3>
-          <p className="admin-basic-note">Stripeへ移る前に、el-townで町内会・自治会情報を確認・入力します。既にStripeへ登録済みの内容は取得して表示し、空欄で上書きしません。</p>
+          <h3>{rawStripeAccountId ? "本番登録を再開・確認" : "Stripe登録を開始"}</h3>
+          <p className="admin-basic-note">以下の画面からStripeの設定項目を入力します。既にStripeへ登録済みの内容は取得して表示し上書きはしません。Stripeの設定項目入力後はStripe画面から入力してください。</p>
           {rawStripeAccountId && !stripeProfileLoaded && <div className="admin-basic-message">Stripeに登録済みの入力内容を読み込んでいます。</div>}
           <div className="admin-basic-form">
             <label className="admin-basic-wide admin-stripe-business-type">
@@ -5417,7 +5417,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           </div>
           <button type="button" className="admin-stripe-primary" onClick={handleStripeOnboardingStart} disabled={stripeBusy || stripeSyncing || (Boolean(rawStripeAccountId) && !stripeProfileLoaded)}>
             <i className={`fas ${stripeBusy ? "fa-spinner fa-spin" : "fa-arrow-up-right-from-square"}`} />
-            <span>{stripeBusy ? "Stripe画面を準備中" : rawStripeAccountId ? "入力内容を反映して本番登録を再開" : "入力内容を確認して本番Stripe登録を開始"}</span>
+            <span>{stripeBusy ? "Stripe画面を準備中" : rawStripeAccountId ? "入力内容を反映して本番登録を再開" : "入力内容を確認してStripe登録を開始"}</span>
           </button>
           <button type="button" className="admin-stripe-sync" onClick={() => void syncStripeStatus(true).catch(() => {})} disabled={stripeBusy || stripeSyncing}>
             <i className={`fas ${stripeSyncing ? "fa-spinner fa-spin" : "fa-rotate"}`} />

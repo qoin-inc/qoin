@@ -325,8 +325,8 @@ export function StripeDesktopPreview({
               </dl>
             </section>
             <section className={`${styles.stripeScreenPanel} ${focus === "registration" || focus === "start" ? focusClass : ""}`}>
-              <h4>本番Stripe登録を開始</h4>
-              <p>Stripeへ移る前に、el-townで町内会・自治会情報を確認・入力します。</p>
+              <h4>Stripe登録を開始</h4>
+              <p>以下の画面からStripeの設定項目を入力します。既にStripeへ登録済みの内容は取得して表示し上書きはしません。Stripeの設定項目入力後はStripe画面から入力してください。</p>
               <div className={styles.stripeFieldGrid}>
                 <label><span>組織区分</span><b>非営利組織（町内会）⌄</b></label>
                 <label><span>Stripeへ登録する町内会・自治会名</span><b>エルタウン町内会</b></label>
@@ -336,7 +336,7 @@ export function StripeDesktopPreview({
               </div>
               <label className={styles.stripeServiceField}><span>サービス内容</span><b>町内会費・自治会費のオンライン受付</b></label>
               <div className={styles.stripeChecks}><span>□ 組織区分を確認しました</span><span>□ 代表者の本人確認書類を準備しました</span><span>□ 町内会・自治会が管理する入金先口座を準備しました</span></div>
-              <button className={`${styles.stripePrimaryButton} ${focus === "start" ? styles.stripeButtonFocus : ""}`} type="button">入力内容を確認して本番Stripe登録を開始</button>
+              <button className={`${styles.stripePrimaryButton} ${focus === "start" ? styles.stripeButtonFocus : ""}`} type="button">入力内容を確認してStripe登録を開始</button>
               <button className={styles.stripeSecondaryButton} type="button">Stripe状態を更新</button>
             </section>
           </div>
