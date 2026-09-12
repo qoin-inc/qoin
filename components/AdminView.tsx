@@ -4027,7 +4027,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       <div class="grand"><span>${isReceipt ? "領収額" : "請求額"}</span><strong>${yen(Number(billing.total_amount || 0))}</strong></div>
     </div>
     ${bankNote}
-    ${isReceipt ? `<p class="note">支払方法：${billing.payment_method === "bank_transfer" ? billing.bank_account_snapshot?.source === "stripe" ? "Stripe銀行振込" : "銀行振込（旧方式）" : "Stripeカード決済"} ／ 入金日：${dateText}</p>` : ""}
+    ${isReceipt ? `<p class="note">支払方法：${billing.payment_method === "bank_transfer" ? billing.bank_account_snapshot?.source === "stripe" ? "Stripe銀行振込" : "銀行振込" : "Stripeカード決済"} ／ 入金日：${dateText}</p>` : ""}
     <p class="note">${isReceipt ? "上記金額を正に領収いたしました。" : billing.payment_method === "bank_transfer" ? "記載の振込先・期限をご確認のうえお振り込みください。入金確認後、領収書を出力できます。" : "上記金額をStripeにてお支払いください。入金確認後、領収書を出力できます。"}</p>
   </div>
 </body>
