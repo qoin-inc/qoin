@@ -10,7 +10,7 @@ import {
 import { ManualAccessGate } from "../_components/ManualAccess";
 
 export const metadata: Metadata = {
-  title: "Stripe連携 操作マニュアル | el-town オンラインマニュアル",
+  title: "Stripe連携の登録のし方 | el-town オンラインマニュアル",
   description: "最新のPC画面で、Stripe本番登録、カード・PayPay決済、会費の入金確認までを説明します。",
 };
 
@@ -21,19 +21,14 @@ export default function StripeManualPage() {
         theme="purple"
         audience="代表役員・会計担当者向け"
         audienceIcon="fa-credit-card"
-        title="Stripe連携 操作マニュアル"
-        summary="最新のPC画面を使い、Connect本番登録、本人確認、入金先口座、会費設定、任意のPayPay申請、会員の支払い、運用後の確認までを順番に説明します。Stripe登録は途中保存されるため、準備後に再開できます。"
-        time="登録約25〜35分＋Stripe・el-town運営による確認時間"
+        title="Stripe連携の登録のし方"
+        summary=""
         processTitle="本番登録から会費の入金確認まで"
         processSubtitle="全ステップをPC画面に統一し、重要な個人情報はStripeの画面だけに入力して進めます"
         returnHref="/admin"
         returnLabel="町内会の管理画面に戻る"
         desktopLayout
-        preparation={[
-          { icon: "fas fa-file-lines", title: "町内会・自治会の確認資料", text: "規約・会則、正式名称、組織区分、Webサイトや活動内容" },
-          { icon: "fas fa-id-card", title: "代表者の本人確認書類", text: "Stripe画面に表示される有効な書類を原本で準備" },
-          { icon: "fas fa-building-columns", title: "町内会・自治会が管理する口座", text: "金融機関名、支店、口座番号、名義を確認できるもの" },
-        ]}
+        preparation={[]}
         steps={[
           {
             title: "Stripe連携でできることを確認する",

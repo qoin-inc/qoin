@@ -110,15 +110,11 @@ export default function AdminManualPage() {
             visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260912-stripe-bank.jpg" alt="システム利用料のお支払方法と月別請求一覧の画面例" caption="画面例（サンプルデータ）" width={1264} height={859} crop={{ left: 105, top: 8, width: 635, height: 535 }} />,
           },
           {
-            title: "Stripe連携を開始・確認する",
-            text: "オンライン会費を受け取る場合に使います。組織区分、連絡先、Webサイト、サービス内容を入力し、本人確認書類と町内会・自治会が管理する口座を準備してStripeの登録画面へ進みます。戻った後は「Stripe状態を更新」を押し、決済受付と入金・振込が有効か確認します。",
-            points: [
-              "代表者情報、本人確認書類、銀行口座はStripeの安全な画面へ直接入力します。",
-              "本番登録が完了してから、会費管理でStripeカード決済・Stripe銀行振込を選択して保存します。銀行振込は追加の利用審査が必要な場合があります。",
-              "追加入力が表示された場合はStripe画面で不足項目を完了します。",
-            ],
-            caution: "本人確認書類、銀行口座、カード情報、パスワードをel-townの問い合わせやAIヘルプへ送らないでください。",
-            link: { href: "/manual/stripe", label: "Stripe連携の詳しい別冊マニュアルを開く" },
+            title: "Stripe連携",
+            subtitle: "会費のオンライン決済登録",
+            text: "会員の年会費をクレジットカード決済、銀行振込、Paypay(オプション）にて納入できる様にStripeと契約するため登録を行います。組織区分、連絡先、Webサイト、サービス内容を入力し、本人確認書類と町内会・自治会が管理する口座を準備してStripeの登録を行います。Webサイトをお持ちでなければel-town.jpをご入力下さい",
+            points: ["詳しくは「Stripe連携の登録のし方」にてご確認下さい"],
+            link: { href: "/manual/stripe", label: "Stripe連携の登録のし方" },
             visual: <StripeDesktopPreview focus="registration" caption="" />,
           },
         ]}
