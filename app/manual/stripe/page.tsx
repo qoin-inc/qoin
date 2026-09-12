@@ -19,7 +19,7 @@ export default function StripeManualPage() {
     <ManualAccessGate>
       <OnboardingGuide
         theme="purple"
-        audience="代表役員・会計担当者向け"
+        audience="町内会・自治会の役員向け"
         audienceIcon="fa-credit-card"
         title="Stripe連携の登録のし方"
         summary=""

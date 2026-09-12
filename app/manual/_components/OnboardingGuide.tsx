@@ -365,9 +365,9 @@ export function StripeFlowDesktopPreview({ caption }: { caption: string }) {
             <i className="fas fa-arrow-right" />
             <div className={styles.stripeFlowStripe}><i className="fab fa-stripe-s" /><strong>Stripe</strong><span>決済・本人確認・振込</span></div>
             <i className="fas fa-arrow-right" />
-            <div><i className="fas fa-building-columns" /><strong>町内会・自治会の口座</strong><span>売上を受け取る</span></div>
+            <div><i className="fas fa-building-columns" /><strong>町内会・自治会の口座</strong><span>会費を受け取る</span></div>
           </div>
-          <div className={styles.stripeFlowChecks}><span><i className="fas fa-check" /> 1つの町内会・自治会につき1 Connect account</span><span><i className="fas fa-check" /> 決済受付と入金／振込を確認</span><span><i className="fas fa-check" /> 会費一覧へ自動反映</span></div>
+          <div className={styles.stripeFlowChecks}><span><i className="fas fa-check" /> 町内会・自治会とStripeとの契約</span><span><i className="fas fa-check" /> 決済と入金／振込を可能</span><span><i className="fas fa-check" /> 会費一覧へ自動反映</span></div>
         </div>
       </div>
       <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
