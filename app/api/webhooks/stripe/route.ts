@@ -324,7 +324,9 @@ export async function POST(req: Request) {
 
   // account.updated イベントを受け取る
   if (event.type === 'account.updated') {
-    const account = event.data.object as Stripe.Account;
+    // Dashboard may offer only newer webhook versions. Read the resource using
+    // this client's pinned API version instead of depending on the event snapshot.
+    const account = await stripe.accounts.retrieve((event.data.object as Stripe.Account).id);
     const active = Boolean(account.charges_enabled && account.payouts_enabled);
     const mode = event.livemode ? 'live' : 'test';
 
@@ -367,7 +369,11 @@ export async function POST(req: Request) {
   }
 
   if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
-    const session = event.data.object as Stripe.Checkout.Session;
+    const session = await stripe.checkout.sessions.retrieve(
+      (event.data.object as Stripe.Checkout.Session).id,
+      {},
+      event.account ? { stripeAccount: event.account } : undefined,
+    );
     const paymentSource = session.metadata?.payment_source;
     const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id || null;
     const systemUsageBillingId = session.metadata?.system_usage_billing_id;
