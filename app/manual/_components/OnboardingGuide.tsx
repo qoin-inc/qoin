@@ -241,6 +241,7 @@ export function DesktopScreenPreview({
   width = 1265,
   height = 712,
   scroll = false,
+  crop,
   hotspots = [],
 }: {
   src: string;
@@ -249,17 +250,19 @@ export function DesktopScreenPreview({
   width?: number;
   height?: number;
   scroll?: boolean;
+  crop?: { left: number; top: number; width: number; height: number };
   hotspots?: Array<{ left: string; top: string; label: string; delay?: number }>;
 }) {
   return (
     <figure className={styles.desktopScreenFigure}>
-      <div className={`${styles.desktopScreenFrame} ${scroll ? styles.desktopScreenScroll : ""}`}>
+      <div className={`${styles.desktopScreenFrame} ${scroll ? styles.desktopScreenScroll : ""}`} style={crop ? { aspectRatio: `${crop.width} / ${crop.height}` } : undefined}>
         <Image
           src={src}
           alt={alt}
           width={width}
           height={height}
           className={scroll ? styles.desktopScreenImageScroll : styles.desktopScreenImage}
+          style={crop ? { position: "absolute", width: `${width / crop.width * 100}%`, maxWidth: "none", height: "auto", left: `${-crop.left / crop.width * 100}%`, top: `${-crop.top / crop.height * 100}%` } : undefined}
         />
         {hotspots.map((hotspot) => (
           <span

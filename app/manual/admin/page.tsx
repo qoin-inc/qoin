@@ -96,7 +96,7 @@ export default function AdminManualPage() {
                 "確定解除後は、役員が会費データを修正できます。",
               ],
             },
-            visual: <><DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-payment-methods-20260912.jpg" alt="手集金・Stripeカード決済・Stripe銀行振込を選ぶ設定画面" caption="支払方法の設定（サンプルデータ）" width={1280} height={720} /><DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management-20260906.png" alt="現在の会費管理画面：年度確定、年度集計、会費請求設定、会費一覧" caption="" width={1177} height={1337} /></>,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management-20260906.png" alt="現在の会費管理画面：年度確定、年度集計、会費請求設定、会費一覧" caption="" width={1177} height={1337} />,
           },
           {
             title: "システム利用料",
@@ -109,7 +109,7 @@ export default function AdminManualPage() {
               "発行済みの旧直接振込の請求書は、元の振込先のままです。新しいStripe口座へ振り替えて支払わないでください。",
               "el-town利用接続数は会員管理の接続数から確認できます。",
             ],
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260912-stripe-bank.jpg" alt="システム利用料のお支払方法と月別請求一覧の画面例" caption="画面例（サンプルデータ）" width={1264} height={859} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260912-stripe-bank.jpg" alt="システム利用料のお支払方法と月別請求一覧の画面例" caption="画面例（サンプルデータ）" width={1264} height={859} crop={{ left: 105, top: 8, width: 635, height: 535 }} />,
           },
           {
             title: "Stripe連携を開始・確認する",
