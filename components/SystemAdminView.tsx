@@ -6,7 +6,7 @@ import SystemUsageRateHistory from "@/components/SystemUsageRateHistory";
 import SystemUsageMonthlyReport from "@/components/SystemUsageMonthlyReport";
 import { rateForMonth, usageAmounts, billingIsIssued } from "@/lib/systemUsageRates";
 import AdminView from "@/components/AdminView";
-import SystemUsageBankAccountPanel from "@/components/SystemUsageBankAccountPanel";
+import SystemUsageIssuerPanel from "@/components/SystemUsageIssuerPanel";
 import PayPayApprovalPanel from "@/components/PayPayApprovalPanel";
 
 type Tab = "towns" | "feeStandards" | "billing" | "paypay";
@@ -399,7 +399,7 @@ export default function SystemAdminView() {
       {tab === "paypay" && <PayPayApprovalPanel />}
 
       {tab === "billing" && <>
-        <SystemUsageBankAccountPanel />
+        <SystemUsageIssuerPanel />
         <SystemUsageRateHistory rates={rates} initial={rates[0] || settings[0]} onSaved={load} />
         <SystemUsageMonthlyReport month={billingMonth} rows={billingRows} loading={loading} busy={busy} enabled={billingEnabled} manualEnabled={manualBillingEnabled} error={rateError} onMonth={setBillingMonth} onRun={mode => void runSystemUsageBilling(mode)} onPaid={bill => void confirmBankPayment(bill)} />
       </>}    </main>
