@@ -864,8 +864,12 @@ export default function ResidentView({ townId, townName, residentName, userId, r
     calendarSelectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [selectedEventDate, selectedLiveCalendarDate]);
 
+  const [feeBankAccount, setFeeBankAccount] = useState<any>(null);
+  const [feeBankInstructionsUrl, setFeeBankInstructionsUrl] = useState("");
+  useEffect(() => { setFeeBankAccount(null); setFeeBankInstructionsUrl(""); }, [townId]);
   const handleOnlinePayment = async (fee: FeeRecord) => {
     setFeeMessage("");
+    setFeeBankAccount(null); setFeeBankInstructionsUrl("");
     if (!stripeAccountId || !stripeReady) {
       setFeeMessage("この町内会・自治会はStripe本番連携の確認中です。役員からの案内をお待ちください。");
       return;
@@ -891,7 +895,9 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         }),
       });
       const data = await response.json();
-      if (!response.ok || !data.url) throw new Error(data.error || "決済画面を作成できませんでした。");
+      if (!response.ok) throw new Error(data.error || "決済画面を作成できませんでした。");
+      if (data.message) { setFeeBankAccount(data.bankAccount || null); setFeeBankInstructionsUrl(data.instructionsUrl || ""); setFeeMessage(data.message); return; }
+      if (!data.url) throw new Error(data.message || "決済状況を確認できませんでした。");
       window.location.href = data.url;
     } catch (error: any) {
       setFeeMessage(error?.message || "オンライン支払いを開始できませんでした。");
@@ -2016,20 +2022,12 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                         <span><strong>手集金</strong><small>役員からの集金案内をご確認ください。</small></span>
                       </div>
                     )}
-                    {feeSetting?.bank_transfer_enabled && (
-                      <div className="el-fee-payment-method">
-                        <i className="fas fa-building-columns" />
-                        <span>
-                          <strong>口座振込</strong>
-                          <small>{feeSetting.bank_name} {feeSetting.bank_branch_name}／{feeSetting.bank_account_type === "checking" ? "当座" : "普通"} {feeSetting.bank_account_number}</small>
-                          <small>口座名義：{feeSetting.bank_account_holder}</small>
-                        </span>
-                      </div>
-                    )}
-                    {(feeSetting?.stripe_card_enabled !== false || feeSetting?.stripe_paypay_enabled) && (stripeAccountId && stripeReady ? (
+                    {(feeSetting?.stripe_card_enabled !== false || feeSetting?.stripe_paypay_enabled || feeSetting?.stripe_bank_transfer_enabled) && (stripeAccountId && stripeReady ? (
                       <button className="el-primary-action" onClick={() => handleOnlinePayment(latestFee)}>
                         <i className="fas fa-credit-card" />
-                        {feeSetting?.stripe_paypay_enabled && feeSetting?.stripe_card_enabled !== false
+                        {feeSetting?.stripe_bank_transfer_enabled
+                          ? "Stripeで支払う（銀行振込・利用可能な決済方法）"
+                          : feeSetting?.stripe_paypay_enabled && feeSetting?.stripe_card_enabled !== false
                           ? "オンラインで支払う（カード・PayPay）"
                           : feeSetting?.stripe_paypay_enabled ? "オンラインで支払う（PayPay）" : "オンラインで支払う（カード）"}
                       </button>
@@ -2044,8 +2042,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                         </Link>
                       </>
                     )}
-                    {feeSetting?.bank_transfer_enabled && (
-                      <p className="el-fee-payment-caution">口座振込の着金確認後、役員が入金状況を反映します。</p>
+                    {feeSetting?.stripe_bank_transfer_enabled && (
+                      <p className="el-fee-payment-caution">銀行振込はStripeが案内する会員世帯専用口座をご利用ください。入金確定後に自動反映されます。不足額がある場合は入金完了にならず、超過分はStripeの残高として管理されます。</p>
                     )}
                   </div>
                 ) : (
@@ -2057,6 +2055,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                   </Link>
                 )}
                 {feeMessage && <div className="form-alert">{feeMessage}</div>}
+                {feeBankAccount && <div className="el-fee-payment-note">Stripe振込先：{feeBankAccount.bank_name} {feeBankAccount.bank_branch_name} ／ {feeBankAccount.bank_account_type === "checking" ? "当座" : "普通"} {feeBankAccount.bank_account_number}<br />口座名義：{feeBankAccount.bank_account_holder}</div>}
+                {feeBankInstructionsUrl && <a href={feeBankInstructionsUrl} target="_blank" rel="noopener noreferrer">Stripeで振込先・残額を確認する</a>}
               </div>
             ) : (
               <div className="el-status-card accent">

@@ -357,7 +357,7 @@ export function StripeFlowDesktopPreview({ caption }: { caption: string }) {
         <div className={styles.stripeFlowScreen}>
           <div className={styles.stripeFlowTitle}><small>Stripe Connect</small><strong>オンライン会費の流れ</strong><span>カード情報はel-townへ保存されません</span></div>
           <div className={styles.stripeFlowNodes}>
-            <div><i className="fas fa-users" /><strong>会員</strong><span>カード・PayPayで支払う</span></div>
+            <div><i className="fas fa-users" /><strong>会員</strong><span>カード・銀行振込・PayPayで支払う</span></div>
             <i className="fas fa-arrow-right" />
             <div className={styles.stripeFlowStripe}><i className="fab fa-stripe-s" /><strong>Stripe</strong><span>決済・本人確認・振込</span></div>
             <i className="fas fa-arrow-right" />
@@ -416,6 +416,7 @@ export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
           <header><small>基本機能</small><strong>会費管理</strong><span>会員への会費請求登録</span></header>
           <nav>{['基本情報', '会員管理', '役員管理', '会費管理', 'システム利用料', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
           <div className={`${styles.feeDesktopGrid} ${styles.feeDesktopCurrent}`}>
+            <section><h4>会費の支払方法</h4><div className={styles.feeDesktopMethods}><b>☑ 手集金</b><b>☑ Stripeカード決済</b><b>☑ Stripe銀行振込（自動消込）</b></div><div className={styles.feeDesktopActions}><button type="button">支払方法を保存</button></div><small>銀行振込はStripe審査完了後に利用できます。振込先の手入力は不要です。</small></section>
             <section><h4>未確定　2026年度の会費データ</h4><small>年度を確定すると、会費情報とは独立して保存され変更不可になります。</small><div className={styles.feeDesktopActions}><button type="button">年度を確定</button></div></section>
             <section><h4>2026年度 集計</h4><div className={styles.feeDesktopFields}><span>請求額　5,000円</span><span>入金額合計　0円</span><span>手集金　0円</span><span>Stripe入金　0円</span><span>未入金額　5,000円</span><span>未納/一部　1</span></div><small>手集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</small></section>
             <section className={styles.pcFocusPanel}><h4>会費請求設定　Stripe有効</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span></div><div className={styles.feeDesktopMethods}><b>全会員世帯　／　会費一覧で選択　／　請求未設定</b></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div></section>
@@ -434,7 +435,7 @@ export function MemberPaymentDesktopPreview({ caption }: { caption: string }) {
         <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / 会員画面 / 会費</span></div>
         <div className={styles.memberPaymentDesktop}>
           <aside><strong>エルタウン町内会</strong><span>回覧板</span><span className={styles.pcStepActive}>会費</span><span>Live</span><span>設定</span></aside>
-          <section><small>会費</small><h4>2026年度</h4><p>この会費は世帯共通です。世帯主または家族が支払うと全員へ反映されます。</p><div className={styles.memberFeeSummary}><span><small>請求額</small><strong>5,000円</strong></span><span><small>入金額</small><strong>0円</strong></span><span><small>状態</small><strong>未納</strong></span></div><div className={styles.memberPaymentMethods}><span><i className="fas fa-hand-holding-yen" /> 手集金</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> オンラインで支払う（カード・PayPay）</button><small>PayPayはStripeの安全な決済画面で選択できます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div></section>
+          <section><small>会費</small><h4>2026年度</h4><p>この会費は世帯共通です。世帯主または家族が支払うと全員へ反映されます。</p><div className={styles.memberFeeSummary}><span><small>請求額</small><strong>5,000円</strong></span><span><small>入金額</small><strong>0円</strong></span><span><small>状態</small><strong>未納</strong></span></div><div className={styles.memberPaymentMethods}><span><i className="fas fa-hand-holding-yen" /> 手集金</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> Stripeで支払う（カード・銀行振込・PayPay）</button><small>利用可能な方法をStripeの決済画面で選びます。銀行振込は専用口座へ振り込み、入金確定後に自動反映されます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div></section>
         </div>
       </div>
       <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>

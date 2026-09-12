@@ -270,7 +270,7 @@ export default function SystemAdminView() {
   const runSystemUsageBilling = async (mode: "snapshot" | "invoice") => {
     const label = mode === "snapshot" ? "現在の接続数を確定" : "請求書を発行";
     if (mode === "invoice") {
-      const typed = window.prompt(`${billingMonth}利用分の${billingEnabled ? "本番" : "銀行口座振込の"}請求書を発行します。${billingEnabled ? "" : "カード決済は行いません。"}確認のため「${billingMonth}」と入力してください。`);
+      const typed = window.prompt(`${billingMonth}利用分の${billingEnabled ? "本番" : "Stripe銀行振込の"}請求書を発行します。${billingEnabled ? "" : "カード決済は行いません。"}確認のため「${billingMonth}」と入力してください。`);
       if (typed !== billingMonth) return;
     } else if (!window.confirm(`${billingMonth}利用分として未確定の団体の現在の接続数と対象月の単価を保存します。保存済み実績は保持します。よろしいですか？`)) return;
     setBusy(true);

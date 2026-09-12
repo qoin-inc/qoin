@@ -111,6 +111,10 @@ const saveSystemUsageCard = async (
 const syncSystemUsageInvoice = async (supabase: SupabaseClient, invoice: Stripe.Invoice, eventType: string) => {
   const billingId = invoice.metadata?.system_usage_billing_id;
   if (!billingId || invoice.metadata?.payment_source !== 'system_usage_billings') return;
+  const current = await supabase.from('system_usage_billings').select('*').eq('id', billingId).single();
+  if (current.error) throw current.error;
+  const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+  if (!current.data || invoice.currency !== 'jpy' || String(current.data.neighborhood_id) !== invoice.metadata?.neighborhood_id || (current.data.stripe_customer_id && current.data.stripe_customer_id !== customerId) || (current.data.stripe_invoice_id && current.data.stripe_invoice_id !== invoice.id)) throw new Error('Invoice does not match the system usage billing.');
   const invoiceAny = invoice as any;
   const paidAtUnix = invoice.status_transitions?.paid_at;
   const paidAt = paidAtUnix ? new Date(paidAtUnix * 1000).toISOString() : null;
@@ -118,9 +122,10 @@ const syncSystemUsageInvoice = async (supabase: SupabaseClient, invoice: Stripe.
     ? invoiceAny.payment_intent
     : invoiceAny.payment_intent?.id || null;
   const billingMonth = invoice.metadata?.billing_month || '';
-  const status = eventType === 'invoice.paid'
+  const isPaid = invoice.status === 'paid';
+  const status = isPaid
     ? 'paid'
-    : eventType === 'invoice.payment_failed'
+    : invoice.status === 'void' ? 'cancelled' : eventType === 'invoice.payment_failed'
       ? 'payment_failed'
       : eventType === 'invoice.payment_action_required'
         ? 'payment_action_required'
@@ -139,11 +144,11 @@ const syncSystemUsageInvoice = async (supabase: SupabaseClient, invoice: Stripe.
     updated_at: new Date().toISOString(),
   };
   if (eventType === 'invoice.finalized') payload.invoice_issued_at = new Date().toISOString();
-  if (eventType === 'invoice.paid') {
+  if (isPaid) {
     payload.paid_at = paidAt || new Date().toISOString();
     payload.receipt_number = `RCPT-${String(billingMonth).replace('-', '')}-${billingId}`;
   }
-  if (eventType === 'invoice.payment_failed' || eventType === 'invoice.payment_action_required') {
+  if (!isPaid && (eventType === 'invoice.payment_failed' || eventType === 'invoice.payment_action_required')) {
     payload.stripe_last_error = eventType === 'invoice.payment_failed'
       ? 'Stripeカードの自動決済に失敗しました。'
       : 'カード決済に追加認証が必要です。';
@@ -361,13 +366,13 @@ export async function POST(req: Request) {
     }
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const session = event.data.object as Stripe.Checkout.Session;
     const paymentSource = session.metadata?.payment_source;
     const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id || null;
     const systemUsageBillingId = session.metadata?.system_usage_billing_id;
 
-    if (paymentSource === 'system_usage_card_setup') {
+    if (paymentSource === 'system_usage_card_setup' && !event.account) {
       const neighborhoodId = session.metadata?.neighborhood_id || '';
       const setupIntentId = typeof session.setup_intent === 'string' ? session.setup_intent : session.setup_intent?.id || '';
       if (neighborhoodId && setupIntentId) {
@@ -375,7 +380,10 @@ export async function POST(req: Request) {
       }
     }
 
+    if (session.mode === 'payment' && session.payment_status !== 'paid') return NextResponse.json({ received: true, awaitingPayment: true });
+
     if (paymentSource === 'system_usage_billings' && systemUsageBillingId) {
+      if (event.account) return NextResponse.json({ error: 'Unexpected connected account for system payment.' }, { status: 400 });
       const paidAt = new Date().toISOString();
       const { data: currentBilling } = await supabase
         .from('system_usage_billings')
@@ -399,13 +407,18 @@ export async function POST(req: Request) {
 
     const feeRecordId = session.metadata?.fee_record_id;
 
-    if (paymentSource !== 'system_usage_billings' && feeRecordId) {
+    if (paymentSource === 'fee_records' && feeRecordId) {
       const amountPaid = session.amount_total || 0;
       const { data: currentFee } = await supabase
         .from('fee_records')
         .select('*')
         .eq('id', feeRecordId)
         .maybeSingle();
+
+      if (!currentFee || !paymentIntentId || session.currency !== 'jpy') return NextResponse.json({ error: 'Invalid fee payment.' }, { status: 400 });
+      const owner = await supabase.from('neighborhoods').select('stripe_account_id').eq('id', currentFee.neighborhood_id).single();
+      if (owner.error) throw owner.error;
+      if (!event.account || owner.data?.stripe_account_id !== event.account || String(session.metadata?.neighborhood_id) !== String(currentFee.neighborhood_id)) return NextResponse.json({ error: 'Payment account does not match the fee.' }, { status: 400 });
 
       const feeFiscalYear = Number(currentFee?.fiscal_year ?? currentFee?.year);
       const closureResult = currentFee?.neighborhood_id && Number.isFinite(feeFiscalYear)
@@ -420,6 +433,13 @@ export async function POST(req: Request) {
         throw closureResult.error;
       }
       if (closureResult.data?.id) {
+        const prior = await supabase.from('fee_stripe_payments').select('fee_record_id,amount').eq('stripe_payment_intent_id', paymentIntentId).maybeSingle();
+        if (prior.error) throw prior.error;
+        if (prior.data) {
+          if (prior.data.fee_record_id !== String(feeRecordId) || Number(prior.data.amount) !== amountPaid) throw new Error('Payment identity mismatch.');
+          return NextResponse.json({ received: true, alreadyRecorded: true });
+        }
+        if (currentFee.stripe_payment_intent_id === paymentIntentId) return NextResponse.json({ received: true, alreadyRecorded: true });
         const latePayment = await supabase.from('fee_year_post_lock_payments').upsert({
           closure_id: closureResult.data.id,
           neighborhood_id: currentFee.neighborhood_id,
@@ -433,31 +453,20 @@ export async function POST(req: Request) {
             payment_status: session.payment_status,
             payment_source: session.metadata?.payment_source || null,
           },
-        }, { onConflict: 'stripe_checkout_session_id' });
+        }, { onConflict: 'stripe_checkout_session_id', ignoreDuplicates: true });
         if (latePayment.error) throw latePayment.error;
         return NextResponse.json({ received: true, finalizedFeePaymentStored: true });
       }
 
       const paidAt = new Date().toISOString();
-      const alreadyRecorded = Boolean(paymentIntentId && currentFee?.stripe_payment_intent_id === paymentIntentId);
-      const cashPaid = Number(currentFee?.paid_amount_cash || 0);
-      const stripePaid = Number(currentFee?.paid_amount_stripe || 0) + (alreadyRecorded ? 0 : amountPaid);
-      const totalPaid = cashPaid + stripePaid;
-      const billingAmount = Number(currentFee?.expected_amount || currentFee?.billing_amount || currentFee?.amount || amountPaid);
       const stripeFee = paymentIntentId ? await getStripeFeeDetails(stripe, event, paymentIntentId) : null;
 
+      const recorded = await supabase.rpc('record_stripe_fee_payment', { p_fee_id: String(feeRecordId), p_payment_intent: paymentIntentId, p_amount: amountPaid });
+      if (recorded.error) throw recorded.error;
       await updateFeeRecordWithFallback(supabase, feeRecordId, {
-        paid_amount_cash: cashPaid,
-        paid_amount_stripe: stripePaid,
-        paid_amount: totalPaid,
-        payment_method: 'stripe',
-        last_payment_method: 'stripe',
-        status: totalPaid >= billingAmount ? 'paid' : 'partial',
-        stripe_payment_intent_id: paymentIntentId,
         stripe_balance_transaction_id: stripeFee?.id || null,
         stripe_fee_amount: stripeFee?.fee || 0,
         stripe_net_amount: stripeFee?.net ?? amountPaid,
-        paid_at: currentFee?.paid_at || paidAt,
       });
 
       if (stripeFee && paymentIntentId) {
@@ -468,7 +477,7 @@ export async function POST(req: Request) {
 
   if (event.type === 'setup_intent.succeeded') {
     const setupIntent = event.data.object as Stripe.SetupIntent;
-    if (setupIntent.metadata?.payment_source === 'system_usage_card_setup' && setupIntent.metadata?.neighborhood_id) {
+    if (!event.account && setupIntent.metadata?.payment_source === 'system_usage_card_setup' && setupIntent.metadata?.neighborhood_id) {
       await saveSystemUsageCard(stripe, supabase, setupIntent.id, setupIntent.metadata.neighborhood_id);
     }
   }
@@ -480,7 +489,11 @@ export async function POST(req: Request) {
     'invoice.payment_action_required',
     'invoice.voided',
   ].includes(event.type)) {
-    await syncSystemUsageInvoice(supabase, event.data.object as Stripe.Invoice, event.type);
+    const notifiedInvoice = event.data.object as Stripe.Invoice;
+    if (!event.account && notifiedInvoice.metadata?.payment_source === 'system_usage_billings') {
+      const currentInvoice = await stripe.invoices.retrieve(notifiedInvoice.id);
+      await syncSystemUsageInvoice(supabase, currentInvoice, event.type);
+    }
   }
 
   return NextResponse.json({ received: true });

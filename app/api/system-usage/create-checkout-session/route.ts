@@ -101,6 +101,14 @@ const createCheckoutResponse = async (
     apiVersion: "2025-02-24.acacia" as any,
   });
 
+  if (billing.stripe_invoice_id) {
+    const invoice = await stripe.invoices.retrieve(billing.stripe_invoice_id);
+    if (invoice.status === "paid" || invoice.status === "void" || !invoice.hosted_invoice_url) {
+      return NextResponse.json({ error: "請求の状態が変更されています。画面を再読み込みしてください。" }, { status: 409 });
+    }
+    return NextResponse.json({ url: invoice.hosted_invoice_url });
+  }
+
   const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const billingMonth = String(billing.billing_month || body.billingMonth || "");
   const townName = String(body.townName || "町内会・自治会");

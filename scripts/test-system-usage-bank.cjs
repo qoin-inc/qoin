@@ -35,12 +35,21 @@ function fixture(withAccount = true) {
     }; return q;
   } };
   let stripeCalls = 0;
+  const invoices = new Map(); const calls=[];
+  const stripe={
+    customers:{create:async()=>({id:'cus_town1'}),update:async id=>({id}),createFundingInstructions:async()=>({financial_addresses:[{type:'zengin',zengin:{bank_name:account.bank_name,bank_code:account.bank_code,branch_name:account.bank_branch_name,branch_code:account.bank_branch_code,account_type:'futsu',account_number:account.bank_account_number,account_holder_name:account.bank_account_holder}}]})},
+    taxRates:{list:async()=>({data:[{id:'tx_1',percentage:10,metadata:{el_town_system_usage:'true'}}]})},
+    invoices:{create:async params=>{calls.push(params);const invoice={id:'in_1',status:'draft',due_date:params.due_date};invoices.set(invoice.id,invoice);return invoice;},retrieve:async id=>invoices.get(id),listLineItems:async()=>({data:[]}),finalizeInvoice:async id=>{const invoice=invoices.get(id);Object.assign(invoice,{status:'open',number:'SYS-001',hosted_invoice_url:'https://invoice.stripe.com/test',amount_paid:0});return invoice;}},
+    invoiceItems:{create:async()=>({id:'ii_1'})},
+  };
+
   const server = load('lib/systemUsageBillingServer.ts', {
+    '@/lib/stripeBankTransfer': load('lib/stripeBankTransfer.ts'),
     '@/lib/systemUsageBankAccount': bank,
     '@/lib/systemUsageRates': rates,
-    '@/lib/stripeConnectServer': { createWebhookSupabaseClient: () => client, createStripeClient: () => { stripeCalls++; throw new Error('Unexpected Stripe call'); } },
+    '@/lib/stripeConnectServer': { createWebhookSupabaseClient: () => client, createStripeClient: () => { stripeCalls++; return {stripe}; } },
   });
-  return { server, client, tables, stripeCalls: () => stripeCalls };
+  return { server, client, tables, stripe, calls, stripeCalls: () => stripeCalls };
 }
 (async () => {
   assert.equal(issuerHelpers.validateInvoiceIssuer({ ...issuer, postal_code: '１２３４５６７', registration_number: 'ｔ１２３４５６７８９０１２３' }).registration_number, issuer.registration_number);
@@ -66,11 +75,11 @@ function fixture(withAccount = true) {
       '@/lib/stripeConnectServer': { createWebhookSupabaseClient: () => ({ from: () => ({ upsert: async value => { stored = value; return { error: null }; } }) }) },
     });
     const result = await route.POST({ json: async () => ({ ...account, issuer }) });
-    assert.equal(result.status, auth ? 200 : 401);
-    assert.equal(stored?.issuer?.company_name, auth ? issuer.company_name : undefined);
+    assert.equal(result.status, 405);
+    assert.equal(stored, undefined);
     stored = undefined;
     const invalid = await route.POST({ json: async () => ({ ...account, issuer: { ...issuer, postal_code: '123' } }) });
-    assert.equal(invalid.status, auth ? 400 : 401);
+    assert.equal(invalid.status, 405);
     assert.equal(stored, undefined);
   }
   assert.equal(bank.validateBankAccount({ ...account, bank_account_number: '００１２３４５' }).bank_account_number, '0012345');
@@ -137,7 +146,7 @@ function fixture(withAccount = true) {
   }
   const adminSource = fs.readFileSync('components/AdminView.tsx', 'utf8');
   const documentSource = adminSource.slice(adminSource.indexOf('  const systemBillingPdfHtml ='), adminSource.indexOf('  const openSystemBillingPdf ='));
-  const renderDocument = vm.runInNewContext(ts.transpileModule(documentSource + '\nsystemBillingPdfHtml;', { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText, { systemBankAccount: { issuer }, invoiceIssuerHtml: issuerHelpers.invoiceIssuerHtml, bankAccountText: bank.bankAccountText, townName: 'テスト町', yen: value => `${value}円` });
+  const renderDocument = vm.runInNewContext(ts.transpileModule(documentSource + '\nsystemBillingPdfHtml;', { compilerOptions: { target: ts.ScriptTarget.ES2020 } }).outputText, { systemBankAccount: { issuer }, systemIssuer:issuer, invoiceIssuerHtml: issuerHelpers.invoiceIssuerHtml, bankAccountText: bank.bankAccountText, townName: 'テスト町', yen: value => `${value}円` });
   for (const type of ['invoice', 'receipt']) {
     const html = renderDocument({ id: 1, billing_month: '2026-08', issuer_snapshot: issuer, paid_at: '2026-09-08', bank_account_snapshot: account, payment_method: 'bank_transfer' }, type);
     for (const value of Object.values(issuer)) assert.ok(html.includes(value), `${type} missing ${value}`);
@@ -206,10 +215,13 @@ function fixture(withAccount = true) {
   await f.server.setSystemUsagePaymentMethod(f.client, 1, 'bank_transfer');
   await f.server.issueSystemUsageInvoices('2026-08');
   const bill = f.tables.system_usage_billings[0];
-  assert.equal(f.stripeCalls(), 0);
+  assert.ok(f.stripeCalls() > 0);
+  assert.equal(f.calls[0].collection_method, 'send_invoice');
+  assert.equal(f.calls[0].payment_settings.payment_method_types[0], 'customer_balance');
+  assert.equal(bill.bank_account_snapshot.source, 'stripe');
   assert.equal(bill.status, 'open');
   assert.equal(bill.total_amount, 231);
-  assert.equal(bill.due_date, '2026-09-10T14:59:59.000Z');
+  assert.ok(new Date(bill.due_date).getTime() > Date.now());
   assert.equal(bill.bank_account_snapshot.bank_account_number, '0012345');
   assert.equal(bill.bank_account_snapshot.bank_code, '0001');
   assert.equal(bill.bank_account_snapshot.bank_branch_code, '001');
@@ -228,12 +240,12 @@ function fixture(withAccount = true) {
   assert.equal(zero.tables.system_usage_billings[0].issuer_snapshot.company_name, issuer.company_name);
   const missing = fixture(false);
   await missing.server.issueSystemUsageInvoices('2026-08');
-  assert.equal(missing.tables.system_usage_billings[0].status, 'bank_account_required');
-  assert.equal(missing.stripeCalls(), 0);
+  assert.equal(missing.tables.system_usage_billings[0].status, 'open');
+  assert.ok(missing.stripeCalls() > 0);
   const manual = fixture();
   await manual.server.issueSystemUsageInvoices('2026-08', { bankTransferOnly: true });
   assert.equal(manual.tables.system_usage_billings[0].status, 'open');
-  assert.equal(manual.stripeCalls(), 0);
+  assert.ok(manual.stripeCalls() > 0);
   for (const price of [100, 0]) {
     const card = fixture();
     card.tables.system_usage_payment_profiles[0].payment_method = 'card';
@@ -266,5 +278,15 @@ function fixture(withAccount = true) {
   const paid = fixture(); paid.tables.system_usage_billings[0].status = 'paid';
   const result = await paid.server.issueSystemUsageInvoices('2026-08');
   assert.equal(result.results[0].status, 'skipped');
-  console.log('PASS: direct bank billing, deadline, immutable destination, validation, missing account, paid/retry protection; no Stripe calls.');
+  const failed=fixture(); let attempts=0;
+  const finalize=failed.stripe.invoices.finalizeInvoice;
+  failed.stripe.invoices.finalizeInvoice=async(...args)=>{if(++attempts===1)throw new Error('temporary failure');return finalize(...args)};
+  await failed.server.issueSystemUsageInvoices('2026-08');
+  assert.equal(failed.tables.system_usage_billings[0].status,'invoice_failed');
+  await failed.server.issueSystemUsageInvoices('2026-08');
+  assert.equal(failed.tables.system_usage_billings[0].status,'open');
+  assert.equal(failed.calls.length,1,'retry must reuse the same invoice');
+  const funding=load('lib/stripeBankTransfer.ts');
+  assert.throws(()=>funding.fundingInstructionsAccount({financial_addresses:[]},'cus_1'));
+  console.log('PASS: Stripe bank invoice, immutable destination/issuer, invoice/receipt rendering, legacy protection, retry, card gating, authorization.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -2,7 +2,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import Stripe from "stripe";
 import { createStripeClient, createWebhookSupabaseClient } from "@/lib/stripeConnectServer";
 import { rateForMonth, usageAmounts } from "@/lib/systemUsageRates";
-import { validateBankAccount } from "@/lib/systemUsageBankAccount";
+import { getStripeBankAccount, stripeBankPaymentOptions } from "@/lib/stripeBankTransfer";
 
 export type SystemUsagePaymentMethod = "card" | "bank_transfer";
 
@@ -136,7 +136,8 @@ export const setSystemUsagePaymentMethod = async (
   townId: string | number,
   paymentMethod: SystemUsagePaymentMethod,
 ) => {
-  const ensured = paymentMethod === "card" ? await ensureSystemUsageStripeCustomer(client, townId) : null;
+  const ensured = await ensureSystemUsageStripeCustomer(client, townId);
+  const bankAccount = paymentMethod === "bank_transfer" ? await getStripeBankAccount(createStripeClient().stripe, ensured.customer.id) : null;
   const now = new Date().toISOString();
   const result = await client
     .from("system_usage_payment_profiles")
@@ -145,6 +146,7 @@ export const setSystemUsagePaymentMethod = async (
       ...(ensured ? { stripe_customer_id: ensured.customer.id } : {}),
       payment_method: paymentMethod,
       bank_transfer_status: paymentMethod === "bank_transfer" ? "ready" : ensured?.profile?.bank_transfer_status || null,
+      ...(bankAccount ? { bank_account_snapshot: bankAccount } : {}),
       automatic_collection_consent_at: paymentMethod === "card" ? now : null,
       updated_at: now,
     }, { onConflict: "neighborhood_id" })
@@ -290,17 +292,19 @@ export const issueSystemUsageInvoices = async (billingMonth: string, options: { 
   const results: Array<Record<string, any>> = [];
 
   for (const billing of billingsResult.data || []) {
-    if (billing.stripe_invoice_id || billing.status === "paid" || billing.status === "open") {
+    const savedStripeDue = billing.bank_account_snapshot?.source === "stripe" ? billing.due_date : null;
+    if ((billing.stripe_invoice_id && !["draft", "invoice_failed"].includes(billing.status)) || billing.status === "paid" || billing.status === "open") {
       results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "skipped", reason: "already_invoiced" });
       continue;
     }
-    const profile = (profilesResult.data || []).find((row: any) => String(row.neighborhood_id) === String(billing.neighborhood_id));
+    let profile = (profilesResult.data || []).find((row: any) => String(row.neighborhood_id) === String(billing.neighborhood_id));
+    if (billing.stripe_invoice_id) profile = { ...profile, payment_method: billing.payment_method, stripe_customer_id: billing.stripe_customer_id };
     if (options.bankTransferOnly && profile?.payment_method !== "bank_transfer") {
       results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: profile?.payment_method === "card" ? "card_billing_disabled" : "payment_method_required" });
       continue;
     }
     const town = (townsResult.data || []).find((row: any) => String(row.id) === String(billing.neighborhood_id));
-    const pushCount = (pushesResult.data || []).filter((row: any) => String(row.neighborhood_id) === String(billing.neighborhood_id)).length;
+    const pushCount = billing.stripe_invoice_id ? Number(billing.push_count || 0) : (pushesResult.data || []).filter((row: any) => String(row.neighborhood_id) === String(billing.neighborhood_id)).length;
     const pushOverage = Math.max(pushCount - Number(billing.free_push_limit || 0), 0);
     const subtotal = Number(billing.linked_account_count || 0) * Number(billing.monthly_household_price || 0)
       + pushOverage * Number(billing.push_unit_price || 0);
@@ -312,7 +316,7 @@ export const issueSystemUsageInvoices = async (billingMonth: string, options: { 
       subtotal_amount: subtotal,
       tax_amount: taxAmount,
       total_amount: total,
-      due_date: dates.dueAt,
+      due_date: billing.due_date || dates.dueAt,
       issuer_snapshot: billing.issuer_snapshot ?? issuerResult.data?.issuer ?? {},
     });
 
@@ -328,45 +332,38 @@ export const issueSystemUsageInvoices = async (billingMonth: string, options: { 
       continue;
     }
 
-    if (profile?.payment_method === "bank_transfer") {
-      const accountResult = await client.from("system_usage_bank_account").select("*").eq("id", 1).maybeSingle();
-      throwIfError(accountResult.error);
-      if (!accountResult.data) {
-        await updateBilling(client, billing.id, { status: "bank_account_required" });
-        results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "bank_account_required" });
+    try {
+      if (profile?.payment_method === "bank_transfer" && !profile.stripe_customer_id) {
+        profile = await setSystemUsagePaymentMethod(client, billing.neighborhood_id, "bank_transfer");
+      }
+      if (!profile?.payment_method || !profile?.stripe_customer_id) {
+        await updateBilling(client, billing.id, { status: "payment_method_required" });
+        results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "payment_method_required" });
         continue;
       }
-      const bankAccount = validateBankAccount(accountResult.data);
-      const { year, month } = parseBillingMonth(billingMonth);
-      await updateBilling(client, billing.id, {
-        status: "open",
-        payment_method: "bank_transfer",
-        bank_account_snapshot: bankAccount,
-        invoice_number: `SYS-${billingMonth.replace("-", "")}-${billing.neighborhood_id}`,
-        invoice_issued_at: dates.nominalIssueAt,
-        due_date: new Date(Date.UTC(year, month, 11) - JST_OFFSET_MS - 1000).toISOString(),
-      });
-      results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "open", paymentMethod: "bank_transfer" });
-      continue;
-    }
+      if (profile.payment_method === "card" && !profile.stripe_default_payment_method_id) {
+        await updateBilling(client, billing.id, { status: "card_setup_required" });
+        results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "card_setup_required" });
+        continue;
+      }
 
-    if (!profile?.payment_method || !profile?.stripe_customer_id) {
-      await updateBilling(client, billing.id, { status: "payment_method_required" });
-      results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "payment_method_required" });
-      continue;
-    }
-    if (profile.payment_method === "card" && !profile.stripe_default_payment_method_id) {
-      await updateBilling(client, billing.id, { status: "card_setup_required" });
-      results.push({ townId: billing.neighborhood_id, billingId: billing.id, status: "card_setup_required" });
-      continue;
-    }
-
-    try {
       const { stripe } = createStripeClient();
-      const invoice = await stripe.invoices.create({
+      const isBank = profile.payment_method === "bank_transfer";
+      const bankAccount = isBank ? await getStripeBankAccount(stripe, profile.stripe_customer_id) : null;
+      if (bankAccount) {
+        const saved = await client.from("system_usage_payment_profiles").update({ bank_account_snapshot: bankAccount, bank_transfer_status: "ready" }).eq("neighborhood_id", billing.neighborhood_id);
+        throwIfError(saved.error);
+      }
+      if (bankAccount) await updateBilling(client, billing.id, { bank_account_snapshot: bankAccount, payment_method: "bank_transfer", stripe_customer_id: profile.stripe_customer_id });
+      const { year, month } = parseBillingMonth(billingMonth);
+      const bankDue = savedStripeDue ? Math.floor(new Date(savedStripeDue).getTime() / 1000) : Math.max(Math.floor(Date.now() / 1000) + 86400, Math.floor((Date.UTC(year, month, 11) - JST_OFFSET_MS - 1000) / 1000));
+      if (isBank) await updateBilling(client, billing.id, { due_date: new Date(bankDue * 1000).toISOString() });
+      const invoice = billing.stripe_invoice_id ? await stripe.invoices.retrieve(billing.stripe_invoice_id) : await stripe.invoices.create({
         customer: profile.stripe_customer_id,
-        collection_method: "charge_automatically",
-        auto_advance: true,
+        currency: "jpy",
+        collection_method: isBank ? "send_invoice" : "charge_automatically",
+        ...(isBank ? { due_date: bankDue } : {}),
+        auto_advance: false,
         description: `el-town システム利用料 ${billingMonth}利用分`,
         footer: "システム利用料のお支払いありがとうございます。",
         custom_fields: [{ name: "請求対象月", value: `${billingMonth}利用分` }],
@@ -376,39 +373,44 @@ export const issueSystemUsageInvoices = async (billingMonth: string, options: { 
           neighborhood_id: String(billing.neighborhood_id),
           billing_month: billingMonth,
         },
-        payment_settings: { payment_method_types: ["card"] },
+        payment_settings: isBank ? { payment_method_types: ["customer_balance"], payment_method_options: stripeBankPaymentOptions } : { payment_method_types: ["card"] },
       } as Stripe.InvoiceCreateParams, { idempotencyKey: `el-town-system-usage-invoice-${billing.id}` });
+      await updateBilling(client, billing.id, { stripe_invoice_id: invoice.id, stripe_customer_id: profile.stripe_customer_id, payment_method: profile.payment_method });
 
-      const taxRateId = await findOrCreateTaxRate(stripe, Number(billing.tax_rate || 0), taxRateCache);
-      const common = {
-        customer: profile.stripe_customer_id,
-        invoice: invoice.id,
-        currency: "jpy",
-        ...(taxRateId ? { tax_rates: [taxRateId] } : {}),
-      };
-      if (Number(billing.linked_account_count || 0) > 0 && Number(billing.monthly_household_price || 0) > 0) {
-        await stripe.invoiceItems.create({
-          ...common,
-          description: `接続数利用料（${billingMonth}利用分）`,
-          quantity: Number(billing.linked_account_count),
-          unit_amount: Number(billing.monthly_household_price),
-          metadata: { item_type: "linked_accounts", billing_month: billingMonth },
-        }, { idempotencyKey: `el-town-system-usage-linked-${billing.id}` });
-      }
-      if (pushOverage > 0 && Number(billing.push_unit_price || 0) > 0) {
-        await stripe.invoiceItems.create({
-          ...common,
-          description: `プッシュ通知超過料（${billingMonth}利用分）`,
-          quantity: pushOverage,
-          unit_amount: Number(billing.push_unit_price),
-          metadata: { item_type: "push_overage", billing_month: billingMonth },
-        }, { idempotencyKey: `el-town-system-usage-push-${billing.id}` });
-      }
+      if (invoice.status === "draft") {
+        const lines = await stripe.invoices.listLineItems(invoice.id, { limit: 100 });
+        const taxRateId = await findOrCreateTaxRate(stripe, Number(billing.tax_rate || 0), taxRateCache);
+        const common = {
+          customer: profile.stripe_customer_id,
+          invoice: invoice.id,
+          currency: "jpy",
+          ...(taxRateId ? { tax_rates: [taxRateId] } : {}),
+        };
+        if (!lines.data.some(line => line.metadata?.item_type === "linked_accounts") && Number(billing.linked_account_count || 0) > 0 && Number(billing.monthly_household_price || 0) > 0) {
+          await stripe.invoiceItems.create({
+            ...common,
+            description: `接続数利用料（${billingMonth}利用分）`,
+            quantity: Number(billing.linked_account_count),
+            unit_amount: Number(billing.monthly_household_price),
+            metadata: { item_type: "linked_accounts", billing_month: billingMonth },
+          }, { idempotencyKey: `el-town-system-usage-linked-${billing.id}` });
+        }
+        if (!lines.data.some(line => line.metadata?.item_type === "push_overage") && pushOverage > 0 && Number(billing.push_unit_price || 0) > 0) {
+          await stripe.invoiceItems.create({
+            ...common,
+            description: `プッシュ通知超過料（${billingMonth}利用分）`,
+            quantity: pushOverage,
+            unit_amount: Number(billing.push_unit_price),
+            metadata: { item_type: "push_overage", billing_month: billingMonth },
+          }, { idempotencyKey: `el-town-system-usage-push-${billing.id}` });
+        }
 
-      const finalized = await stripe.invoices.finalizeInvoice(invoice.id, { auto_advance: true });
+      }
+      const finalized = invoice.status === "draft" ? await stripe.invoices.finalizeInvoice(invoice.id, { auto_advance: true }, { idempotencyKey: `el-town-system-usage-finalize-${billing.id}` }) : invoice;
       await updateBilling(client, billing.id, {
-        status: finalized.status === "paid" ? "paid" : "open",
+        status: finalized.status === "paid" ? "paid" : finalized.status === "void" ? "cancelled" : finalized.status === "uncollectible" ? "payment_failed" : "open",
         invoice_number: finalized.number,
+        ...(isBank ? { due_date: new Date((finalized.due_date || bankDue) * 1000).toISOString(), bank_account_snapshot: bankAccount } : {}),
         invoice_issued_at: new Date().toISOString(),
         payment_method: profile.payment_method,
         stripe_customer_id: profile.stripe_customer_id,
