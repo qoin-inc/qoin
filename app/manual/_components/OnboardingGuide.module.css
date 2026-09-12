@@ -115,6 +115,19 @@
   text-align: center;
 }
 
+.stepList .stepCardFullWidth {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.stepCardFullWidth .stepCopy {
+  order: 1;
+}
+
+.stepCardFullWidth .stepVisual {
+  order: 2;
+  width: 100%;
+}
+
 .desktopScreenFrame {
   position: relative;
   width: 100%;

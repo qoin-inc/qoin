@@ -20,6 +20,7 @@ type GuideStep = {
   caution?: string;
   link?: { href: string; label: string };
   copyFirst?: boolean;
+  fullWidthVisual?: boolean;
 };
 
 const themeStyles = {
@@ -132,7 +133,7 @@ export function OnboardingGuide({
               return (
                 <li
                   key={step.title}
-                  className={`${styles.stepCard} ${visualFirst ? styles.stepCardReverse : ""} rounded-[2rem] border border-[#dce8ed] bg-white p-6 shadow-[0_12px_40px_rgba(33,78,98,.07)] md:p-9`}
+                  className={`${styles.stepCard} ${visualFirst ? styles.stepCardReverse : ""} ${step.fullWidthVisual ? styles.stepCardFullWidth : ""} rounded-[2rem] border border-[#dce8ed] bg-white p-6 shadow-[0_12px_40px_rgba(33,78,98,.07)] md:p-9`}
                 >
                   <div className={styles.stepCopy}>
                     <div className={`mb-4 inline-grid h-10 w-10 place-items-center rounded-full text-sm font-black text-white ${colors.solid}`}>

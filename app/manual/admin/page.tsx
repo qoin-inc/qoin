@@ -80,6 +80,7 @@ export default function AdminManualPage() {
           },
           {
             title: "会費管理",
+            fullWidthVisual: true,
             subtitle: "会員への会費請求登録",
             text: "会費請求設定にて対象年度、請求額を入力し、対象会員を選び、「請求額を設定」を押下すると会員に会費が設定されます。会費は「全会員世帯」「会費一覧で選択」で個別設定し、追加された会員は「請求未設定」を選んで設定してください。「会費の支払方法」で手集金・Stripeカード決済・Stripe銀行振込を選び、「支払方法を保存」を押します。銀行振込はStripeの利用審査完了後に利用できます。オンラインで支払われた会費は入金確定後にStripe入金へ自動反映されます。",
             points: [
@@ -100,6 +101,7 @@ export default function AdminManualPage() {
           },
           {
             title: "システム利用料",
+            fullWidthVisual: true,
             subtitle: "el-town利用料の支払、請求履歴",
             text: "Stripeのクレジットカード自動決済または銀行振込を選びます。銀行振込を選ぶと、その町内会・自治会専用の振込先をStripeから取得します。毎月のご利用料金のご請求書、ご入金受領後の領収書を出力できます。",
             points: [
