@@ -5426,6 +5426,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <div className="admin-basic-message admin-stripe-status-detail" role="status">
               <strong>{currentStripeStatus.message}</strong>
               {currentStripeStatus.reasons.length > 0 && <ul>{currentStripeStatus.reasons.map((reason, index) => <li key={index}>{reason}</li>)}</ul>}
+              {currentStripeStatus.reasons.length > 0 && (
+                <p>
+                  <a className="admin-stripe-details-link" href="https://connect.stripe.com/express_login" target="_blank" rel="noopener noreferrer">Stripeの管理画面で確認する（別タブ）</a>
+                  <br />
+                  Stripeに登録したメールアドレスでログインし、対象の町内会・自治会の通知や要対応事項を確認してください。理由の詳細が表示されない場合は、Stripeへお問い合わせください。
+                </p>
+              )}
             </div>
           )}
         </section>

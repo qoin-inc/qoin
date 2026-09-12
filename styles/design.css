@@ -2061,6 +2061,12 @@ button { cursor: pointer; border: 0; }
   padding-left: 20px;
 }
 
+.admin-stripe-details-link {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .admin-basic-form .admin-publish-toggle {
   grid-column: 1 / -1;
   display: grid;
