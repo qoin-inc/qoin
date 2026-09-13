@@ -24,7 +24,7 @@ export default function StripeManualPage() {
         title="Stripe連携の登録のし方"
         summary=""
         processTitle="本番登録から会費の入金確認まで"
-        processSubtitle="全ステップをPC画面に統一し、重要な個人情報はStripeの画面だけに入力して進めます"
+        processSubtitle=""
         returnHref="/admin"
         returnLabel="町内会の管理画面に戻る"
         desktopLayout
@@ -42,14 +42,8 @@ export default function StripeManualPage() {
             visual: <StripeFlowDesktopPreview caption="PC版：会員の支払いから町内会・自治会口座への入金までの全体像" />,
           },
           {
-            title: "組織区分と登録担当者を決める",
-            text: "会則や登記の有無を確認し、管理画面の組織区分から実態に合うものを選びます。町内会・自治会・任意組織、法人、個人、行政機関を自己判断で読み替えず、規約や正式な組織形態に合わせてください。",
-            points: [
-              "代表者本人が確認できる状態で手続きを行います。",
-              "Stripeからの確認メールを受信できる継続利用可能なメールアドレスを使います。",
-              "入金先は個人の生活口座ではなく、町内会・自治会で管理する口座を用意します。",
-            ],
-            caution: "組織区分や代表者情報が実態と異なると、追加確認や入金保留の原因になります。不明な場合は会則・登記資料を確認してください。",
+            title: "Stripe画面入力前にel-town画面に設定項目を入力する",
+            text: "組織区分は便宜的に「個人」を選択してください、他の「非営利団体」等を選んだ場合登録が難しくなります。町内会・自治会名、メールアドレス、電話番号、webサイト、サービス内容を入力します。町内会・自治会でwebサイトをお持ちでない場合は、el-town.jpをご登録下さい。",
             visual: <StripeDesktopPreview focus="registration" caption="PC版・Stripe連携：組織区分と登録情報を資料に照らして確認します" />,
           },
           {
