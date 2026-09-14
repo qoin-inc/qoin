@@ -4490,7 +4490,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         <div className="admin-publish-heading">
           <div>
             <p className="el-kicker">{activePublishMeta.label}</p>
-            <h3>{editingPublishId ? "発信内容を編集" : publishDraft.type === "event" ? "イベント内容・開始日時にて参加申込を募集" : publishDraft.type === "assembly" ? "総会内容・日時にて総会出席者へ案内" : "内容や画像、PDF添付を添付し発信を押下"}</h3>
+            <h3>{editingPublishId ? "発信内容を編集" : publishDraft.type === "event" ? "イベント内容・開始日時にて参加申込を募集" : publishDraft.type === "assembly" ? "総会内容・日時にて総会出席者へ案内" : "内容や画像・PDFを添付し発信を押下"}</h3>
           </div>
           <div className="admin-heading-actions">
             {editingPublishId && (
