@@ -307,8 +307,8 @@ const integratedWorkFilters: Array<{ value: IntegratedWorkFilter; label: string 
 const publishTypeOptions: Array<{ value: PublishType; label: string; hint: string }> = [
   { value: "circular", label: "電子回覧板", hint: "町内会・自治会の回覧板を電子化" },
   { value: "notice", label: "連絡", hint: "町内会・自治会の連絡事項を発信" },
-  { value: "event", label: "イベント", hint: "開催日時と大人/子供の参加返信を受け付けます。" },
-  { value: "assembly", label: "総会案内", hint: "総会日時、出欠返信、委任状添付を受け付けます。" },
+  { value: "event", label: "イベント", hint: "イベントを案内し参加者を募集します" },
+  { value: "assembly", label: "総会案内", hint: "総会を案内し、出欠返信、委任状を受け付けます" },
 ];
 
 const publishFeatureMap: Record<PublishFeatureLabel, PublishType> = {
