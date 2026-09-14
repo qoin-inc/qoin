@@ -305,7 +305,7 @@ const integratedWorkFilters: Array<{ value: IntegratedWorkFilter; label: string 
 ];
 
 const publishTypeOptions: Array<{ value: PublishType; label: string; hint: string }> = [
-  { value: "circular", label: "電子回覧板", hint: "標準仕様。主にPDFや画像を添付して回覧します。" },
+  { value: "circular", label: "電子回覧板", hint: "町内会・自治会の回覧板を電子化" },
   { value: "notice", label: "連絡", hint: "標準の連絡仕様。本文中心の案内に使います。" },
   { value: "event", label: "イベント", hint: "開催日時と大人/子供の参加返信を受け付けます。" },
   { value: "assembly", label: "総会案内", hint: "総会日時、出欠返信、委任状添付を受け付けます。" },
