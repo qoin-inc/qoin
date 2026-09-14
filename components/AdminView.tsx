@@ -306,7 +306,7 @@ const integratedWorkFilters: Array<{ value: IntegratedWorkFilter; label: string 
 
 const publishTypeOptions: Array<{ value: PublishType; label: string; hint: string }> = [
   { value: "circular", label: "電子回覧板", hint: "町内会・自治会の回覧板を電子化" },
-  { value: "notice", label: "連絡", hint: "標準の連絡仕様。本文中心の案内に使います。" },
+  { value: "notice", label: "連絡", hint: "町内会・自治会の連絡事項を発信" },
   { value: "event", label: "イベント", hint: "開催日時と大人/子供の参加返信を受け付けます。" },
   { value: "assembly", label: "総会案内", hint: "総会日時、出欠返信、委任状添付を受け付けます。" },
 ];
@@ -4490,7 +4490,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         <div className="admin-publish-heading">
           <div>
             <p className="el-kicker">{activePublishMeta.label}</p>
-            <h3>{editingPublishId ? "発信内容を編集" : "表題・送り主・内容・添付を付けて会員へ配信"}</h3>
+            <h3>{editingPublishId ? "発信内容を編集" : publishDraft.type === "event" ? "イベント内容・開始日時にて参加申込を募集" : publishDraft.type === "assembly" ? "総会内容・日時にて総会出席者へ案内" : "内容や画像、PDF添付を添付し発信を押下"}</h3>
           </div>
           <div className="admin-heading-actions">
             {editingPublishId && (
@@ -4501,7 +4501,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             )}
             <button type="submit" disabled={publishBusy}>
               <i className={`fas ${publishBusy ? "fa-spinner fa-spin" : editingPublishId ? "fa-floppy-disk" : "fa-paper-plane"}`} />
-              <span>{publishBusy ? "保存中" : editingPublishId ? "発信を更新" : "発信を保存"}</span>
+              <span>{publishBusy ? "保存中" : editingPublishId ? "発信を更新" : "発信"}</span>
             </button>
           </div>
         </div>
