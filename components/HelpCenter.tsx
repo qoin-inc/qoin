@@ -180,7 +180,7 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   const helpSessionRef = useRef(0);
   const operationCategories = audience === "portal" ? portalCategories : audience === "admin" ? adminCategories : memberCategories;
   const selectedCategory = operationCategories.find((category) => category.id === selectedCategoryId);
-  const title = audience === "member" ? "会員の方のヘルプ" : audience === "portal" ? "マイel-townのヘルプ" : "役員の方のヘルプ";
+  const title = audience === "member" ? "会員の方のヘルプ" : audience === "portal" ? "マイel-townのヘルプ" : "役員管理機能ヘルプ";
   const isAiChatActive = chatMessages.length > 0 || asking;
 
   const resetHelpState = useCallback(() => {
@@ -266,10 +266,10 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
             </header>
             {audience === "admin" && !isAiChatActive && (
               <><Link href="/manual/admin" className="help-center-manual" onClick={closeHelp}>
-                <i className="fas fa-book-open" /><span><strong>役員管理画面マニュアルを見る</strong><small>画像付きの手順を確認できます</small></span><i className="fas fa-chevron-right" />
+                <i className="fas fa-book-open" /><span><strong>基本機能マニュアルを見る</strong><small>画像付きの手順を確認できます</small></span><i className="fas fa-chevron-right" />
               </Link>
               <Link href="/manual/publish" className="help-center-manual" onClick={closeHelp}>
-                <i className="fas fa-paper-plane" /><span><strong>発信機能のマニュアルを見る</strong><small>電子回覧板・連絡・イベント・総会案内の画像付き手順</small></span><i className="fas fa-chevron-right" />
+                <i className="fas fa-paper-plane" /><span><strong>発信機能マニュアルを見る</strong><small>電子回覧板・連絡・イベント・総会案内の画像付き手順</small></span><i className="fas fa-chevron-right" />
               </Link></>
             )}
             <div className={`help-center-chat${isAiChatActive ? " is-ai-chat-active" : ""}`}>
