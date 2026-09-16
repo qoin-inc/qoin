@@ -9,7 +9,7 @@ type Theme = "blue" | "green" | "purple";
 type GuideStep = {
   title: string;
   subtitle?: string;
-  text: string;
+  text: ReactNode;
   visual: ReactNode;
   points?: string[];
   additionalSection?: {
@@ -67,6 +67,7 @@ export function OnboardingGuide({
   returnHref = "/manual",
   returnLabel = "マニュアル一覧へ戻る",
   desktopLayout = false,
+  showStepNumbers = true,
 }: {
   theme: Theme;
   audience: string;
@@ -81,6 +82,7 @@ export function OnboardingGuide({
   returnHref?: string;
   returnLabel?: string;
   desktopLayout?: boolean;
+  showStepNumbers?: boolean;
 }) {
   const colors = themeStyles[theme];
 
@@ -136,9 +138,9 @@ export function OnboardingGuide({
                   className={`${styles.stepCard} ${visualFirst ? styles.stepCardReverse : ""} ${step.fullWidthVisual ? styles.stepCardFullWidth : ""} rounded-[2rem] border border-[#dce8ed] bg-white p-6 shadow-[0_12px_40px_rgba(33,78,98,.07)] md:p-9`}
                 >
                   <div className={styles.stepCopy}>
-                    <div className={`mb-4 inline-grid h-10 w-10 place-items-center rounded-full text-sm font-black text-white ${colors.solid}`}>
+                    {showStepNumbers && <div className={`mb-4 inline-grid h-10 w-10 place-items-center rounded-full text-sm font-black text-white ${colors.solid}`}>
                       {index + 1}
-                    </div>
+                    </div>}
                     <h3 className={`${styles.stepTitle} text-xl font-black leading-8 text-[#203947]`}>{step.title}</h3>
                     {step.subtitle && (
                       <h4 className={`${styles.stepSubtitle} mt-4 text-lg font-black leading-8 text-[#203947]`}>{step.subtitle}</h4>

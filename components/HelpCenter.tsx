@@ -265,9 +265,12 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
               <button type="button" className="help-center-close" onClick={closeHelp} aria-label="ヘルプを閉じる"><i className="fas fa-xmark" /></button>
             </header>
             {audience === "admin" && !isAiChatActive && (
-              <Link href="/manual/admin" className="help-center-manual" onClick={closeHelp}>
+              <><Link href="/manual/admin" className="help-center-manual" onClick={closeHelp}>
                 <i className="fas fa-book-open" /><span><strong>役員管理画面マニュアルを見る</strong><small>画像付きの手順を確認できます</small></span><i className="fas fa-chevron-right" />
               </Link>
+              <Link href="/manual/publish" className="help-center-manual" onClick={closeHelp}>
+                <i className="fas fa-paper-plane" /><span><strong>発信機能のマニュアルを見る</strong><small>電子回覧板・連絡・イベント・総会案内の画像付き手順</small></span><i className="fas fa-chevron-right" />
+              </Link></>
             )}
             <div className={`help-center-chat${isAiChatActive ? " is-ai-chat-active" : ""}`}>
               {!isAiChatActive && audience !== "admin" && (

@@ -12,7 +12,8 @@ const protectedSections = [
     description: '利用開始後に使う、会員画面と役員管理画面の操作手順です。',
     items: [
       { href: '/manual/member', label: '会員向け', time: '全10ステップ', title: '会員向け操作マニュアル', description: '回覧板の確認、イベント参加、会費、設定などの基本操作を説明します。', icon: 'fa-mobile-screen-button', tone: 'green' },
-      { href: '/manual/admin', label: '役員向け', time: '全10ステップ', title: '役員管理画面 操作マニュアル', description: 'お知らせの配信、会員名簿、会費、管理者設定などを説明します。', icon: 'fa-user-gear', tone: 'blue' },
+      { href: '/manual/admin', label: '役員向け', time: '基本機能編', title: '役員管理画面 基本機能編', description: '基本情報、会員名簿、役員、会費などの操作を説明します。', icon: 'fa-user-gear', tone: 'blue' },
+      { href: '/manual/publish', label: '役員向け', time: '発信機能編', title: '役員管理画面 発信機能編', description: '電子回覧板・連絡・イベント・総会案内の発信と回答の確認を説明します。', icon: 'fa-paper-plane', tone: 'blue' },
     ],
   },
   {

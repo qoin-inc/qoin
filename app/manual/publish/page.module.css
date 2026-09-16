@@ -1,0 +1,23 @@
+.guide { color: #243746; }
+.guide main > section { padding: 48px 24px 24px; }
+.guide main > section > div { max-width: 800px; margin: auto; }
+.guide h1 { font-size: clamp(26px, 3vw, 38px); line-height: 1.5; color: #203947; }
+.guide main > section p { line-height: 1.9; }
+.guide article { padding: 24px; box-sizing: border-box; }
+.guide article > section > ol > li {
+  padding: 30px;
+  border: 1px solid #dce8ed;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 12px 40px rgba(33, 78, 98, .07);
+}
+.guide h3 { margin: 0; color: #203947; }
+.guide h4 { color: #118bb3; }
+.guide p, .guide li { line-height: 1.9; }
+.guide article ul li { margin-top: 10px; }
+.guide article ul li span { margin-right: 8px; color: #118bb3; }
+@media (max-width: 640px) {
+  .guide main > section { padding: 30px 18px 12px; }
+  .guide article { padding: 16px; }
+  .guide article > section > ol > li { padding: 20px; border-radius: 18px; }
+}
