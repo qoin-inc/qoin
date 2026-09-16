@@ -262,8 +262,8 @@ const functionGroups: Array<{ key: DashboardMenu; title: string; icon: string; d
     key: "live",
     title: "Live・施設予約",
     icon: "fa-video",
-    desc: "会議開催、Live配信URL、施設登録、施設予約を管理します。",
-    items: ["会議開催", "Liveイベント", "施設登録", "予約承認"],
+    desc: "Web会議案内や施設予約を管理します。",
+    items: ["Web会議", "施設管理"],
     tone: "rose",
   },
   {
@@ -5453,11 +5453,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
   const renderLiveFacilityPanel = () => {
     return (
-      <section id="admin-live-facility-panel" className="admin-basic-panel admin-live-panel" aria-label="Web会議・施設予約">
+      <section id="admin-live-facility-panel" className="admin-basic-panel admin-live-panel" aria-label="Live・施設予約">
         <div className="admin-basic-header">
           <div>
-            <p className="el-kicker">Web会議・施設予約</p>
-            <h2>Web会議案内と施設予約を管理します</h2>
+            <h2>Live・施設予約</h2>
           </div>
         </div>
 
@@ -5468,7 +5467,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           </button>
           <button type="button" className={activeLiveFacilityScreen === "facility" ? "active" : ""} onClick={() => setActiveLiveFacilityScreen("facility")}>
             <i className="fas fa-building" />
-            <span>施設予約</span>
+            <span>施設管理</span>
           </button>
         </div>
 

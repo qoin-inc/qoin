@@ -23,7 +23,7 @@ const protectedSections = [
     description: '決済やオンライン会議など、必要な機能の手順を確認できます。',
     items: [
       { href: '/manual/stripe', label: '役員向け', time: '全6ステップ', title: 'Stripe連携 操作マニュアル', description: 'オンライン集金に必要なStripe登録から会費請求までを説明します。', icon: 'fa-credit-card', tone: 'purple' },
-      { href: '/manual/live', label: '役員向け', time: '全8ステップ', title: 'Live・施設予約管理マニュアル', description: 'オンライン会議・配信URLの設定と施設予約の操作を説明します。', icon: 'fa-video', tone: 'purple' },
+      { href: '/manual/live', label: '役員向け', time: 'Live・施設予約編', title: '役員管理画面 Live・施設予約編', description: 'Web会議案内と施設管理の操作を説明します。', icon: 'fa-video', tone: 'purple' },
     ],
   },
 ];

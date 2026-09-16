@@ -270,6 +270,9 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
               </Link>
               <Link href="/manual/publish" className="help-center-manual" onClick={closeHelp}>
                 <i className="fas fa-paper-plane" /><span><strong>発信機能マニュアルを見る</strong><small>電子回覧板・連絡・イベント・総会案内の画像付き手順</small></span><i className="fas fa-chevron-right" />
+              </Link>
+              <Link href="/manual/live" className="help-center-manual" onClick={closeHelp}>
+                <i className="fas fa-video" /><span><strong>Live・施設予約マニュアルを見る</strong><small>Web会議・施設管理の操作手順</small></span><i className="fas fa-chevron-right" />
               </Link></>
             )}
             <div className={`help-center-chat${isAiChatActive ? " is-ai-chat-active" : ""}`}>
