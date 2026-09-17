@@ -270,8 +270,8 @@ const functionGroups: Array<{ key: DashboardMenu; title: string; icon: string; d
     key: "accounting",
     title: "総会会計",
     icon: "fa-chart-pie",
-    desc: "総会に必要な予算書と決算書を作成します。",
-    items: ["予算書作成", "決算書作成", "科目管理", "CSV/印刷"],
+    desc: "町内会・自治会の会計処理、総会の予算書・決算書作成を行います",
+    items: ["会計科目登録", "予算入力", "会計処理", "総会資料作成"],
     tone: "indigo",
   },
 ];
@@ -375,10 +375,10 @@ const assemblyCategoryTypeLabel: Record<AssemblyCategoryType, string> = {
 };
 
 const assemblyTabs: Array<{ key: AssemblyTab; label: string; icon: string }> = [
-  { key: "categories", label: "科目", icon: "fa-list-check" },
-  { key: "budget", label: "予算", icon: "fa-file-invoice" },
-  { key: "settlement", label: "決算入力", icon: "fa-receipt" },
-  { key: "report", label: "集計/出力", icon: "fa-print" },
+  { key: "categories", label: "会計科目登録", icon: "fa-list-check" },
+  { key: "budget", label: "予算入力", icon: "fa-file-invoice" },
+  { key: "settlement", label: "会計処理", icon: "fa-receipt" },
+  { key: "report", label: "総会資料作成", icon: "fa-print" },
 ];
 
 const standardAssemblyCategories: Array<{ type: AssemblyCategoryType; name: string; sortOrder: number }> = [
@@ -5690,7 +5690,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         <div className="admin-workspace-header">
           <div>
             <p className="el-kicker">総会会計</p>
-            <h2>予算書・決算書</h2>
+            <h2>操作する画面を選んでください</h2>
           </div>
           <div className="admin-accounting-year">
             <label>
@@ -6346,11 +6346,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           <span>{month.label} プッシュ件数</span>
           <strong>{loading ? "-" : summary.monthlyPushes.toLocaleString()}</strong>
           <small>月別通知</small>
-        </div>
-        <div className="admin-metric-card warning">
-          <span>システム利用料</span>
-          <strong>{loading ? "-" : yen(summary.systemUsageFee)}</strong>
-          <small>月額・超過配信</small>
         </div>
         <div className="admin-metric-card">
           <span>年間会費請求額</span>
