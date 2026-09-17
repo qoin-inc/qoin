@@ -5543,8 +5543,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <form className="admin-basic-card admin-live-form" onSubmit={handleFacilitySubmit}>
               <div className="admin-basic-card-heading">
                 <div>
-                  <h3>{editingFacilityId ? "施設情報を編集" : "施設登録"}</h3>
-                  <p>予約制御に使える時刻・曜日・日付で、施設の利用条件を登録します。</p>
+                  <h3>施設管理</h3>
+                  <p><strong>施設の登録及び利用条件を登録します。</strong></p>
                 </div>
                 <div className="admin-heading-actions">
                   {editingFacilityId && (
@@ -6403,7 +6403,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           {(integratedWorkFilter === "all" || integratedWorkFilter === "facility") && (
             <section className="admin-integrated-reservations" aria-label="施設予約管理">
               <div className="admin-basic-card-heading">
-                <div><h3>施設・予約一元管理</h3><p>施設の下に予約をまとめ、施設情報の修正・削除と予約状態の変更を行えます。</p></div>
+                <div><h3>施設予約一覧</h3><p><strong>施設予約を、施設毎に一覧で管理し、申込を承認・否認します。</strong></p></div>
                 <span>{integratedFacilityCards.length}施設 / {filteredIntegratedFacilityReservations.length}予約</span>
               </div>
               <div className="admin-integrated-reservation-filters">
