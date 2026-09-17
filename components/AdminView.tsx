@@ -5456,7 +5456,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       <section id="admin-live-facility-panel" className="admin-basic-panel admin-live-panel" aria-label="Live・施設予約">
         <div className="admin-basic-header">
           <div>
-            <h2>Live・施設予約</h2>
+            <p className="el-kicker">Live・施設予約</p>
+            <h2>操作する画面を選んでください</h2>
           </div>
         </div>
 
