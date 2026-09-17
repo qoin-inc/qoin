@@ -682,6 +682,46 @@ button { cursor: pointer; border: 0; }
   line-height: 1.4;
 }
 
+/* Keep the introductory area compact on wider screens. */
+@media (min-width: 769px) {
+  .initial-menu-screenshot-style {
+    padding-top: clamp(48px, 8dvh, 80px);
+  }
+
+  .initial-menu-screenshot-style .initial-menu-card {
+    padding: 36px 44px 42px;
+  }
+
+  .initial-menu-screenshot-style .initial-menu-brand {
+    margin-bottom: 24px;
+  }
+
+  .initial-menu-screenshot-style .initial-menu-logo {
+    width: min(330px, 65%);
+    max-height: 72px;
+  }
+
+  .initial-menu-screenshot-style .initial-menu-brand p {
+    margin-top: 8px;
+    font-size: 18px;
+  }
+
+  .initial-menu-welcome {
+    margin-bottom: 22px;
+    padding: 14px 20px;
+  }
+
+  .initial-menu-welcome strong {
+    font-size: 20px;
+  }
+
+  .initial-menu-welcome p {
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
 @media (max-width: 480px) {
   .initial-menu-screenshot-style {
     padding-top: 104px;
