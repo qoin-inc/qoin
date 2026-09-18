@@ -6336,29 +6336,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
       {renderDashboardMenuPanel()}
 
-      <section className="admin-metric-strip" aria-label="運営指標">
-        <div className="admin-metric-card">
-          <span>連携会員数</span>
-          <strong>{loading ? "-" : summary.linkedMembers.toLocaleString()}</strong>
-          <small>LINE連携済み</small>
-        </div>
-        <div className="admin-metric-card">
-          <span>{month.label} プッシュ件数</span>
-          <strong>{loading ? "-" : summary.monthlyPushes.toLocaleString()}</strong>
-          <small>月別通知</small>
-        </div>
-        <div className="admin-metric-card">
-          <span>年間会費請求額</span>
-          <strong>{loading ? "-" : yen(summary.annualFeeBilling)}</strong>
-          <small>請求予定合計</small>
-        </div>
-        <div className="admin-metric-card success">
-          <span>納入額</span>
-          <strong>{loading ? "-" : yen(summary.paidTotal)}</strong>
-          <small>現金・Stripe合計</small>
-        </div>
-      </section>
-
       {showIntegratedWorkView && (
         <section className="admin-workspace-panel" aria-label="統合ビュー">
           <div className="admin-workspace-header">
