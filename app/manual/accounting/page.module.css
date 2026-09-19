@@ -1,3 +1,22 @@
+.guide { color: #243746; }
+.guide main > section { padding: 48px 24px 24px; }
+.guide main > section > div { max-width: 800px; margin: auto; }
+.guide h1 { font-size: clamp(26px, 3vw, 38px); line-height: 1.5; color: #203947; }
+.guide main > section p { line-height: 1.9; }
+.guide article { padding: 24px; box-sizing: border-box; }
+.guide article > section > ol > li {
+  padding: 30px;
+  border: 1px solid #dce8ed;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 12px 40px rgba(33, 78, 98, .07);
+}
+.guide h3 { margin: 0; color: #203947; }
+.guide h4 { color: #118bb3; }
+.guide p, .guide li { line-height: 1.9; }
+.guide article ul li { margin-top: 10px; }
+.guide article ul li span { margin-right: 8px; color: #118bb3; }
+
 .figure { margin: 0; width: 100%; }
 .browserBar { height: 28px; display: flex; align-items: center; gap: 5px; padding: 0 10px; border-radius: 12px 12px 0 0; background: #3f4b5c; color: #fff; }
 .browserBar span { width: 7px; height: 7px; border-radius: 50%; background: #dce5ef; }
@@ -49,6 +68,9 @@
 .tableWrap th, .tableWrap td { padding: 6px 4px; border-bottom: 1px solid #e2e8f0; color: #475569; text-align: left; white-space: nowrap; }
 .tableWrap th { background: #f8fafc; color: #334155; font-weight: 900; }
 @media (max-width: 640px) {
+  .guide main > section { padding: 30px 18px 12px; }
+  .guide article { padding: 16px; }
+  .guide article > section > ol > li { padding: 20px; border-radius: 18px; }
   .screen { padding: 10px; }
   .screenHeader { display: grid; }
   .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }

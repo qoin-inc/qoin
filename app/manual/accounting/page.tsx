@@ -148,6 +148,7 @@ function PreviewTable({ headings, rows }: { headings: string[]; rows: string[][]
 export default function AccountingManualPage() {
   return (
     <ManualAccessGate scope="admin">
+      <div className={styles.guide}>
       <OnboardingGuide
         theme="purple"
         audience="町内会・自治会の役員向け"
@@ -198,6 +199,7 @@ export default function AccountingManualPage() {
           },
         ]}
       />
+      </div>
     </ManualAccessGate>
   );
 }
