@@ -381,23 +381,6 @@ const assemblyTabs: Array<{ key: AssemblyTab; label: string; icon: string }> = [
   { key: "report", label: "総会資料作成", icon: "fa-print" },
 ];
 
-const standardAssemblyCategories: Array<{ type: AssemblyCategoryType; name: string; sortOrder: number }> = [
-  { type: "income", name: "会費", sortOrder: 10 },
-  { type: "income", name: "補助金", sortOrder: 20 },
-  { type: "income", name: "事業収入", sortOrder: 30 },
-  { type: "income", name: "繰越金", sortOrder: 40 },
-  { type: "income", name: "雑入", sortOrder: 50 },
-  { type: "expense", name: "会議費", sortOrder: 110 },
-  { type: "expense", name: "事務費", sortOrder: 120 },
-  { type: "expense", name: "印刷費", sortOrder: 130 },
-  { type: "expense", name: "通信費", sortOrder: 140 },
-  { type: "expense", name: "集会所管理費", sortOrder: 150 },
-  { type: "expense", name: "慶弔費", sortOrder: 160 },
-  { type: "expense", name: "事業費", sortOrder: 170 },
-  { type: "expense", name: "支払手数料", sortOrder: 180 },
-  { type: "expense", name: "予備費", sortOrder: 190 },
-];
-
 const yen = (value: number) => `¥${Math.round(value || 0).toLocaleString()}`;
 const weekdayOptions = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -2285,60 +2268,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       await fetchAssemblyAccounting(editingAssemblyCategoryId ? "科目を更新しました。" : "科目を追加しました。");
     } catch (error: any) {
       setAssemblyMessage(error?.message || "科目の保存に失敗しました。");
-      setAssemblyBusy(false);
-    }
-  };
-
-  const handleInitializeStandardAssemblyCategories = async () => {
-    if (!ensureAssemblyYearEditable()) return;
-    let standardRows = standardAssemblyCategories;
-    try {
-      const { data } = await supabase
-        .from("assembly_standard_categories")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      if (data && data.length > 0) {
-        standardRows = data.map((row: any) => ({
-          type: row.type === "expense" ? "expense" : "income",
-          name: row.name,
-          sortOrder: Number(row.sort_order ?? 0),
-        }));
-      }
-    } catch {
-      standardRows = standardAssemblyCategories;
-    }
-
-    const existingKeys = new Set(
-      assemblyData.categories
-        .filter((category) => !category.parent_id)
-        .map((category) => `${category.type}:${String(category.name || "").trim()}`),
-    );
-    const inserts = standardRows
-      .filter((category) => !existingKeys.has(`${category.type}:${category.name}`))
-      .map((category) => ({
-        neighborhood_id: townId,
-        type: category.type,
-        name: category.name,
-        parent_id: null,
-        sort_order: category.sortOrder,
-        is_standard: true,
-        is_active: true,
-      }));
-
-    if (inserts.length === 0) {
-      setAssemblyMessage("標準科目はすでに作成済みです。");
-      return;
-    }
-
-    setAssemblyBusy(true);
-    setAssemblyMessage("");
-    try {
-      const { error } = await supabase.from("assembly_categories").insert(inserts);
-      if (error) throw error;
-      await fetchAssemblyAccounting(`標準科目を${inserts.length}件作成しました。`);
-    } catch (error: any) {
-      setAssemblyMessage(error?.message || "標準科目を作成できませんでした。");
       setAssemblyBusy(false);
     }
   };
@@ -5777,10 +5706,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                   <p>親科目または補助科目として登録します。</p>
                 </div>
                 <div className="admin-heading-actions">
-                  <button type="button" className="secondary" onClick={handleInitializeStandardAssemblyCategories} disabled={assemblyBusy || !canEditAssemblyYear}>
-                    <i className="fas fa-wand-magic-sparkles" />
-                    <span>標準科目を作成</span>
-                  </button>
                   {editingAssemblyCategoryId && (
                     <button type="button" className="secondary" onClick={cancelAssemblyCategoryEdit} disabled={assemblyBusy}>
                       <i className="fas fa-xmark" />
