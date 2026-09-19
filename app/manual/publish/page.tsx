@@ -29,8 +29,8 @@ export default function PublishManualPage() {
         audienceIcon="fa-people-roof"
         title="役員管理画面 発信機能編"
         summary="電子回覧板・連絡・イベント・総会案内の操作方法を説明します。"
-        returnHref="/admin"
-        returnLabel="管理機能に戻る"
+        returnHref="/admin?help=open"
+        returnLabel="管理機能ヘルプに戻る"
         desktopLayout
         showStepNumbers={false}
         preparation={[]}

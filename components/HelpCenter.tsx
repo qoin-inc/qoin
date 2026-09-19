@@ -205,6 +205,16 @@ export default function HelpCenter({ audience, showLabel = true, className = "" 
   }, [closeHelp, open]);
 
   useEffect(() => {
+    if (audience !== "admin") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("help") !== "open") return;
+    resetHelpState();
+    setOpen(true);
+    url.searchParams.delete("help");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [audience, resetHelpState]);
+
+  useEffect(() => {
     if (chatLogRef.current) chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
   }, [asking, chatMessages]);
 

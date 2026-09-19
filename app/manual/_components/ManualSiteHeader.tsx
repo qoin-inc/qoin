@@ -19,7 +19,7 @@ export function ManualSiteHeader({
         >
           <i className="fas fa-chevron-left" aria-hidden="true" />
           <span className={styles.backLabelLong}>{backLabel}</span>
-          <span className={styles.backLabelShort}>{backHref === "/admin" ? "管理機能" : "一覧"}</span>
+          <span className={styles.backLabelShort}>{backHref.startsWith("/admin") ? "管理ヘルプ" : "一覧"}</span>
         </Link>
 
         <Link

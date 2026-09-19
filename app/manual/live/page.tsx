@@ -38,8 +38,8 @@ export default function LiveManualPage() {
         audienceIcon="fa-people-roof"
         title="役員管理画面 Live・施設予約編"
         summary="Web会議案内と、会員が予約する施設の登録・管理方法を説明します。"
-        returnHref="/admin"
-        returnLabel="管理機能に戻る"
+        returnHref="/admin?help=open"
+        returnLabel="管理機能ヘルプに戻る"
         desktopLayout
         showStepNumbers={false}
         preparation={[]}

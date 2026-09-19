@@ -20,8 +20,8 @@ export default function AdminManualPage() {
         audienceIcon="fa-people-roof"
         title="役員管理画面 基本機能編"
         summary="役員管理画面の各管理機能の操作方法を確認します。"
-        returnHref="/admin"
-        returnLabel="管理機能に戻る"
+        returnHref="/admin?help=open"
+        returnLabel="管理機能ヘルプに戻る"
         desktopLayout
         preparation={[]}
         processTitle="各管理機能の操作説明"

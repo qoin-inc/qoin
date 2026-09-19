@@ -156,8 +156,8 @@ export default function AccountingManualPage() {
         title="役員管理画面 総会会計編"
         summary="町内会・自治会の会計処理、総会の予算書・決算書作成を行います"
         summaryNormalWeight
-        returnHref="/admin"
-        returnLabel="管理機能に戻る"
+        returnHref="/admin?help=open"
+        returnLabel="管理機能ヘルプに戻る"
         desktopLayout
         showStepNumbers={false}
         preparation={[]}
