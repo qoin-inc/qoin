@@ -59,6 +59,7 @@ export function OnboardingGuide({
   audienceIcon,
   title,
   summary,
+  summaryNormalWeight = false,
   time,
   preparation,
   steps,
@@ -74,6 +75,7 @@ export function OnboardingGuide({
   audienceIcon: string;
   title: string;
   summary: string;
+  summaryNormalWeight?: boolean;
   time?: string;
   preparation: Array<{ icon: string; title: string; text: string }>;
   steps: GuideStep[];
@@ -97,7 +99,12 @@ export function OnboardingGuide({
             {audience}
           </div>
           <h1 className="text-3xl font-black leading-tight text-[#203947] md:text-4xl">{title}</h1>
-          <p className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-8 text-[#506b78]">{summary}</p>
+          <p
+            className="mx-auto mt-5 max-w-2xl text-sm font-semibold leading-8 text-[#506b78]"
+            style={summaryNormalWeight ? { fontWeight: 400 } : undefined}
+          >
+            {summary}
+          </p>
           {time && (
             <p className="mt-5 text-xs font-black text-[#607b89]">
               <i className="far fa-clock mr-2" aria-hidden="true" />

@@ -5663,7 +5663,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           <div className="admin-fee-closure-actions">
             {!assemblyYearClosure && (
               <button type="button" onClick={() => void finalizeSelectedAssemblyYear()} disabled={assemblyBusy || assemblyClosureAvailable !== true || assemblyCategories.length === 0}>
-                <i className="fas fa-lock" /> 年度を確定
+                <i className="fas fa-lock" /> 年度確定
               </button>
             )}
             {assemblyYearLocked && canManageYearClosure && (

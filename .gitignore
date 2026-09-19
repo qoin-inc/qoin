@@ -7,6 +7,10 @@ node_modules/
 
 # Next.js build output
 .next/
+tsconfig.tsbuildinfo
+
+# Supabase CLI local state
+supabase/.temp/
 
 # Build artifacts
 dist/

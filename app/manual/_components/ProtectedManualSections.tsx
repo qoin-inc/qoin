@@ -24,6 +24,7 @@ const protectedSections = [
     items: [
       { href: '/manual/stripe', label: '役員向け', time: '全6ステップ', title: 'Stripe連携 操作マニュアル', description: 'オンライン集金に必要なStripe登録から会費請求までを説明します。', icon: 'fa-credit-card', tone: 'purple' },
       { href: '/manual/live', label: '役員向け', time: 'Live・施設予約編', title: '役員管理画面 Live・施設予約編', description: 'Web会議案内と施設管理の操作を説明します。', icon: 'fa-video', tone: 'purple' },
+      { href: '/manual/accounting', label: '役員向け', time: '総会会計編', title: '役員管理画面 総会会計編', description: '会計科目、予算、会計明細、総会資料作成の操作を説明します。', icon: 'fa-chart-pie', tone: 'purple' },
     ],
   },
 ];
