@@ -320,7 +320,7 @@ export function StripeDesktopPreview({
               <h4>Stripe登録を開始</h4>
               <p>以下の画面からStripeの設定項目を入力します。既にStripeへ登録済みの内容は取得して表示し上書きはしません。Stripeの設定項目入力後はStripe画面から入力してください。</p>
               <div className={styles.stripeFieldGrid}>
-                <label><span>組織区分</span><b>非営利組織（町内会）⌄</b></label>
+                <label><span>組織区分</span><b>個人⌄</b></label>
                 <label><span>Stripeへ登録する町内会・自治会名</span><b>エルタウン町内会</b></label>
                 <label><span>Stripe連絡先メール</span><b>accounting@example.jp</b></label>
                 <label><span>問い合わせ電話番号</span><b>例：03-1234-5678</b></label>
