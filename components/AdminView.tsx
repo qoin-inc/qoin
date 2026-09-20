@@ -7,7 +7,6 @@ import { rateForMonth, usageMonthLabel, shiftUsageMonth, billingIsIssued } from 
 import { BankAccount, bankAccountText } from "@/lib/systemUsageBankAccount";
 import { invoiceIssuerHtml } from "@/lib/systemUsageIssuer";
 import type { StripeStatusDisplay } from "@/lib/stripeStatusDisplay";
-import FeePaymentMethods from "@/components/FeePaymentMethods";
 import type { InvoiceIssuer } from "@/lib/systemUsageIssuer";
 
 type AdminViewProps = {
@@ -4827,7 +4826,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     if (activeBasicFeature === "会費管理") {
       return (
         <div className="admin-fee-screen">
-          <FeePaymentMethods townId={townId} setting={basicData.feeSetting} onSaved={setting => setBasicData(current => ({ ...current, feeSetting: setting }))} />
           <section className={`admin-basic-card admin-fee-closure ${feeYearLocked ? "locked" : feeYearCorrectionOpen ? "unlocked" : "open"}`}>
             <div>
               <span className="admin-fee-closure-status">
