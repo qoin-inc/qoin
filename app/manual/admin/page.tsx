@@ -38,7 +38,6 @@ export default function AdminManualPage() {
               <DesktopScreenPreview
                 src="/manual/screens/admin-basic/01-basic-menu.png"
                 alt="管理トップの基本機能メニュー"
-                caption=""
                 width={1264}
                 height={1026}
                 hotspots={[{ left: "14%", top: "35%", label: "基本機能を開く" }]}
@@ -52,7 +51,7 @@ export default function AdminManualPage() {
             points: [
               "決算月の変更は会費管理や会計の対象年度に影響します。締め処理についてはマニュアルを確認してください。",
             ],
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/02-basic-info.png" alt="基本情報のPC管理画面" caption="" width={1664} height={922} hotspots={[{ left: "69%", top: "46%", label: "保存して反映" }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/02-basic-info.png" alt="基本情報のPC管理画面" width={1664} height={922} hotspots={[{ left: "69%", top: "46%", label: "保存して反映" }]} />,
           },
           {
             title: "会員管理",
@@ -64,7 +63,7 @@ export default function AdminManualPage() {
               "退会承認を行うとその世帯のLINE連携が解除されます。転居などを確認後承認してください。",
               "役員は、退会申請の承認または会員一覧の「退会」から世帯を退会にできます。退会時は本人と家族のLINE連携が解除されます。退会済みの世帯または家族は「復活」で利用可能な状態へ戻せます。LINE連携は自動では戻らないため、復活後に本人または家族がLINEから会員名簿との照合をやり直してください。",
             ],
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/03-member-management.png" alt="会員管理のPC管理画面" caption="" hotspots={[{ left: "10%", top: "55%", label: "会員を登録" }, { left: "68%", top: "69%", label: "一覧を確認", delay: 1.2 }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/03-member-management.png" alt="会員管理のPC管理画面" hotspots={[{ left: "10%", top: "55%", label: "会員を登録" }, { left: "68%", top: "69%", label: "一覧を確認", delay: 1.2 }]} />,
           },
           {
             title: "役員管理",
@@ -76,7 +75,7 @@ export default function AdminManualPage() {
               "役員改選時など役員を入れ替えする場合、最低１名は退任できません。先に別の役員の登録した後、退任させてください。",
             ],
             copyFirst: true,
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" caption="" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/06-admin-management.png" alt="役員管理のPC管理画面" hotspots={[{ left: "15%", top: "62%", label: "招待メールを送信" }, { left: "65%", top: "55%", label: "在任・招待・退任", delay: 1.2 }]} />,
           },
           {
             title: "会費管理",
@@ -96,7 +95,7 @@ export default function AdminManualPage() {
                 "確定解除後は、役員が会費データを修正できます。",
               ],
             },
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management-20260906.png" alt="現在の会費管理画面：年度確定、年度集計、会費請求設定、会費一覧" caption="" width={1177} height={1337} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/04-fee-management-20260906.png" alt="現在の会費管理画面：年度確定、年度集計、会費請求設定、会費一覧" width={1177} height={1337} />,
           },
           {
             title: "システム利用料",
@@ -107,7 +106,7 @@ export default function AdminManualPage() {
               "Stripe銀行振込：請求書に記載された振込先へ、記載の支払期限までにお振り込みください。通常は翌月10日が期限です。",
               "el-town利用接続数は会員管理の接続数から確認できます。",
             ],
-            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260912-stripe-bank.jpg" alt="システム利用料のお支払方法と月別請求一覧の画面例" caption="画面例（サンプルデータ）" width={1264} height={859} crop={{ left: 105, top: 8, width: 635, height: 535 }} />,
+            visual: <DesktopScreenPreview src="/manual/screens/admin-basic/05-system-fee-20260912-stripe-bank.jpg" alt="システム利用料のお支払方法と月別請求一覧の画面例" width={1264} height={859} crop={{ left: 105, top: 8, width: 635, height: 535 }} />,
           },
           {
             title: "Stripe連携",
@@ -115,7 +114,7 @@ export default function AdminManualPage() {
             text: "会員の年会費をクレジットカード決済、銀行振込、Paypay(オプション）にて納入できる様にStripeと契約するため登録を行います。組織区分、連絡先、Webサイト、サービス内容を入力し、本人確認書類と町内会・自治会が管理する口座を準備してStripeの登録を行います。Webサイトをお持ちでなければel-town.jpをご入力下さい",
             points: ["詳しくは「Stripe連携の登録のし方」にてご確認下さい"],
             link: { href: "/manual/stripe", label: "Stripe連携の登録のし方" },
-            visual: <StripeDesktopPreview focus="registration" caption="" />,
+            visual: <StripeDesktopPreview focus="registration" />,
           },
         ]}
       />

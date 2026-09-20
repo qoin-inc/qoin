@@ -31,7 +31,6 @@ export default function AdminSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/top-menu.png"
               alt="役員の方ボタンが表示された実際のel-townトップ画面"
-              caption="実際のトップ画面で「役員の方」を選びます"
             />
           ),
         },
@@ -42,7 +41,6 @@ export default function AdminSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-login.png"
               alt="新規の町内会・自治会を登録するボタンがある実際の役員ログイン画面"
-              caption="実際の役員ログイン画面下部に新規登録ボタンがあります"
             />
           ),
         },
@@ -53,7 +51,6 @@ export default function AdminSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-signup-top.png"
               alt="町内会名、郵便番号、会員世帯数、役職の入力欄がある実際の新規登録画面"
-              caption="実際の新規登録画面・前半"
             />
           ),
         },
@@ -64,7 +61,6 @@ export default function AdminSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-signup-bottom.png"
               alt="代表役員のお名前、メールID、パスワード入力欄がある実際の新規登録画面"
-              caption="実際の新規登録画面・後半"
             />
           ),
         },
@@ -75,7 +71,6 @@ export default function AdminSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-signup-bottom.png"
               alt="登録して開始ボタンがある実際の新規登録画面"
-              caption="入力内容を確認し、実画面の「登録して開始」を押します"
             />
           ),
         },

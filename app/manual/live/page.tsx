@@ -22,7 +22,6 @@ function LiveScreen({
     <DesktopScreenPreview
       src={`/manual/screens/admin-live/${file}.png`}
       alt={`${title}のPC管理画面`}
-      caption="画面はローカル管理画面の表示例です。"
       width={width}
       height={height}
     />

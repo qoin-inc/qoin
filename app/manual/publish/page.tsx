@@ -12,7 +12,6 @@ function PublishScreen({ file, title, proxy = false }: { file: string; title: st
   return <DesktopScreenPreview
     src={`/manual/screens/admin-publish/${file}.png`}
     alt={`${title}のPC管理画面の入力例`}
-    caption="画面は入力例です。"
     width={1264}
     height={712}
     crop={proxy ? { left: 153, top: 23, width: 944, height: 590 } : { left: 135, top: 97, width: 982, height: 610 }}

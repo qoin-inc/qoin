@@ -37,7 +37,6 @@ export default function MemberSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/line-authentication.png"
               alt="el-townアイコンと町内会・自治会DXアプリの説明が表示されたLINE認証画面"
-              caption="内容を確認し、実際のLINE認証画面で「許可する」を押します"
             />
           ),
         },
@@ -48,7 +47,6 @@ export default function MemberSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/member-signup-top.png"
               alt="町内会名と住所を入力する実際の会員情報連携画面"
-              caption="実際の会員情報連携画面・前半"
             />
           ),
         },
@@ -59,7 +57,6 @@ export default function MemberSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/member-signup-bottom.png"
               alt="世帯主と登録する方の氏名を入力する実際の会員情報連携画面"
-              caption="実際の会員情報連携画面・後半"
             />
           ),
         },
@@ -70,7 +67,6 @@ export default function MemberSignupManualPage() {
             <ActualScreenImage
               src="/manual/screens/member-home.jpg"
               alt="エルタウン町内会の回覧とお知らせが表示された会員ホーム画面"
-              caption="連携が完了すると、エルタウン町内会の回覧やお知らせが表示されます"
             />
           ),
         },

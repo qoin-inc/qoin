@@ -215,13 +215,11 @@ export function OnboardingGuide({
 export function ActualScreenImage({
   src,
   alt,
-  caption,
   width = 390,
   height = 844,
 }: {
   src: string;
   alt: string;
-  caption: string;
   width?: number;
   height?: number;
 }) {
@@ -236,10 +234,6 @@ export function ActualScreenImage({
           className={styles.actualScreenImage}
         />
       </div>
-      <figcaption className="mt-3 text-center text-[11px] font-black text-[#607b89]">
-        <i className="fas fa-camera mr-2" aria-hidden="true" />
-        {caption}
-      </figcaption>
     </figure>
   );
 }
@@ -247,7 +241,6 @@ export function ActualScreenImage({
 export function DesktopScreenPreview({
   src,
   alt,
-  caption,
   width = 1265,
   height = 712,
   scroll = false,
@@ -256,7 +249,6 @@ export function DesktopScreenPreview({
 }: {
   src: string;
   alt: string;
-  caption: string;
   width?: number;
   height?: number;
   scroll?: boolean;
@@ -285,22 +277,14 @@ export function DesktopScreenPreview({
           </span>
         ))}
       </div>
-      {caption && (
-        <figcaption>
-          <i className="fas fa-desktop" aria-hidden="true" />
-          {caption}
-        </figcaption>
-      )}
     </figure>
   );
 }
 
 export function StripeDesktopPreview({
   focus = "registration",
-  caption,
 }: {
   focus?: "status" | "registration" | "start";
-  caption: string;
 }) {
   const focusClass = {
     status: styles.stripeFocusStatus,
@@ -350,12 +334,11 @@ export function StripeDesktopPreview({
           </div>
         </div>
       </div>
-      {caption && <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>}
     </figure>
   );
 }
 
-export function StripeFlowDesktopPreview({ caption }: { caption: string }) {
+export function StripeFlowDesktopPreview() {
   return (
     <figure className={styles.pcGuideFigure}>
       <div className={styles.pcGuideFrame}>
@@ -372,17 +355,14 @@ export function StripeFlowDesktopPreview({ caption }: { caption: string }) {
           <div className={styles.stripeFlowChecks}><span><i className="fas fa-check" /> 町内会・自治会とStripeとの契約</span><span><i className="fas fa-check" /> 決済と入金／振込を可能</span><span><i className="fas fa-check" /> 会費一覧へ自動反映</span></div>
         </div>
       </div>
-      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
     </figure>
   );
 }
 
 export function StripeHostedDesktopPreview({
   stage,
-  caption,
 }: {
   stage: "organization" | "verification";
-  caption: string;
 }) {
   const verification = stage === "verification";
   return (
@@ -408,12 +388,11 @@ export function StripeHostedDesktopPreview({
           </section>
         </div>
       </div>
-      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
     </figure>
   );
 }
 
-export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
+export function FeeSettingsDesktopPreview() {
   return (
     <figure className={styles.pcGuideFigure}>
       <div className={styles.pcGuideFrame}>
@@ -430,11 +409,10 @@ export function FeeSettingsDesktopPreview({ caption }: { caption: string }) {
           </div>
         </div>
       </div>
-      {caption && <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>}
     </figure>
   );
 }
-export function MemberPaymentDesktopPreview({ caption }: { caption: string }) {
+export function MemberPaymentDesktopPreview() {
   return (
     <figure className={styles.pcGuideFigure}>
       <div className={styles.pcGuideFrame}>
@@ -444,7 +422,6 @@ export function MemberPaymentDesktopPreview({ caption }: { caption: string }) {
           <section><small>会費</small><h4>2026年度</h4><p>この会費は世帯共通です。世帯主または家族が支払うと全員へ反映されます。</p><div className={styles.memberFeeSummary}><span><small>請求額</small><strong>5,000円</strong></span><span><small>入金額</small><strong>0円</strong></span><span><small>状態</small><strong>未納</strong></span></div><div className={styles.memberPaymentMethods}><span><i className="fas fa-hand-holding-yen" /> 手集金</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> Stripeで支払う（カード・銀行振込・PayPay）</button><small>利用可能な方法をStripeの決済画面で選びます。銀行振込は専用口座へ振り込み、入金確定後に自動反映されます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div></section>
         </div>
       </div>
-      <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>
     </figure>
   );
 }
@@ -476,7 +453,6 @@ export function AnimatedAction({
           <i className="fas fa-hand-pointer" aria-hidden="true" />
         </span>
       </div>
-      <p className={styles.animationCaption}>操作イメージ</p>
     </div>
   );
 }
@@ -526,7 +502,6 @@ export function QrLineScanVisual() {
           el-townの会員登録画面を開きます
         </div>
       </div>
-      <figcaption>LINEでの読み取り手順（図のQRコードは読み取りできません）</figcaption>
     </figure>
   );
 }
@@ -572,7 +547,6 @@ export function AnimatedFormPreview({
           </div>
         )}
       </div>
-      <figcaption>実際の入力項目に合わせた操作イメージ</figcaption>
     </figure>
   );
 }

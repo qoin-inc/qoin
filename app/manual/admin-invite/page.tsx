@@ -28,7 +28,6 @@ export default function AdminInviteManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-invite-actual.png"
               alt="実際の役員招待登録画面"
-              caption="招待URLから開く実際の役員登録画面"
               width={374}
               height={1036}
             />
@@ -41,7 +40,6 @@ export default function AdminInviteManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-invite-actual.png"
               alt="お名前とメールアドレスを入力した実際の役員登録画面"
-              caption="お名前と招待先メールアドレスを入力します"
               width={374}
               height={1036}
             />
@@ -54,7 +52,6 @@ export default function AdminInviteManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-invite-actual.png"
               alt="パスワード入力欄が表示された実際の役員登録画面"
-              caption="初回登録または登録済みアカウントのパスワードを入力します"
               width={374}
               height={1036}
             />
@@ -67,7 +64,6 @@ export default function AdminInviteManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-invite-current-account-actual.png"
               alt="ログイン中の役員アカウントへ町内会・自治会を追加する実際の画面"
-              caption="登録済みの役員アカウントへ町内会・自治会を追加します"
             />
           ),
         },
@@ -79,12 +75,10 @@ export default function AdminInviteManualPage() {
               <ActualScreenImage
                 src="/manual/screens/admin-town-selection-actual.png"
                 alt="実際の管理する町内会選択画面"
-                caption="所属する町内会・自治会から管理先を選びます"
               />
               <ActualScreenImage
                 src="/manual/screens/admin-town-switch-actual.png"
                 alt="実際の役員管理画面上部にある町内会切替ボタン"
-                caption="管理画面上部の町内会切替ボタン"
                 width={375}
                 height={812}
               />
@@ -98,7 +92,6 @@ export default function AdminInviteManualPage() {
             <ActualScreenImage
               src="/manual/screens/admin-invite-expired-actual.png"
               alt="期限切れの招待URLを開いた実際の案内画面"
-              caption="期限切れの場合は新しい招待を依頼します"
             />
           ),
         },

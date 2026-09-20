@@ -39,12 +39,12 @@ export default function StripeManualPage() {
               "利用条件や手数料は登録時にStripe画面の最新表示を確認します。",
             ],
             caution: "Stripeのパスワード、確認コード、カード番号、本人確認書類の画像を、el-townの問い合わせやAIヘルプへ送らないでください。",
-            visual: <StripeFlowDesktopPreview caption="PC版：会員の支払いから町内会・自治会口座への入金までの全体像" />,
+            visual: <StripeFlowDesktopPreview />,
           },
           {
             title: "Stripe画面入力前にel-town画面に設定項目を入力する",
             text: "組織区分は便宜的に「個人」を選択してください、他の「非営利団体」等を選んだ場合登録が難しくなります。町内会・自治会名、メールアドレス、電話番号、webサイト、サービス内容を入力します。町内会・自治会でwebサイトをお持ちでない場合は、el-town.jpをご登録下さい。",
-            visual: <StripeDesktopPreview focus="registration" caption="PC版・Stripe連携：組織区分と登録情報を資料に照らして確認します" />,
+            visual: <StripeDesktopPreview focus="registration" />,
           },
           {
             title: "3つチェック項目確認後にStripe画面にて登録を開始する",
@@ -53,7 +53,7 @@ export default function StripeManualPage() {
               "新しい画面が開かない場合は、ブラウザのポップアップ制限を確認してもう一度押します。",
               "途中で閉じても「本番登録を再開・確認」から続きへ戻れます。",
             ],
-            visual: <StripeDesktopPreview focus="start" caption="現在のPC画面：3つの準備確認後に紫色の開始ボタンを押します" />,
+            visual: <StripeDesktopPreview focus="start" />,
           },
           {
             title: "Stripeで組織と代表者情報を入力する",
@@ -64,7 +64,7 @@ export default function StripeManualPage() {
               "入力内容の確認画面で誤字、番地、電話番号を見直します。",
             ],
             caution: "Stripeが求める項目は組織区分や確認状況により異なります。このマニュアルにない項目が出た場合は、画面の最新案内を優先してください。",
-            visual: <StripeHostedDesktopPreview stage="organization" caption="PC版・Stripe画面：組織と代表者情報を確認資料どおりに入力します" />,
+            visual: <StripeHostedDesktopPreview stage="organization" />,
           },
           {
             title: "本人確認書類と入金先口座を登録する",
@@ -75,7 +75,7 @@ export default function StripeManualPage() {
               "登録完了画面が表示されるまでブラウザの戻る操作を避けます。",
             ],
             caution: "本人確認書類と口座情報は必ずStripe画面へ直接入力します。スクリーンショットをメールやチャットへ添付しないでください。",
-            visual: <StripeHostedDesktopPreview stage="verification" caption="PC版・Stripe画面：本人確認書類と町内会・自治会が管理する口座を直接登録します" />,
+            visual: <StripeHostedDesktopPreview stage="verification" />,
           },
           {
             title: "el-townへ戻り「Stripe状態を更新」する",
@@ -86,7 +86,7 @@ export default function StripeManualPage() {
               "審査中の場合は時間を置き、Stripeからのメールを確認してから再更新します。",
             ],
             caution: "登録画面を完了しただけでは、決済受付と入金が有効になっていない場合があります。2項目の「有効」を必ず確認してください。",
-            visual: <StripeDesktopPreview focus="status" caption="現在のPC画面：左側の状態一覧と右側の「Stripe状態を更新」を照合します" />,
+            visual: <StripeDesktopPreview focus="status" />,
           },
           {
             title: "会費管理で請求額を設定する",
@@ -97,7 +97,7 @@ export default function StripeManualPage() {
               "手集金も併用する場合は、現金とStripeの金額が別欄で集計されることを確認します。",
             ],
             caution: "Stripe連携の有効化と会員への請求設定は別操作です。対象者や金額を確認せず一括設定しないでください。",
-            visual: <FeeSettingsDesktopPreview caption="PC版・会費管理：Stripeの有効状態を確認し、対象会員へ請求額を設定します" />,
+            visual: <FeeSettingsDesktopPreview />,
           },
           {
             title: "会員の支払いと自動反映を確認する",
@@ -108,7 +108,7 @@ export default function StripeManualPage() {
               "反映に時間がかかる場合は画面を更新し、Stripe状態と決済結果を確認します。",
             ],
             caution: "役員が会員のカード番号や確認コードを聞き取って代理入力しないでください。会員本人がStripe画面へ入力します。",
-            visual: <MemberPaymentDesktopPreview caption="PC版・会員画面：カード・PayPayのオンライン支払い導線を確認します" />,
+            visual: <MemberPaymentDesktopPreview />,
           },
           {
             title: "運用開始後の確認とトラブル対応",
@@ -120,7 +120,7 @@ export default function StripeManualPage() {
               "解決しない：エラー文、発生時刻、操作箇所を控えます。個人情報や書類画像は添付しません。",
             ],
             caution: "組織区分、代表者、本人確認、銀行口座に関するStripeの判断は、Stripe画面とStripeからの通知を優先してください。",
-            visual: <StripeDesktopPreview focus="status" caption="PC版・Stripe連携：決済受付、入金／振込、追加入力の有無を定期確認します" />,
+            visual: <StripeDesktopPreview focus="status" />,
           },
         ]}
       />
