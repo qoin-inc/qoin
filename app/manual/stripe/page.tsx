@@ -25,18 +25,17 @@ export default function StripeManualPage() {
         summary=""
         processTitle="本番登録から会費の入金確認まで"
         processSubtitle=""
-        returnHref="/admin"
-        returnLabel="町内会の管理画面に戻る"
+        returnHref="/manual/admin"
+        returnLabel="基本機能編ヘルプに戻る"
         desktopLayout
         preparation={[]}
         steps={[
           {
             title: "Stripe連携でできることを確認する",
-            text: "Stripe Connectは、町内会・自治会が会員からオンラインで会費を受け取り、町内会・自治会の口座へ入金するための決済基盤です。契約主体は町内会・自治会とStripeで、el-townは管理画面と決済をつなぐ仕組みを提供します。",
+            text: <>Stripeは、町内会・自治会の会員がオンライン決済にて会費を支払うための決済基盤です。契約主体は町内会・自治会とStripeになります。el-townはオンライン決済のプラットフォームであるStripeの利用を標準で提供します。<strong>会員は町内会・自治会がStripeと契約した場合、オンライン決済が可能となり、クレジットカードや口座振込、PayPay（オプション）にて決済可能となります。</strong></>,
             points: [
-              "会員はStripeの安全な決済画面で支払い、カード情報はel-townへ保存されません。",
-              "役員はel-townの会費一覧で、手集金とStripe入金を分けて確認できます。",
-              "利用条件や手数料は登録時にStripe画面の最新表示を確認します。",
+              "クレジットカード情報はel-townへ保存されません。",
+              "el-townの会費一覧で、手入金とStripe入金を分けて確認できます。",
             ],
             caution: "Stripeのパスワード、確認コード、カード番号、本人確認書類の画像を、el-townの問い合わせやAIヘルプへ送らないでください。",
             visual: <StripeFlowDesktopPreview />,

@@ -344,7 +344,7 @@ export function StripeFlowDesktopPreview() {
       <div className={styles.pcGuideFrame}>
         <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / Stripe連携</span></div>
         <div className={styles.stripeFlowScreen}>
-          <div className={styles.stripeFlowTitle}><small>Stripe Connect</small><strong>オンライン会費の流れ</strong><span>カード情報はel-townへ保存されません</span></div>
+          <div className={styles.stripeFlowTitle}><small>Stripe</small><strong>オンライン会費の流れ</strong><span>カード情報はel-townへ保存されません</span></div>
           <div className={styles.stripeFlowNodes}>
             <div><i className="fas fa-users" /><strong>会員</strong><span>カード・銀行振込・PayPayで支払う</span></div>
             <i className="fas fa-arrow-right" />
