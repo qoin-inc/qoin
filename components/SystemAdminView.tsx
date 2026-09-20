@@ -7,9 +7,8 @@ import SystemUsageMonthlyReport from "@/components/SystemUsageMonthlyReport";
 import { rateForMonth, usageAmounts, billingIsIssued } from "@/lib/systemUsageRates";
 import AdminView from "@/components/AdminView";
 import SystemUsageIssuerPanel from "@/components/SystemUsageIssuerPanel";
-import PayPayApprovalPanel from "@/components/PayPayApprovalPanel";
 
-type Tab = "towns" | "feeStandards" | "billing" | "paypay";
+type Tab = "towns" | "feeStandards" | "billing";
 type Town = { id: string | number; name: string; created_at?: string | null };
 type FeeStandardDraft = {
   feeName: string;
@@ -343,8 +342,8 @@ export default function SystemAdminView() {
 
   return (
     <main className="system-admin-screen">
-      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : tab === "feeStandards" ? "会費標準設定" : tab === "paypay" ? "PayPay申請承認" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録済み町内会・自治会の状況確認、管理画面の照査、完全削除を行います。" : tab === "feeStandards" ? "町内会・自治会が会員世帯へ請求する会費の初期値を版管理します。" : tab === "paypay" ? "町内会・自治会から届いたPayPay利用・変更・停止申請を確認します。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
-      <nav className="system-admin-tabs"><button className={tab === "towns" ? "active" : ""} onClick={() => setTab("towns")}>町内会・自治会管理</button><button className={tab === "feeStandards" ? "active" : ""} onClick={() => setTab("feeStandards")}>会費標準設定</button><button className={tab === "paypay" ? "active" : ""} onClick={() => setTab("paypay")}>PayPay申請</button><button className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>システム利用料設定</button></nav>
+      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : tab === "feeStandards" ? "会費標準設定" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録済み町内会・自治会の状況確認、管理画面の照査、完全削除を行います。" : tab === "feeStandards" ? "町内会・自治会が会員世帯へ請求する会費の初期値を版管理します。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
+      <nav className="system-admin-tabs"><button className={tab === "towns" ? "active" : ""} onClick={() => setTab("towns")}>町内会・自治会管理</button><button className={tab === "feeStandards" ? "active" : ""} onClick={() => setTab("feeStandards")}>会費標準設定</button><button className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>システム利用料設定</button></nav>
       {message && <div className="system-admin-message">{message}</div>}
 
       {tab === "towns" && <>
@@ -395,8 +394,6 @@ export default function SystemAdminView() {
           </div>
         </section>
       </>}
-
-      {tab === "paypay" && <PayPayApprovalPanel />}
 
       {tab === "billing" && <>
         <SystemUsageIssuerPanel />

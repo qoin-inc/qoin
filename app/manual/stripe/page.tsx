@@ -100,18 +100,6 @@ export default function StripeManualPage() {
             visual: <FeeSettingsDesktopPreview caption="PC版・会費管理：Stripeの有効状態を確認し、対象会員へ請求額を設定します" />,
           },
           {
-            title: "必要な町内会・自治会だけPayPay利用を申請する",
-            text: "PayPayを利用する場合はStripe連携画面下部の「Stripe PayPayの申請」で公開情報を入力します。町内会・自治会が申請した後、el-town運営の確認、特定商取引法ページの公開、Stripe審査を経て利用可能になります。",
-            points: [
-              "先にStripe Connectの本番登録と決済受付を完了します。",
-              "町内会・自治会名、運営責任者、所在地、問い合わせ先、会費名称・金額、返金条件を確認します。",
-              "会長個人の自宅住所や個人メールではなく、町内会・自治会の正式な公開連絡先を使用します。",
-              "承認後は会員のStripe決済画面へPayPayが自動表示されます。",
-            ],
-            caution: "PayPayは希望する町内会・自治会向けのオプションです。申請しただけでは有効にならず、公開ページとStripe審査の完了が必要です。",
-            visual: <StripeDesktopPreview focus="paypay" caption="PC版・Stripe連携：公開情報を確認してPayPay利用を申請します" />,
-          },
-          {
             title: "会員の支払いと自動反映を確認する",
             text: "会員は会員画面の会費案内から「オンラインで支払う」を押し、Stripeの安全な決済画面でカードまたは有効化済みのPayPayを選びます。支払い完了後、役員は会費一覧を更新し、Stripe入金額と未入金額が正しく反映されたことを確認します。",
             points: [

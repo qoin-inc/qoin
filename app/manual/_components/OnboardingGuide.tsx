@@ -299,19 +299,18 @@ export function StripeDesktopPreview({
   focus = "registration",
   caption,
 }: {
-  focus?: "status" | "registration" | "start" | "paypay";
+  focus?: "status" | "registration" | "start";
   caption: string;
 }) {
   const focusClass = {
     status: styles.stripeFocusStatus,
     registration: styles.stripeFocusRegistration,
     start: styles.stripeFocusStart,
-    paypay: styles.stripeFocusPaypay,
   }[focus];
 
   return (
     <figure className={styles.stripeWalkthroughFigure}>
-      <div className={`${styles.stripeScreenFrame} ${focus === "paypay" ? styles.stripeScreenPaypay : ""}`}>
+      <div className={styles.stripeScreenFrame}>
         <div className={styles.stripeScreenCanvas}>
           <div className={styles.stripeScreenHero}>
             <span><i className="fas fa-arrow-left" aria-hidden="true" /> 管理トップへ戻る</span>
@@ -349,12 +348,6 @@ export function StripeDesktopPreview({
               <button className={styles.stripeSecondaryButton} type="button">Stripe状態を更新</button>
             </section>
           </div>
-          <section className={`${styles.stripePaypayPanel} ${focus === "paypay" ? focusClass : ""}`}>
-            <div className={styles.stripePanelHeading}><strong>町内会・自治会別オプション　Stripe PayPayの申請</strong><b>未申請</b></div>
-            <p>利用する町内会・自治会だけ申請します。先にStripe Connectの本番登録を完了してください。</p>
-            <div className={styles.stripePaypayFlow}><span>1. 町内会・自治会が入力・申請</span><span>2. el-town運営が確認</span><span>3. 法定ページ公開</span><span>4. Stripe審査</span></div>
-            <div className={styles.stripePaypayFields}><span>町内会・自治会名　エルタウン町内会</span><span>運営責任者　例：会長 山田太郎</span><span>郵便番号　123-4567</span><span>会費名称　年会費</span></div>
-          </section>
         </div>
       </div>
       {caption && <figcaption><i className="fas fa-desktop" aria-hidden="true" />{caption}</figcaption>}

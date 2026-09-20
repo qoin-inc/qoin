@@ -28,7 +28,7 @@ export default function FeePaymentMethods({ townId, setting, onSaved }: { townId
       <label><input type="checkbox" checked={card} onChange={e => setCard(e.target.checked)} />Stripeカード決済</label>
       <label><input type="checkbox" checked={bank} onChange={e => setBank(e.target.checked)} />Stripe銀行振込（自動消込）</label>
     </fieldset>
-    <p>Stripeの振込先は支払画面で案内されます。町内会・自治会の受取口座をここで手入力する必要はありません。PayPayは別途申請して有効になった場合に利用できます。</p>
+    <p>Stripeの振込先は支払画面で案内されます。町内会・自治会の受取口座をここで手入力する必要はありません。PayPayはel-townのプラットフォーム側で有効化された後に利用できます。町内会・自治会ごとの申請は不要です。</p>
     <button type="button" onClick={() => void save()} disabled={busy}>{busy ? "保存中…" : "支払方法を保存"}</button>
     {message && <p role="status">{message}</p>}
   </section>;
