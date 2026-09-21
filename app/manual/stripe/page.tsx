@@ -66,14 +66,14 @@ export default function StripeManualPage() {
             visual: <StripeHostedDesktopPreview stage="verification" />,
           },
           {
-            title: "el-townへ戻り「Stripe状態を更新」する",
-            text: "Stripeで入力を終えてel-townへ戻ったら、「Stripe状態を更新」を押します。Connectアカウント、Stripe登録名、入金先口座末尾、決済受付、入金／振込の表示を確認します。",
+            title: "Stripe状態を更新する",
+            text: "Stripe側の入力後、el-townの画面にて「Stripe状態を更新」を押下します。Stripe Connectアカウント、Stripe登録名、入金先口座末尾、決済受付、入金／振込の表示を確認してください。",
             points: [
               "状態が「有効」で、「決済受付：有効」「入金/振込：有効」なら会費請求へ進めます。",
               "「追加入力が必要」と表示された場合は「本番登録を再開・確認」からStripeへ戻ります。",
               "審査中の場合は時間を置き、Stripeからのメールを確認してから再更新します。",
             ],
-            caution: "登録画面を完了しただけでは、決済受付と入金が有効になっていない場合があります。2項目の「有効」を必ず確認してください。",
+            caution: "登録画面を完了しただけでは、決済受付と入金が有効になっていない場合があります。「有効」かどうかを必ず確認してください。",
             visual: <StripeDesktopPreview focus="status" />,
           },
           {

@@ -317,6 +317,15 @@ export function StripeDesktopPreview({
               </dl>
             </section>
             <section className={`${styles.stripeScreenPanel} ${focus === "registration" || focus === "start" ? focusClass : ""}`}>
+              {focus === "status" ? (
+                <>
+                  <h4>本番登録を再開・確認</h4>
+                  <p>Stripe側の入力後、状態を更新して決済受付と入金／振込を確認します。</p>
+                  <button className={styles.stripePrimaryButton} type="button">本番登録を再開・確認</button>
+                  <button className={`${styles.stripeSecondaryButton} ${styles.stripeButtonFocus}`} type="button">Stripe状態を更新</button>
+                </>
+              ) : (
+                <>
               <h4>Stripe登録を開始</h4>
               <p>以下の画面からStripeの設定項目を入力します。既にStripeへ登録済みの内容は取得して表示し上書きはしません。Stripeの設定項目入力後はStripe画面から入力してください。</p>
               <div className={styles.stripeFieldGrid}>
@@ -330,6 +339,8 @@ export function StripeDesktopPreview({
               <div className={styles.stripeChecks}><span>□ 組織区分を確認しました</span><span>□ 代表者の本人確認書類を準備しました</span><span>□ 町内会・自治会が管理する入金先口座を準備しました</span></div>
               <button className={`${styles.stripePrimaryButton} ${focus === "start" ? styles.stripeButtonFocus : ""}`} type="button">入力内容を確認してStripe登録を開始</button>
               <button className={styles.stripeSecondaryButton} type="button">Stripe状態を更新</button>
+                </>
+              )}
             </section>
           </div>
         </div>
