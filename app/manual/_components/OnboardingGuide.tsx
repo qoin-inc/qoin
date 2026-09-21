@@ -412,11 +412,10 @@ export function FeeSettingsDesktopPreview() {
           <header><small>基本機能</small><strong>会費管理</strong><span>会員への会費請求登録</span></header>
           <nav>{['基本情報', '会員管理', '役員管理', '会費管理', 'システム利用料', 'Stripe連携'].map((tab) => <span className={tab === '会費管理' ? styles.pcTabActive : ''} key={tab}>{tab}</span>)}</nav>
           <div className={`${styles.feeDesktopGrid} ${styles.feeDesktopCurrent}`}>
-            <section><h4>会費の支払方法</h4><div className={styles.feeDesktopMethods}><b>☑ 手集金</b><b>☑ Stripeカード決済</b><b>☑ Stripe銀行振込（自動消込）</b></div><div className={styles.feeDesktopActions}><button type="button">支払方法を保存</button></div><small>銀行振込はStripe審査完了後に利用できます。振込先の手入力は不要です。</small></section>
             <section><h4>未確定　2026年度の会費データ</h4><small>年度を確定すると、会費情報とは独立して保存され変更不可になります。</small><div className={styles.feeDesktopActions}><button type="button">年度を確定</button></div></section>
-            <section><h4>2026年度 集計</h4><div className={styles.feeDesktopFields}><span>請求額　5,000円</span><span>入金額合計　0円</span><span>手集金　0円</span><span>Stripe入金　0円</span><span>未入金額　5,000円</span><span>未納/一部　1</span></div><small>手集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</small></section>
-            <section className={styles.pcFocusPanel}><h4>会費請求設定　Stripe有効</h4><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span></div><div className={styles.feeDesktopMethods}><b>全会員世帯　／　会費一覧で選択　／　請求未設定</b></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div></section>
-            <section><h4>会費一覧</h4><div className={styles.feeDesktopMethods}><b>会費一覧検索　氏名・住所など</b><b>選択　会員名　請求額　手集金　Stripe入金　修正</b><b>☑ 会員名　5,000円　0円　0円　個別データを保存</b><b>□ 会員名　請求未設定　0円　0円　個別データを保存</b></div><small>請求未設定の会員も請求額・手集金を入力して個別に保存できます。</small></section>
+            <section><h4>2026年度 集計</h4><div className={styles.feeDesktopFields}><span>請求額　5,000円</span><span>入金額合計　0円</span><span>集金　0円</span><span>Stripe入金　0円</span><span>未入金額　5,000円</span><span>未納/一部　1</span></div><small>集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</small></section>
+            <section className={styles.pcFocusPanel}><h4>会費請求設定</h4><p><strong>会計年度ごとに全会員世帯、会費一覧で選択した会員、請求未設定の会員、請求額0円の会員へ請求額を設定します。会員は会費支払いの際、町内会・自治会で利用可能なオンライン決済方法から支払を選んで支払えます。前年度を確定していなくても次年度の請求を設定可能です。</strong></p><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span></div><div className={styles.feeDesktopMethods}><b>全会員世帯　／　会費一覧で選択　／　請求未設定　／　請求額0円</b></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div></section>
+            <section><h4>会費一覧</h4><div className={styles.feeDesktopMethods}><b>会費一覧検索　氏名・住所など</b><b>選択　会員名　請求額　集金　Stripe入金　修正</b><b>☑ 会員名　5,000円　0円　0円　個別データを保存</b><b>□ 会員名　請求未設定　0円　0円　個別データを保存</b></div><small>請求未設定の会員も請求額・集金を入力して個別に保存できます。</small></section>
           </div>
         </div>
       </div>

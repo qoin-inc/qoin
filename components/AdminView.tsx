@@ -715,9 +715,9 @@ const getPaymentMethodLabel = (fee: any) => {
   const cash = getFeeCashPaid(fee);
   const stripe = getFeeStripePaid(fee);
   const paid = getFeePaidAmount(fee);
-  if (cash > 0 && stripe > 0) return "Stripe + 手集金";
+  if (cash > 0 && stripe > 0) return "Stripe + 集金";
   if (stripe > 0 || (paid > 0 && (fee?.payment_method === "stripe" || fee?.last_payment_method === "stripe"))) return "Stripe";
-  if (cash > 0 || (paid > 0 && (fee?.payment_method === "cash" || fee?.last_payment_method === "cash"))) return "手集金";
+  if (cash > 0 || (paid > 0 && (fee?.payment_method === "cash" || fee?.last_payment_method === "cash"))) return "集金";
   return "未入金";
 };
 const currentFiscalYear = (startMonth?: number | string | null) => {
@@ -3738,7 +3738,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       return;
     }
     if (amountText === "" || !Number.isFinite(amount) || amount < 0) {
-      setFeeMessage("手集金額を0円以上で入力してください。");
+      setFeeMessage("集金額を0円以上で入力してください。");
       return;
     }
     if (billingText === "" || !Number.isFinite(correctedBillingAmount) || correctedBillingAmount < 0) {
@@ -3785,8 +3785,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         return next;
       });
       setFeeMessage(fee?.id
-        ? "個別の請求額と手集金額を更新しました。Stripe入金額とは別に集計します。"
-        : "個別の請求額と手集金額を登録しました。Stripe入金額とは別に集計します。");
+        ? "個別の請求額と集金額を更新しました。Stripe入金額とは別に集計します。"
+        : "個別の請求額と集金額を登録しました。Stripe入金額とは別に集計します。");
     } catch (error: any) {
       setFeeMessage(error?.message || "入金情報の保存に失敗しました。");
     } finally {
@@ -4870,19 +4870,19 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             <div className="admin-mini-metrics">
               <span><strong>{yen(feeBillingTotal)}</strong>請求額</span>
               <span><strong>{yen(feePaidTotal)}</strong>入金額合計</span>
-              <span><strong>{yen(feeCashPaidTotal)}</strong>手集金</span>
+              <span><strong>{yen(feeCashPaidTotal)}</strong>集金</span>
               <span><strong>{yen(feeStripePaidTotal)}</strong>Stripe入金</span>
               <span><strong>{yen(feeBalanceTotal)}</strong>未入金額</span>
               <span><strong>{feeUnpaidCount.toLocaleString()}</strong>未納/一部</span>
             </div>
-            <p className="admin-basic-note">手集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</p>
+            <p className="admin-basic-note">集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</p>
           </section>
 
           <section className="admin-basic-card admin-fee-command">
             <div className="admin-basic-card-heading">
               <div>
                 <h3>会費請求設定</h3>
-                <p>会計年度ごとに全会員世帯、会費一覧で選択した会員、請求未設定の会員へ、請求額0円の会員へ請求額を設定します。会員は町内会・自治会で利用可能な手集金やStripeから支払い方法を選べます。前年度を確定していなくても次年度の請求を作成できます。</p>
+                <p><strong>会計年度ごとに全会員世帯、会費一覧で選択した会員、請求未設定の会員、請求額0円の会員へ請求額を設定します。会員は会費支払いの際、町内会・自治会で利用可能なオンライン決済方法から支払を選んで支払えます。前年度を確定していなくても次年度の請求を設定可能です。</strong></p>
               </div>
               <div className="admin-fee-heading-status">
                 <span className="admin-member-count">対象年度 {feeFiscalYear}年度</span>
@@ -4955,7 +4955,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
               <div className="admin-fee-row admin-fee-head">
                 <span>選択 / 対象</span>
                 <span>請求額</span>
-                <span>手集金</span>
+                <span>集金</span>
                 <span>Stripe入金</span>
                 <span>状態</span>
                 <span>修正</span>
