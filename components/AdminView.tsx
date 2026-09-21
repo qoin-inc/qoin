@@ -156,7 +156,6 @@ const facilityReservationFacilityId = (reservation: any) => (
   reservation?.facility_bigint_id ?? reservation?.facility_id
 );
 
-type IntegratedWorkFilter = "all" | "circular" | "notice" | "event" | "assembly" | "live" | "facility";
 type FacilityReservationStatusFilter = "all" | "pending" | "approved" | "rejected";
 
 type PublishType = "circular" | "notice" | "event" | "assembly";
@@ -291,16 +290,6 @@ const typeLabel: Record<WorkItem["type"], string> = {
   facility: "施設予約",
   live: "Live",
 };
-
-const integratedWorkFilters: Array<{ value: IntegratedWorkFilter; label: string }> = [
-  { value: "all", label: "すべて" },
-  { value: "circular", label: "電子回覧板" },
-  { value: "notice", label: "連絡" },
-  { value: "event", label: "イベント" },
-  { value: "assembly", label: "総会" },
-  { value: "live", label: "Live" },
-  { value: "facility", label: "施設予約" },
-];
 
 const publishTypeOptions: Array<{ value: PublishType; label: string; hint: string }> = [
   { value: "circular", label: "電子回覧板", hint: "町内会・自治会の回覧板を電子化" },
@@ -987,7 +976,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     paidTotal: 0,
   });
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
-  const [integratedWorkFilter, setIntegratedWorkFilter] = useState<IntegratedWorkFilter>("all");
   const [integratedTitleSearch, setIntegratedTitleSearch] = useState("");
   const [integratedFacilityFilter, setIntegratedFacilityFilter] = useState("all");
   const [integratedFacilityStatus, setIntegratedFacilityStatus] = useState<FacilityReservationStatusFilter>("all");
@@ -4205,11 +4193,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
   const activePublishMeta = publishTypeOptions.find((option) => option.value === publishDraft.type) || publishTypeOptions[0];
   const activeDashboardGroup = functionGroups.find((group) => group.key === activeDashboardMenu) || functionGroups[0];
-  const publishWorkItems = workItems.filter((item) => ["circular", "notice", "event", "assembly"].includes(item.type));
-  const integratedWorkItems = workItems.filter((item) => ["circular", "notice", "event", "assembly", "facility", "live"].includes(item.type));
+  const publishWorkItems = workItems.filter((item) => item.type === publishDraft.type);
+  const integratedWorkItems = workItems.filter((item) => item.type === activeLiveFacilityScreen);
   const normalizedIntegratedTitleSearch = integratedTitleSearch.trim().toLocaleLowerCase("ja");
   const filteredIntegratedWorkItems = integratedWorkItems.filter((item) => {
-    if (integratedWorkFilter !== "all" && item.type !== integratedWorkFilter) return false;
     if (!normalizedIntegratedTitleSearch) return true;
     return String(item.title || "").toLocaleLowerCase("ja").includes(normalizedIntegratedTitleSearch);
   });
@@ -4227,7 +4214,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     integratedFacilityFilter === "all" || String(facility.id) === integratedFacilityFilter
   ));
   const visibleIntegratedWorkItems = filteredIntegratedWorkItems.filter((item) => item.type !== "facility");
-  const showIntegratedWorkView = activeDashboardMenu === "publish" || activeDashboardMenu === "live";
+  const showIntegratedWorkView = activeDashboardMenu === "live";
   const assemblyCategories = useMemo(
     () => sortAssemblyCategories(assemblyData.categories).filter(isActiveAssemblyCategory),
     [assemblyData.categories],
@@ -4520,7 +4507,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
       <div className="admin-work-list">
         {publishWorkItems.map(renderWorkItemCard)}
-        {!loading && publishWorkItems.length === 0 && <div className="el-empty">発信済みの電子回覧板・連絡・イベント・総会案内はまだありません。</div>}
+        {!loading && publishWorkItems.length === 0 && <div className="el-empty">発信済みの{activePublishMeta.label}はまだありません。</div>}
       </div>
     </section>
   );
@@ -6254,42 +6241,31 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       {renderDashboardMenuPanel()}
 
       {showIntegratedWorkView && (
-        <section className="admin-workspace-panel" aria-label="統合ビュー">
+        <section className="admin-workspace-panel" aria-label={`${activeLiveFacilityScreen === "live" ? "Web会議" : "施設予約"}一覧`}>
           <div className="admin-workspace-header">
             <div>
-              <p className="el-kicker">総合ビュー</p>
-              <h2>発信機能・Live・施設予約</h2>
+              <p className="el-kicker">Live・施設予約</p>
+              <h2>{activeLiveFacilityScreen === "live" ? "Web会議一覧" : "施設予約一覧"}</h2>
             </div>
           </div>
-          <div className="admin-integrated-controls">
-            <div className="admin-view-tabs" aria-label="表示する種類">
-              {integratedWorkFilters.map((filter) => (
-                <button
-                  type="button"
-                  key={filter.value}
-                  className={integratedWorkFilter === filter.value ? "active" : ""}
-                  aria-pressed={integratedWorkFilter === filter.value}
-                  onClick={() => setIntegratedWorkFilter(filter.value)}
-                >
-                  {filter.label}
-                </button>
-              ))}
+          {activeLiveFacilityScreen === "live" && (
+            <div className="admin-integrated-controls">
+              <label className="admin-integrated-search">
+                <span>表題検索</span>
+                <div>
+                  <i className="fas fa-magnifying-glass" />
+                  <input
+                    type="search"
+                    value={integratedTitleSearch}
+                    onChange={(event) => setIntegratedTitleSearch(event.target.value)}
+                    placeholder="表題の一部を入力"
+                  />
+                </div>
+              </label>
+              <small className="admin-integrated-count">{filteredIntegratedWorkItems.length}件 / 全{integratedWorkItems.length}件</small>
             </div>
-            <label className="admin-integrated-search">
-              <span>表題検索</span>
-              <div>
-                <i className="fas fa-magnifying-glass" />
-                <input
-                  type="search"
-                  value={integratedTitleSearch}
-                  onChange={(event) => setIntegratedTitleSearch(event.target.value)}
-                  placeholder="表題の一部を入力"
-                />
-              </div>
-            </label>
-            <small className="admin-integrated-count">{filteredIntegratedWorkItems.length}件 / 全{integratedWorkItems.length}件</small>
-          </div>
-          {(integratedWorkFilter === "all" || integratedWorkFilter === "facility") && (
+          )}
+          {activeLiveFacilityScreen === "facility" && (
             <section className="admin-integrated-reservations" aria-label="施設予約管理">
               <div className="admin-basic-card-heading">
                 <div><h3>施設予約一覧</h3><p><strong>施設予約を、施設毎に一覧で管理し、申込を承認・否認します。</strong></p></div>
@@ -6345,9 +6321,9 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           )}
           <div className="admin-work-list">
             {visibleIntegratedWorkItems.map(renderWorkItemCard)}
-            {!loading && integratedWorkItems.length === 0 && <div className="el-empty">発信機能とLive・施設予約の表示項目はまだありません。</div>}
-            {!loading && integratedWorkItems.length > 0 && filteredIntegratedWorkItems.length === 0 && (
-              <div className="el-empty">選択した種類・表題に一致する項目はありません。</div>
+            {!loading && activeLiveFacilityScreen === "live" && integratedWorkItems.length === 0 && <div className="el-empty">Web会議の案内はまだありません。</div>}
+            {!loading && activeLiveFacilityScreen === "live" && integratedWorkItems.length > 0 && filteredIntegratedWorkItems.length === 0 && (
+              <div className="el-empty">表題に一致するWeb会議はありません。</div>
             )}
           </div>
         </section>
