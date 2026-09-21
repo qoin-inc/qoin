@@ -414,7 +414,16 @@ export function FeeSettingsDesktopPreview() {
           <div className={`${styles.feeDesktopGrid} ${styles.feeDesktopCurrent}`}>
             <section><h4>未確定　2026年度の会費データ</h4><small>年度を確定すると、会費情報とは独立して保存され変更不可になります。</small><div className={styles.feeDesktopActions}><button type="button">年度を確定</button></div></section>
             <section><h4>2026年度 集計</h4><div className={styles.feeDesktopFields}><span>請求額　5,000円</span><span>入金額合計　0円</span><span>集金　0円</span><span>Stripe入金　0円</span><span>未入金額　5,000円</span><span>未納/一部　1</span></div><small>集金の場合は会費一覧の金額欄に入金します。オンライン入金はStripe入金に自動反映されます。</small></section>
-            <section className={styles.pcFocusPanel}><h4>会費請求設定</h4><p><strong>会計年度ごとに全会員世帯、会費一覧で選択した会員、請求未設定の会員、請求額0円の会員へ請求額を設定します。会員は会費支払いの際、町内会・自治会で利用可能なオンライン決済方法から支払を選んで支払えます。前年度を確定していなくても次年度の請求を設定可能です。</strong></p><div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span></div><div className={styles.feeDesktopMethods}><b>全会員世帯　／　会費一覧で選択　／　請求未設定　／　請求額0円</b></div><div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div></section>
+            <section className={styles.pcFocusPanel}>
+              <div className={styles.feeDesktopSectionHeading}>
+                <h4>会費請求設定</h4>
+                <div className={styles.feeDesktopBadges}><span>対象年度 2026年度</span><span>Stripe利用制限中</span></div>
+              </div>
+              <p><strong>会計年度ごとに全会員世帯、会費一覧で選択した会員、請求未設定の会員、請求額0円の会員へ請求額を設定します。会員は会費支払いの際、町内会・自治会で利用可能なオンライン決済方法から支払を選んで支払えます。前年度を確定していなくても次年度の請求を設定可能です。</strong></p>
+              <div className={styles.feeDesktopFields}><span>会計年度　2026年度</span><span>会費請求額　5,000円</span></div>
+              <div className={styles.feeDesktopTargets}><b>全会員世帯</b><b>会費一覧で選択</b><b>請求未設定</b><b>請求額0円</b></div>
+              <div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div>
+            </section>
             <section><h4>会費一覧</h4><div className={styles.feeDesktopMethods}><b>会費一覧検索　氏名・住所など</b><b>選択　会員名　請求額　集金　Stripe入金　修正</b><b>☑ 会員名　5,000円　0円　0円　個別データを保存</b><b>□ 会員名　請求未設定　0円　0円　個別データを保存</b></div><small>請求未設定の会員も請求額・集金を入力して個別に保存できます。</small></section>
           </div>
         </div>
@@ -422,15 +431,20 @@ export function FeeSettingsDesktopPreview() {
     </figure>
   );
 }
-export function MemberPaymentDesktopPreview() {
+export function MemberPaymentMobilePreview() {
   return (
-    <figure className={styles.pcGuideFigure}>
-      <div className={styles.pcGuideFrame}>
-        <div className={styles.pcGuideToolbar}><i className="fas fa-lock" aria-hidden="true" /><span>el-town.jp / 会員画面 / 会費</span></div>
-        <div className={styles.memberPaymentDesktop}>
-          <aside><strong>エルタウン町内会</strong><span>回覧板</span><span className={styles.pcStepActive}>会費</span><span>Live</span><span>設定</span></aside>
-          <section><small>会費</small><h4>2026年度</h4><p>この会費は世帯共通です。世帯主または家族が支払うと全員へ反映されます。</p><div className={styles.memberFeeSummary}><span><small>請求額</small><strong>5,000円</strong></span><span><small>入金額</small><strong>0円</strong></span><span><small>状態</small><strong>未納</strong></span></div><div className={styles.memberPaymentMethods}><span><i className="fas fa-hand-holding-yen" /> 手集金</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> Stripeで支払う（カード・銀行振込・PayPay）</button><small>利用可能な方法をStripeの決済画面で選びます。銀行振込は専用口座へ振り込み、入金確定後に自動反映されます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div></section>
-        </div>
+    <figure className={styles.memberMobileFigure}>
+      <div className={styles.memberMobileFrame}>
+        <div className={styles.memberMobileStatus}><span>9:41</span><span>● ● ●</span></div>
+        <header className={styles.memberMobileHeader}><div><small>エルタウン町内会</small><strong>会費</strong></div><span>メニュー</span></header>
+        <main className={styles.memberMobileBody}>
+          <small>会費</small>
+          <h4>2026年度</h4>
+          <p>この会費は世帯共通です。世帯主または家族が支払うと全員へ反映されます。</p>
+          <div className={styles.memberFeeSummary}><span><small>請求額</small><strong>5,000円</strong></span><span><small>入金額</small><strong>0円</strong></span><span><small>状態</small><strong>未納</strong></span></div>
+          <div className={styles.memberPaymentMethods}><span><i className="fas fa-hand-holding-yen" /> 集金</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> オンラインで支払う</button><small>クレジットカード・口座振込・PayPay（オプション）から選べます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div>
+        </main>
+        <nav className={styles.memberMobileNav}><span>回覧板</span><span className={styles.memberMobileNavActive}>会費</span><span>Live</span><span>設定</span></nav>
       </div>
     </figure>
   );

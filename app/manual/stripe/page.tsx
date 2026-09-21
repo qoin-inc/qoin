@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   FeeSettingsDesktopPreview,
-  MemberPaymentDesktopPreview,
+  MemberPaymentMobilePreview,
   OnboardingGuide,
   StripeDesktopPreview,
   StripeFlowDesktopPreview,
@@ -83,26 +83,8 @@ export default function StripeManualPage() {
           },
           {
             title: "会員の支払いと自動反映を確認する",
-            text: "会員は会員画面の会費案内から「オンラインで支払う」を押し、Stripeの安全な決済画面でカードまたは有効化済みのPayPayを選びます。支払い完了後、役員は会費一覧を更新し、Stripe入金額と未入金額が正しく反映されたことを確認します。",
-            points: [
-              "会員へは支払う年度、金額、期限、支払い完了画面まで確認するよう案内します。",
-              "二重支払いを避けるため、完了画面が出た後に同じボタンを繰り返し押さないよう案内します。",
-              "反映に時間がかかる場合は画面を更新し、Stripe状態と決済結果を確認します。",
-            ],
-            caution: "役員が会員のカード番号や確認コードを聞き取って代理入力しないでください。会員本人がStripe画面へ入力します。",
-            visual: <MemberPaymentDesktopPreview />,
-          },
-          {
-            title: "運用開始後の確認とトラブル対応",
-            text: "日常運用では、会費一覧のStripe入金、未入金、入金先口座、決済受付、入金／振込の状態を定期的に確認します。代表者・住所・口座などを変更した場合やStripeから確認メールが届いた場合は、登録を再開して不足項目を完了します。",
-            points: [
-              "決済できない：Stripe状態を更新し、決済受付が有効か確認します。",
-              "入金されない：入金／振込が有効か、口座末尾が正しいか、Stripeの案内がないか確認します。",
-              "登録画面が開かない：ポップアップ制限を解除し、1回だけ再実行します。",
-              "解決しない：エラー文、発生時刻、操作箇所を控えます。個人情報や書類画像は添付しません。",
-            ],
-            caution: "組織区分、代表者、本人確認、銀行口座に関するStripeの判断は、Stripe画面とStripeからの通知を優先してください。",
-            visual: <StripeDesktopPreview focus="status" />,
+            text: "会員は会員画面の会費案内から「オンラインで支払う」にて、Stripeの安全な決済画面でクレジットカード口座振込、PayPay(オプション）を選び支払います。支払い完了後、Stripe入金の場合自動で入金が反映します。",
+            visual: <MemberPaymentMobilePreview />,
           },
         ]}
       />
