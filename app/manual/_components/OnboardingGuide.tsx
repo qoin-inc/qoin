@@ -424,7 +424,7 @@ export function FeeSettingsDesktopPreview() {
               <div className={styles.feeDesktopTargets}><b>全会員世帯</b><b>会費一覧で選択</b><b>請求未設定</b><b>請求額0円</b></div>
               <div className={styles.feeDesktopActions}><button type="button">請求額を設定</button></div>
             </section>
-            <section><h4>会費一覧</h4><div className={styles.feeDesktopMethods}><b>会費一覧検索　氏名・住所など</b><b>選択　会員名　請求額　集金　Stripe入金　修正</b><b>☑ 会員名　5,000円　0円　0円　個別データを保存</b><b>□ 会員名　請求未設定　0円　0円　個別データを保存</b></div><small>請求未設定の会員も請求額・集金を入力して個別に保存できます。</small></section>
+            <section><h4>会費一覧</h4><div className={styles.feeDesktopMethods}><b>会費一覧検索　氏名・住所など</b><b>選択　会員名　請求額　集金　Stripe入金　修正</b><b>☑ 会員名　5,000円　集金希望　0円　個別データを保存</b><b>□ 会員名　請求未設定　0円　0円　個別データを保存</b></div><small>会員の集金希望が表示されます。請求未設定の会員も請求額・集金を入力して個別に保存できます。</small></section>
           </div>
         </div>
       </div>
@@ -440,9 +440,11 @@ export function MemberPaymentMobilePreview() {
         <main className={styles.memberMobileBody}>
           <small>会費</small>
           <h4>2026年度</h4>
+          <p>2026年度の年会費をご請求いたします。4月末までにお納めください。</p>
+          <p>役員による集金を希望される場合は「集金」にチェックをお願いいたします。</p>
           <p>この会費は世帯共通です。世帯主または家族が支払うと全員へ反映されます。</p>
-          <div className={styles.memberFeeSummary}><span><small>請求額</small><strong>5,000円</strong></span><span><small>入金額</small><strong>0円</strong></span><span><small>状態</small><strong>未納</strong></span></div>
-          <div className={styles.memberPaymentMethods}><span><i className="fas fa-hand-holding-yen" /> 集金</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> オンラインで支払う</button><small>クレジットカード・口座振込・PayPay（オプション）から選べます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div>
+          <div className={styles.memberFeeSummary}><span><small>年会費</small><strong>5,000円</strong></span><span><small>状態</small><strong>未納</strong></span></div>
+          <div className={styles.memberPaymentMethods}><span><input type="checkbox" readOnly /> 集金を希望する</span><button className={styles.pcFocusPanel} type="button"><i className="fas fa-credit-card" /> Stripeで支払う</button><small>クレジットカード・口座振込・PayPay（オプション）から選べます。</small><a>お支払い条件・特定商取引法に基づく表記</a></div>
         </main>
         <nav className={styles.memberMobileNav}><span>回覧板</span><span className={styles.memberMobileNavActive}>会費</span><span>Live</span><span>設定</span></nav>
       </div>

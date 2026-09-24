@@ -4987,6 +4987,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                         placeholder="0"
                         disabled={isEmpty || (!fee?.id && !selectable) || !canEditSelectedFeeYear}
                       />
+                      {fee?.cash_collection_requested && getFeePaidAmount(fee) < getFeeBillingAmount(fee) && <small className="admin-fee-collection-request">会員が集金を希望</small>}
                     </span>
                     <span>
                       <strong>{yen(getFeeStripePaid(fee))}</strong>

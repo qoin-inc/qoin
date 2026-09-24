@@ -374,7 +374,7 @@
 .memberMobileBody > small { color: #0ea5e9; font-size: 8px; font-weight: 950; }
 .memberMobileBody h4 { margin: 2px 0 7px; color: #1e293b; font-size: 19px; font-weight: 950; }
 .memberMobileBody p { margin: 0; color: #64748b; font-size: 8px; line-height: 1.55; font-weight: 750; }
-.memberFeeSummary { margin-top: 15px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.memberFeeSummary { margin-top: 15px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .memberFeeSummary span { padding: 10px; display: grid; gap: 3px; border-radius: 7px; background: #f8fafc; }
 .memberFeeSummary small { color: #64748b; font-size: 7px; font-weight: 800; }
 .memberFeeSummary strong { color: #1e293b; font-size: 12px; font-weight: 950; }

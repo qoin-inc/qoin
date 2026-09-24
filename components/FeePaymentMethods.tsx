@@ -24,7 +24,7 @@ export default function FeePaymentMethods({ townId, setting, onSaved }: { townId
     <h3>会費の支払方法</h3>
     <p>会員が選べる支払方法を設定します。銀行振込はStripeが会員世帯ごとに発行する口座へ振り込み、入金確定後に自動で消込します。</p>
     <fieldset disabled={busy} className="admin-stripe-checklist">
-      <label><input type="checkbox" checked={cash} onChange={e => setCash(e.target.checked)} />手集金</label>
+      <label><input type="checkbox" checked={cash} onChange={e => setCash(e.target.checked)} />集金</label>
       <label><input type="checkbox" checked={card} onChange={e => setCard(e.target.checked)} />Stripeカード決済</label>
       <label><input type="checkbox" checked={bank} onChange={e => setBank(e.target.checked)} />Stripe銀行振込（自動消込）</label>
     </fieldset>

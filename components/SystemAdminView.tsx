@@ -362,7 +362,7 @@ export default function SystemAdminView() {
               <div className="system-admin-metrics">
                 <span><strong>{yen(Number(publishedFeeStandard.default_amount))}</strong>1世帯・年額</span>
                 <span><strong>基本情報</strong>決算月を使用</span>
-                <span><strong>{publishedFeeStandard.cash_enabled ? "利用可" : "利用不可"}</strong>手集金</span>
+                <span><strong>{publishedFeeStandard.cash_enabled ? "利用可" : "利用不可"}</strong>集金</span>
                 <span><strong>{publishedFeeStandard.stripe_card_enabled ? "利用可" : "利用不可"}</strong>Stripeカード</span>
               </div>
               <p>{feeConfiguredTownCount} / {towns.length}件の町内会・自治会に会費設定があります。公開済み設定は既存の請求・入金実績を変更しません。</p>
@@ -379,7 +379,7 @@ export default function SystemAdminView() {
               <label><span>請求対象</span><input value="請求作成時点の有効な全会員世帯" readOnly /></label>
               <label><span>会費収入科目</span><input value={feeStandardDraft.revenueCategory} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, revenueCategory: e.target.value })} /></label>
               <label><span>変更理由</span><input value={feeStandardDraft.changeReason} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, changeReason: e.target.value })} placeholder="例：2027年度の標準額改定" /></label>
-              <label><span><input type="checkbox" checked={feeStandardDraft.cashEnabled} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, cashEnabled: e.target.checked })} /> 手集金を利用可能にする</span></label>
+              <label><span><input type="checkbox" checked={feeStandardDraft.cashEnabled} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, cashEnabled: e.target.checked })} /> 集金を利用可能にする</span></label>
               <label><span><input type="checkbox" checked={feeStandardDraft.stripeCardEnabled} onChange={(e) => setFeeStandardDraft({ ...feeStandardDraft, stripeCardEnabled: e.target.checked })} /> Stripeカード決済を利用可能にする</span></label>
             </div>
             <div className="system-admin-actions"><button onClick={publishFeeStandard} disabled={busy || !publishedFeeStandard}>新しい標準版として公開</button></div>
@@ -389,7 +389,7 @@ export default function SystemAdminView() {
         <section className="system-admin-card">
           <div className="system-admin-heading"><div><h2>標準設定の履歴</h2><p>公開済み版は上書きせず、新しい版として保存します。</p></div><span>{feeStandards.length}版</span></div>
           <div className="system-admin-table">
-            <div className="system-admin-row system-admin-head"><span>版</span><span>状態</span><span>名称</span><span>金額</span><span>年度基準</span><span>手集金</span><span>Stripe</span><span>変更理由</span></div>
+            <div className="system-admin-row system-admin-head"><span>版</span><span>状態</span><span>名称</span><span>金額</span><span>年度基準</span><span>集金</span><span>Stripe</span><span>変更理由</span></div>
             {feeStandards.map((item) => <div className="system-admin-row" key={item.id}><span><strong>v{item.version_number}</strong></span><span>{item.status === "published" ? "公開中" : item.status === "retired" ? "廃止" : "下書き"}</span><span>{item.fee_name}</span><span>{yen(Number(item.default_amount))}</span><span>基本情報の決算月</span><span>{item.cash_enabled ? "可" : "不可"}</span><span>{item.stripe_card_enabled ? "可" : "不可"}</span><span>{item.change_reason}</span></div>)}
           </div>
         </section>

@@ -54,7 +54,7 @@ export default function MemberManualPage() {
 
         <section className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
           <h2 className="font-bold mb-2">会費の支払い</h2>
-          <p className="text-sm mb-2">会費の画面で未納の請求を確認し、「Stripeで支払う」を押します。町内会・自治会が有効にしたカード・銀行振込・PayPayから選べます。手集金は役員の案内に従ってください。</p>
+          <p className="text-sm mb-2">会費の画面で年会費と未納・完納の状態を確認します。役員による集金を希望する場合は「集金」にチェックしてください。Stripeが利用可能な場合は「オンラインで支払う」から、町内会・自治会が有効にしたカード・銀行振込・PayPayを選べます。</p>
           <p className="text-sm mb-2">銀行振込ではStripeが案内する専用口座と残額を確認して振り込みます。入金確定後、会費に自動反映されます。手続き直後や金額が不足している間は、入金済みにはなりません。</p>
           <p className="text-sm">すでに銀行振込を選んだ請求は、同じ支払ボタンから振込先・残額を再確認できます。過払い分はStripeの残高として扱われるため、役員へご相談ください。</p>
         </section>

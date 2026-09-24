@@ -3930,7 +3930,7 @@ button { cursor: pointer; border: 0; }
 
 .el-fee-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 14px 0;
 }
@@ -4016,6 +4016,53 @@ button { cursor: pointer; border: 0; }
   font-size: 12px;
   font-weight: 700;
   line-height: 1.5;
+}
+
+.el-fee-collection-choice {
+  grid-template-columns: 26px 1fr;
+  align-items: center;
+  cursor: pointer;
+}
+
+.el-fee-collection-choice > input {
+  width: 22px;
+  height: 22px;
+  accent-color: #c2410c;
+}
+
+.el-fee-collection-choice:has(input:checked) {
+  border-color: #fb923c;
+  background: #ffedd5;
+}
+
+.el-fee-stripe-option {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.el-fee-stripe-option > strong {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.el-fee-stripe-option > small {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.el-fee-stripe-option > button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.admin-fee-row .admin-fee-collection-request {
+  color: #c2410c;
+  font-weight: 900;
 }
 
 .el-status-card .el-fee-payment-caution {

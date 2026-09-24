@@ -67,6 +67,7 @@ type FeeRecord = {
   last_payment_method?: string;
   status?: string;
   is_billed?: boolean;
+  cash_collection_requested?: boolean;
 };
 
 type LiveSession = {
@@ -172,17 +173,15 @@ const getFeePaidAmount = (fee: FeeRecord) => Number(fee.paid_amount ?? (getFeeCa
 const getFeeStatusLabel = (fee: FeeRecord) => {
   const billed = getFeeBillingAmount(fee);
   const paid = getFeePaidAmount(fee);
-  if (billed > 0 && paid >= billed) return "納入済";
-  if (paid > 0) return "一部入金";
-  return "未納";
+  return paid >= billed ? "完納" : "未納";
 };
 const getPaymentMethodLabel = (fee: FeeRecord) => {
   const cash = getFeeCashPaid(fee);
   const stripe = getFeeStripePaid(fee);
-  if (cash > 0 && stripe > 0) return "Stripe + 手集金";
+  if (cash > 0 && stripe > 0) return "Stripe + 集金";
   if (stripe > 0 || fee.payment_method === "stripe" || fee.last_payment_method === "stripe") return "Stripe";
-  if (cash > 0 || fee.payment_method === "cash" || fee.last_payment_method === "cash") return "手集金";
-  return "未入金";
+  if (cash > 0 || fee.payment_method === "cash" || fee.last_payment_method === "cash") return "集金";
+  return "";
 };
 
 const parseAttachmentList = (item: Circular) => {
@@ -422,6 +421,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [liveApplications, setLiveApplications] = useState<LiveApplication[]>([]);
   const [feeRecords, setFeeRecords] = useState<FeeRecord[]>([]);
   const [feeSetting, setFeeSetting] = useState<any | null>(null);
+  const [feeFiscalStartMonth, setFeeFiscalStartMonth] = useState(4);
+  const [feeCollectionBusy, setFeeCollectionBusy] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState("");
   const [stripeReady, setStripeReady] = useState(false);
   const [feeLoading, setFeeLoading] = useState(true);
@@ -586,14 +587,14 @@ export default function ResidentView({ townId, townName, residentName, userId, r
 
       let townResult = await supabase
         .from("neighborhoods")
-        .select("stripe_account_id,stripe_account_mode,stripe_onboarding_status,stripe_charges_enabled,stripe_payouts_enabled")
+        .select("stripe_account_id,stripe_account_mode,stripe_onboarding_status,stripe_charges_enabled,stripe_payouts_enabled,fiscal_start_month")
         .eq("id", townId)
         .maybeSingle();
 
       if (townResult.error && String(townResult.error.message || "").includes("stripe_")) {
         townResult = await supabase
           .from("neighborhoods")
-          .select("stripe_account_id")
+          .select("stripe_account_id,fiscal_start_month")
           .eq("id", townId)
           .maybeSingle();
       }
@@ -605,6 +606,8 @@ export default function ResidentView({ townId, townName, residentName, userId, r
         .maybeSingle();
       if (active) {
         setFeeSetting(feeSettingData || null);
+        const startMonth = Number(townData?.fiscal_start_month);
+        setFeeFiscalStartMonth(Number.isInteger(startMonth) && startMonth >= 1 && startMonth <= 12 ? startMonth : 4);
         setStripeAccountId(townData?.stripe_account_id || "");
         setStripeReady(Boolean(
           townData?.stripe_account_id &&
@@ -867,6 +870,25 @@ export default function ResidentView({ townId, townName, residentName, userId, r
   const [feeBankAccount, setFeeBankAccount] = useState<any>(null);
   const [feeBankInstructionsUrl, setFeeBankInstructionsUrl] = useState("");
   useEffect(() => { setFeeBankAccount(null); setFeeBankInstructionsUrl(""); }, [townId]);
+  const handleCashCollectionRequest = async (fee: FeeRecord, requested: boolean) => {
+    setFeeMessage("");
+    setFeeCollectionBusy(true);
+    try {
+      const { data, error } = await supabase.rpc("set_own_fee_cash_collection_request", {
+        p_fee_record_id: String(fee.id),
+        p_requested: requested,
+      });
+      if (error) throw error;
+      setFeeRecords((current) => current.map((record) =>
+        String(record.id) === String(fee.id) ? { ...record, cash_collection_requested: Boolean(data) } : record,
+      ));
+      setFeeMessage(requested ? "集金希望を役員へ伝えました。" : "集金希望を取り消しました。");
+    } catch (error: any) {
+      setFeeMessage(error?.message || "集金希望を保存できませんでした。");
+    } finally {
+      setFeeCollectionBusy(false);
+    }
+  };
   const handleOnlinePayment = async (fee: FeeRecord) => {
     setFeeMessage("");
     setFeeBankAccount(null); setFeeBankInstructionsUrl("");
@@ -2006,34 +2028,44 @@ export default function ResidentView({ townId, townName, residentName, userId, r
               <div className="el-status-card accent">
                 <p className="el-kicker">会費</p>
                 <h2>{getFeeYear(latestFee)}年度</h2>
-                <p>この会費は世帯共通です。世帯主または家族が支払うと、同じ世帯の全員に入金状況が反映されます。</p>
+                <p>{getFeeYear(latestFee)}年度の年会費をご請求いたします。{feeFiscalStartMonth}月末までにお納めください。</p>
+                {feeSetting?.cash_enabled !== false && getFeePaidAmount(latestFee) < getFeeBillingAmount(latestFee) && (
+                  <p>役員による集金を希望される場合は「集金」にチェックをお願いいたします。</p>
+                )}
+                <p>この会費は世帯共通です。世帯主または家族が支払うと、同じ世帯の全員に納入状況が反映されます。</p>
                 <div className="el-fee-summary">
-                  <span><small>請求額</small><strong>{yen(getFeeBillingAmount(latestFee))}</strong></span>
-                  <span><small>入金額</small><strong>{yen(getFeePaidAmount(latestFee))}</strong></span>
+                  <span><small>年会費</small><strong>{yen(getFeeBillingAmount(latestFee))}</strong></span>
                   <span><small>状態</small><strong>{getFeeStatusLabel(latestFee)}</strong></span>
                 </div>
-                <p>入金方法: {getPaymentMethodLabel(latestFee)}</p>
+                {getFeePaidAmount(latestFee) > 0 && <p>入金方法: {getPaymentMethodLabel(latestFee)}</p>}
                 {feeSetting?.payment_instructions && <p className="el-fee-payment-note">{feeSetting.payment_instructions}</p>}
                 {getFeePaidAmount(latestFee) < getFeeBillingAmount(latestFee) ? (
                   <div className="el-fee-payment-methods">
                     {feeSetting?.cash_enabled !== false && (
-                      <div className="el-fee-payment-method">
-                        <i className="fas fa-hand-holding-yen" />
-                        <span><strong>手集金</strong><small>役員からの集金案内をご確認ください。</small></span>
+                      <label className="el-fee-payment-method el-fee-collection-choice">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(latestFee.cash_collection_requested)}
+                          onChange={(event) => void handleCashCollectionRequest(latestFee, event.target.checked)}
+                          disabled={feeCollectionBusy || residentRosterId === null}
+                        />
+                        <span><strong>集金</strong><small>{residentRosterId === null ? "名簿との連携を確認してください。" : "役員による集金を希望する"}</small></span>
+                      </label>
+                    )}
+                    {(feeSetting?.stripe_card_enabled !== false || feeSetting?.stripe_paypay_enabled || feeSetting?.stripe_bank_transfer_enabled) && (
+                      <div className="el-fee-stripe-option">
+                        <strong>Stripeで支払う</strong>
+                        <button className="el-primary-action" onClick={() => handleOnlinePayment(latestFee)} disabled={!stripeAccountId || !stripeReady}>
+                          <i className="fas fa-credit-card" />
+                          {feeSetting?.stripe_bank_transfer_enabled
+                            ? "オンラインで支払う（銀行振込・利用可能な決済方法）"
+                            : feeSetting?.stripe_paypay_enabled && feeSetting?.stripe_card_enabled !== false
+                            ? "オンラインで支払う（カード・PayPay）"
+                            : feeSetting?.stripe_paypay_enabled ? "オンラインで支払う（PayPay）" : "オンラインで支払う（カード）"}
+                        </button>
+                        {(!stripeAccountId || !stripeReady) && <small>Stripeの支払いは準備中です。利用可能になり次第、このボタンから支払えます。</small>}
                       </div>
                     )}
-                    {(feeSetting?.stripe_card_enabled !== false || feeSetting?.stripe_paypay_enabled || feeSetting?.stripe_bank_transfer_enabled) && (stripeAccountId && stripeReady ? (
-                      <button className="el-primary-action" onClick={() => handleOnlinePayment(latestFee)}>
-                        <i className="fas fa-credit-card" />
-                        {feeSetting?.stripe_bank_transfer_enabled
-                          ? "Stripeで支払う（銀行振込・利用可能な決済方法）"
-                          : feeSetting?.stripe_paypay_enabled && feeSetting?.stripe_card_enabled !== false
-                          ? "オンラインで支払う（カード・PayPay）"
-                          : feeSetting?.stripe_paypay_enabled ? "オンラインで支払う（PayPay）" : "オンラインで支払う（カード）"}
-                      </button>
-                    ) : stripeAccountId ? (
-                      <div className="el-empty">Stripe本番連携の確認中です。役員からの案内をお待ちください。</div>
-                    ) : null)}
                     {feeSetting?.stripe_paypay_enabled && (
                       <>
                         <p className="el-fee-payment-caution">PayPayはStripeの安全な決済画面で選択できます。</p>
@@ -2046,14 +2078,14 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                       <p className="el-fee-payment-caution">銀行振込はStripeが案内する会員世帯専用口座をご利用ください。入金確定後に自動反映されます。不足額がある場合は入金完了にならず、超過分はStripeの残高として管理されます。</p>
                     )}
                   </div>
-                ) : (
+                ) : getFeePaidAmount(latestFee) > 0 ? (
                   <Link
                     href={`/resident/receipt?name=${encodeURIComponent(displayName)}&amount=${getFeePaidAmount(latestFee)}&method=${encodeURIComponent(getPaymentMethodLabel(latestFee))}&town=${encodeURIComponent(placeName)}`}
                     className="el-secondary-action"
                   >
                     領収書を表示
                   </Link>
-                )}
+                ) : null}
                 {feeMessage && <div className="form-alert">{feeMessage}</div>}
                 {feeBankAccount && <div className="el-fee-payment-note">Stripe振込先：{feeBankAccount.bank_name} {feeBankAccount.bank_branch_name} ／ {feeBankAccount.bank_account_type === "checking" ? "当座" : "普通"} {feeBankAccount.bank_account_number}<br />口座名義：{feeBankAccount.bank_account_holder}</div>}
                 {feeBankInstructionsUrl && <a href={feeBankInstructionsUrl} target="_blank" rel="noopener noreferrer">Stripeで振込先・残額を確認する</a>}
