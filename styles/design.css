@@ -3697,6 +3697,31 @@ button { cursor: pointer; border: 0; }
   gap: 7px;
 }
 
+.admin-fee-search-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.admin-fee-collection-filter {
+  min-height: 44px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.admin-fee-collection-filter.active {
+  border-color: #f97316;
+  background: #ffedd5;
+  box-shadow: 0 0 0 2px #fed7aa;
+}
+
 .admin-fee-roster-tools label span,
 .admin-fee-roster-tools > small {
   color: #374151;
@@ -5102,6 +5127,11 @@ button { cursor: pointer; border: 0; }
   font-size: 16px;
 }
 
+.admin-feature-screen .admin-fee-collection-filter {
+  min-height: 52px;
+  font-size: 14px;
+}
+
 .admin-feature-screen .admin-fee-actions button,
 .admin-feature-screen .admin-member-actions button,
 .admin-feature-screen .admin-member-actions label,
@@ -5552,6 +5582,10 @@ button { cursor: pointer; border: 0; }
   }
 
   .admin-fee-roster-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-fee-search-controls {
     grid-template-columns: 1fr;
   }
 

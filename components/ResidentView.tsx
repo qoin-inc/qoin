@@ -2032,7 +2032,6 @@ export default function ResidentView({ townId, townName, residentName, userId, r
                 {feeSetting?.cash_enabled !== false && getFeePaidAmount(latestFee) < getFeeBillingAmount(latestFee) && (
                   <p>役員による集金を希望される場合は「集金」にチェックをお願いいたします。</p>
                 )}
-                <p>この会費は世帯共通です。世帯主または家族が支払うと、同じ世帯の全員に納入状況が反映されます。</p>
                 <div className="el-fee-summary">
                   <span><small>年会費</small><strong>{yen(getFeeBillingAmount(latestFee))}</strong></span>
                   <span><small>状態</small><strong>{getFeeStatusLabel(latestFee)}</strong></span>

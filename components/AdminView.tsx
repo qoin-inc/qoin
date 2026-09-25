@@ -693,6 +693,7 @@ const getFeeBillingAmount = (fee: any) => Number(fee?.expected_amount ?? fee?.bi
 const getFeeCashPaid = (fee: any) => Number(fee?.paid_amount_cash ?? (fee?.payment_method === "cash" ? fee?.paid_amount : 0) ?? 0);
 const getFeeStripePaid = (fee: any) => Number(fee?.paid_amount_stripe ?? (fee?.payment_method === "stripe" ? fee?.paid_amount : 0) ?? 0);
 const getFeePaidAmount = (fee: any) => Number(fee?.paid_amount ?? (getFeeCashPaid(fee) + getFeeStripePaid(fee)));
+const hasPendingFeeCollectionRequest = (fee: any) => Boolean(fee?.cash_collection_requested) && getFeePaidAmount(fee) < getFeeBillingAmount(fee);
 const getFeeStatusLabel = (fee: any) => {
   const billing = getFeeBillingAmount(fee);
   const paid = getFeePaidAmount(fee);
@@ -1005,6 +1006,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [feeDraft, setFeeDraft] = useState<FeeDraft>({ fiscalYear: "", amount: "", targetMode: "all" });
   const [feeSelectedMembers, setFeeSelectedMembers] = useState<Record<string, boolean>>({});
   const [feeRosterSearch, setFeeRosterSearch] = useState("");
+  const [feeCollectionRequestedOnly, setFeeCollectionRequestedOnly] = useState(false);
   const [feeCashDrafts, setFeeCashDrafts] = useState<Record<string, string>>({});
   const [feeBillingDrafts, setFeeBillingDrafts] = useState<Record<string, string>>({});
   const [feeBusy, setFeeBusy] = useState(false);
@@ -3381,6 +3383,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       })),
   ].filter(({ member, fee }) => {
     if (feeDraft.targetMode === "unbilled" && (!member || isWithdrawnMember(member) || (fee && getFeeBillingAmount(fee) !== 0))) return false;
+    if (feeCollectionRequestedOnly && !hasPendingFeeCollectionRequest(fee)) return false;
     if (!feeRosterQuery) return true;
     return [
       fee?.resident_name,
@@ -3404,6 +3407,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const feeStripePaidTotal = summaryFeeRecords.reduce((sum, fee) => sum + getFeeStripePaid(fee), 0);
   const feeBalanceTotal = Math.max(feeBillingTotal - feePaidTotal, 0);
   const feeUnpaidCount = summaryFeeRecords.filter((fee) => getFeePaidAmount(fee) < getFeeBillingAmount(fee)).length;
+  const feeCollectionRequestCount = summaryFeeRecords.filter(hasPendingFeeCollectionRequest).length;
   const feeSelectedCount = activeFeeMembers.filter((member) => feeSelectedMembers[String(member.id)]).length;
   const feeVisibleSelectedCount = feeListRows.filter(({ member }) => member && feeSelectedMembers[String(member.id)]).length;
   const feeTargetCount = feeDraft.targetMode === "all"
@@ -3612,11 +3616,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const setVisibleFeeTargets = (checked: boolean) => {
     setFeeDraft((current) => ({ ...current, targetMode: "selected" }));
     setFeeSelectedMembers((current) => {
-      const next = feeDraft.targetMode === "all"
-        ? Object.fromEntries(activeFeeMembers.map((member) => [String(member.id), true]))
-        : feeDraft.targetMode === "unbilled"
-          ? Object.fromEntries(unbilledFeeMembers.map((member) => [String(member.id), true]))
-          : { ...current };
+      const next = checked
+        ? feeDraft.targetMode === "selected" ? { ...current } : {}
+        : feeDraft.targetMode === "all"
+          ? Object.fromEntries(activeFeeMembers.map((member) => [String(member.id), true]))
+          : feeDraft.targetMode === "unbilled"
+            ? Object.fromEntries(unbilledFeeMembers.map((member) => [String(member.id), true]))
+            : { ...current };
       for (const { member } of feeListRows) {
         if (!member || isWithdrawnMember(member)) continue;
         const memberId = String(member.id);
@@ -4923,10 +4929,20 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             </div>
 
             <div className="admin-fee-roster-tools">
-              <label>
-                <span>会費一覧検索</span>
-                <input value={feeRosterSearch} onChange={(event) => setFeeRosterSearch(event.target.value)} placeholder="氏名・カナ・郵便番号・住所で検索" />
-              </label>
+              <div className="admin-fee-search-controls">
+                <label>
+                  <span>会費一覧検索</span>
+                  <input value={feeRosterSearch} onChange={(event) => setFeeRosterSearch(event.target.value)} placeholder="氏名・カナ・郵便番号・住所で検索" />
+                </label>
+                <button
+                  type="button"
+                  className={`admin-fee-collection-filter${feeCollectionRequestedOnly ? " active" : ""}`}
+                  aria-pressed={feeCollectionRequestedOnly}
+                  onClick={() => setFeeCollectionRequestedOnly((current) => !current)}
+                >
+                  集金希望のみ（{feeCollectionRequestCount.toLocaleString()}）
+                </button>
+              </div>
               <div className="admin-fee-roster-buttons">
                 <button type="button" onClick={useAllFeeTargets} disabled={!canBatchEditSelectedFeeYear}>全会員を選択</button>
                 <button type="button" onClick={() => setVisibleFeeTargets(true)} disabled={!canBatchEditSelectedFeeYear}>表示中を選択</button>
@@ -4987,7 +5003,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                         placeholder="0"
                         disabled={isEmpty || (!fee?.id && !selectable) || !canEditSelectedFeeYear}
                       />
-                      {fee?.cash_collection_requested && getFeePaidAmount(fee) < getFeeBillingAmount(fee) && <small className="admin-fee-collection-request">会員が集金を希望</small>}
+                      {hasPendingFeeCollectionRequest(fee) && <small className="admin-fee-collection-request">会員が集金を希望</small>}
                     </span>
                     <span>
                       <strong>{yen(getFeeStripePaid(fee))}</strong>
