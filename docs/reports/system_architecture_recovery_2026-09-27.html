@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="el-townの2026年9月27日時点のシステム構成と災害復旧手順">
+<title>el-town システム構成・災害復旧手順書（2026-09-27）</title>
+<style>
+    :root{--blue:#2e8bc0;--sky:#58aede;--orange:#f28c28;--ink:#172033;--muted:#64748b;--line:#dbe5ee;--paper:#fff;--bg:#eef5f8;--nav:#102a43;--ok:#15803d;--warn:#b45309;--danger:#b91c1c;--code:#0f172a;--shadow:0 16px 40px rgba(15,42,67,.10)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--bg);font-family:Inter,"Noto Sans JP","Yu Gothic UI",Meiryo,sans-serif;line-height:1.75}
+    .sidebar{position:fixed;inset:0 auto 0 0;width:310px;background:linear-gradient(180deg,#0b2339,#133d5b);color:#fff;padding:24px 18px;overflow:auto;z-index:20}.brand{display:flex;gap:12px;align-items:center;padding:4px 8px 20px;border-bottom:1px solid rgba(255,255,255,.14)}.brand-mark{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--sky),#7dd3fc);display:grid;place-items:center;font-size:22px;font-weight:900}.brand strong{display:block;font-size:16px}.brand small{display:block;color:#b9d8e9;font-size:11px}.sidebar h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8fc5df;margin:22px 8px 8px}.toc{display:grid;gap:2px}.toc a{display:block;color:#dceef7;text-decoration:none;padding:8px 10px;border-radius:8px;font-size:12px;line-height:1.45}.toc a:hover,.toc a.active{background:rgba(88,174,222,.22);color:#fff}.toc .toc-3{padding-left:24px;color:#a9cedf;font-size:11px}.side-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 6px}.side-actions button{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#fff;border-radius:8px;padding:9px;font-weight:800;cursor:pointer}
+    .main{margin-left:310px;min-width:0}.hero{padding:54px clamp(24px,6vw,86px) 44px;color:#fff;background:radial-gradient(circle at 85% 10%,rgba(125,211,252,.35),transparent 34%),linear-gradient(135deg,#174b6d,#2e8bc0)}.hero .eyebrow{font-weight:900;letter-spacing:.13em;font-size:12px;color:#ccecff}.hero h1{border:0;color:#fff;margin:8px 0 14px;font-size:clamp(28px,4vw,48px);line-height:1.25}.hero p{max-width:850px;margin:0;color:#e6f5fc}.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.badge{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+    .content{max-width:1160px;margin:0 auto;padding:38px clamp(20px,5vw,70px) 90px}.notice{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:18px 20px;margin-bottom:30px;border:1px solid #f5c77a;border-left:6px solid var(--orange);border-radius:12px;background:#fffaf0;box-shadow:var(--shadow)}.notice strong{color:#92400e}.notice span:first-child{font-size:24px}
+    article>h1{display:none}h2{margin:58px 0 18px;padding:14px 18px;border-left:7px solid var(--sky);border-radius:0 10px 10px 0;background:linear-gradient(90deg,#e7f5fc,rgba(231,245,252,.2));font-size:25px;line-height:1.35;color:#123b56}h3{margin:34px 0 12px;font-size:19px;color:#1f5f85}h4{margin:24px 0 8px;color:#334155}.anchor{margin-left:8px;color:#9db6c4;text-decoration:none;opacity:0}h2:hover .anchor,h3:hover .anchor{opacity:1}p{margin:12px 0}ul,ol{margin:12px 0 18px;padding-left:27px}li{margin:6px 0}li::marker{color:var(--blue);font-weight:900}strong{font-weight:900}a{color:#0369a1;text-decoration-thickness:1px;text-underline-offset:3px}code{padding:.13em .42em;border:1px solid #d5e1e9;border-radius:5px;background:#edf5f8;color:#9f1239;font-family:"Cascadia Code",Consolas,monospace;font-size:.88em}
+    .table-wrap{overflow:auto;margin:18px 0 26px;border:1px solid var(--line);border-radius:12px;background:var(--paper);box-shadow:0 8px 24px rgba(15,42,67,.06)}table{width:100%;border-collapse:collapse;font-size:13px}th{position:sticky;top:0;background:#153e5a;color:#fff;text-align:left;padding:12px 14px;white-space:nowrap}td{padding:11px 14px;border-top:1px solid var(--line);vertical-align:top}tbody tr:nth-child(even){background:#f7fbfd}tbody tr:hover{background:#eaf6fb}td code{white-space:nowrap}
+    .code-wrap,.diagram-wrap{margin:18px 0 28px;border-radius:12px;overflow:hidden;background:var(--code);box-shadow:var(--shadow)}.code-wrap>span,.diagram-label{display:block;padding:8px 14px;background:#1e293b;color:#93c5fd;font:700 11px/1.4 Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}.code-wrap pre{margin:0;padding:18px;overflow:auto;color:#dbeafe}.code-wrap pre code{padding:0;border:0;background:transparent;color:inherit}.diagram-wrap{background:#fff;border:1px solid var(--line)}.diagram-wrap pre{margin:0;padding:24px;overflow:auto;text-align:center;background:#fff;color:#334155}.diagram-label{background:#e7f5fc;color:#1f5f85}
+    .footer{border-top:1px solid var(--line);background:#fff;padding:24px clamp(20px,5vw,70px);color:var(--muted);font-size:12px}.mobile-bar{display:none}.back-top{position:fixed;right:22px;bottom:22px;width:46px;height:46px;border:0;border-radius:50%;background:var(--orange);color:#fff;font-size:20px;box-shadow:var(--shadow);cursor:pointer}
+    @media(max-width:900px){.sidebar{transform:translateX(-100%);transition:.2s}.sidebar.open{transform:translateX(0);box-shadow:20px 0 50px rgba(0,0,0,.25)}.main{margin-left:0}.mobile-bar{position:sticky;top:0;z-index:15;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#102a43;color:#fff}.mobile-bar button{border:0;background:#245b7d;color:#fff;border-radius:7px;padding:8px 11px}.hero{padding-top:36px}.content{padding-top:24px}.table-wrap{margin-inline:-10px}h2{font-size:21px}}
+    @media print{body{background:#fff;font-size:10.5pt}.sidebar,.mobile-bar,.back-top,.side-actions{display:none!important}.main{margin:0}.hero{padding:24px 0;color:#000;background:#fff;border-bottom:2px solid #2e8bc0}.hero h1{color:#123b56;font-size:25pt}.hero p,.hero .eyebrow{color:#475569}.badge{color:#334155;border-color:#94a3b8}.content{max-width:none;padding:10px 0}.notice{box-shadow:none}h2{break-after:avoid;margin-top:28px}.table-wrap,.code-wrap,.diagram-wrap{box-shadow:none;break-inside:avoid}a{color:inherit;text-decoration:none}.footer{padding-inline:0}}
+  </style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><div class="brand-mark">e</div><div><strong>el-town</strong><small>System Recovery Report · 2026-09-27</small></div></div>
+  <div class="side-actions"><button type="button" onclick="window.print()">印刷</button><button type="button" onclick="location.href='system_architecture_recovery_2026-09-27.md'">MD原本</button></div>
+  <h2>目次</h2><nav class="toc" id="toc"><a class="toc-2" href="#1-現状と復旧可能性">1. 現状と復旧可能性</a>
+<a class="toc-2" href="#2-システム全体像">2. システム全体像</a>
+<a class="toc-2" href="#3-開発-ビルド構成">3. 開発・ビルド構成</a>
+<a class="toc-2" href="#4-github-netlify-デプロイ">4. GitHub・Netlify・デプロイ</a>
+<a class="toc-2" href="#5-環境分離の状態と予定構成">5. 環境分離の状態と予定構成</a>
+<a class="toc-2" href="#6-環境変数-秘密情報">6. 環境変数・秘密情報</a>
+<a class="toc-2" href="#7-画面-api-主要業務">7. 画面・API・主要業務</a>
+<a class="toc-2" href="#8-supabase-認証-rls">8. Supabase・認証・RLS</a>
+<a class="toc-2" href="#9-外部サービス台帳と復元対象">9. 外部サービス台帳と復元対象</a>
+<a class="toc-2" href="#10-災害復旧手順">10. 災害復旧手順</a>
+<a class="toc-3" href="#a-初動">A. 初動</a>
+<a class="toc-3" href="#b-コードとnetlify">B. コードとNetlify</a>
+<a class="toc-3" href="#c-supabase">C. Supabase</a>
+<a class="toc-3" href="#d-stripe-lineと段階再開">D. Stripe・LINEと段階再開</a>
+<a class="toc-2" href="#11-復旧後の合格条件">11. 復旧後の合格条件</a>
+<a class="toc-2" href="#12-優先改善事項と文書の限界">12. 優先改善事項と文書の限界</a>
+<a class="toc-2" href="#関連資料">関連資料</a></nav>
+</aside>
+<div class="main">
+  <div class="mobile-bar"><strong>el-town 構成・復旧</strong><button type="button" id="menuButton">目次</button></div>
+  <header class="hero"><div class="eyebrow">SYSTEM RECOVERY · 2026-09-27 JST</div><h1>システム構成・災害復旧手順書</h1><p>現行の本番構成、復旧に必要な外部資産、検証環境の分離計画を記録します。</p><div class="badges"><span class="badge">Next.js / Netlify</span><span class="badge">Supabase</span><span class="badge">Stripe</span><span class="badge">LINE</span></div></header>
+  <main class="content"><article><h1>el-town システム構成・災害復旧手順書</h1>
+<ul>
+<li>スナップショット日: <strong>2026-09-27（JST）</strong></li>
+<li>対象: 現行の本番システムと、未構築の検証環境の分離計画</li>
+<li>本番URL: <code>https://el-town.jp</code></li>
+<li>ソース: <code>https://github.com/qoin-inc/qoin.git</code> / <code>deploy-ui-restore</code></li>
+<li>アプリ実装の確認コミット: <code>f7287c0debebde77cd8cd050ae51c09359de117e</code></li>
+<li>最終の検証済み本番デプロイ: <code>6ab70d2e7189d8199f4df688</code>（2026-09-26 JST、上記コミット）</li>
+<li>作業ディレクトリ: <code>C:\Users\info\Documents\Codex\projects\el-town</code></li>
+</ul>
+<p>この文書は、リポジトリの2026-09-27時点の実装と、ローカルの承認付きデプロイ履歴を照合した構成記録である。Supabase・Stripe・LINE・Netlifyの管理画面に保存された設定値、実データ、課金プラン、バックアップの実行状態を全面的に照合した記録ではない。秘密値や個人情報は記載しない。</p>
+<h2 id="1-現状と復旧可能性">1. 現状と復旧可能性<a class="anchor" href="#1-現状と復旧可能性" aria-label="この見出しへのリンク">#</a></h2>
+<p>el-townは <strong>Next.js 14 / React 18 / TypeScript</strong> の1つのWebアプリである。Netlifyで配信し、Supabase Postgres・Auth・Storage、LINE Login/LIFF・Messaging API、Stripe Platform・Connectに接続する。現在確認できる公開先は <code>el-town.jp</code> の本番サイトで、独立した検証用NetlifyサイトとSupabase Projectはまだ作成されていない。</p>
+<p>GitHubからコード、画面、API、差分migration、静的資産、デプロイスクリプトと資料を復元できる。一方、<strong>Gitだけで本番を完全復元することはできない</strong>。本番DBの全行・Authデータ、Storageのファイル実体、外部サービスのオブジェクトと設定、秘密値、DNSと組織権限は別の保全が必要である。現在の <code>supabase/migrations</code> と <code>docs/sql</code> は完全な初期スキーマではなく、空のSupabase Projectへ適用するだけで本番相当になる保証はない。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>現在確認できる状態</th>
+<th>根拠</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本番URLは <code>https://el-town.jp</code></td>
+<td><code>deploy.config.json</code> と検証済みデプロイ履歴</td>
+</tr>
+<tr>
+<td>本番デプロイのコミット・build ID・deploy ID照合は成功</td>
+<td>2026-09-26の <code>.deploy/deployments.jsonl</code>（ローカル、Git管理外）</td>
+</tr>
+<tr>
+<td>独立した検証環境は未作成</td>
+<td>2026-09-27の利用者確認。Netlify previewは独立した検証サイトの代わりではない</td>
+</tr>
+<tr>
+<td><code>.env.local</code> はGit追跡中</td>
+<td><code>git ls-files .env.local</code>。秘密値を本書に転記しない</td>
+</tr>
+<tr>
+<td>初期スキーマのbaseline migrationは未整備</td>
+<td><code>supabase/migrations</code> と <code>docs/sql</code> の確認</td>
+</tr>
+</tbody></table></div>
+<h2 id="2-システム全体像">2. システム全体像<a class="anchor" href="#2-システム全体像" aria-label="この見出しへのリンク">#</a></h2>
+<div class="diagram-wrap"><span class="diagram-label">システム構成</span><pre class="mermaid">flowchart LR
+  M[&quot;会員・家族 / LINE内ブラウザ&quot;] --&gt; L[&quot;LINE Login / LIFF&quot;] --&gt; N[&quot;Netlify / Next.js&quot;]
+  O[&quot;役員・システム管理者 / Web&quot;] --&gt; N
+  G[&quot;GitHub / qoin-inc/qoin&quot;] --&gt; N
+  N &lt;--&gt; S[&quot;Supabase / Postgres・Auth・Storage&quot;]
+  N &lt;--&gt; P[&quot;Stripe Platform・Connect&quot;]
+  N --&gt; A[&quot;LINE Messaging API&quot;]
+  N --&gt; X[&quot;OpenStreetMap / Nominatim&quot;]
+</pre></div>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>層</th>
+<th>実装・責務</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>画面</td>
+<td><code>app/</code>、<code>components/</code>、<code>styles/</code>。会員、役員、システム管理、地域ポータル、マニュアル</td>
+</tr>
+<tr>
+<td>サーバー</td>
+<td>Next.js Route Handlers <code>app/api/</code>、Netlify Scheduled Functions <code>netlify/functions/</code></td>
+</tr>
+<tr>
+<td>データ</td>
+<td>Supabase Postgres、Auth、Storage。業務表の団体識別は主に <code>neighborhood_id</code></td>
+</tr>
+<tr>
+<td>決済</td>
+<td>Stripe Platformでシステム利用料、Connect Expressで団体会費</td>
+</tr>
+<tr>
+<td>LINE</td>
+<td>LIFFで会員画面に入り、Messaging APIで役員からのプッシュ通知を送信</td>
+</tr>
+<tr>
+<td>ソース・配信</td>
+<td>GitHub <code>qoin-inc/qoin</code>、Netlify site <code>el-town</code>、独自ドメイン <code>el-town.jp</code></td>
+</tr>
+</tbody></table></div>
+<h2 id="3-開発-ビルド構成">3. 開発・ビルド構成<a class="anchor" href="#3-開発-ビルド構成" aria-label="この見出しへのリンク">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>項目</th>
+<th>2026-09-27の確認値</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ローカルOS / shell</td>
+<td>Windows / PowerShell</td>
+</tr>
+<tr>
+<td>ローカルNode.js / npm</td>
+<td><code>v24.14.1</code> / <code>11.11.0</code></td>
+</tr>
+<tr>
+<td>Git</td>
+<td><code>2.54.0.windows.1</code></td>
+</tr>
+<tr>
+<td>Dev Container</td>
+<td>Node 22イメージ</td>
+</tr>
+<tr>
+<td>GitHub Actions</td>
+<td>Node 20指定。現行構成と不一致で、成功するCIとは見なせない</td>
+</tr>
+<tr>
+<td>Next.js / React</td>
+<td><code>14.2.5</code> / <code>18.3.1</code></td>
+</tr>
+<tr>
+<td>Supabase JS / Stripe / LIFF</td>
+<td><code>2.44.4</code> / <code>^13.0.0</code> / <code>^2.25.0</code></td>
+</tr>
+<tr>
+<td>TypeScript</td>
+<td><code>6.0.3</code></td>
+</tr>
+</tbody></table></div>
+<p><code>package-lock.json</code> を正本として <code>npm ci</code> を使う。<code>package.json</code> には <code>dev</code>、<code>build</code>、<code>start</code>、<code>deploy:plan</code>、<code>deploy:approved</code> があり、<code>lint</code> と <code>test</code> のnpm scriptはない。App Routerが中心で、<code>pages/admin/budget.tsx</code> はPages Routerの画面として残る。Nodeのバージョンはローカル24、Dev Container 22、CI 20で不一致であり、復旧手順では実際に成功したバージョンを記録して固定する必要がある。</p>
+<div class="code-wrap"><pre><code>git clone https://github.com/qoin-inc/qoin.git el-town
+Set-Location el-town
+git switch deploy-ui-restore
+git rev-parse HEAD
+npm ci
+npm.cmd run build
+</code></pre></div>
+<p>上記の <code>git rev-parse</code> がこの文書の確認コミット、または承認済みの後継コミットを指すことを確認する。復旧のため過去コミットへ戻す場合は、detached HEADのまま開発せず復旧用ブランチを作る。</p>
+<h2 id="4-github-netlify-デプロイ">4. GitHub・Netlify・デプロイ<a class="anchor" href="#4-github-netlify-デプロイ" aria-label="この見出しへのリンク">#</a></h2>
+<p><code>origin</code> は <code>https://github.com/qoin-inc/qoin.git</code>。現在の作業ブランチは <code>deploy-ui-restore</code> である。GitHubへのpushとremote HEADの一致確認は <code>AGENTS.md</code> の要件。GitHub以外にも暗号化したmirror backupを保管する。</p>
+<p>Netlifyは <code>netlify.toml</code> の <code>npm run build</code> と <code>.next</code>、<code>@netlify/plugin-nextjs</code> を使う。<code>deploy.config.json</code> は本番サイト <code>el-town</code>、公開URL <code>https://el-town.jp</code>、承認有効期限15分を指定する。<code>scripts/safe-netlify-deploy.mjs</code> が計画・承認・実行・公開後の照合を担当する。</p>
+<p><strong>デプロイ手順:</strong></p>
+<ol>
+<li>実装をコミットし、対応するGitHubブランチへpushしてHEADを照合する。</li>
+<li><code>npm.cmd run build</code> を成功させる。</li>
+<li>本番なら <code>npm.cmd run deploy:plan -- --prod</code> を実行する。</li>
+<li>利用者が出力された <code>APPROVE DEPLOY ...</code> を完全一致で返信した場合だけ <code>deploy:approved</code> を実行する。</li>
+<li>公開URL、コミット、build ID、deploy IDを照合する。失敗・期限切れ・ビルド変更後は新しい計画と承認を得る。</li>
+</ol>
+<p>2026-09-26の最終デプロイは <code>f7287c0d...</code>、deploy ID <code>6ab70d2e7189d8199f4df688</code>、最終build ID <code>6z4QMWeAgAH4V5kZr9jnP</code> として照合済み。これ以後の外部変更は本書で未検証である。<code>.deploy/</code> はGit管理外のローカル証跡なので、災害時に依存しない。</p>
+<p><strong>Scheduled Functions:</strong> <code>system-usage-snapshot.mts</code> は毎月16日00:00 UTC、<code>system-usage-invoice.mts</code> は毎月1日00:00 UTCに設定されている。請求を停止する場合は <code>SYSTEM_BILLING_ENABLED=false</code> を維持し、Stripe側の既存請求の状態も別途確認する。</p>
+<p><strong>現行CIの問題:</strong> <code>.github/workflows/ci.yml</code> は <code>main</code>・<code>develop</code> だけを対象にし、存在しない <code>npm run lint</code>、<code>npm test</code>、<code>scripts/backup-db.sh</code> を呼ぶ。デプロイ先も現在の <code>.next</code> と異なる <code>./out</code> で、監視パスに <code>app/</code>、<code>lib/</code>、<code>netlify/</code> 等がない。現行のビルド・バックアップ・本番公開の成功証拠として扱わない。</p>
+<h2 id="5-環境分離の状態と予定構成">5. 環境分離の状態と予定構成<a class="anchor" href="#5-環境分離の状態と予定構成" aria-label="この見出しへのリンク">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>役割</th>
+<th>現状 / 予定</th>
+<th>データ・外部連携</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ローカル開発</td>
+<td>既存PC。<code>.env.local</code> の接続先を作業前に確認</td>
+<td>本番DBへ書き込まない運用が必要</td>
+</tr>
+<tr>
+<td>検証</td>
+<td><strong>未作成</strong>。別Netlify siteと別Supabase Projectを予定</td>
+<td>架空データ、Stripe Sandbox、検証用LINE/LIFF、専用Webhook</td>
+</tr>
+<tr>
+<td>本番</td>
+<td>既存 <code>el-town.jp</code> と既存Supabase Project</td>
+<td>実データ、本番Stripe、本番LINE</td>
+</tr>
+</tbody></table></div>
+<p>アプリのリポジトリは1つを維持し、同じ承認済みコミットを環境別設定でそれぞれビルドする。検証環境で確認後に本番へ反映する。検証DBへ本番の個人情報を複製しない。検証用Supabase Projectは別課金が発生し得るため、作成前に契約プランと費用を確認する。</p>
+<p><strong>分離前のコード・構成課題:</strong></p>
+<ol>
+<li><code>netlify.toml</code> の <code>[build.environment]</code> に本番の <code>NEXT_PUBLIC_LIFF_ID</code> が固定される。<code>app/portal/page.tsx</code> にも同じLIFF IDのフォールバックがある。検証サイトが本番LINEへ接続しないよう、サイト別設定へ変更する。</li>
+<li><code>app/api/fees/create-checkout-session/route.ts</code> と <code>app/api/admin/stripe/create-account-link/route.ts</code> は <code>NODE_ENV === &quot;production&quot;</code> をStripe本番キーの判定に使う。検証サイトも本番ビルドになるため、明示的なアプリ環境判定へ変更する。</li>
+<li>承認付きデプロイスクリプトと <code>deploy.config.json</code> は現状1つの本番siteを前提とする。検証site IDを明示し、サイトを取り違えない計画・照合を追加する。</li>
+<li>完全なbaseline migration、Data APIの必要なGRANT、RLS・Storage Policy、架空seedを整備し、空の検証Projectに再現できるようにする。</li>
+</ol>
+<p>検証用のNetlify site ID、Supabase Project Ref、LINE公式アカウント・Messaging API channel・LINE Login channel・LIFF ID、Stripe Sandboxの接続先とWebhook secretは本番とは別に管理する。IDと秘密値を混同せず、秘密値は環境変数管理に保存する。</p>
+<h2 id="6-環境変数-秘密情報">6. 環境変数・秘密情報<a class="anchor" href="#6-環境変数-秘密情報" aria-label="この見出しへのリンク">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>区分</th>
+<th>主な名前</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ブラウザ公開</td>
+<td><code>NEXT_PUBLIC_SUPABASE_URL</code>, <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, <code>NEXT_PUBLIC_LIFF_ID</code>, <code>NEXT_PUBLIC_BASE_URL</code>, <code>NEXT_PUBLIC_APP_URL</code></td>
+<td>接続先とLIFF。<code>NEXT_PUBLIC_*</code> はビルドに組み込まれる</td>
+</tr>
+<tr>
+<td>Supabaseサーバー</td>
+<td><code>SUPABASE_SECRET_KEY</code> または互換の <code>SUPABASE_SERVICE_ROLE_KEY</code></td>
+<td>Webhook、管理API、定期処理。ブラウザへ渡さない</td>
+</tr>
+<tr>
+<td>Stripe</td>
+<td><code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code>, <code>STRIPE_CONNECT_WEBHOOK_SECRET</code></td>
+<td>本番またはSandboxのAPIと署名照合</td>
+</tr>
+<tr>
+<td>LINE</td>
+<td><code>LINE_CHANNEL_ACCESS_TOKEN</code> または互換名 <code>LINE_MESSAGING_CHANNEL_ACCESS_TOKEN</code></td>
+<td>Messaging API送信</td>
+</tr>
+<tr>
+<td>system管理</td>
+<td><code>SYSTEM_LOGIN_ID</code>, <code>SYSTEM_LOGIN_PASSWORD</code>, <code>SYSTEM_SESSION_SECRET</code>, <code>SYSTEM_ADMIN_EMAIL</code></td>
+<td><code>/system</code> 認証とセッション</td>
+</tr>
+<tr>
+<td>定期請求</td>
+<td><code>SYSTEM_BILLING_CRON_SECRET</code>, <code>SYSTEM_BILLING_ENABLED</code></td>
+<td>ジョブ認証と実行スイッチ</td>
+</tr>
+<tr>
+<td>デプロイ</td>
+<td><code>NETLIFY_AUTH_TOKEN</code></td>
+<td>ローカルの承認付きデプロイ用。アプリRuntimeへ不要</td>
+</tr>
+</tbody></table></div>
+<p><code>.env.local</code> は <code>.gitignore</code> に載っているが、<strong>現時点でもGit追跡中</strong>である。値や履歴を本書に載せない。既存の秘密値の棚卸し・失効/ローテーション、追跡解除、必要なら履歴上の露出対応を、関係者と調整した独立したセキュリティ作業として扱う。</p>
+<h2 id="7-画面-api-主要業務">7. 画面・API・主要業務<a class="anchor" href="#7-画面-api-主要業務" aria-label="この見出しへのリンク">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>主なURL</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/</code>、<code>/resident</code>、<code>/resident/proxy</code>、<code>/resident/receipt</code></td>
+<td>初期メニュー、会員画面、委任状、領収書</td>
+</tr>
+<tr>
+<td><code>/admin</code>、<code>/admin/stripe/return</code>、<code>/admin/stripe/refresh</code></td>
+<td>役員画面、Stripe Connect onboarding</td>
+</tr>
+<tr>
+<td><code>/system</code></td>
+<td>el-townシステム管理・使用料管理</td>
+</tr>
+<tr>
+<td><code>/portal</code>、<code>/richmenu</code>、<code>/manual/*</code></td>
+<td>地域ポータル、LINE関連、操作マニュアル</td>
+</tr>
+<tr>
+<td><code>/api/admin/publish-line</code></td>
+<td>LINEプッシュ</td>
+</tr>
+<tr>
+<td><code>/api/fees/create-checkout-session</code>、<code>/api/webhooks/stripe</code></td>
+<td>会費Checkout、Stripe platform/Connect Webhook</td>
+</tr>
+<tr>
+<td><code>/api/system-usage/*</code></td>
+<td>使用料の設定、Stripe支払、請求・銀行振込処理</td>
+</tr>
+<tr>
+<td><code>/api/system/session</code></td>
+<td>system管理者セッション</td>
+</tr>
+</tbody></table></div>
+<p>主な業務機能は、団体登録・役員招待、名簿・家族LINE連携、回覧とLINE通知、イベント・施設・Live、地域投稿、総会・会計、会費とシステム使用料である。</p>
+<p><strong>2026-07-19版からの主な追加・変更:</strong></p>
+<ul>
+<li>会費に年度確定・再確定、年度スナップショット、ロック後入金と訂正監査を追加。</li>
+<li>総会会計に年度確定・スナップショット・訂正監査を追加。</li>
+<li>会費のカード・PayPay・Stripe銀行振込設定と入金反映、商取引表示・審査状態を拡張。</li>
+<li>会員は「集金希望」を設定でき、役員の会費一覧では未納の集金希望世帯を絞り込める。</li>
+<li>システム使用料の銀行振込先・入金確認・発行者・料金履歴関連APIを追加。</li>
+<li>会員・役員向けマニュアルとStripeヘルプを更新。</li>
+</ul>
+<p><code>components/AdminView.tsx</code>、<code>components/ResidentView.tsx</code>、<code>styles/design.css</code> は大きく、復旧時には先に基準コミットの挙動を戻し、分割は別作業にする。</p>
+<h2 id="8-supabase-認証-rls">8. Supabase・認証・RLS<a class="anchor" href="#8-supabase-認証-rls" aria-label="この見出しへのリンク">#</a></h2>
+<p>主な表: <code>neighborhoods</code>, <code>neighborhood_admins</code>, <code>resident_rosters</code>, <code>circulars</code>, <code>public_posts</code>, <code>fee_records</code>, <code>neighborhood_fee_settings</code>, <code>fee_year_closures</code>, <code>fee_year_snapshot_rows</code>, <code>assembly_year_closures</code>, <code>assembly_year_snapshots</code>, <code>system_usage_billings</code>, <code>system_usage_payment_profiles</code>, <code>fee_stripe_sessions</code>, <code>fee_stripe_payments</code>。Storage <code>attachments</code> はファイル実体とbucket設定・Policyの両方を復元する。表・関数の完全一覧はDBの実スキーマから取得する必要がある。</p>
+<p>2026-09-27時点で <code>supabase/migrations</code> は12本、<code>docs/sql</code> は40本あるが、多くは既存表への差分である。<strong>本番と同じ空ProjectをGitだけで作るbaselineはない</strong>。schema、roles、data、Auth、Storage実体と外部設定を別々に保全・復元検証する。migrationの適用済み状態は本番DBで未照合であり、ファイルの存在を適用済みの証拠としない。</p>
+<p>役員はSupabase Authと <code>neighborhood_admins</code> の団体権限で認可する。会員はLIFFのLINE user IDを疑似メール <code>@line.eltown.local</code> に変換したSupabase Authユーザーと名簿の本人・家族列を連携する。現状はクライアント側の予測可能な認証情報に依存するため、資料の計画どおり、LIFF ID tokenのサーバー検証方式へ移行する必要がある。</p>
+<p><code>/system</code> は独自ログインとSupabase側の管理セッションを併用する。<code>lib/systemAdminServer.ts</code> には環境変数が欠けた場合の既定ログインID・パスワード・セッション秘密のフォールバックが残る。本番では未設定時に拒否する修正が優先事項である。Supabaseのブラウザ公開キーは秘密ではなく、全業務表・StorageのRLS/PolicyとGRANTが実際の認可境界になる。</p>
+<h2 id="9-外部サービス台帳と復元対象">9. 外部サービス台帳と復元対象<a class="anchor" href="#9-外部サービス台帳と復元対象" aria-label="この見出しへのリンク">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>サービス</th>
+<th>コード外で保全するもの</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Supabase</td>
+<td>Project Ref、region、plan、DB roles/schema/data・Auth、Storage実体、bucket/Policy、Site URL、Redirect URL、メール設定</td>
+</tr>
+<tr>
+<td>Netlify</td>
+<td>Site ID、ドメインとDNS、環境変数、ビルド設定、deploy履歴、Scheduled Functions</td>
+</tr>
+<tr>
+<td>Stripe</td>
+<td>Platform・Connectアカウント対応、Customer/Invoice/Checkout/PaymentIntent、API key、Platform/Connect Webhook endpointと署名</td>
+</tr>
+<tr>
+<td>LINE</td>
+<td>Provider、LINE Login channel、LIFF IDとEndpoint URL、公式アカウント、Messaging API channel、token、リッチメニューとリンク</td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td>リポジトリと全履歴、ブランチ、権限、Actions secrets。別媒体へのmirror backup</td>
+</tr>
+</tbody></table></div>
+<p>本番のStripe Webhook URLは <code>https://el-town.jp/api/webhooks/stripe</code>。検証環境を作るときは専用URLとSandbox secretを設け、Connectアカウントを本番と共有しない。LINEも検証用公式アカウント・LIFF・チャネルを別にし、本番会員を検証用名簿へ複製しない。</p>
+<h2 id="10-災害復旧手順">10. 災害復旧手順<a class="anchor" href="#10-災害復旧手順" aria-label="この見出しへのリンク">#</a></h2>
+<h3 id="a-初動">A. 初動<a class="anchor" href="#a-初動" aria-label="この見出しへのリンク">#</a></h3>
+<ol>
+<li>障害範囲をGitHub、Netlify、Supabase、Stripe、LINE、DNSに分ける。不正アクセス疑いでは書き込み・請求・一括送信を止め、証跡を保全する。</li>
+<li><code>SYSTEM_BILLING_ENABLED=false</code> を確認する。Stripe側で確定済みの請求・決済は別に照合し、再実行で二重請求しない。</li>
+<li>復旧目標のコミット、最新の検証済みdeploy ID、DB復元点、Storage backupの時刻を確定する。</li>
+</ol>
+<h3 id="b-コードとnetlify">B. コードとNetlify<a class="anchor" href="#b-コードとnetlify" aria-label="この見出しへのリンク">#</a></h3>
+<ol>
+<li>GitHubまたは外部mirrorからcloneし、承認済みコミットを確認する。</li>
+<li><code>npm ci</code> と <code>npm.cmd run build</code> を実行する。</li>
+<li>Site ID、環境変数、ドメイン、Next.js plugin、Scheduled Functionsを復元する。本番・検証の秘密値を混ぜない。</li>
+<li><code>docs/admin/safe-deployment.md</code> と <code>AGENTS.md</code> の承認付き手順で公開し、URL・コミット・build ID・deploy IDを照合する。</li>
+</ol>
+<h3 id="c-supabase">C. Supabase<a class="anchor" href="#c-supabase" aria-label="この見出しへのリンク">#</a></h3>
+<ol>
+<li>利用可能なPITR・managed backupを確認する。新Projectへ復旧する場合はregion、Postgres version、extensionを合わせる。</li>
+<li>roles、schema、data、Auth関連データ、RLS/Policy、GRANT、関数・trigger・indexを復元し、主要表の件数と権限を照合する。</li>
+<li>Storage <code>attachments</code> の実ファイルを別バックアップから戻す。DB backupのmetadataだけでは足りない。</li>
+<li>Auth Site URL、Redirect URL、メール設定、Project URLとキーを接続先に反映し、認証の再ログイン要否を確認する。</li>
+</ol>
+<h3 id="d-stripe-lineと段階再開">D. Stripe・LINEと段階再開<a class="anchor" href="#d-stripe-lineと段階再開" aria-label="この見出しへのリンク">#</a></h3>
+<ol>
+<li>StripeのPlatform/Connect署名とアカウント対応を照合し、Connectを重複作成しない。</li>
+<li>LINE LIFF Endpoint URL、Messaging API token、友だち追加・リッチメニューのリンクを照合する。</li>
+<li>管理者・会員各1名でログインと団体分離を確認し、回覧、添付、限定LINE通知、会費Checkout/Webhook、施設・Live、年度確定を順に試す。</li>
+<li>システム利用料は請求額・時期・入金を手動確認してから定期請求を再開する。</li>
+</ol>
+<h2 id="11-復旧後の合格条件">11. 復旧後の合格条件<a class="anchor" href="#11-復旧後の合格条件" aria-label="この見出しへのリンク">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>分野</th>
+<th>合格条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ソース・ビルド</td>
+<td>承認済みコミットと一致し、<code>npm run build</code> 成功</td>
+</tr>
+<tr>
+<td>公開</td>
+<td>URL、deploy ID、build ID、commit IDが一致</td>
+</tr>
+<tr>
+<td>認証・認可</td>
+<td>役員・会員・systemが正しく入り、他団体を参照・更新できない</td>
+</tr>
+<tr>
+<td>DB・Storage</td>
+<td>主要件数、RLS/GRANT、添付の表示・アップロードが正しい</td>
+</tr>
+<tr>
+<td>LINE</td>
+<td>対象団体の限定会員へ1通だけ届き、失敗が追跡できる</td>
+</tr>
+<tr>
+<td>Stripe</td>
+<td>Connect状態、テスト決済または限定本番決済、Webhook、会計反映が一致</td>
+</tr>
+<tr>
+<td>会費・総会</td>
+<td>年度状態、集金希望、入金、スナップショット、訂正履歴が正しい</td>
+</tr>
+<tr>
+<td>定期処理</td>
+<td>停止時は請求しない。再開後は件数・金額・税・入金が一致</td>
+</tr>
+</tbody></table></div>
+<h2 id="12-優先改善事項と文書の限界">12. 優先改善事項と文書の限界<a class="anchor" href="#12-優先改善事項と文書の限界" aria-label="この見出しへのリンク">#</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>優先度</th>
+<th>未完了事項</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P0</td>
+<td><code>.env.local</code> のGit追跡と秘密値の履歴上の露出を調査し、ローテーション・追跡解除を実施</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>本番DBの完全なroles/schema/data・AuthバックアップとStorage実体の外部バックアップを作成・復元試験</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>会員認証をサーバー検証へ変更し、system管理の既定資格情報を廃止</td>
+</tr>
+<tr>
+<td>P0</td>
+<td>全表・Storageの団体分離、RLS・GRANTを監査・回帰試験</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>検証Netlify・Supabase・Stripe Sandbox・LINEを分離し、baseline migrationと架空seedを用意</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>CIのbranch、コマンド、監視パス、デプロイ方式を現行構成へ修正</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Nodeバージョンをローカル・CI・Netlifyで統一</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>LINE配信・Stripe Webhook・月次請求のジョブ化、監視、重複防止と監査ログ</td>
+</tr>
+</tbody></table></div>
+<p>バックアップの取得有無と復元成功、外部サービスの現在の契約・設定・権限は本書作成時点で未確認である。期限や料金、各サービスのAPI仕様は復旧時に公式管理画面・公式資料で再確認する。過去の2026-07-19版は <code>docs/reports/old/</code> に原本のまま保存する。</p>
+<h2 id="関連資料">関連資料<a class="anchor" href="#関連資料" aria-label="この見出しへのリンク">#</a></h2>
+<ul>
+<li><code>docs/admin/safe-deployment.md</code>、<code>AGENTS.md</code></li>
+<li><code>docs/reports/operations_architecture_100_towns_action_plan_2026-08-20.md</code></li>
+<li><code>docs/reports/operations_architecture_100_towns_environment_costs_ids_codex_2026-09-25.md</code></li>
+<li><code>docs/reports/operations_architecture_scalability_codex_2026-08-19.md</code></li>
+<li><code>supabase/migrations/</code>、<code>docs/sql/</code></li>
+<li><a href="https://supabase.com/docs/guides/deployment/managing-environments">Supabase環境管理</a></li>
+<li><a href="https://docs.netlify.com/build/environment-variables/overview/">Netlify環境変数</a></li>
+</ul>
+</article></main>
+  <footer class="footer">Source: system_architecture_recovery_2026-09-27.md / Updated 2026-09-27 JST / 秘密値は記載していません。</footer>
+</div>
+<button class="back-top" type="button" title="先頭へ" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script>
+const sidebar=document.getElementById('sidebar');document.getElementById('menuButton')?.addEventListener('click',()=>sidebar.classList.toggle('open'));
+document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',()=>sidebar.classList.remove('open')));
+const links=[...document.querySelectorAll('.toc a')],sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id));}}},{rootMargin:'-20% 0px -70%'});sections.forEach(s=>observer.observe(s));
+</script>
+<script type="module">try{const mermaid=(await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')).default;mermaid.initialize({startOnLoad:false,theme:'neutral',securityLevel:'strict'});await mermaid.run({nodes:document.querySelectorAll('.mermaid')});}catch(error){console.info('Mermaid offline fallback: diagram source remains visible.');}</script>
+</body></html>
