@@ -111,6 +111,21 @@ Netlifyは `netlify.toml` の `npm run build` と `.next`、`@netlify/plugin-nex
 
 検証用のNetlify site ID、Supabase Project Ref、LINE公式アカウント・Messaging API channel・LINE Login channel・LIFF ID、Stripe Sandboxの接続先とWebhook secretは本番とは別に管理する。IDと秘密値を混同せず、秘密値は環境変数管理に保存する。
 
+### 検証環境のID・接続先を作成する手順（2026-09-27時点：未実施）
+
+IDの文字列を手で決めるのではなく、各管理画面で検証用リソースを新規作成し、発行された値を記録する。既存の管理者アカウント・組織・GitHubリポジトリは利用できるが、本番のProject・Site・チャネル・決済データとは分ける。これは環境の分離であり、団体ごとにLINE IDを分ける計画とは別の話である。本番会員の移行は不要で、検証には架空データを使う。
+
+| 順序 | 利用者が作成するものと手順 | 発行後に記録する識別子・URL | 本番との関係 |
+|---|---|---|---|
+| 1 | 既存のSupabase組織で **New project** を選び、例として `el-town-staging` を作成する。契約プランと追加費用を作成前に確認する | Project Ref、Project URL、region | 同じ組織で管理可能。DB・Auth・StorageとAPIキーは本番Projectと別 |
+| 2 | 既存のNetlifyチームで検証用siteを新規作成する。例: `el-town-staging`。GitHubを接続する場合は同じ `qoin-inc/qoin` を選べるが、分離修正と検証用環境変数の設定前にデプロイを開始しない | Site ID、`*.netlify.app` のURL | チームとコードは共通にできる。Site ID・環境変数・公開URLは別 |
+| 3 | LINE Developersで検証用Providerを作成し、その下に **LINE Login** チャネル（Web app）を作る。検証用LINE公式アカウントを新規作成し、公式アカウント管理画面でMessaging APIを有効化するときに**同じ検証用Provider**を選ぶ。LINE LoginチャネルのLIFFタブからLIFFを追加し、Endpoint URLに検証用Netlify URLを設定する | Provider名、公式アカウントのBasic ID、LINE Login channel ID、Messaging API channel ID、LIFF ID・LIFF URL | 本番Provider・公式アカウント・各チャネルは使用しない。同じ検証用Provider内ではLINE user IDを照合できるが、本番Providerのuser IDとは異なる。Providerは公式アカウントへの割当後に変更できない |
+| 4 | 既存のStripe Dashboardのアカウント切替から **Switch to sandbox → Create sandbox** を選び、例として `el-town-staging` を作成する。会費のConnect動作を試すときはSandbox内で検証用接続アカウントも作成する | Sandboxの識別子・テスト用アカウントID。APIキーとWebhook署名は別途秘密管理 | Stripeの管理アカウントは共通にできる。本番決済・Connectアカウント・Webhookとは分ける |
+
+作成後、識別子・URLだけを環境台帳に記録する。DBパスワード、Supabaseの秘密キー、Stripe APIキー・Webhook secret、LINE channel access tokenはチャットやGitに記載せず、検証用Netlifyの環境変数と適切な秘密管理先に保存する。GitHubの新規アカウント・リポジトリIDは不要。LINE公式アカウントの友だち追加QRは検証用と本番用を分け、テスト担当者だけを検証用へ案内する。
+
+参考: [Supabaseの環境分離](https://supabase.com/docs/guides/deployment/managing-environments)、[NetlifyのGit連携](https://docs.netlify.com/start/choose-your-path/)、[LINE Messaging API開始手順](https://developers.line.biz/en/docs/messaging-api/getting-started/)、[LINE LIFF登録](https://developers.line.biz/en/docs/liff/registering-liff-apps)、[Stripe Sandbox作成](https://docs.stripe.com/sandboxes/dashboard/manage)。
+
 ## 6. 環境変数・秘密情報
 
 | 区分 | 主な名前 | 用途 |
@@ -229,6 +244,24 @@ Netlifyは `netlify.toml` の `npm run build` と `.next`、`@netlify/plugin-nex
 | P1 | LINE配信・Stripe Webhook・月次請求のジョブ化、監視、重複防止と監査ログ |
 
 バックアップの取得有無と復元成功、外部サービスの現在の契約・設定・権限は本書作成時点で未確認である。期限や料金、各サービスのAPI仕様は復旧時に公式管理画面・公式資料で再確認する。過去の2026-07-19版は `docs/reports/old/` に原本のまま保存する。
+
+## 13. 2026-09-27の実績と次回の作業
+
+### 今日までに確認・完了したこと
+
+1. 現行の本番アプリ構成、GitHub・Netlifyデプロイ記録、復旧に必要な外部資産と未確認事項を調査し、本書のMarkdown版・HTML版へ整理した。
+2. 2026-07-19版のMarkdown・HTML原本を `docs/reports/old/` に保管した。2026-09-27版はGitHubの `deploy-ui-restore` ブランチへ反映済みである。
+3. 検証用Netlify site・Supabase Projectが未作成であることを確認し、LINE・Stripeを含む環境分離方針とIDの作成手順を記録した。
+
+### 次回やること
+
+1. Supabaseのプラン・費用と、Netlify・LINE・Stripe各管理画面の権限を確認する。
+2. 検証用Supabase ProjectとNetlify siteを作成し、発行された識別子・URLを環境台帳へ記録する。Siteのデプロイ開始前に、本番LIFF IDの固定値、Stripe環境判定、デプロイ先選択を修正する。
+3. 検証用LINE Provider・公式アカウント・LINE Login・Messaging API・LIFFを作成し、検証用URLと友だち追加QRを設定する。
+4. Stripe Sandboxと専用Webhookを作成し、検証用のキー・署名値を秘密管理先に設定する。
+5. Supabaseのbaseline migration、RLS・GRANT・Storage Policy、架空seedを整備して空Projectに適用し、管理者・会員のログイン、団体分離、LINE通知、会費のテスト決済・Webhookを順に検証する。検証完了後に本番反映を別途判断する。
+
+**本日の終了時点:** 検証用の外部IDや環境はまだ作成しておらず、検証環境の公開・本番へのデプロイも行っていない。
 
 ## 関連資料
 
