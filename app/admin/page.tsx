@@ -31,7 +31,7 @@ const fetchAdminMemberships = async (accessToken: string): Promise<AdminMembersh
 };
 
 export default function AdminPage() {
-  const [view, setView] = useState<'loading' | 'login' | 'signup' | 'join' | 'invite' | 'select_town' | 'dashboard' | 'forgot_password' | 'update_password'>('loading');
+  const [view, setView] = useState<'loading' | 'login' | 'signup' | 'invite' | 'select_town' | 'dashboard' | 'forgot_password' | 'update_password'>('loading');
   const [town, setTown] = useState<{id: number, name: string} | null>(null);
   const [adminMemberships, setAdminMemberships] = useState<AdminMembership[]>([]);
 
@@ -47,7 +47,6 @@ export default function AdminPage() {
   const [inviteName, setInviteName] = useState('');
   const [inviteSessionEmail, setInviteSessionEmail] = useState('');
   const [inviteConfirmPassword, setInviteConfirmPassword] = useState('');
-  const [joinConfirmPassword, setJoinConfirmPassword] = useState('');
 
   const selectAdminMembership = (membership: AdminMembership) => {
     setTown(membership.town);
@@ -198,13 +197,12 @@ export default function AdminPage() {
         }
         return;
       }
-      // URLに ?mode=join があれば招待された役員の合流画面
+      // 旧形式の招待URLは安全なトークンを含まないため使用しない。
       if (typeof window !== 'undefined' && window.location.search.includes('mode=join')) {
-        await supabase.auth.signOut();
-        setView('join');
+        setLoginError('古い招待URLは利用できません。代表者に新しい招待URLの発行を依頼してください。');
+        setView('login');
         return;
       }
-
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         try {
@@ -245,107 +243,6 @@ export default function AdminPage() {
       setAdminMemberships([]);
       setTown(null);
       setLoginError(err.message || 'ログインに失敗しました。メールアドレスとパスワードをご確認ください。');
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleJoinSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoggingIn(true);
-    setLoginError('');
-
-    try {
-      // パスワード制限チェック
-      if (loginPassword !== joinConfirmPassword) {
-        throw new Error('パスワードと確認用パスワードが一致しません。');
-      }
-      if (loginPassword.length < 8) {
-        throw new Error('パスワードは8文字以上で入力してください。');
-      }
-
-      // 安全なアカウント運用のための複雑さチェック（3種類以上）
-      const pwd = loginPassword;
-      const hasUpper = /[A-Z]/.test(pwd);
-      const hasLower = /[a-z]/.test(pwd);
-      const hasDigit = /\d/.test(pwd);
-      const hasSymbol = /[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]/.test(pwd);
-      
-      let typesCount = 0;
-      if (hasUpper) typesCount++;
-      if (hasLower) typesCount++;
-      if (hasDigit) typesCount++;
-      if (hasSymbol) typesCount++;
-
-      if (typesCount < 3) {
-        throw new Error('安全なアカウント運用のために、パスワードには「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせてください。');
-      }
-
-      // 1. まず入力されたメアドが招待リストに存在するかチェック
-      const { data: pendingAdmin, error: pendingError } = await supabase
-        .from('neighborhood_admins')
-        .select('*')
-        .eq('admin_email', loginEmail)
-        .eq('status', 'pending')
-        .single();
-
-      if (pendingError || !pendingAdmin) {
-        throw new Error('招待リストにメールアドレスが見つかりません。代表者に招待してもらってください。');
-      }
-
-      // 2. Authでユーザーを新規作成、もし既に登録済みならログインを試みる
-      let authUserId;
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: loginEmail,
-        password: loginPassword,
-      });
-
-      if (authError) {
-        if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
-          // 既に登録されている場合、入力されたパスワードでログインできるか検証する
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: loginEmail,
-            password: loginPassword,
-          });
-          
-          if (signInError) {
-             throw new Error('このメールアドレスは既にシステムに登録されています。以前作成したパスワードを入力してください。（再合流）');
-          }
-          authUserId = signInData.user?.id;
-        } else {
-          throw authError;
-        }
-      } else {
-        authUserId = authData.user?.id;
-      }
-
-      if (!authUserId) throw new Error('ユーザー情報の取得に失敗しました。');
-
-      // 3. pending のレコードを active に更新し、UUIDを連携する
-      const { error: updateError } = await supabase
-        .from('neighborhood_admins')
-        .update({
-          admin_auth_id: authUserId,
-          status: 'active'
-        })
-        .eq('id', pendingAdmin.id);
-
-      if (updateError) throw updateError;
-
-      // 4. 町内会・自治会情報を取得してダッシュボードへ
-      const { data: townData } = await supabase
-        .from('neighborhoods')
-        .select('id, name')
-        .eq('id', pendingAdmin.neighborhood_id)
-        .single();
-
-      if (townData) {
-        setLoginError('役員登録は承認待ちです。代表者が承認するまでお待ちください。');
-        setView('login');
-      }
-    } catch (err: any) {
-      console.error(err);
-      setLoginError(err.message || '登録処理に失敗しました。');
     } finally {
       setIsLoggingIn(false);
     }
@@ -395,114 +292,42 @@ export default function AdminPage() {
         }
       }
 
-      // 1. tokenから役員候補者の招待レコードを探す
-      let pendingAdminResult = await supabase
-        .from('neighborhood_admins')
-        .select('id, neighborhood_id, admin_email, admin_name, admin_role, status, invited_at, neighborhoods(id, name)')
-        .eq('admin_invite_token', inviteTokenParam)
-        .maybeSingle();
-
-      if (pendingAdminResult.error && String(pendingAdminResult.error.message || '').includes('admin_invite_token')) {
-        pendingAdminResult = await supabase
-          .from('neighborhood_admins')
-          .select('id, neighborhood_id, admin_email, admin_name, admin_role, status, invited_at, neighborhoods(id, name)')
-          .eq('invite_token', inviteTokenParam)
-          .maybeSingle();
-      }
-
-      const pendingAdmin = pendingAdminResult.data;
-      if (pendingAdminResult.error || !pendingAdmin) {
-        throw new Error('役員招待情報が見つかりません。招待URLが間違っているか無効になっています。');
-      }
-      if (pendingAdmin.status === 'retired' || pendingAdmin.status === 'rejected') {
-        throw new Error('この役員招待は利用できません。代表者に再招待を依頼してください。');
-      }
-      if (pendingAdmin.status === 'active') {
-        throw new Error('この役員招待はすでに利用済みです。通常ログインしてください。');
-      }
-      const invitedAt = new Date(pendingAdmin.invited_at || '').getTime();
-      const inviteExpiresAt = invitedAt + (7 * 24 * 60 * 60 * 1000);
-      if (!Number.isFinite(invitedAt) || inviteExpiresAt <= Date.now()) {
-        throw new Error('この役員招待は発行から7日を過ぎて失効しました。代表者に再発行を依頼してください。');
-      }
-      if (String(pendingAdmin.admin_email || '').toLowerCase() !== normalizedInviteEmail) {
-        throw new Error('招待されたメールアドレスと入力したメールアドレスが一致しません。');
-      }
-
-      const townData = Array.isArray(pendingAdmin.neighborhoods)
-        ? pendingAdmin.neighborhoods[0]
-        : pendingAdmin.neighborhoods;
-
-      if (!townData) {
-        throw new Error('町内会・自治会情報が見つかりません。代表者に再招待を依頼してください。');
-      }
-
-      // 2. Authでユーザーを新規作成、もし既に登録済みならログインを試みる
-      let authUserId = matchingSession?.user?.id;
-      if (!authUserId) {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+      // 招待レコードの検索と更新はサーバーだけで行う。
+      let activeSession = matchingSession;
+      if (!activeSession?.access_token) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: normalizedInviteEmail,
           password: loginPassword,
         });
-
-        if (authError) {
-          if (authError.message.includes('already registered') || authError.message.includes('already exists')) {
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-              email: normalizedInviteEmail,
-              password: loginPassword,
-            });
-            if (signInError) {
-              throw new Error('このメールアドレスは既にシステムに登録されています。以前作成したパスワードを入力してください。（再合流）');
-            }
-            authUserId = signInData.user?.id;
-          } else {
-            throw authError;
-          }
+        if (!signInError && signInData.session) {
+          activeSession = signInData.session;
         } else {
-          authUserId = authData.user?.id;
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: normalizedInviteEmail,
+            password: loginPassword,
+          });
+          if (signUpError) throw signUpError;
+          activeSession = signUpData.session;
         }
       }
 
-      if (!authUserId) throw new Error('ユーザー情報の取得に失敗しました。');
-
-      // 3. 招待済みの役員候補者レコードを有効化する
-      let updatePayload: Record<string, any> = {
-        admin_auth_id: authUserId,
-        admin_email: normalizedInviteEmail,
-        admin_name: inviteName.trim() || pendingAdmin.admin_name,
-        status: 'active',
-      };
-
-      let updateResult = await supabase
-        .from('neighborhood_admins')
-        .update(updatePayload)
-        .eq('id', pendingAdmin.id);
-
-      if (updateResult.error && String(updateResult.error.message || '').includes('admin_invite_token')) {
-        delete updatePayload.admin_invite_token;
-        updateResult = await supabase
-          .from('neighborhood_admins')
-          .update(updatePayload)
-          .eq('id', pendingAdmin.id);
+      if (!activeSession?.access_token) {
+        throw new Error('メールアドレスを確認してから、招待URLを開き直してログインしてください。');
       }
-      if (updateResult.error && String(updateResult.error.message || '').includes('invite_token')) {
-        delete updatePayload.invite_token;
-        updateResult = await supabase
-          .from('neighborhood_admins')
-          .update(updatePayload)
-          .eq('id', pendingAdmin.id);
-      }
-      if (updateResult.error) throw updateResult.error;
 
-      // 4. 複数所属を再取得し、必要なら町内会・自治会の選択画面へ
-      const { data: { session: activeSession } } = await supabase.auth.getSession();
-      if (activeSession?.access_token) {
-        const memberships = await fetchAdminMemberships(activeSession.access_token);
-        applyAdminMemberships(memberships, false);
-      } else {
-        setTown(townData as any);
-        setView('dashboard');
-      }
+      const response = await fetch('/api/admin/accept-invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + activeSession.access_token,
+        },
+        body: JSON.stringify({ token: inviteTokenParam, name: inviteName.trim() }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || '招待を登録できませんでした。');
+
+      const memberships = await fetchAdminMemberships(activeSession.access_token);
+      applyAdminMemberships(memberships, false);
     } catch (err: any) {
       console.error(err);
       setLoginError(err.message || '登録処理に失敗しました。');
@@ -565,75 +390,6 @@ export default function AdminPage() {
   if (view === 'signup') {
     return <SignupTown onComplete={handleSignupComplete} onCancel={() => setView('login')} />;
   }
-
-  // --- 旧仕様の Join 画面開始 ---
-  if (view === 'join') {
-    return (
-      <div className="bg-[#f0f2f5] min-h-screen font-sans flex flex-col items-center justify-center p-4 relative">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden relative z-10 p-8 pb-10">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-black text-qoin-main tracking-tight mb-2">招待からの新規役員登録</h1>
-            <p className="text-gray-500 font-bold text-xs">連携するパスワードをご自身で設定してください。</p>
-          </div>
-
-          <form onSubmit={handleJoinSubmit} className="space-y-5">
-            {loginError && (
-              <div className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-xl mb-4 border border-red-200">
-                {loginError}
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">招待されたメールアドレス</label>
-              <input 
-                type="email" 
-                value={loginEmail}
-                onChange={e => setLoginEmail(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">設定するパスワード <span className="text-red-500">*</span></label>
-              <input 
-                type="password" 
-                value={loginPassword}
-                onChange={e => setLoginPassword(e.target.value)}
-                placeholder="半角英数字8文字以上"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                required
-              />
-              <p className="text-[10px] text-gray-400 font-bold mt-1 leading-relaxed">
-                安全なアカウント運用のために、「英大文字」「英小文字」「数字」「記号」のうち3種類以上を組み合わせた8文字以上の文字列を設定してください。
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">パスワード（確認用） <span className="text-red-500">*</span></label>
-              <input 
-                type="password" 
-                value={joinConfirmPassword}
-                onChange={e => setJoinConfirmPassword(e.target.value)}
-                placeholder="パスワードを再入力してください"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-qoin-main focus:ring-2 focus:ring-sky-100 transition font-bold text-gray-700"
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              disabled={isLoggingIn}
-              className="w-full bg-qoin-main text-white font-black py-4 rounded-xl shadow-lg hover:bg-qoin-main_hover transition disabled:opacity-50 flex items-center justify-center cursor-pointer mt-2"
-            >
-              {isLoggingIn ? <i className="fas fa-spinner fa-spin"></i> : 'パスワードを設定して役員に合流する'}
-            </button>
-          </form>
-          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
-             <button type="button" onClick={() => setView('login')} className="text-sm font-bold text-gray-500 hover:text-gray-700">キャンセルして戻る</button>
-          </div>
-        </div>
-        <div className="absolute top-0 left-0 w-full h-64 bg-qoin-main rounded-b-[4rem] z-0"></div>
-      </div>
-    );
-  }
-  // --- 旧仕様の Join 画面終了 ---
 
   if (view === 'invite') {
     const normalizedLoginEmail = loginEmail.trim().toLowerCase();

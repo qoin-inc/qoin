@@ -29,49 +29,18 @@ export async function GET(request: Request) {
   if (authError || !user || !userEmail) {
     return json({ error: 'ログイン情報の有効期限が切れています。もう一度ログインしてください。' }, 401);
   }
-  const emailPattern = userEmail.replace(/[\\%_]/g, (character) => `\\${character}`);
+  const { data: authRecords, error: authIdError } = await supabase
+    .from('neighborhood_admins')
+    .select(membershipColumns)
+    .eq('admin_auth_id', user.id)
+    .eq('status', 'active');
 
-  const [authIdResult, emailResult] = await Promise.all([
-    supabase
-      .from('neighborhood_admins')
-      .select(membershipColumns)
-      .eq('admin_auth_id', user.id)
-      .eq('status', 'active'),
-    supabase
-      .from('neighborhood_admins')
-      .select(membershipColumns)
-      .ilike('admin_email', emailPattern)
-      .eq('status', 'active'),
-  ]);
-
-  if (authIdResult.error || emailResult.error) {
-    console.error('[admin-memberships] lookup failed', {
-      authIdError: authIdResult.error?.message,
-      emailError: emailResult.error?.message,
-    });
+  if (authIdError) {
+    console.error('[admin-memberships] lookup failed', { message: authIdError.message });
     return json({ error: '所属する町内会・自治会を確認できません。しばらくしてから再度お試しください。' }, 500);
   }
 
-  let records = new Map<string, any>();
-  for (const record of [...(authIdResult.data || []), ...(emailResult.data || [])]) {
-    records.set(String(record.id), record);
-  }
-
-  const relinkIds = [...records.values()]
-    .filter((record) => record.admin_auth_id !== user.id && String(record.admin_email || '').trim().toLowerCase() === userEmail)
-    .map((record) => record.id);
-
-  if (relinkIds.length > 0) {
-    const { error: relinkError } = await supabase
-      .from('neighborhood_admins')
-      .update({ admin_auth_id: user.id })
-      .in('id', relinkIds)
-      .eq('status', 'active');
-    if (relinkError) {
-      console.error('[admin-memberships] relink failed', { message: relinkError.message });
-      return json({ error: '役員情報の紐付けを更新できません。管理者へお問い合わせください。' }, 409);
-    }
-  }
+  let records = new Map<string, any>((authRecords || []).map((record) => [String(record.id), record]));
 
   if (records.size === 0) {
     const { data: legacyTowns, error: legacyError } = await supabase
