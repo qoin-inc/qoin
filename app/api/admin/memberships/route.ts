@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-
-const SYSTEM_ADMIN_EMAIL = 'admin@el-town.jp';
+import { isStagingInviteTarget, isStagingSystemAdmin } from '@/lib/stagingInviteTarget';
 
 const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(body, {
   status,
@@ -18,6 +17,9 @@ export async function GET(request: Request) {
   const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   if (!supabaseUrl || !supabaseSecretKey) {
     return json({ error: '所属情報を確認できません。しばらくしてから再度お試しください。' }, 503);
+  }
+  if (!isStagingInviteTarget(supabaseUrl, process.env.STAGING_SUPABASE_PROJECT_REF || '')) {
+    return json({ error: '検証用Supabaseの接続先が確認できません。' }, 503);
   }
 
   const supabase = createClient(supabaseUrl, supabaseSecretKey, {
@@ -88,7 +90,7 @@ export async function GET(request: Request) {
           neighborhood.admin_auth_id === user.id
           || String(neighborhood.admin_email || '').trim().toLowerCase() === userEmail
         ),
-        isSystemAdmin: userEmail === SYSTEM_ADMIN_EMAIL,
+        isSystemAdmin: isStagingSystemAdmin(user.id, process.env.STAGING_SYSTEM_ADMIN_AUTH_ID || ''),
         town: {
           id: Number(neighborhood.id),
           name: String(neighborhood.name),

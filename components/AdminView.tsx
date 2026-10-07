@@ -469,9 +469,33 @@ const stripeRequirementLabel = (requirement: string) => {
 const memberCsvHeaders = ["名簿ID", "氏名", "氏名カタカナ", "郵便番号", "住所２", "住所３", "家族１", "家族１カタカナ", "家族２", "家族２カタカナ"];
 const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所３"]);
 const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message", "family_withdrawal_status_1", "family_withdrawal_status_2"];
-const adminDetailColumns = ["admin_role", "admin_invite_token", "invite_token", "invited_at", "retired_at"];
 const adminInviteValidityMs = 7 * 24 * 60 * 60 * 1000;
 const systemAdminEmail = "admin@el-town.jp";
+const stagingInviteOrigin = "https://el-town-staging.netlify.app";
+const getAdminBearerToken = async () => {
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    const { data: refreshData } = await supabase.auth.refreshSession();
+    session = refreshData.session;
+  }
+  if (!session?.access_token) throw new Error("管理者ログインを確認できません。再ログインしてください。");
+  return session.access_token;
+};
+
+const requestAdminManagement = async (method: "GET" | "POST" | "PATCH" | "DELETE", townId: number | string, payload?: Record<string, unknown>) => {
+  const accessToken = await getAdminBearerToken();
+  const url = method === "GET"
+    ? `/api/admin/manage-invites?townId=${encodeURIComponent(String(townId))}`
+    : "/api/admin/manage-invites";
+  const response = await fetch(url, {
+    method,
+    headers: { Authorization: `Bearer ${accessToken}`, ...(method === "GET" ? {} : { "Content-Type": "application/json" }) },
+    body: method === "GET" ? undefined : JSON.stringify({ townId, ...payload }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data?.error || "役員情報を処理できませんでした。");
+  return data;
+};
 const feeDetailColumns = [
   "neighborhood_id",
   "roster_id",
@@ -1020,6 +1044,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [adminInviteUrl, setAdminInviteUrl] = useState("");
   const [adminBusy, setAdminBusy] = useState(false);
   const [adminMessage, setAdminMessage] = useState("");
+  const [adminLoadError, setAdminLoadError] = useState("");
   const [activeAdminListStatus, setActiveAdminListStatus] = useState<AdminListStatus>("active");
   const [systemBankAccount, setSystemBankAccount] = useState<BankAccount | null>(null);
   const [systemIssuer, setSystemIssuer] = useState<InvoiceIssuer | null>(null);
@@ -1225,7 +1250,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
             .eq("neighborhood_id", townId)
             .limit(10000),
           supabase.from("resident_rosters").select("*").eq("neighborhood_id", townId).order("id", { ascending: false }).limit(1000),
-          supabase.from("neighborhood_admins").select("*").eq("neighborhood_id", townId).order("id", { ascending: false }).limit(100),
+          requestAdminManagement("GET", townId).then((result) => ({ data: result.admins || [], error: "" }))
+            .catch((error) => ({ data: [], error: error?.message || "役員一覧を取得できませんでした。" })),
           supabase
             .from("circulars")
             .select("id", { count: "exact", head: true })
@@ -1277,6 +1303,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           paidTotal,
         });
 
+        setAdminLoadError(adminRows.error);
         setBasicData({
           town: townInfo.data || null,
           members: memberListRows,
@@ -3077,35 +3104,12 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   };
 
   const buildAdminInviteUrl = (token: string) => {
-    if (typeof window === "undefined") return `/admin?mode=invite&token=${encodeURIComponent(token)}`;
-    return `${window.location.origin}/admin?mode=invite&token=${encodeURIComponent(token)}`;
+    return `${stagingInviteOrigin}/admin?mode=invite&token=${encodeURIComponent(token)}`;
   };
 
   const handleAdminInviteDraftChange = (field: keyof AdminInviteDraft, value: string) => {
     setAdminInviteDraft((current) => ({ ...current, [field]: value }));
     setAdminMessage("");
-  };
-
-  const saveAdminRecordWithFallback = async (payload: Record<string, any>, existingId?: number | string | null) => {
-    let nextPayload = { ...payload };
-
-    for (let attempt = 0; attempt < adminDetailColumns.length + 3; attempt += 1) {
-      const result = existingId
-        ? await supabase.from("neighborhood_admins").update(nextPayload).eq("id", existingId).select("*").maybeSingle()
-        : await supabase.from("neighborhood_admins").insert(nextPayload).select("*").single();
-
-      if (!result.error) return { ...(result.data || {}), ...nextPayload, id: result.data?.id || existingId };
-
-      const missingColumn = missingColumnFromError(result.error);
-      if (missingColumn && Object.prototype.hasOwnProperty.call(nextPayload, missingColumn)) {
-        delete nextPayload[missingColumn];
-        continue;
-      }
-
-      throw result.error;
-    }
-
-    throw new Error("役員情報の保存に失敗しました。");
   };
 
   const adminsByStatus = useMemo(() => ({
@@ -3214,6 +3218,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   };
 
   const handleAdminInviteCreate = async () => {
+    if (adminLoadError) {
+      setAdminMessage(adminLoadError);
+      return;
+    }
     const email = adminInviteDraft.email.trim().toLowerCase();
     const name = adminInviteDraft.name.trim();
     const role = adminInviteDraft.role.trim();
@@ -3245,30 +3253,14 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAdminBusy(true);
     setAdminMessage("");
     try {
-      const expiredDuplicates = basicData.admins.filter((admin) => (
-        String(admin.admin_email || "").toLowerCase() === email && isAdminInviteExpired(admin) && admin.id
-      ));
-      for (const expired of expiredDuplicates) {
-        const { error } = await supabase.from("neighborhood_admins").delete().eq("id", expired.id);
-        if (error) throw error;
-      }
-
-      const token = crypto.randomUUID();
-      const payload = {
-        neighborhood_id: townId,
-        admin_email: email,
-        admin_name: name,
-        admin_role: role,
-        status: "pending",
-        admin_invite_token: token,
-        invite_token: token,
-        invited_at: new Date().toISOString(),
-      };
-      const saved = await saveAdminRecordWithFallback(payload);
+      const result = await requestAdminManagement("POST", townId, { name, email, role });
+      const saved = result.admin;
+      const token = String(result.token || "");
+      if (!saved?.id || !token) throw new Error("招待URLを取得できませんでした。");
       const url = buildAdminInviteUrl(token);
       setBasicData((current) => ({
         ...current,
-        admins: [saved, ...current.admins.filter((admin) => !expiredDuplicates.some((expired) => String(expired.id) === String(admin.id)))],
+        admins: [saved, ...current.admins.filter((admin) => String(admin.id) !== String(saved.id))],
       }));
       setAdminInviteDraft({ name: "", email: "", role: "" });
       setAdminInviteUrl(url);
@@ -3297,10 +3289,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAdminBusy(true);
     setAdminMessage("");
     try {
-      const payload = retiring
-        ? { status: "retired", retired_at: new Date().toISOString() }
-        : { status: "active", retired_at: null };
-      const saved = await saveAdminRecordWithFallback(payload, admin.id);
+      const result = await requestAdminManagement("PATCH", townId, { id: admin.id, status: nextStatus });
+      const saved = result.admin;
       setBasicData((current) => ({
         ...current,
         admins: current.admins.map((item) => (String(item.id) === String(admin.id) ? { ...item, ...saved } : item)),
@@ -3321,8 +3311,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAdminBusy(true);
     setAdminMessage("");
     try {
-      const { error } = await supabase.from("neighborhood_admins").delete().eq("id", admin.id);
-      if (error) throw error;
+      await requestAdminManagement("DELETE", townId, { id: admin.id });
 
       setBasicData((current) => ({
         ...current,
@@ -3573,8 +3562,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         throw new Error("ログインの有効期限が切れています。ページを再読み込みして、もう一度ログインしてください。");
       }
       await requestAdminInviteEmail(admin.id, accessToken);
-      const token = admin.admin_invite_token || admin.invite_token;
-      if (token) setAdminInviteUrl(buildAdminInviteUrl(token));
       setAdminMessage("役員候補者へ招待メールを再送しました。");
     } catch (error: any) {
       setAdminMessage(error?.message || "招待メールを再送できませんでした。");
@@ -4006,13 +3993,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   };
 
   const getAdminAccessToken = async () => {
-    let { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
-      const { data: refreshData } = await supabase.auth.refreshSession();
-      session = refreshData.session;
-    }
-    if (!session?.access_token) throw new Error("管理者ログインを確認できません。再ログインしてください。");
-    return session.access_token;
+    return getAdminBearerToken();
   };
 
   const selectSystemUsagePaymentMethod = async (paymentMethod: "card" | "bank_transfer") => {
@@ -5170,11 +5151,12 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 <span>役職</span>
                 <input value={adminInviteDraft.role} onChange={(event) => handleAdminInviteDraftChange("role", event.target.value)} placeholder="例: 副会長、会計" />
               </label>
-              <button type="button" onClick={handleAdminInviteCreate} disabled={adminBusy || activeOrInvitedAdminCount >= 20}>
+              <button type="button" onClick={handleAdminInviteCreate} disabled={adminBusy || Boolean(adminLoadError) || activeOrInvitedAdminCount >= 20}>
                 <i className={`fas ${adminBusy ? "fa-spinner fa-spin" : "fa-envelope"}`} />
                 <span>{activeOrInvitedAdminCount >= 20 ? "上限20名" : "招待メールを送信"}</span>
               </button>
             </div>
+            {adminLoadError && <p role="alert" className="mt-3 text-sm font-bold text-red-700">{adminLoadError}</p>}
             <p className="mt-3 text-xs font-bold leading-6 text-gray-500">
               登録済みの役員は、現在のアカウントと共通のパスワードで別の町内会・自治会を追加します。町内会・自治会ごとに新しいパスワードを作る必要はありません。
             </p>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireNeighborhoodAdmin } from "@/lib/stripeConnectServer";
+import { isStagingInviteTarget } from "@/lib/stagingInviteTarget";
 
 const INVITE_VALIDITY_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -21,6 +22,9 @@ const formatJapaneseDate = (date: Date) => new Intl.DateTimeFormat("ja-JP", {
 
 export async function POST(request: Request) {
   try {
+    if (!isStagingInviteTarget(process.env.NEXT_PUBLIC_SUPABASE_URL || "", process.env.STAGING_SUPABASE_PROJECT_REF || "")) {
+      return NextResponse.json({ error: "検証用Supabaseの接続先が確認できません。" }, { status: 503 });
+    }
     const body = await request.json().catch(() => ({}));
     const townId = String(body?.townId || "");
     const invitationId = String(body?.invitationId || "");
@@ -72,7 +76,7 @@ export async function POST(request: Request) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
       return NextResponse.json({ error: "招待先メールアドレスが正しくありません。" }, { status: 400 });
     }
-    const origin = process.env.NEXT_PUBLIC_BASE_URL || new URL(request.url).origin;
+    const origin = "https://el-town-staging.netlify.app";
     const inviteUrl = `${origin.replace(/\/$/, "")}/admin?mode=invite&token=${encodeURIComponent(invitation.admin_invite_token)}`;
     const expiresLabel = formatJapaneseDate(expiresAt);
     const subject = `【el-town】${townName.replace(/[\r\n]+/g, " ")}の役員招待`;

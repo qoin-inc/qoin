@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { ADMIN_INVITE_VALIDITY_MS, validateAdminInviteAcceptance } from '@/lib/adminInviteAcceptance';
+import { isStagingInviteTarget } from '@/lib/stagingInviteTarget';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,6 +25,9 @@ export async function POST(request: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const secret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   if (!url || !secret) return json({ error: '招待の登録設定が未完了です。' }, 503);
+  if (!isStagingInviteTarget(url, process.env.STAGING_SUPABASE_PROJECT_REF || '')) {
+    return json({ error: '検証用Supabaseの接続先が確認できません。' }, 503);
+  }
 
   const admin = createClient(url, secret, { auth: { autoRefreshToken: false, persistSession: false } });
   const { data: authData, error: authError } = await admin.auth.getUser(accessToken);

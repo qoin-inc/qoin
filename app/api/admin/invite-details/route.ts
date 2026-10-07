@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { isStagingInviteTarget } from "@/lib/stagingInviteTarget";
 
 const INVITE_VALIDITY_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -16,6 +17,9 @@ export async function GET(request: Request) {
   const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!supabaseUrl || !supabaseSecretKey) {
     return json({ code: "unavailable", error: "招待情報を確認できません。しばらくしてから再度お試しください。" }, 503);
+  }
+  if (!isStagingInviteTarget(supabaseUrl, process.env.STAGING_SUPABASE_PROJECT_REF || "")) {
+    return json({ code: "unavailable", error: "検証用Supabaseの接続先が確認できません。" }, 503);
   }
 
   const supabase = createClient(supabaseUrl, supabaseSecretKey, {
