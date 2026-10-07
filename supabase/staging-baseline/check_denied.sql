@@ -70,11 +70,20 @@ $checks$;
 
 -- Verify the default ACL of a newly created function, not just current functions.
 CREATE FUNCTION public._staging_acl_probe() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$;
+CREATE TABLE public._staging_table_acl_probe (id bigserial PRIMARY KEY);
 DO $default_acl$
 BEGIN
   IF has_function_privilege('anon', 'public._staging_acl_probe()', 'EXECUTE')
     OR has_function_privilege('authenticated', 'public._staging_acl_probe()', 'EXECUTE')
   THEN RAISE EXCEPTION 'New public function would be executable by a client role'; END IF;
+  IF has_table_privilege('anon', 'public._staging_table_acl_probe', 'SELECT')
+    OR has_table_privilege('authenticated', 'public._staging_table_acl_probe', 'SELECT')
+    OR has_table_privilege('anon', 'public._staging_table_acl_probe', 'INSERT')
+    OR has_table_privilege('authenticated', 'public._staging_table_acl_probe', 'INSERT')
+  THEN RAISE EXCEPTION 'New public table would be accessible by a client role'; END IF;
+  IF has_sequence_privilege('anon', 'public._staging_table_acl_probe_id_seq', 'USAGE')
+    OR has_sequence_privilege('authenticated', 'public._staging_table_acl_probe_id_seq', 'USAGE')
+  THEN RAISE EXCEPTION 'New public sequence would be accessible by a client role'; END IF;
 END;
 $default_acl$;
 
