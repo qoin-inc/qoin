@@ -4,6 +4,8 @@
 
 この段階では `anon` と `authenticated` に表・シーケンス・関数のアクセスを付けません。`service_role` はサーバー用に許可します。固定メールによるシステム管理者判定は常にfalseとし、システム管理者の自動追加および名簿削除時のAuthユーザー削除は無効化しています。したがって、**このSQLを適用するだけではアプリは動作しません**。操作ごとのGRANT、RLS Policy、Storage Policy、検証用管理者IDの設計とテストが残ります。
 
+役員招待の所属確認に限った追加権限案は `20261008_admin_invite_membership_LOCAL_ONLY.sql` に分離しました。ローカル実行ガード付きで、実Supabase Projectには適用できません。対象操作、テスト結果、未対応のブラウザ直接操作は `docs/reports/staging_admin_invite_access_2026-10-08.md` に記録しています。
+
 このファイルは通常の `supabase/migrations/` の外に置いています。本番にリンクされたCLIで `supabase db push` を実行しないでください。検証Projectへの適用前にはProject Refを別手順で照合し、承認済みの適用手順を用意します。現時点ではローカルの使い捨てPostgreSQLで `check_denied.sql` を実行して確認する用途に限ります。
 
 2026-10-07にPGlite 0.5.8（PostgreSQL 18.3相当）のメモリ内DBへ適用し、`check_denied.sql` が通過しました。45テーブル、31関数、Policy 0件、`anon` の役員表SELECT拒否、`service_role` の役員表UPDATE許可を確認しました。新規表・シーケンス・関数の既定権限も拒否側を検証しました。PGliteにはSupabase Authの最小スタブを用いており、Supabase実環境の互換性やアプリ機能はまだ確認していません。Docker Desktopは一時ソケットの起動エラーが再発し、PostgreSQL 17コンテナでの確認は実施できませんでした。
