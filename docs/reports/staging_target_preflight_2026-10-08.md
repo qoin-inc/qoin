@@ -1,8 +1,8 @@
 # 検証用Supabase接続先の事前確認（2026-10-08）
 
-共有された `el-town-staging` のSupabase画面には `https://zghcorbdtslrjtkkspfe.supabase.co` が表示されていた。Project Refは `zghcorbdtslrjtkkspfe` と読めるが、実作業の直前に管理画面のProject Settingsで再確認する。
+共有された `el-town-staging` のSupabase画面には `https://zghcorbdtslrjtkkspfe.supabase.co` が表示されていた。2026-10-09に共有されたSettings → General画面でProject ID `zghcorbdtslrjtkkspfe`、リージョン `ap-northeast-1` を再確認した。実際のDB変更・デプロイ直前にも、対象のプロジェクト名とIDを照合する。
 
-この作業ブランチに残るローカル `.env.local` は別のSupabaseホストを指し、`STAGING_SUPABASE_PROJECT_REF` も未設定。現状の設定を使ってアプリ、DBコマンド、結合テストを起動しない。`.env.local` はGitの追跡から外したが、過去の履歴に含まれた `NETLIFY_AUTH_TOKEN` はNetlify側で失効・再発行する必要がある。
+この作業ブランチに残るローカル `.env.local` は別のSupabaseホストを指し、`STAGING_SUPABASE_PROJECT_REF` も未設定。現状の設定を使ってアプリ、DBコマンド、結合テストを起動しない。`.env.local` はGitの追跡から外した。過去の履歴に含まれた `NETLIFY_AUTH_TOKEN` は2026-06-27から同じ値で、Netlify画面には同日作成の期限切れトークンがある。ただし画面で値を照合できず、同一トークンとは確定していない。有効なトークンは用途を確認するまで削除しない。
 
 ## 接続前の手順
 
