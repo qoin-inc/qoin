@@ -7,7 +7,7 @@
 ## 接続前の手順
 
 1. Supabase管理画面で `el-town-staging` のProject RefとProject URLを照合する。Project名だけで判断しない。
-2. 検証専用の環境変数に `NEXT_PUBLIC_SUPABASE_URL`、検証Projectの公開用キー、`STAGING_SUPABASE_PROJECT_REF` を設定する。秘密キーは文書・チャット・Gitに記録しない。
+2. `.env.staging.example` を参照し、この作業ブランチのGit追跡外 `.env.local` に `NEXT_PUBLIC_SUPABASE_URL`、検証Projectの公開用キー、`STAGING_SUPABASE_PROJECT_REF` を設定する。`NEXT_PUBLIC_SUPABASE_ANON_KEY` に入れるのは検証Projectのpublishable/anon keyであり、service_role/secret keyではない。秘密キーは文書・チャット・Gitに記録しない。
 3. リポジトリのルートで `node scripts/check-staging-target.mjs <管理画面で確認したProject Ref> <検証用envファイル>` を実行する。このコマンドはローカルファイルのみを読み、ネットワークへ接続しない。正常終了してもキーの正しさやDBの状態は証明しない。
 4. DB適用前に対象Projectが空であること、baseline SQLと権限SQLの適用順、管理画面全体に必要なRLSと権限を確認する。現行の役員権限SQLはローカル専用であり、実Projectにそのまま適用できない。
 5. Netlify検証サイトに設定する接続先も同じProject Refと照合する。デプロイは `AGENTS.md` の承認付き手順を使う。
