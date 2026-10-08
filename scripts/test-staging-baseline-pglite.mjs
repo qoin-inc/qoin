@@ -18,7 +18,7 @@ async function expectGuardToBlock(setup) {
     await guardedDb.exec(setup);
     await assert.rejects(
       () => guardedDb.exec(baseline),
-      /Staging baseline requires an empty public schema and zero Auth users/,
+      /Staging baseline requires zero public tables\/functions and Auth users/,
     );
     await guardedDb.exec('ROLLBACK;');
     const result = await guardedDb.query("SELECT to_regclass('public.neighborhood_admins') IS NULL AS unchanged;");
@@ -30,6 +30,7 @@ async function expectGuardToBlock(setup) {
 
 try {
   await expectGuardToBlock('CREATE TABLE public.existing_data (id integer);');
+  await expectGuardToBlock('CREATE FUNCTION public.existing_function() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$;');
   await expectGuardToBlock("INSERT INTO auth.users VALUES ('00000000-0000-0000-0000-000000000001');");
   await db.exec(`
     CREATE ROLE anon NOLOGIN;
@@ -44,6 +45,31 @@ try {
 
   const checks = fs.readFileSync('supabase/staging-baseline/check_denied.sql', 'utf8');
   await db.exec(checks);
+
+  const postflight = fs.readFileSync('supabase/staging-baseline/postflight_readonly.sql', 'utf8');
+  const verified = await db.query(postflight);
+  assert.deepEqual(
+    {
+      public_tables: verified.rows[0].public_tables,
+      public_functions: verified.rows[0].public_functions,
+      public_policies: verified.rows[0].public_policies,
+      rls_tables: verified.rows[0].rls_tables,
+      auth_users: verified.rows[0].auth_users,
+      anon_admin_read: verified.rows[0].anon_admin_read,
+      authenticated_admin_read: verified.rows[0].authenticated_admin_read,
+      service_admin_update: verified.rows[0].service_admin_update,
+    },
+    {
+      public_tables: 45,
+      public_functions: 31,
+      public_policies: 0,
+      rls_tables: 45,
+      auth_users: 0,
+      anon_admin_read: false,
+      authenticated_admin_read: false,
+      service_admin_update: true,
+    },
+  );
 
   const result = await db.query(`
     SELECT

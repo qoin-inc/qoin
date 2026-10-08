@@ -6,11 +6,11 @@
 
 役員招待の所属確認に限った追加権限案は `20261008_admin_invite_membership_LOCAL_ONLY.sql` に分離しました。ローカル実行ガード付きで、実Supabase Projectには適用できません。対象操作、テスト結果、未対応のブラウザ直接操作は `docs/reports/staging_admin_invite_access_2026-10-08.md` に記録しています。
 
-このファイルは通常の `supabase/migrations/` の外に置いています。本番にリンクされたCLIで `supabase db push` を実行しないでください。検証Projectへの適用前にはProject Refを別手順で照合し、承認済みの適用手順を用意します。現時点ではローカルの使い捨てPostgreSQLで `check_denied.sql` を実行して確認する用途に限ります。
+このファイルは通常の `supabase/migrations/` の外に置いています。本番にリンクされたCLIで `supabase db push` を実行しないでください。ローカル検証と実Projectへの適用手順を分けており、実Projectでは `docs/admin/staging-baseline-apply.md` のProject ID照合・空DB確認・適用後確認を必ず行います。
 
-検証Projectの空状態を確認する読み取りSQLは `preflight_readonly.sql` に分離しました。SupabaseのSQL Editorを開いた際に、画面のProject IDが `zghcorbdtslrjtkkspfe` であることを先に確認してください。このSQL自体はProject IDを証明できません。`public_tables` と `auth_users` がともに0、`app_schema_present` がfalseであることを確認するまでbaselineを適用しません。SQLの結果が条件を満たしても、アプリ全体の権限設計と実Supabaseでの互換性確認が残ります。
+検証Projectの空状態を確認する読み取りSQLは `preflight_readonly.sql` に分離しました。SupabaseのSQL Editorを開いた際に、画面のProject IDが `zghcorbdtslrjtkkspfe` であることを先に確認してください。このSQL自体はProject IDを証明できません。`public_tables`、`public_functions`、`auth_users` がすべて0、`app_schema_present` がfalseであることを確認するまでbaselineを適用しません。SQLの結果が条件を満たしても、アプリ全体の権限設計と実Supabaseでの互換性確認が残ります。
 
-baseline本体にも空DBガードを追加しました。`public` に既存テーブルがあるか、`auth.users` にユーザーがいる場合は、最初のスキーマ変更より前にトランザクションを失敗させます。これは誤適用を減らすための補助で、Project IDの照合や適用先確認を代替しません。
+baseline本体にも空DBガードを追加しました。`public` に既存テーブル・関数があるか、`auth.users` にユーザーがいる場合は、最初のスキーマ変更より前にトランザクションを失敗させます。これは誤適用を減らすための補助で、Project IDの照合や適用先確認を代替しません。
 
 2026-10-07にPGlite 0.5.8（PostgreSQL 18.3相当）のメモリ内DBへ適用し、`check_denied.sql` が通過しました。45テーブル、31関数、Policy 0件、`anon` の役員表SELECT拒否、`service_role` の役員表UPDATE許可を確認しました。新規表・シーケンス・関数の既定権限も拒否側を検証しました。PGliteにはSupabase Authの最小スタブを用いており、Supabase実環境の互換性やアプリ機能はまだ確認していません。Docker Desktopは一時ソケットの起動エラーが再発し、PostgreSQL 17コンテナでの確認は実施できませんでした。
 

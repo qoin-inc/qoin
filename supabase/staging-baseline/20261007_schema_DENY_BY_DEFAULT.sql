@@ -4,7 +4,7 @@
 -- Do not replay the 12 existing migrations on top of this snapshot.
 -- Storage bucket/policies and client GRANT/RLS rules require separate review.
 BEGIN;
--- Refuse to modify a database that already contains application tables or Auth users.
+-- Refuse to modify a database with public tables/functions or Auth users.
 -- The project identity must still be verified separately in the Supabase dashboard.
 DO $empty_staging_guard$
 BEGIN
@@ -12,8 +12,12 @@ BEGIN
     SELECT 1 FROM pg_catalog.pg_class AS c
     JOIN pg_catalog.pg_namespace AS n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
+  ) OR EXISTS (
+    SELECT 1 FROM pg_catalog.pg_proc AS p
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
   ) OR EXISTS (SELECT 1 FROM auth.users) THEN
-    RAISE EXCEPTION 'Staging baseline requires an empty public schema and zero Auth users';
+    RAISE EXCEPTION 'Staging baseline requires zero public tables/functions and Auth users';
   END IF;
 END;
 $empty_staging_guard$;
