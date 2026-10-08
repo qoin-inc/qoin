@@ -8,6 +8,8 @@
 
 このファイルは通常の `supabase/migrations/` の外に置いています。本番にリンクされたCLIで `supabase db push` を実行しないでください。検証Projectへの適用前にはProject Refを別手順で照合し、承認済みの適用手順を用意します。現時点ではローカルの使い捨てPostgreSQLで `check_denied.sql` を実行して確認する用途に限ります。
 
+検証Projectの空状態を確認する読み取りSQLは `preflight_readonly.sql` に分離しました。SupabaseのSQL Editorを開いた際に、画面のProject IDが `zghcorbdtslrjtkkspfe` であることを先に確認してください。このSQL自体はProject IDを証明できません。`public_tables` と `auth_users` がともに0、`app_schema_present` がfalseであることを確認するまでbaselineを適用しません。SQLの結果が条件を満たしても、アプリ全体の権限設計と実Supabaseでの互換性確認が残ります。
+
 2026-10-07にPGlite 0.5.8（PostgreSQL 18.3相当）のメモリ内DBへ適用し、`check_denied.sql` が通過しました。45テーブル、31関数、Policy 0件、`anon` の役員表SELECT拒否、`service_role` の役員表UPDATE許可を確認しました。新規表・シーケンス・関数の既定権限も拒否側を検証しました。PGliteにはSupabase Authの最小スタブを用いており、Supabase実環境の互換性やアプリ機能はまだ確認していません。Docker Desktopは一時ソケットの起動エラーが再発し、PostgreSQL 17コンテナでの確認は実施できませんでした。
 
 リポジトリのルートから再実行できます。PGliteはリポジトリ外の一時ディレクトリへ入れ、実際のSupabaseには接続しません。
