@@ -6,7 +6,7 @@
 
 | サービス | 検証用リソース | 識別子・URL | 状態 |
 |---|---|---|---|
-| Supabase | `el-town-staging` | Project Ref: `zghcorbdtslrjtkkspfe`、Project URL: `https://zghcorbdtslrjtkkspfe.supabase.co`。リージョン: Tokyo、Compute: Micro | 2026-10-09にProject ID・リージョンを画面で確認。ローカル接続先チェックとpublishable keyによる公開Auth設定の読み取りは通過。DBの空状態は未確認、migration未適用、アプリ未接続 |
+| Supabase | `el-town-staging` | Project Ref: `zghcorbdtslrjtkkspfe`、Project URL: `https://zghcorbdtslrjtkkspfe.supabase.co`。リージョン: Tokyo、Compute: Micro | Project ID・リージョンを画面で確認。ローカル接続先チェックとpublishable keyによる公開Auth設定の読み取りは通過。SQL Editor画像ではpublicテーブル0・Authユーザー0（画像にProject IDなし）。migration未適用、アプリ未接続 |
 | Netlify | `el-town-staging` | Site ID: `4e00785b-ffe1-4e3b-bc45-c1ab26d7a3ba`、URL: `https://el-town-staging.netlify.app` | 2026-10-06に既存の `el-town` チームで空サイトを作成。GitHub未接続、公開済みdeployなし |
 | LINE | 検証用Provider・公式アカウント・LINE Login・Messaging API・LIFF | 未作成 | 本番とは別に作成予定。LIFF Endpoint URLには検証用Netlify URLを使用 |
 | Stripe | 検証用Sandbox・Webhook | 未作成 | 本番決済・Connectアカウントとは分離予定 |

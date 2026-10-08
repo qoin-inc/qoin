@@ -114,6 +114,19 @@ const preamble = `-- Staging schema baseline: structure only, deny direct client
 -- Do not replay the 12 existing migrations on top of this snapshot.
 -- Storage bucket/policies and client GRANT/RLS rules require separate review.
 BEGIN;
+-- Refuse to modify a database that already contains application tables or Auth users.
+-- The project identity must still be verified separately in the Supabase dashboard.
+DO $empty_staging_guard$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_catalog.pg_class AS c
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
+  ) OR EXISTS (SELECT 1 FROM auth.users) THEN
+    RAISE EXCEPTION 'Staging baseline requires an empty public schema and zero Auth users';
+  END IF;
+END;
+$empty_staging_guard$;
 `;
 
 const hardening = `

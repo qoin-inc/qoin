@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
 
 const [pgliteModulePath] = process.argv.slice(2);
@@ -8,8 +9,28 @@ if (!pgliteModulePath) {
 
 const { PGlite } = await import(pathToFileURL(pgliteModulePath).href);
 const db = await PGlite.create();
+const baseline = fs.readFileSync('supabase/staging-baseline/20261007_schema_DENY_BY_DEFAULT.sql', 'utf8');
+
+async function expectGuardToBlock(setup) {
+  const guardedDb = await PGlite.create();
+  try {
+    await guardedDb.exec('CREATE SCHEMA auth; CREATE TABLE auth.users (id uuid PRIMARY KEY);');
+    await guardedDb.exec(setup);
+    await assert.rejects(
+      () => guardedDb.exec(baseline),
+      /Staging baseline requires an empty public schema and zero Auth users/,
+    );
+    await guardedDb.exec('ROLLBACK;');
+    const result = await guardedDb.query("SELECT to_regclass('public.neighborhood_admins') IS NULL AS unchanged;");
+    assert.equal(result.rows[0].unchanged, true);
+  } finally {
+    await guardedDb.close();
+  }
+}
 
 try {
+  await expectGuardToBlock('CREATE TABLE public.existing_data (id integer);');
+  await expectGuardToBlock("INSERT INTO auth.users VALUES ('00000000-0000-0000-0000-000000000001');");
   await db.exec(`
     CREATE ROLE anon NOLOGIN;
     CREATE ROLE authenticated NOLOGIN;
@@ -19,7 +40,6 @@ try {
     CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULL::uuid $$;
   `);
 
-  const baseline = fs.readFileSync('supabase/staging-baseline/20261007_schema_DENY_BY_DEFAULT.sql', 'utf8');
   await db.exec(baseline);
 
   const checks = fs.readFileSync('supabase/staging-baseline/check_denied.sql', 'utf8');

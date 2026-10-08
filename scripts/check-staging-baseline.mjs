@@ -17,5 +17,6 @@ assert.doesNotMatch(sql, /DELETE FROM auth\.users/);
 assert.match(sql, /CREATE OR REPLACE FUNCTION "public"\."ensure_system_admin_for_neighborhood"[\s\S]*?AS \$\$ BEGIN RETURN NEW; END; \$\$;/);
 assert.match(sql, /CREATE OR REPLACE FUNCTION "public"\."handle_delete_auth_user"[\s\S]*?AS \$\$ BEGIN RETURN OLD; END; \$\$;/);
 assert.ok(sql.trimEnd().endsWith('COMMIT;'), 'baseline must close the transaction');
+assert.match(sql, /BEGIN;\s*-- Refuse to modify[\s\S]*?DO \$empty_staging_guard\$[\s\S]*?FROM auth\.users[\s\S]*?\$empty_staging_guard\$;/);
 
 console.log('Static baseline checks passed: 45 RLS tables, 31 functions, zero inherited policies, client access denied.');

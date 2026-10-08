@@ -13,3 +13,5 @@
 5. Netlify検証サイトに設定する接続先も同じProject Refと照合する。デプロイは `AGENTS.md` の承認付き手順を使う。
 
 2026-10-08時点では手順3がProject Ref未設定とURL不一致で失敗した。2026-10-09に設定を修正し、手順3と公開Auth設定の読み取りが通過した。実SupabaseへのDB変更とNetlifyデプロイは行っていない。
+
+2026-10-09に共有されたSQL Editorの結果は `public_tables=0`、`auth_users=0`、`app_schema_present=false` だった。ただし画像にはProject IDが写っていないため、この結果だけでは検証ProjectのDBと断定できない。baseline適用時にSQL Editor上のProject IDを再確認する。baseline本体には既存テーブルまたはAuthユーザーがある場合の停止ガードを追加し、使い捨てDBで拒否と空DBへの適用を確認した。
