@@ -19,3 +19,7 @@
 同日に共有されたSettings → General画面で `el-town-staging` のProject ID `zghcorbdtslrjtkkspfe` を再確認した。適用手順を見直し、既存の `public` 関数が上書き・権限変更されないよう、関数件数も事前確認とSQL本体の停止条件に追加した。最初のSQL Editor結果には関数件数がないため、更新版 `preflight_readonly.sql` の再実行が必要。`docs/admin/staging-baseline-apply.md` に実Project向けの適用順と事後確認を記録した。実Projectへのbaseline適用は未実施。
 
 更新版のSQL Editor結果で `public_functions=1` を確認した。関数名は `rls_auto_enable`、戻り値は `event_trigger`、所有者は `postgres`、拡張機能には属さず、`ensure_rls` イベントトリガーが有効（`O`）。これはProject作成時に選択したautomatic RLS設定と整合する。baselineはこの既存関数とトリガーだけを許容し、関数の一括ACL変更から除外するよう修正した。他の既存関数は引き続き拒否する。実Projectへのbaseline適用は未実施。
+
+## 2026-10-09 適用結果
+
+ユーザーが `el-town-staging` のSQL Editorで修正版baselineを実行した後、`postflight_readonly.sql` の結果画像を共有した。`public_tables=45`、`public_functions=32`、`public_policies=0`、`rls_tables=45`、`auth_users=0`、`enabled_rls_triggers=1`、`anon_admin_read=false`、`authenticated_admin_read=false`、`service_admin_update=true` で、手順書の期待値とすべて一致した。構造baselineの適用は完了。検証アプリ用の追加GRANT/RLS、Storage、管理者ID、Netlify環境変数は未整備のため、アプリはまだ利用できない。Netlifyデプロイと本番Projectへの操作は行っていない。
