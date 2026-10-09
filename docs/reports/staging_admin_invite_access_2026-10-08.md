@@ -48,4 +48,6 @@ node scripts/test-staging-admin-invite-access-pglite.mjs "$env:TEMP\el-town-pgli
 
 ## 2026-10-09 追記
 
-構造baselineが実検証Projectへ適用され、45テーブル・Policy 0件・RLS有効テーブル45件の事後確認に通過した。これを前提に、所属確認だけを許可する `20261009_admin_invite_membership_STAGING.sql` と事後確認SQLを作成した。既存Policyがある場合に停止するガード、および4列のSELECT・本人のactive行だけを返すPolicyを、使い捨てDBで確認した。実Supabaseへの追加権限SQLの適用はまだ行っていない。アプリ全体の権限・Storage・管理者ID・Netlify設定は引き続き未対応。
+構造baselineが実検証Projectへ適用され、45テーブル・Policy 0件・RLS有効テーブル45件の事後確認に通過した。これを前提に、所属確認だけを許可する `20261009_admin_invite_membership_STAGING.sql` と事後確認SQLを作成した。既存Policyがある場合に停止するガード、および4列のSELECT・本人のactive行だけを返すPolicyを、使い捨てDBで確認した。
+
+利用者が `el-town-staging` のSQL Editorで追加権限SQLを実行し、画面に `Success. No rows returned` と表示された。続く読み取り専用確認SQLのスクリーンショットでは、対象Policy数1、役員表のPolicy総数1、必要な4列の `authenticated` SELECTはすべてtrue、招待トークンのSELECT、`anon` SELECT、`authenticated` INSERT/UPDATE/DELETEはすべてfalseだった。画面右端の `server_update` は画像に写っていないため、この時点では未確認とする。SQL実行前の構造baseline事後確認では `service_admin_update=true` だった。本人のactive行だけ見えることはローカルDBで検証済みだが、実検証Projectでのログインユーザーを使った結合試験は未実施。アプリ全体の権限・Storage・管理者ID・Netlify設定も引き続き未対応。
