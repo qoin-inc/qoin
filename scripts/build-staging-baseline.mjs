@@ -114,7 +114,7 @@ const preamble = `-- Staging schema baseline: structure only, deny direct client
 -- Do not replay the 12 existing migrations on top of this snapshot.
 -- Storage bucket/policies and client GRANT/RLS rules require separate review.
 BEGIN;
--- Refuse to modify a database with public tables/functions or Auth users.
+-- Refuse to modify a database with public tables, unknown functions, or Auth users.
 -- The project identity must still be verified separately in the Supabase dashboard.
 DO $empty_staging_guard$
 BEGIN
@@ -125,9 +125,18 @@ BEGIN
   ) OR EXISTS (
     SELECT 1 FROM pg_catalog.pg_proc AS p
     JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public'
+    WHERE n.nspname = 'public' AND NOT (
+      p.proname = 'rls_auto_enable' AND p.pronargs = 0
+      AND p.prorettype = 'event_trigger'::regtype
+      AND pg_catalog.pg_get_userbyid(p.proowner) = 'postgres'
+      AND EXISTS (
+        SELECT 1 FROM pg_catalog.pg_event_trigger AS t
+        WHERE t.evtfoid = p.oid AND t.evtname = 'ensure_rls'
+          AND t.evtenabled = 'O'
+      )
+    )
   ) OR EXISTS (SELECT 1 FROM auth.users) THEN
-    RAISE EXCEPTION 'Staging baseline requires zero public tables/functions and Auth users';
+    RAISE EXCEPTION 'Staging baseline requires zero public tables/Auth users and no unknown public functions';
   END IF;
 END;
 $empty_staging_guard$;
@@ -139,7 +148,6 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC, anon, authenticated;
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC, anon, authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON TABLES FROM PUBLIC, anon, authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON SEQUENCES FROM PUBLIC, anon, authenticated;
@@ -148,10 +156,26 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public REVOKE ALL ON FUNCTI
 -- Service-role access is reserved for server-side code; never expose its key to a browser.
 GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO service_role;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO service_role;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO service_role;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
+
+-- Only the 31 baseline functions get new ACLs. Preserve the existing
+-- rls_auto_enable() event trigger function and its privileges.
+DO $baseline_function_access$
+DECLARE f record;
+BEGIN
+  FOR f IN
+    SELECT p.oid::regprocedure AS signature
+    FROM pg_catalog.pg_proc AS p
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname <> 'rls_auto_enable'
+  LOOP
+    EXECUTE format('REVOKE ALL ON FUNCTION %s FROM PUBLIC, anon, authenticated', f.signature);
+    EXECUTE format('GRANT ALL ON FUNCTION %s TO service_role', f.signature);
+  END LOOP;
+END;
+$baseline_function_access$;
 
 COMMIT;
 `;

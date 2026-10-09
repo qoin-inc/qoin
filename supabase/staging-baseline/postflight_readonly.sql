@@ -16,6 +16,11 @@ SELECT
    JOIN pg_catalog.pg_namespace AS n ON n.oid = c.relnamespace
    WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p') AND c.relrowsecurity) AS rls_tables,
   (SELECT count(*) FROM auth.users) AS auth_users,
+  (SELECT count(*) FROM pg_catalog.pg_event_trigger AS t
+   JOIN pg_catalog.pg_proc AS p ON p.oid = t.evtfoid
+   JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace
+   WHERE n.nspname = 'public' AND p.proname = 'rls_auto_enable'
+     AND t.evtname = 'ensure_rls' AND t.evtenabled = 'O') AS enabled_rls_triggers,
   has_table_privilege('anon', 'public.neighborhood_admins', 'SELECT') AS anon_admin_read,
   has_table_privilege('authenticated', 'public.neighborhood_admins', 'SELECT') AS authenticated_admin_read,
   has_table_privilege('service_role', 'public.neighborhood_admins', 'UPDATE') AS service_admin_update;

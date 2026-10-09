@@ -18,7 +18,7 @@ async function expectGuardToBlock(setup) {
     await guardedDb.exec(setup);
     await assert.rejects(
       () => guardedDb.exec(baseline),
-      /Staging baseline requires zero public tables\/functions and Auth users/,
+      /Staging baseline requires zero public tables\/Auth users and no unknown public functions/,
     );
     await guardedDb.exec('ROLLBACK;');
     const result = await guardedDb.query("SELECT to_regclass('public.neighborhood_admins') IS NULL AS unchanged;");
@@ -28,10 +28,48 @@ async function expectGuardToBlock(setup) {
   }
 }
 
+async function expectExistingRlsTriggerToSurvive() {
+  const guardedDb = await PGlite.create();
+  try {
+    await guardedDb.exec(`
+      CREATE ROLE anon NOLOGIN;
+      CREATE ROLE authenticated NOLOGIN;
+      CREATE ROLE service_role NOLOGIN;
+      CREATE SCHEMA auth;
+      CREATE TABLE auth.users (id uuid PRIMARY KEY);
+      CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULL::uuid $$;
+      CREATE FUNCTION public.rls_auto_enable() RETURNS event_trigger
+        LANGUAGE plpgsql AS $$ BEGIN NULL; END; $$;
+      CREATE EVENT TRIGGER ensure_rls ON ddl_command_end WHEN TAG IN ('CREATE TABLE')
+        EXECUTE FUNCTION public.rls_auto_enable();
+    `);
+    const before = await guardedDb.query("SELECT proacl FROM pg_proc WHERE oid='public.rls_auto_enable()'::regprocedure;");
+    await guardedDb.exec(baseline);
+    const after = await guardedDb.query(`
+      SELECT p.proacl, t.evtenabled,
+        (SELECT count(*) FROM pg_proc AS f JOIN pg_namespace AS n ON n.oid=f.pronamespace
+         WHERE n.nspname='public') AS function_count
+      FROM pg_proc AS p JOIN pg_event_trigger AS t ON t.evtfoid=p.oid
+      WHERE p.oid='public.rls_auto_enable()'::regprocedure;
+    `);
+    assert.deepEqual(after.rows[0].proacl, before.rows[0].proacl);
+    assert.equal(after.rows[0].evtenabled, 'O');
+    assert.equal(after.rows[0].function_count, 32);
+    const postflight = fs.readFileSync('supabase/staging-baseline/postflight_readonly.sql', 'utf8');
+    const verified = await guardedDb.query(postflight);
+    assert.equal(verified.rows[0].public_tables, 45);
+    assert.equal(verified.rows[0].public_functions, 32);
+    assert.equal(verified.rows[0].enabled_rls_triggers, 1);
+  } finally {
+    await guardedDb.close();
+  }
+}
+
 try {
   await expectGuardToBlock('CREATE TABLE public.existing_data (id integer);');
   await expectGuardToBlock('CREATE FUNCTION public.existing_function() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$;');
   await expectGuardToBlock("INSERT INTO auth.users VALUES ('00000000-0000-0000-0000-000000000001');");
+  await expectExistingRlsTriggerToSurvive();
   await db.exec(`
     CREATE ROLE anon NOLOGIN;
     CREATE ROLE authenticated NOLOGIN;

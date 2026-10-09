@@ -1,8 +1,9 @@
 -- Read-only preflight for the el-town-staging Supabase SQL Editor.
 -- First verify the dashboard project name and Project ID: zghcorbdtslrjtkkspfe.
 -- This SQL cannot identify the Supabase Project ID by itself.
--- Do not run the baseline unless public_tables = 0, public_functions = 0,
--- and auth_users = 0.
+-- Do not run the baseline unless public_tables = 0 and auth_users = 0.
+-- This project has one known public function: rls_auto_enable(), connected
+-- to the enabled ensure_rls event trigger. Any other function needs review.
 -- Even then, review the result and the project identity before any write.
 
 SELECT

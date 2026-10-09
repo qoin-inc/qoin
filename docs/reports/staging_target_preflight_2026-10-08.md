@@ -17,3 +17,5 @@
 2026-10-09に共有されたSQL Editorの結果は `public_tables=0`、`auth_users=0`、`app_schema_present=false` だった。ただし画像にはProject IDが写っていないため、この結果だけでは検証ProjectのDBと断定できない。baseline適用時にSQL Editor上のProject IDを再確認する。baseline本体には既存テーブルまたはAuthユーザーがある場合の停止ガードを追加し、使い捨てDBで拒否と空DBへの適用を確認した。
 
 同日に共有されたSettings → General画面で `el-town-staging` のProject ID `zghcorbdtslrjtkkspfe` を再確認した。適用手順を見直し、既存の `public` 関数が上書き・権限変更されないよう、関数件数も事前確認とSQL本体の停止条件に追加した。最初のSQL Editor結果には関数件数がないため、更新版 `preflight_readonly.sql` の再実行が必要。`docs/admin/staging-baseline-apply.md` に実Project向けの適用順と事後確認を記録した。実Projectへのbaseline適用は未実施。
+
+更新版のSQL Editor結果で `public_functions=1` を確認した。関数名は `rls_auto_enable`、戻り値は `event_trigger`、所有者は `postgres`、拡張機能には属さず、`ensure_rls` イベントトリガーが有効（`O`）。これはProject作成時に選択したautomatic RLS設定と整合する。baselineはこの既存関数とトリガーだけを許容し、関数の一括ACL変更から除外するよう修正した。他の既存関数は引き続き拒否する。実Projectへのbaseline適用は未実施。
