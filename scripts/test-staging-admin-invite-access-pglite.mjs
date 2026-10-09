@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const [pgliteModulePath] = process.argv.slice(2);
+const useStagingApply = process.argv.includes('--staging-apply');
 if (!pgliteModulePath) {
   throw new Error('Usage: node scripts/test-staging-admin-invite-access-pglite.mjs <absolute-pglite-module-path>');
 }
@@ -34,14 +35,31 @@ try {
   // pg_dump baselines disable row-security for restore; client probes need it on.
   await db.exec('SET row_security = on;');
 
-  // The fixture must reject accidental execution without the local-only setting.
-  await assert.rejects(
-    db.exec(fs.readFileSync('supabase/staging-baseline/20261008_admin_invite_membership_LOCAL_ONLY.sql', 'utf8')),
-    /Local staging access test only/,
-  );
-  await db.exec('ROLLBACK;');
-  await db.exec("SELECT set_config('el_town.local_staging_access_test', 'on', false);");
-  await db.exec(fs.readFileSync('supabase/staging-baseline/20261008_admin_invite_membership_LOCAL_ONLY.sql', 'utf8'));
+  if (useStagingApply) {
+    const stagingSql = fs.readFileSync('supabase/staging-baseline/20261009_admin_invite_membership_STAGING.sql', 'utf8');
+    await db.exec('CREATE POLICY unexpected_existing_policy ON public.neighborhood_admins FOR SELECT TO authenticated USING (false);');
+    await assert.rejects(db.exec(stagingSql), /Unexpected staging baseline or admin privileges/);
+    await db.exec('ROLLBACK; DROP POLICY unexpected_existing_policy ON public.neighborhood_admins;');
+    await db.exec(stagingSql);
+  } else {
+    // The local fixture must reject accidental execution without its setting.
+    const localSql = fs.readFileSync('supabase/staging-baseline/20261008_admin_invite_membership_LOCAL_ONLY.sql', 'utf8');
+    await assert.rejects(db.exec(localSql), /Local staging access test only/);
+    await db.exec('ROLLBACK;');
+    await db.exec("SELECT set_config('el_town.local_staging_access_test', 'on', false);");
+    await db.exec(localSql);
+  }
+
+  const postflight = fs.readFileSync('supabase/staging-baseline/postflight_admin_invite_membership_readonly.sql', 'utf8');
+  const verified = await db.query(postflight);
+  assert.deepEqual(verified.rows[0], {
+    expected_policy_count: 1, admin_policy_count: 1,
+    member_id_read: true, member_town_read: true,
+    member_auth_id_read: true, member_status_read: true,
+    token_read: false, anon_read: false,
+    client_insert: false, client_update: false, client_delete: false,
+    server_update: true,
+  });
 
   await db.exec(`
     INSERT INTO public.neighborhoods (id, name) VALUES (10, '架空町内会A'), (20, '架空町内会B');
@@ -87,7 +105,7 @@ try {
   assert.deepEqual(server.rows.map((row) => row.id), [2]);
   await db.exec('RESET ROLE;');
 
-  console.log(JSON.stringify({ local_only_guard: true, ...permissions.rows[0], own_A: [1], own_B: [3], pending_visible: 0, server_update_rows: [2] }));
+  console.log(JSON.stringify({ mode: useStagingApply ? 'staging-apply' : 'local-only', guard: true, ...permissions.rows[0], own_A: [1], own_B: [3], pending_visible: 0, server_update_rows: [2] }));
 } catch (error) {
   console.error(String(error?.message || error).slice(0, 2000));
   process.exitCode = 1;

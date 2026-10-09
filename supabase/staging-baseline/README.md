@@ -4,7 +4,7 @@
 
 この段階では `anon` と `authenticated` に表・シーケンス・関数のアクセスを付けません。`service_role` はサーバー用に許可します。固定メールによるシステム管理者判定は常にfalseとし、システム管理者の自動追加および名簿削除時のAuthユーザー削除は無効化しています。したがって、**このSQLを適用するだけではアプリは動作しません**。操作ごとのGRANT、RLS Policy、Storage Policy、検証用管理者IDの設計とテストが残ります。
 
-役員招待の所属確認に限った追加権限案は `20261008_admin_invite_membership_LOCAL_ONLY.sql` に分離しました。ローカル実行ガード付きで、実Supabase Projectには適用できません。対象操作、テスト結果、未対応のブラウザ直接操作は `docs/reports/staging_admin_invite_access_2026-10-08.md` に記録しています。
+役員招待の所属確認に限った追加権限案は `20261008_admin_invite_membership_LOCAL_ONLY.sql` に分離しました。ローカル実行ガード付きで、実Supabase Projectには適用できません。2026-10-09に実検証Project向けの `20261009_admin_invite_membership_STAGING.sql` を別途作成し、使い捨てDBでガードと権限を確認しました。実Projectでの手順は `docs/admin/staging-admin-invite-membership-apply.md` を参照してください。まだ実Projectには適用していません。対象操作、テスト結果、未対応のブラウザ直接操作は `docs/reports/staging_admin_invite_access_2026-10-08.md` に記録しています。
 
 このファイルは通常の `supabase/migrations/` の外に置いています。本番にリンクされたCLIで `supabase db push` を実行しないでください。ローカル検証と実Projectへの適用手順を分けており、実Projectでは `docs/admin/staging-baseline-apply.md` のProject ID照合・空DB確認・適用後確認を必ず行います。
 

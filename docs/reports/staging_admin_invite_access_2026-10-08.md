@@ -45,3 +45,7 @@ node scripts/test-staging-admin-invite-access-pglite.mjs "$env:TEMP\el-town-pgli
 2. 招待以外の管理画面で必要な表・関数・Storageの権限を別途設計する。現状の拒否初期状態では管理画面全体は動かない。`SignupTown` と `SystemAdminView` にも役員表への直接アクセスが残る。
 3. APIと実Supabaseの結合テストを架空データで行う。役員数上限と最後の役員の退任判定は現在アプリ側の確認であり、同時実行まで原子的に防ぐDB制約は未実装。
 4. 実Supabaseに近いPostgreSQL環境で権限を再検証し、検証Project Ref、費用、秘密情報の保管先と適用手順を照合する。本番へリンクされたCLIから無指定のDB変更コマンドを実行しない。
+
+## 2026-10-09 追記
+
+構造baselineが実検証Projectへ適用され、45テーブル・Policy 0件・RLS有効テーブル45件の事後確認に通過した。これを前提に、所属確認だけを許可する `20261009_admin_invite_membership_STAGING.sql` と事後確認SQLを作成した。既存Policyがある場合に停止するガード、および4列のSELECT・本人のactive行だけを返すPolicyを、使い捨てDBで確認した。実Supabaseへの追加権限SQLの適用はまだ行っていない。アプリ全体の権限・Storage・管理者ID・Netlify設定は引き続き未対応。
