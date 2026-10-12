@@ -1,9 +1,12 @@
+/** This worktree may only use the verified el-town staging Supabase project. */
+export const EL_TOWN_STAGING_PROJECT_REF = 'zghcorbdtslrjtkkspfe';
+
 /** Refuse invite operations unless this branch is explicitly pointed at its staging project. */
 export const isStagingInviteTarget = (supabaseUrl: string, expectedRef: string) => {
-  if (!/^[a-z0-9]{10,30}$/.test(expectedRef)) return false;
+  if (expectedRef !== EL_TOWN_STAGING_PROJECT_REF) return false;
   try {
     const url = new URL(supabaseUrl);
-    return url.protocol === 'https:' && url.hostname === `${expectedRef}.supabase.co`;
+    return url.href === `https://${EL_TOWN_STAGING_PROJECT_REF}.supabase.co/`;
   } catch {
     return false;
   }

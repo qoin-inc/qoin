@@ -1,14 +1,16 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { canChangeAdminStatus, countsTowardAdminLimit } from '@/lib/adminInviteManagement.mjs';
-import { isStagingInviteTarget } from '@/lib/stagingInviteTarget';
+import { isStagingInviteTarget, isStagingSystemAdmin } from '@/lib/stagingInviteTarget';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const visibleColumns = 'id,neighborhood_id,admin_auth_id,admin_name,admin_email,admin_role,status,invited_at,retired_at';
-const reservedSystemEmail = 'admin@el-town.jp';
-const toBrowser = ({ admin_auth_id: _authId, ...row }: Record<string, any>) => row;
+const toBrowser = ({ admin_auth_id: authId, ...row }: Record<string, any>, systemAdminId: string) => ({
+  ...row,
+  isSystemAdmin: isStagingSystemAdmin(authId || '', systemAdminId),
+});
 const json = (body: Record<string, unknown>, status = 200) => NextResponse.json(body, {
   status,
   headers: { 'Cache-Control': 'no-store' },
@@ -46,6 +48,14 @@ const authorize = async (request: Request, townId: string) => {
     throw new InviteRequestError('検証用Supabaseの接続先が確認できません。', 503);
   }
   const admin = createClient(url, secret, { auth: { autoRefreshToken: false, persistSession: false } });
+  const systemAdminId = process.env.STAGING_SYSTEM_ADMIN_AUTH_ID || '';
+  if (!isStagingSystemAdmin(systemAdminId, systemAdminId)) {
+    throw new InviteRequestError('検証用システム管理者IDが未設定です。', 503);
+  }
+  const { data: systemAdmin, error: systemAdminError } = await admin.auth.admin.getUserById(systemAdminId);
+  if (systemAdminError || !systemAdmin.user?.email || !isStagingSystemAdmin(systemAdmin.user.id, systemAdminId)) {
+    throw new InviteRequestError('検証用システム管理者のAuthユーザーを確認できません。', 503);
+  }
   const { data: auth, error: authError } = await admin.auth.getUser(token);
   if (authError || !auth.user?.id) throw new InviteRequestError('管理者ログインの有効期限が切れています。', 401);
 
@@ -54,7 +64,7 @@ const authorize = async (request: Request, townId: string) => {
     .eq('status', 'active').maybeSingle();
   if (error) throw new InviteRequestError('役員権限を確認できません。', 503);
   if (!membership) throw new InviteRequestError('この町内会・自治会の役員管理権限がありません。', 403);
-  return admin;
+  return { admin, systemAdminId, systemAdminEmail: systemAdmin.user.email.trim().toLowerCase() };
 };
 
 const run = async (work: () => Promise<NextResponse>) => {
@@ -77,8 +87,8 @@ const loadRows = async (admin: SupabaseClient, townId: string) => {
 export async function GET(request: Request) {
   return run(async () => {
     const townId = townIdFrom(new URL(request.url).searchParams.get('townId'));
-    const admin = await authorize(request, townId);
-    return json({ admins: (await loadRows(admin, townId)).map(toBrowser) });
+    const { admin, systemAdminId } = await authorize(request, townId);
+    return json({ admins: (await loadRows(admin, townId)).map((row) => toBrowser(row, systemAdminId)) });
   });
 }
 
@@ -92,8 +102,8 @@ export async function POST(request: Request) {
     if (!name || name.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || role.length > 100) {
       throw new InviteRequestError('役員候補者の名前、メールアドレス、役職を確認してください。', 400);
     }
-    if (email === reservedSystemEmail) throw new InviteRequestError('このメールアドレスは役員招待に使用できません。', 403);
-    const admin = await authorize(request, townId);
+    const { admin, systemAdminId, systemAdminEmail } = await authorize(request, townId);
+    if (email === systemAdminEmail) throw new InviteRequestError('このメールアドレスは役員招待に使用できません。', 403);
     const rows = await loadRows(admin, townId);
     const now = Date.now();
     const live = rows.filter((row) => countsTowardAdminLimit(row, now));
@@ -120,7 +130,7 @@ export async function POST(request: Request) {
       throw new InviteRequestError('役員招待を作成できませんでした。', 503);
     }
     if (!data) throw new InviteRequestError('招待情報が変更されました。再読み込みしてください。', 409);
-    return json({ admin: toBrowser(data), token }, 201);
+    return json({ admin: toBrowser(data, systemAdminId), token }, 201);
   });
 }
 
@@ -131,11 +141,12 @@ export async function PATCH(request: Request) {
     const id = recordIdFrom(body.id);
     const nextStatus = body.status;
     if (nextStatus !== 'active' && nextStatus !== 'retired') throw new InviteRequestError('役員状態を確認してください。', 400);
-    const admin = await authorize(request, townId);
+    const { admin, systemAdminId, systemAdminEmail } = await authorize(request, townId);
     const rows = await loadRows(admin, townId);
     const target = rows.find((row) => String(row.id) === id);
     if (!target) throw new InviteRequestError('役員が見つかりません。', 404);
-    if (String(target.admin_email || '').trim().toLowerCase() === reservedSystemEmail) {
+    if (isStagingSystemAdmin(target.admin_auth_id || '', systemAdminId)
+      || String(target.admin_email || '').trim().toLowerCase() === systemAdminEmail) {
       throw new InviteRequestError('この役員は変更できません。', 403);
     }
     if (!canChangeAdminStatus(rows, target, nextStatus)) {
@@ -149,7 +160,7 @@ export async function PATCH(request: Request) {
       .select(visibleColumns).maybeSingle();
     if (error) throw new InviteRequestError('役員状態を更新できませんでした。', 503);
     if (!data) throw new InviteRequestError('役員状態が変更されました。再読み込みしてください。', 409);
-    return json({ admin: toBrowser(data) });
+    return json({ admin: toBrowser(data, systemAdminId) });
   });
 }
 
@@ -158,11 +169,12 @@ export async function DELETE(request: Request) {
     const body = await parseBody(request);
     const townId = townIdFrom(body.townId);
     const id = recordIdFrom(body.id);
-    const admin = await authorize(request, townId);
+    const { admin, systemAdminId, systemAdminEmail } = await authorize(request, townId);
     const rows = await loadRows(admin, townId);
     const target = rows.find((row) => String(row.id) === id);
     if (!target) throw new InviteRequestError('役員が見つかりません。', 404);
-    if (String(target.admin_email || '').trim().toLowerCase() === reservedSystemEmail) {
+    if (isStagingSystemAdmin(target.admin_auth_id || '', systemAdminId)
+      || String(target.admin_email || '').trim().toLowerCase() === systemAdminEmail) {
       throw new InviteRequestError('この役員は削除できません。', 403);
     }
     const { data, error } = await admin.from('neighborhood_admins').delete()

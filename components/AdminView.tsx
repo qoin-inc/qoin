@@ -470,7 +470,6 @@ const memberCsvHeaders = ["名簿ID", "氏名", "氏名カタカナ", "郵便番
 const memberCsvExcelTextHeaders = new Set(["郵便番号", "住所２", "住所３"]);
 const rosterDetailColumns = ["kana_name", "postal_code", "address2", "address3", "family_name_1", "family_kana_name_1", "family_name_2", "family_kana_name_2", "withdrawal_status", "withdrawal_reply_message", "family_withdrawal_status_1", "family_withdrawal_status_2"];
 const adminInviteValidityMs = 7 * 24 * 60 * 60 * 1000;
-const systemAdminEmail = "admin@el-town.jp";
 const stagingInviteOrigin = "https://el-town-staging.netlify.app";
 const getAdminBearerToken = async () => {
   let { data: { session } } = await supabase.auth.getSession();
@@ -710,7 +709,7 @@ const getAdminStatusLabel = (admin: any) => {
   return admin.status || "状態未設定";
 };
 const isDeletableAdminInvite = (admin: any) => ["pending", "waiting_approval"].includes(admin.status);
-const isSystemAdminRecord = (admin: any) => String(admin?.admin_email || "").trim().toLowerCase() === systemAdminEmail;
+const isSystemAdminRecord = (admin: any) => admin?.isSystemAdmin === true;
 const getFeeRosterId = (fee: any) => fee?.roster_id ?? fee?.roster_id_snapshot ?? fee?.resident_roster_id ?? fee?.member_id ?? null;
 const getFeeYear = (fee: any) => Number(fee?.fiscal_year ?? fee?.year ?? new Date().getFullYear());
 const getFeeBillingAmount = (fee: any) => Number(fee?.expected_amount ?? fee?.billing_amount ?? fee?.amount ?? 0);
