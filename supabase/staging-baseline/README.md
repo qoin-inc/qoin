@@ -6,7 +6,7 @@
 
 役員招待の所属確認に限った追加権限案は `20261008_admin_invite_membership_LOCAL_ONLY.sql` に分離しました。ローカル実行ガード付きで、実Supabase Projectには適用できません。実検証Project向けの `20261009_admin_invite_membership_STAGING.sql` は2026-10-09に適用され、事後確認の全項目が一致しました。手順は `docs/admin/staging-admin-invite-membership-apply.md`、結果は `docs/reports/staging_admin_invite_access_2026-10-08.md` を参照してください。
 
-2026-10-13に、メール固定判定を使わずAuthユーザーIDを照合する検証専用SQL `20261013_system_admin_identity_STAGING.sql` を用意しました。これは使い捨てDBでテストした案で、実Projectには未適用です。空の専用表を作るため、適用だけでは誰にもシステム管理権限を与えません。手順は `docs/admin/staging-system-admin-identity-apply.md` を参照してください。
+2026-10-13に、メール固定判定を使わずAuthユーザーIDを照合する検証専用SQL `20261013_system_admin_identity_STAGING.sql` を用意しました。2026-10-18に `el-town-staging` へ適用し、空の専用表・RLS・クライアントアクセス拒否を事後確認しました。その後、検証用AuthユーザーIDを1件登録し、指定ID以外が登録されていないことを確認しました。検証Projectへの一時ログインで管理者判定関数2件がtrueを返しました。手順は `docs/admin/staging-system-admin-identity-apply.md` を参照してください。このSQLは再実行しません。
 
 このファイルは通常の `supabase/migrations/` の外に置いています。本番にリンクされたCLIで `supabase db push` を実行しないでください。ローカル検証と実Projectへの適用手順を分けており、実Projectでは `docs/admin/staging-baseline-apply.md` のProject ID照合・空DB確認・適用後確認を必ず行います。
 
