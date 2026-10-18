@@ -3,7 +3,8 @@
   "siteName": "el-town-staging",
   "siteId": "4e00785b-ffe1-4e3b-bc45-c1ab26d7a3ba",
   "publicUrl": "https://el-town-staging.netlify.app",
-  "artifactDirectory": ".next",
+  "artifactDirectory": ".netlify/static",
+  "buildIdFile": ".next/BUILD_ID",
   "approvalTtlMinutes": 15,
   "requiredBranch": "staging-invite-server"
 }

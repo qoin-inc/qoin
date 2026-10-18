@@ -49,7 +49,18 @@ const currentState = (config) => {
   if (!existsSync(resolve(root, config.artifactDirectory))) {
     throw new Error(`Deployment blocked: ${config.artifactDirectory} does not exist. Run npm run build first.`);
   }
-  const buildIdPath = join(root, config.artifactDirectory, "BUILD_ID");
+  if (config.buildIdFile) {
+    const requiredArtifacts = [
+      join(root, config.artifactDirectory, "assets", "logo_horizontal_final.png"),
+      join(root, config.artifactDirectory, "_next", "static"),
+      join(root, ".netlify", "functions", "___netlify-server-handler.zip"),
+      join(root, config.buildIdFile),
+    ];
+    if (requiredArtifacts.some((path) => !existsSync(path))) {
+      throw new Error("Deployment blocked: staging static assets or server function are missing. Run netlify build first.");
+    }
+  }
+  const buildIdPath = join(root, config.buildIdFile || join(config.artifactDirectory, "BUILD_ID"));
   const buildId = existsSync(buildIdPath) ? readFileSync(buildIdPath, "utf8").trim() : "unavailable";
   return { branch, commitId, buildId };
 };
@@ -147,12 +158,15 @@ const createPlan = () => {
     siteId: config.siteId || null,
     publicUrl: config.publicUrl,
     artifactDirectory: config.artifactDirectory,
+    buildIdFile: config.buildIdFile || null,
     requiredBranch: config.requiredBranch || null,
     environment,
     branch: state.branch,
     commitId: state.commitId,
     buildId: state.buildId,
-    artifacts: [`${config.artifactDirectory}/**`],
+    artifacts: config.buildIdFile
+      ? [`${config.artifactDirectory}/**`, ".netlify/functions/**"]
+      : [`${config.artifactDirectory}/**`],
     command: displayCommand({ environment, siteId: config.siteId, artifactDirectory: config.artifactDirectory }),
     createdAt: createdAt.toISOString(),
     expiresAt: expiresAt.toISOString(),
@@ -202,7 +216,9 @@ const executePlan = async () => {
   if (plan.environment === "staging") {
     const stagingConfig = JSON.parse(readFileSync(join(root, "deploy.staging.config.json"), "utf8"));
     if (plan.siteId !== stagingConfig.siteId || plan.publicUrl !== stagingConfig.publicUrl
-      || plan.siteName !== stagingConfig.siteName || plan.requiredBranch !== stagingConfig.requiredBranch) {
+      || plan.siteName !== stagingConfig.siteName || plan.requiredBranch !== stagingConfig.requiredBranch
+      || plan.artifactDirectory !== stagingConfig.artifactDirectory
+      || plan.buildIdFile !== stagingConfig.buildIdFile) {
       throw new Error("Deployment blocked: staging target changed after approval.");
     }
     verifyStagingEnvironment(stagingConfig);
@@ -240,7 +256,7 @@ const executePlan = async () => {
   const publicUrl = plan.environment === "production" || plan.environment === "staging" ? plan.publicUrl : deployUrl;
   if (!publicUrl) throw new Error("Deployment completed but no public URL was returned.");
 
-  const finalBuildIdPath = join(root, plan.artifactDirectory, "BUILD_ID");
+  const finalBuildIdPath = join(root, plan.buildIdFile || join(plan.artifactDirectory, "BUILD_ID"));
   const finalBuildId = existsSync(finalBuildIdPath) ? readFileSync(finalBuildIdPath, "utf8").trim() : plan.buildId;
 
   const response = await fetch(`${publicUrl}${publicUrl.includes("?") ? "&" : "?"}deploy_check=${Date.now()}`, {
@@ -253,7 +269,17 @@ const executePlan = async () => {
     buildIdMatches: finalBuildId === "unavailable" ? "unavailable" : html.includes(finalBuildId),
     deploymentIdAvailable: deploymentId !== "unavailable",
   };
-  const requiredPassed = checks.publicUrlReachable && checks.commitUnchanged && checks.buildIdMatches !== false;
+  if (plan.environment === "staging") {
+    const scriptPath = html.match(/<script[^>]+src="(\/_next\/static\/[^"]+\.js)"/)?.[1];
+    const logoPath = "/assets/logo_horizontal_final.png";
+    const [scriptResponse, logoResponse] = await Promise.all([
+      scriptPath ? fetch(new URL(scriptPath, publicUrl), { method: "HEAD" }) : Promise.resolve(null),
+      fetch(new URL(logoPath, publicUrl), { method: "HEAD" }),
+    ]);
+    checks.staticAssetsReachable = Boolean(scriptResponse?.ok && logoResponse.ok);
+  }
+  const requiredPassed = checks.publicUrlReachable && checks.commitUnchanged
+    && checks.buildIdMatches !== false && checks.staticAssetsReachable !== false;
   const record = {
     ...plan,
     approvalHash: undefined,

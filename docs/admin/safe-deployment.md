@@ -26,6 +26,8 @@ npm run deploy:plan -- --staging
 
 検証サイトのURLは `https://el-town-staging.netlify.app`。`--staging` は専用のSite IDと `staging-invite-server` ブランチを要求し、検証用Supabase接続値とLINE・Stripe等の無効化設定をNetlify側で照合する。計画作成時・承認後の実行直前に設定が一致しなければ停止する。CLIのリンク先が本番サイトでも、検証用Site IDを環境変数とデプロイ引数の両方で指定する。検証サイトのURLへ公開するためCLI内部では `--prod` を使うが、対象Site IDは本番サイトと別である。
 
+検証サイトの公開フォルダーは Netlify Next.js Runtime が生成する `.netlify/static`。`.next` を直接公開するとHTMLだけが表示され、`/_next/static` と画像が404になる。`netlify build` 後に `.netlify/static/_next/static`、`.netlify/static/assets/logo_horizontal_final.png`、`.netlify/functions/___netlify-server-handler.zip` を確認する。公開後の照合ではHTMLのビルドIDに加え、JavaScriptとロゴのHTTP応答も確認する。
+
 検証用Supabaseの秘密値をNetlifyへ設定する場合は、送信先と対象キーについて利用者の明示的な承認を得る。秘密値を承認文字列、ログ、文書へ載せない。
 
 本番:
