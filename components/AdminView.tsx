@@ -524,6 +524,17 @@ const requestAssemblySettlement = async (
   if (!response.ok) throw new Error(result.error || '決算明細の操作を完了できませんでした。');
   return result.data;
 };
+const requestAssemblyPlanning = async (payload: Record<string, unknown>) => {
+  const token = await getAdminBearerToken();
+  const response = await fetch('/api/admin/assembly-planning', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || '総会会計の科目・予算を保存できませんでした。');
+  return result.data;
+};
 const feeDetailColumns = [
   "neighborhood_id",
   "roster_id",
@@ -2229,20 +2240,16 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAssemblyBusy(true);
     setAssemblyMessage("");
     try {
-      const payload = {
-        neighborhood_id: townId,
+      await requestAssemblyPlanning({
+        action: editingAssemblyCategoryId ? 'categoryUpdate' : 'categoryCreate',
+        townId,
+        fiscalYear: assemblyFiscalYear,
+        categoryId: editingAssemblyCategoryId ? Number(editingAssemblyCategoryId) : null,
         type: assemblyCategoryDraft.type,
         name,
-        parent_id: assemblyCategoryDraft.parentId ? Number(assemblyCategoryDraft.parentId) : null,
-        sort_order: assemblyCategoryDraft.sortOrder ? Number(assemblyCategoryDraft.sortOrder) : 0,
-        is_active: true,
-        updated_at: new Date().toISOString(),
-      };
-      if (editingAssemblyCategoryId) {
-        await updateRowWithFallback("assembly_categories", editingAssemblyCategoryId, payload, "科目を更新できませんでした。");
-      } else {
-        await insertRowWithFallback("assembly_categories", { ...payload, is_standard: false, created_at: new Date().toISOString() }, "科目を追加できませんでした。");
-      }
+        parentId: assemblyCategoryDraft.parentId ? Number(assemblyCategoryDraft.parentId) : null,
+        sortOrder: assemblyCategoryDraft.sortOrder ? Number(assemblyCategoryDraft.sortOrder) : 0,
+      });
       setEditingAssemblyCategoryId(null);
       setAssemblyCategoryDraft(defaultAssemblyCategoryDraft);
       await fetchAssemblyAccounting(editingAssemblyCategoryId ? "科目を更新しました。" : "科目を追加しました。");
@@ -2271,31 +2278,17 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
     setAssemblyBusy(true);
     setAssemblyMessage("");
-    if (settlementCount > 0) {
-      const settlementUpdate = await supabase
-        .from("assembly_settlements")
-        .update({ category_id: null, updated_at: new Date().toISOString() })
-        .eq("neighborhood_id", townId)
-        .in("category_id", targetCategoryIds);
-      if (settlementUpdate.error) {
-        setAssemblyMessage("科目削除前に docs/sql/assembly_accounting_category_delete_set_null_2026-07-09.sql をSupabase SQL Editorで実行してください。決算明細を未設定項目に移せるようにします。");
-        setAssemblyBusy(false);
-        return;
-      }
-    }
-
-    const categoryDelete = await supabase
-      .from("assembly_categories")
-      .delete()
-      .eq("id", category.id)
-      .eq("neighborhood_id", townId);
-    if (categoryDelete.error) {
-      setAssemblyMessage(categoryDelete.error.message || "科目を削除できませんでした。");
+    try {
+      await requestAssemblyPlanning({
+        action: 'categoryDelete', townId, fiscalYear: assemblyFiscalYear,
+        categoryId: Number(category.id),
+      });
+      if (String(editingAssemblyCategoryId) === String(category.id)) cancelAssemblyCategoryEdit();
+      await fetchAssemblyAccounting(settlementCount > 0 ? "科目を削除し、決算明細は未設定項目へ移しました。" : "科目を削除しました。");
+    } catch (error: any) {
+      setAssemblyMessage(error?.message || "科目を削除できませんでした。");
       setAssemblyBusy(false);
-      return;
     }
-    if (String(editingAssemblyCategoryId) === String(category.id)) cancelAssemblyCategoryEdit();
-    await fetchAssemblyAccounting(settlementCount > 0 ? "科目を削除し、決算明細は未設定項目へ移しました。" : "科目を削除しました。");
   };
 
   const handleAssemblyBudgetDraftChange = (categoryId: string | number, field: keyof AssemblyBudgetDraft, value: string) => {
@@ -2322,20 +2315,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     try {
       const rows = categories.map((category) => {
         const draft = assemblyBudgetDrafts[String(category.id)] || { budgetAmount: "0", previousBudgetAmount: "0", note: "" };
-        return {
-          neighborhood_id: townId,
-          fiscal_year: assemblyFiscalYear,
-          category_id: Number(category.id),
-          budget_amount: amountFromInput(draft.budgetAmount),
-          previous_budget_amount: amountFromInput(draft.previousBudgetAmount),
-          note: draft.note.trim() || null,
-          updated_at: new Date().toISOString(),
-        };
+        return { categoryId: Number(category.id), amount: amountFromInput(draft.budgetAmount),
+          previousAmount: amountFromInput(draft.previousBudgetAmount), note: draft.note.trim() };
       });
-      const { error } = await supabase
-        .from("assembly_budgets")
-        .upsert(rows, { onConflict: "neighborhood_id,fiscal_year,category_id" });
-      if (error) throw error;
+      await requestAssemblyPlanning({ action: 'budgetSave', townId, fiscalYear: assemblyFiscalYear, rows });
       await fetchAssemblyAccounting("予算を保存しました。");
     } catch (error: any) {
       setAssemblyMessage(error?.message || "予算を保存できませんでした。");
