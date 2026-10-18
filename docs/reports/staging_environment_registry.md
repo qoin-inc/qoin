@@ -11,4 +11,6 @@
 | LINE | 検証用Provider・公式アカウント・LINE Login・Messaging API・LIFF | 未作成 | 本番とは別に作成予定。LIFF Endpoint URLには検証用Netlify URLを使用 |
 | Stripe | 検証用Sandbox・Webhook | 未作成 | 本番決済・Connectアカウントとは分離予定 |
 
-NetlifyサイトはCLIの `sites:create` で `--disable-linking` を指定して作成した。2026-10-18に検証ブランチから固定LIFF IDとポータルの同IDへのフォールバックを削除。ローカルのSupabase接続先検査は合格し、StripeキーとLIFF IDは未設定。Netlify側の環境変数は未照合。検証用LIFF・Stripeの分離、残るSupabase権限整備、デプロイ先の照合が終わるまでアプリをデプロイしない。
+NetlifyサイトはCLIの `sites:create` で `--disable-linking` を指定して作成した。2026-10-18に検証ブランチから固定LIFF IDとポータルの同IDへのフォールバックを削除。ローカルのSupabase接続先検査は合格し、StripeキーとLIFF IDは未設定。
+
+2026-10-18にNetlify CLIで検証Site IDを明示して環境変数を照合したところ、Supabase・LINE・Stripe等の値が本番サイトと同一だった。検証サイト専用の `STAGING_SUPABASE_PROJECT_REF`、`NEXT_PUBLIC_BASE_URL`、`NEXT_PUBLIC_LIFF_ID=disabled-for-staging` は設定したが、Supabase秘密鍵とシステムログイン情報の送信は自動承認審査で停止されたため未実施。検証サイトの残りの接続値は未分離であり、デプロイは行っていない。本番Netlifyサイトの設定変更コマンドは実行していない。

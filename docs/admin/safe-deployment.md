@@ -16,6 +16,18 @@ npm run build
 npm run deploy:plan
 ```
 
+独立した検証サイト `el-town-staging` への公開:
+
+```powershell
+$env:NETLIFY_SITE_ID = '4e00785b-ffe1-4e3b-bc45-c1ab26d7a3ba'
+npx.cmd --yes netlify-cli@26.1.0 build --context production
+npm run deploy:plan -- --staging
+```
+
+検証サイトのURLは `https://el-town-staging.netlify.app`。`--staging` は専用のSite IDと `staging-invite-server` ブランチを要求し、検証用Supabase接続値とLINE・Stripe等の無効化設定をNetlify側で照合する。計画作成時・承認後の実行直前に設定が一致しなければ停止する。CLIのリンク先が本番サイトでも、検証用Site IDを環境変数とデプロイ引数の両方で指定する。検証サイトのURLへ公開するためCLI内部では `--prod` を使うが、対象Site IDは本番サイトと別である。
+
+検証用Supabaseの秘密値をNetlifyへ設定する場合は、送信先と対象キーについて利用者の明示的な承認を得る。秘密値を承認文字列、ログ、文書へ載せない。
+
 本番:
 
 ```powershell

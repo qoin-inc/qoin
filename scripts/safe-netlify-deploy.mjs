@@ -8,7 +8,7 @@ const root = process.cwd();
 const stateDir = join(root, ".deploy");
 const pendingPath = join(stateDir, "pending.json");
 const historyPath = join(stateDir, "deployments.jsonl");
-const config = JSON.parse(readFileSync(join(root, "deploy.config.json"), "utf8"));
+const productionConfig = JSON.parse(readFileSync(join(root, "deploy.config.json"), "utf8"));
 const mode = process.argv[2];
 const args = process.argv.slice(3);
 
@@ -41,7 +41,7 @@ const appendRecord = (record) => {
   appendFileSync(historyPath, `${JSON.stringify(record)}\n`, "utf8");
 };
 
-const currentState = () => {
+const currentState = (config) => {
   const branch = git("branch", "--show-current");
   const commitId = git("rev-parse", "HEAD");
   const dirty = git("status", "--porcelain");
@@ -54,19 +54,88 @@ const currentState = () => {
   return { branch, commitId, buildId };
 };
 
-const deployArgs = (environment) => [
-  "netlify",
+const deployArgs = (plan) => [
+  ...(plan.environment === "staging" ? ["--yes", "netlify-cli@26.1.0"] : ["netlify"]),
   "deploy",
-  ...(environment === "production" ? ["--prod"] : []),
-  `--dir=${config.artifactDirectory}`,
+  ...(plan.environment === "production" || plan.environment === "staging" ? ["--prod"] : []),
+  ...(plan.environment === "staging" ? ["--no-build"] : []),
+  ...(plan.siteId ? [`--site=${plan.siteId}`] : []),
+  `--dir=${plan.artifactDirectory}`,
   "--json",
 ];
 
-const displayCommand = (environment) => `npx netlify deploy${environment === "production" ? " --prod" : ""} --dir=${config.artifactDirectory} --json`;
+const displayCommand = (plan) => `npx ${plan.environment === "staging" ? "--yes netlify-cli@26.1.0" : "netlify"} deploy${plan.environment === "production" || plan.environment === "staging" ? " --prod" : ""}${plan.environment === "staging" ? " --no-build" : ""}${plan.siteId ? ` --site=${plan.siteId}` : ""} --dir=${plan.artifactDirectory} --json`;
+
+const verifyStagingEnvironment = (config) => {
+  const cliArgs = ["--yes", "netlify-cli@26.1.0", "env:list", "--site", config.siteId,
+    "--context", "production", "--json"];
+  const options = { env: { ...process.env, NETLIFY_SITE_ID: config.siteId,
+    NPM_CONFIG_CACHE: join(process.env.TEMP || process.env.TMP || root, "codex-netlify-npm-cache") } };
+  const result = process.platform === "win32"
+    ? run(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npx.cmd", ...cliArgs], options)
+    : run("npx", cliArgs, options);
+  if (result.status !== 0) throw new Error("Deployment blocked: cannot verify staging site variables.");
+  let remote;
+  try { remote = JSON.parse(result.stdout); }
+  catch { throw new Error("Deployment blocked: cannot parse staging site variables."); }
+  const local = Object.fromEntries(readFileSync(join(root, ".env.local"), "utf8")
+    .split(/\r?\n/).map((line) => line.match(/^([A-Z][A-Z0-9_]*)=(.*)$/)).filter(Boolean)
+    .map((match) => [match[1], match[2]]));
+  const expected = {
+    NEXT_PUBLIC_SUPABASE_URL: "https://zghcorbdtslrjtkkspfe.supabase.co",
+    STAGING_SUPABASE_PROJECT_REF: "zghcorbdtslrjtkkspfe",
+    STAGING_SYSTEM_ADMIN_AUTH_ID: "575133be-3165-4a3c-b008-21c6804f5447",
+    NEXT_PUBLIC_BASE_URL: "https://el-town-staging.netlify.app",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: local.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_SECRET_KEY: local.SUPABASE_SECRET_KEY,
+    NEXT_PUBLIC_LIFF_ID: "disabled-for-staging",
+    LINE_CHANNEL_ACCESS_TOKEN: "disabled-for-staging",
+    LINE_CHANNEL_SECRET: "disabled-for-staging",
+    RESEND_API_KEY: "disabled-for-staging",
+    ADMIN_INVITE_EMAIL_FROM: "disabled-for-staging",
+    STRIPE_SECRET_KEY: "disabled-for-staging",
+    STRIPE_SECRET_KEY_LIVE: "disabled-for-staging",
+    STRIPE_SECRET_KEY_TEST: "disabled-for-staging",
+    STRIPE_CONNECT_WEBHOOK_SECRET: "disabled-for-staging",
+    OPENAI_API_KEY: "disabled-for-staging",
+    SYSTEM_BILLING_ENABLED: "false",
+    SYSTEM_BILLING_CRON_SECRET: "disabled-for-staging",
+    SUPABASE_SEVRET_KEY: "disabled-for-staging",
+  };
+  for (const [key, value] of Object.entries(expected)) {
+    if (!value || remote[key] !== value) {
+      throw new Error(`Deployment blocked: staging site variable ${key} is missing or differs from the reviewed value.`);
+    }
+  }
+  for (const key of ["SYSTEM_LOGIN_ID", "SYSTEM_LOGIN_PASSWORD", "SYSTEM_SESSION_SECRET"]) {
+    if (!remote[key] || remote[key] !== local[key]) {
+      throw new Error(`Deployment blocked: staging site variable ${key} is not configured for this checkout.`);
+    }
+  }
+  const permittedKeys = new Set([...Object.keys(expected),
+    "SYSTEM_LOGIN_ID", "SYSTEM_LOGIN_PASSWORD", "SYSTEM_SESSION_SECRET"]);
+  const unexpectedKeys = Object.keys(remote).filter((key) => !permittedKeys.has(key));
+  if (unexpectedKeys.length) {
+    throw new Error(`Deployment blocked: unreviewed staging site variables: ${unexpectedKeys.join(", ")}.`);
+  }
+};
 
 const createPlan = () => {
-  const environment = args.includes("--prod") ? "production" : "preview";
-  const state = currentState();
+  if (args.includes("--staging") && args.includes("--prod")) {
+    throw new Error("Choose either --staging or --prod, not both.");
+  }
+  const environment = args.includes("--staging") ? "staging" : args.includes("--prod") ? "production" : "preview";
+  const config = environment === "staging"
+    ? JSON.parse(readFileSync(join(root, "deploy.staging.config.json"), "utf8"))
+    : productionConfig;
+  const state = currentState(config);
+  if (config.requiredBranch && state.branch !== config.requiredBranch) {
+    throw new Error(`Deployment blocked: staging requires branch ${config.requiredBranch}.`);
+  }
+  if (environment === "staging" && !/^[0-9a-f-]{36}$/i.test(config.siteId || "")) {
+    throw new Error("Deployment blocked: staging Site ID is missing.");
+  }
+  if (environment === "staging") verifyStagingEnvironment(config);
   const createdAt = new Date();
   const expiresAt = new Date(createdAt.getTime() + Number(config.approvalTtlMinutes || 15) * 60_000);
   const nonce = randomBytes(4).toString("hex");
@@ -75,13 +144,16 @@ const createPlan = () => {
     version: 1,
     service: config.service,
     siteName: config.siteName,
+    siteId: config.siteId || null,
     publicUrl: config.publicUrl,
+    artifactDirectory: config.artifactDirectory,
+    requiredBranch: config.requiredBranch || null,
     environment,
     branch: state.branch,
     commitId: state.commitId,
     buildId: state.buildId,
     artifacts: [`${config.artifactDirectory}/**`],
-    command: displayCommand(environment),
+    command: displayCommand({ environment, siteId: config.siteId, artifactDirectory: config.artifactDirectory }),
     createdAt: createdAt.toISOString(),
     expiresAt: expiresAt.toISOString(),
     nonce,
@@ -94,6 +166,7 @@ const createPlan = () => {
   console.table({
     service: plan.service,
     site: plan.siteName,
+    siteId: plan.siteId || "linked site",
     environment: plan.environment,
     branch: plan.branch,
     commit: plan.commitId,
@@ -126,7 +199,18 @@ const executePlan = async () => {
   if (!approval || approvalHash !== plan.approvalHash) throw new Error("Deployment blocked: approval does not match the pending plan.");
   if (Date.now() > new Date(plan.expiresAt).getTime()) throw new Error("Deployment blocked: approval expired. Create a new plan.");
 
-  const state = currentState();
+  if (plan.environment === "staging") {
+    const stagingConfig = JSON.parse(readFileSync(join(root, "deploy.staging.config.json"), "utf8"));
+    if (plan.siteId !== stagingConfig.siteId || plan.publicUrl !== stagingConfig.publicUrl
+      || plan.siteName !== stagingConfig.siteName || plan.requiredBranch !== stagingConfig.requiredBranch) {
+      throw new Error("Deployment blocked: staging target changed after approval.");
+    }
+    verifyStagingEnvironment(stagingConfig);
+  }
+  const state = currentState(plan);
+  if (plan.requiredBranch && state.branch !== plan.requiredBranch) {
+    throw new Error(`Deployment blocked: expected branch ${plan.requiredBranch}.`);
+  }
   if (state.commitId !== plan.commitId || state.branch !== plan.branch || state.buildId !== plan.buildId) {
     throw new Error("Deployment blocked: branch, commit, or build changed after approval. Create a new plan.");
   }
@@ -134,21 +218,29 @@ const executePlan = async () => {
   // Consume approval before starting the external side effect. Failed attempts require a new plan.
   unlinkSync(pendingPath);
   const startedAt = new Date().toISOString();
+  const deployOptions = plan.environment === "staging"
+    ? { env: { ...process.env, NETLIFY_SITE_ID: plan.siteId,
+      NPM_CONFIG_CACHE: join(process.env.TEMP || process.env.TMP || root, "codex-netlify-npm-cache") } }
+    : {};
   const result = process.platform === "win32"
-    ? run(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npx.cmd", ...deployArgs(plan.environment)])
-    : run("npx", deployArgs(plan.environment));
+    ? run(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npx.cmd", ...deployArgs(plan)], deployOptions)
+    : run("npx", deployArgs(plan), deployOptions);
   if (result.status !== 0) {
     appendRecord({ ...plan, status: "failed", startedAt, finishedAt: new Date().toISOString(), error: result.stderr.trim().slice(0, 500) });
     throw new Error(result.stderr.trim() || "Netlify deployment failed.");
   }
 
   const provider = parseDeployJson(result.stdout);
-  const deployUrl = provider.url || provider.deploy_url || provider.deployUrl || (plan.environment === "production" ? plan.publicUrl : "");
+  const returnedSiteId = provider.site_id || provider.siteId || null;
+  if (plan.siteId && returnedSiteId && returnedSiteId !== plan.siteId) {
+    throw new Error("Deployment returned a different Site ID from the approved target.");
+  }
+  const deployUrl = provider.url || provider.deploy_url || provider.deployUrl || (plan.environment === "production" || plan.environment === "staging" ? plan.publicUrl : "");
   const deploymentId = provider.deploy_id || provider.deployId || provider.id || "unavailable";
-  const publicUrl = plan.environment === "production" ? plan.publicUrl : deployUrl;
+  const publicUrl = plan.environment === "production" || plan.environment === "staging" ? plan.publicUrl : deployUrl;
   if (!publicUrl) throw new Error("Deployment completed but no public URL was returned.");
 
-  const finalBuildIdPath = join(root, config.artifactDirectory, "BUILD_ID");
+  const finalBuildIdPath = join(root, plan.artifactDirectory, "BUILD_ID");
   const finalBuildId = existsSync(finalBuildIdPath) ? readFileSync(finalBuildIdPath, "utf8").trim() : plan.buildId;
 
   const response = await fetch(`${publicUrl}${publicUrl.includes("?") ? "&" : "?"}deploy_check=${Date.now()}`, {
@@ -186,7 +278,7 @@ const executePlan = async () => {
 try {
   if (mode === "plan") createPlan();
   else if (mode === "execute") await executePlan();
-  else throw new Error("Usage: npm run deploy:plan -- [--prod] OR npm run deploy:approved -- --approval=\"...\"");
+  else throw new Error("Usage: npm run deploy:plan -- [--staging|--prod] OR npm run deploy:approved -- --approval=\"...\"");
 } catch (error) {
   console.error(`\n${error.message}`);
   process.exitCode = 1;
