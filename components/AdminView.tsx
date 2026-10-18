@@ -495,6 +495,22 @@ const requestAdminManagement = async (method: "GET" | "POST" | "PATCH" | "DELETE
   if (!response.ok) throw new Error(data?.error || "役員情報を処理できませんでした。");
   return data;
 };
+const requestYearClosure = async (
+  action: "finalizeFee" | "unlockFee" | "finalizeAssembly" | "unlockAssembly",
+  townId: number | string,
+  fiscalYear: number,
+  reason?: string,
+) => {
+  const token = await getAdminBearerToken();
+  const response = await fetch('/api/admin/year-closure', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action, townId, fiscalYear, reason }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || '年度確定の操作を完了できませんでした。');
+  return result.data;
+};
 const feeDetailColumns = [
   "neighborhood_id",
   "roster_id",
@@ -1114,7 +1130,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   );
   const assemblyYearLocked = assemblyYearClosure?.status === "locked";
   const assemblyYearCorrectionOpen = assemblyYearClosure?.status === "unlocked";
-  const canManageYearClosure = isRepresentative || isSystemAdmin;
+  const canManageYearClosure = isRepresentative;
   const canEditAssemblyYear = assemblyClosureAvailable !== null && !assemblyYearLocked && (!assemblyYearCorrectionOpen || canManageYearClosure);
 
   const refreshFeeYearClosures = useCallback(async () => {
@@ -3103,11 +3119,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAssemblyBusy(true);
     setAssemblyMessage("");
     try {
-      const { data, error } = await supabase.rpc("finalize_assembly_year", {
-        p_neighborhood_id: townId,
-        p_fiscal_year: assemblyFiscalYear,
-      });
-      if (error) throw error;
+      const data = await requestYearClosure('finalizeAssembly', townId, assemblyFiscalYear);
       const revision = Number(data?.revision || (assemblyYearClosure?.revision || 0) + 1);
       await fetchAssemblyAccounting(`${assemblyFiscalYear}年度の総会会計を${actionLabel}し、固定データを改訂${revision}版として保存しました。`);
     } catch (error: any) {
@@ -3118,7 +3130,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
   const unlockSelectedAssemblyYear = async () => {
     if (!canManageYearClosure) {
-      setAssemblyMessage("総会会計の確定を解除できるのは代表者またはシステム権限者だけです。");
+      setAssemblyMessage("総会会計の確定を解除できるのは代表者だけです。");
       return;
     }
     const reason = typeof window !== "undefined"
@@ -3133,13 +3145,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAssemblyBusy(true);
     setAssemblyMessage("");
     try {
-      const { error } = await supabase.rpc("unlock_assembly_year", {
-        p_neighborhood_id: townId,
-        p_fiscal_year: assemblyFiscalYear,
-        p_reason: reason.trim(),
-      });
-      if (error) throw error;
-      await fetchAssemblyAccounting(`${assemblyFiscalYear}年度の確定を解除しました。代表者またはシステム権限者が固定化した年度データを訂正した後、再確定してください。`);
+      await requestYearClosure('unlockAssembly', townId, assemblyFiscalYear, reason.trim());
+      await fetchAssemblyAccounting(`${assemblyFiscalYear}年度の確定を解除しました。代表者が固定化した年度データを訂正した後、再確定してください。`);
     } catch (error: any) {
       setAssemblyMessage(error?.message || `${assemblyFiscalYear}年度の確定を解除できませんでした。`);
       setAssemblyBusy(false);
@@ -3355,11 +3362,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setFeeClosureError(false);
     setFeeClosureMessage("");
     try {
-      const { data, error } = await supabase.rpc("finalize_fee_year", {
-        p_neighborhood_id: townId,
-        p_fiscal_year: feeFiscalYear,
-      });
-      if (error) throw error;
+      const data = await requestYearClosure('finalizeFee', townId, feeFiscalYear);
       await refreshFeeYearClosures();
       const snapshotCount = Number(data?.snapshotCount || data?.snapshot_count || feeRecordsForYear.length);
       setFeeClosureError(false);
@@ -3375,7 +3378,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const unlockSelectedFeeYear = async () => {
     if (!canManageYearClosure) {
       setFeeClosureError(true);
-      setFeeClosureMessage("確定を解除できるのは代表者またはシステム権限者だけです。");
+      setFeeClosureMessage("確定を解除できるのは代表者だけです。");
       return;
     }
     const reason = typeof window !== "undefined"
@@ -3392,15 +3395,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setFeeClosureError(false);
     setFeeClosureMessage("");
     try {
-      const { error } = await supabase.rpc("unlock_fee_year", {
-        p_neighborhood_id: townId,
-        p_fiscal_year: feeFiscalYear,
-        p_reason: reason.trim(),
-      });
-      if (error) throw error;
+      await requestYearClosure('unlockFee', townId, feeFiscalYear, reason.trim());
       await refreshFeeYearClosures();
       setFeeClosureError(false);
-      setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。役員が個別データを訂正した後、代表者またはシステム権限者が必ず再確定してください。`);
+      setFeeClosureMessage(`${feeFiscalYear}年度の確定を解除しました。役員が個別データを訂正した後、代表者が必ず再確定してください。`);
     } catch (error: any) {
       setFeeClosureError(true);
       setFeeClosureMessage(error?.message || `${feeFiscalYear}年度の確定を解除できませんでした。`);
@@ -4769,8 +4767,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                   <i className="fas fa-lock" /> 訂正後に再確定
                 </button>
               )}
-              {feeYearLocked && !canManageYearClosure && <small>確定解除は代表者またはシステム権限者だけが行えます。</small>}
-              {feeYearCorrectionOpen && !canManageYearClosure && <small>個別データを訂正できます。再確定は代表者またはシステム権限者が行います。</small>}
+              {feeYearLocked && !canManageYearClosure && <small>確定解除は代表者だけが行えます。</small>}
+              {feeYearCorrectionOpen && !canManageYearClosure && <small>個別データを訂正できます。再確定は代表者が行います。</small>}
             </div>
             {feeClosureAvailable === false && <div className="admin-basic-message error">年度確定用のDB更新が未適用です。</div>}
             {feeClosureMessage && <div className={`admin-basic-message ${feeClosureError ? "error" : "success"}`}>{feeClosureMessage}</div>}
@@ -5591,8 +5589,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 <i className="fas fa-lock" /> 訂正後に再確定
               </button>
             )}
-            {assemblyYearLocked && !canManageYearClosure && <small>確定解除は代表者またはシステム権限者だけが行えます。</small>}
-            {assemblyYearCorrectionOpen && !canManageYearClosure && <small>訂正と再確定は代表者またはシステム権限者だけが行えます。</small>}
+            {assemblyYearLocked && !canManageYearClosure && <small>確定解除は代表者だけが行えます。</small>}
+            {assemblyYearCorrectionOpen && !canManageYearClosure && <small>訂正と再確定は代表者だけが行えます。</small>}
           </div>
           {assemblyClosureAvailable === false && <div className="admin-basic-message error">総会会計の年度確定用DB更新が未適用です。</div>}
         </section>
