@@ -10,6 +10,7 @@
 | 会費・総会の年度確定と確定解除 | `AdminView` → `/api/admin/year-closure` → 操作者のSupabase Auth JWTでDB関数を実行。サーバーで検証先、対象町内会のactive役員所属、代表者限定操作、年度・理由、現在の確定状態を確認 | 2026-10-18に検証Project ID `zghcorbdtslrjtkkspfe` を画面で照合し、`20261018_year_closure_STAGING.sql` を適用。4関数とも `anon_execute=false`、`authenticated_execute=true`。APIで未認証401、不正年度・短い理由400、所属なし町内会403を確認。仮の町内会・役員・名簿・会費で、会費・総会とも確定200、重複確定409、解除200、重複解除409を確認。試験用の各テーブル件数は元に戻した。実ブラウザでの役員画面操作は未確認 | 検証サイトのデプロイ後、役員画面の年度確定・解除を確認する。直接書込とStorageは別途移行する |
 | 総会会計の決算明細追加・削除 | `AdminView` → `/api/admin/assembly-settlement` → 操作者のSupabase Auth JWTで検証用DB関数を実行。サーバーとDB関数の両方でactive役員所属、町内会・年度、確定状態を確認。確定解除中は代表者のみ。自動作成明細の削除は禁止 | 2026-10-18に検証Project ID `zghcorbdtslrjtkkspfe` を画面で照合し、`20261018_assembly_settlement_write_STAGING.sql` を適用。2関数とも `anon_execute=false`、`authenticated_execute=true`。直接RPCの匿名・所属なしを拒否。APIの未認証401、不正年度400、別町内会403、明細の追加・削除、確定中409、解除後の代表者訂正と監査記録を一時データで確認。試験前後の対象表件数は一致。型チェック・ビルド成功。役員画面の実ブラウザ操作は未確認 | 検証サイトのデプロイ後に画面操作を確認。科目・予算・会費の直接書込と領収書Storageは別途移行する |
 | 総会会計の科目・予算保存 | `AdminView` → `/api/admin/assembly-planning` → 操作者のSupabase Auth JWTで検証用DB関数を実行。サーバーとDB関数でactive役員所属、町内会・年度、確定状態を確認。確定解除中の予算訂正は代表者のみ。過年度確定後の共通科目更新・削除、確定解除中の科目変更は停止 | 2026-10-18に検証Project ID `zghcorbdtslrjtkkspfe` を画面で照合し、`20261018_assembly_category_budget_write_STAGING.sql` を適用。2関数とも `anon_execute=false`、`authenticated_execute=true`。一時データで認証・町内会範囲、科目作成・更新、予算保存、確定中409、解除後の予算訂正と監査記録を確認。試験前後の対象表件数は一致。役員画面の実ブラウザ操作は未確認 | 検証サイトのデプロイ後に画面操作を確認。会費の直接書込とStorageを別途移行する |
+| 会費請求・現金入金の保存 | `AdminView` → `/api/admin/fee-records` → 操作者のSupabase Auth JWTで検証用DB関数を実行。サーバーとDB関数でactive役員所属、町内会・年度、確定状態を確認。確定解除中は代表者の個別訂正のみ。Stripe入金額と決済IDはDBの現在値を保持し、ブラウザーから更新させない | 2026-10-18に検証Project ID `zghcorbdtslrjtkkspfe` を画面で照合し、`20261018_fee_record_write_STAGING.sql` を適用。`anon_execute=false`、`authenticated_execute=true`。一時データで認証なし401・別町内会403、直接RPCの匿名・別町内会拒否、一括請求の原子性、請求額・現金入金の保存とStripe値の保持、確定中409、解除後の代表者訂正と監査記録を確認。試験前後の対象表件数は一致。役員画面の実ブラウザ操作は未確認 | 検証サイトへデプロイ後に画面操作を確認。領収書・回覧のStorage権限を別途設計する |
 | 町内会の新規登録 | `SignupTown` → `/api/admin/signup-town`。サーバーでAuthセッション、確認済みメール、入力メール一致、検証先を確認してから町内会と初期役員を登録 | 2026-10-18の検証DB試験で未認証401、メール不一致403、登録201、重複409。試験データは削除 | メール認証を伴う実ブラウザ操作を確認する |
 | システム管理画面 | `SystemAdminView` の全件取得は `/api/system/overview`、標準会費公開は `/api/system/fee-standard` に移行。標準会費公開では署名済みシステム管理セッションと検証用管理者のSupabase Authセッションの両方を確認する。役員所属がないまま開く管理画面と、従来の複数表を順番に消す完全削除は画面上で停止 | 2026-10-18に検証専用SQLを適用し、`anon_execute=false`、`authenticated_execute=true`、管理者1件を画面で確認。再試験ではDBセッションなし401、正常公開201と公開版を確認。試験版の削除後、会費版・町内会・会費設定・適用履歴の行数は試験前の0件に復帰した。システム一覧の未認証401・認証後200、標準会費の不正入力400も確認済み | 実ブラウザの画面確認を行う。完全削除はDB側の一括処理を設計してから再開する |
 | 添付ファイル | 回覧の添付は引き続き `AdminView` が `attachments` bucketへブラウザから直接uploadする。決算明細の領収書入力は一時的に無効化 | bucket・Storage Policyは未作成。検証用の決算明細は添付なしで追加できる | 保存パスと公開範囲を決め、町内会単位のアップロード権限を設計する。個人情報を含む添付の公開URL利用も見直す |
@@ -18,7 +19,7 @@
 
 1. 検証用管理者AuthユーザーIDの適用・検証と、役員招待APIの実結合試験は2026-10-18に完了。
 2. `SignupTown` と `SystemAdminView` の直接書込をサーバー側へ移し、完全削除は一括処理ができるまで停止した。
-3. 標準会費公開の検証用関数権限と正常系、会計の追加取得、年度確定RPC、決算明細の追加・削除、科目・予算保存APIは検証済み。次に会費の直接書込とStorageを機能ごとに移す。実ブラウザでの正常系画面確認も検証環境で行う。
+3. 標準会費公開の検証用関数権限と正常系、会計の追加取得、年度確定RPC、決算明細の追加・削除、科目・予算保存、会費の請求・現金入金APIは検証済み。次にStorage権限を設計する。実ブラウザでの正常系画面確認も検証環境で行う。
 4. 検証用LIFFとStripeを作成してから、Netlifyの環境変数と接続先を読み取り確認する。検証ブランチの `netlify.toml` とLIFF初期化処理にあった固定LIFF IDは2026-10-18に削除した。
 
 Netlifyの検証サイトは未デプロイ。本番Supabase・本番Netlifyは変更していない。

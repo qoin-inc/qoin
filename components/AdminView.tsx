@@ -535,27 +535,17 @@ const requestAssemblyPlanning = async (payload: Record<string, unknown>) => {
   if (!response.ok) throw new Error(result.error || '総会会計の科目・予算を保存できませんでした。');
   return result.data;
 };
-const feeDetailColumns = [
-  "neighborhood_id",
-  "roster_id",
-  "resident_name",
-  "fiscal_year",
-  "expected_amount",
-  "billing_amount",
-  "amount",
-  "paid_amount",
-  "paid_amount_cash",
-  "paid_amount_stripe",
-  "billing_channel",
-  "payment_method",
-  "last_payment_method",
-  "billing_status",
-  "status",
-  "is_billed",
-  "billed_at",
-  "paid_at",
-  "stripe_payment_intent_id",
-];
+const requestFeeRecords = async (payload: Record<string, unknown>): Promise<any[]> => {
+  const token = await getAdminBearerToken();
+  const response = await fetch('/api/admin/fee-records', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || '会費を保存できませんでした。');
+  return result.data;
+};
 const requiredFeeIdentityColumns = new Set(["neighborhood_id", "roster_id", "resident_name", "fiscal_year"]);
 
 const memberScaleToHouseholds = (scale: string) => {
@@ -579,11 +569,6 @@ const missingColumnFromError = (error: any) => {
   const plain = message.match(/column ["']?([a-zA-Z0-9_]+)["']?/);
   return plain?.[1] || "";
 };
-const isDuplicateKeyError = (error: any) => {
-  const message = String(error?.message || "");
-  return error?.code === "23505" || message.includes("duplicate key value violates unique constraint");
-};
-
 const publishFailureMessage = (error: any, phase: "attachment" | "save") => {
   const message = String(error?.message || "");
   const code = String(error?.code || error?.statusCode || error?.status || "");
@@ -3385,80 +3370,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     }
   };
 
-  const findExistingFeeRecord = async (payload: Record<string, any>) => {
-    const rosterId = payload.roster_id ?? payload.resident_roster_id ?? payload.member_id;
-    const year = payload.fiscal_year ?? payload.year;
-    if (!rosterId || !year) return null;
-
-    for (const yearColumn of ["fiscal_year", "year"]) {
-      const result = await supabase
-        .from("fee_records")
-        .select("*")
-        .eq("roster_id", rosterId)
-        .eq(yearColumn, year)
-        .maybeSingle();
-
-      if (!result.error && result.data) return result.data;
-      if (result.error && isMissingColumnError(result.error, yearColumn)) continue;
-    }
-
-    return null;
-  };
-
-  const saveFeeRecord = async (payload: Record<string, any>, existingId?: number | string | null) => {
-    let nextPayload = { ...payload };
-
-    for (let attempt = 0; attempt < feeDetailColumns.length + 4; attempt += 1) {
-      const result = existingId
-        ? await supabase.from("fee_records").update(nextPayload).eq("id", existingId).select("*").maybeSingle()
-        : await supabase.from("fee_records").insert(nextPayload).select("*").single();
-
-      if (!result.error) return { ...(result.data || {}), ...nextPayload, id: result.data?.id || existingId || `local-fee-${Date.now()}` };
-
-      if (!existingId && isDuplicateKeyError(result.error)) {
-        const existingRecord = await findExistingFeeRecord(nextPayload);
-        if (existingRecord?.id) {
-          return saveFeeRecord(nextPayload, existingRecord.id);
-        }
-      }
-
-      const missingColumn = missingColumnFromError(result.error);
-      if (missingColumn && Object.prototype.hasOwnProperty.call(nextPayload, missingColumn)) {
-        delete nextPayload[missingColumn];
-        continue;
-      }
-
-      throw result.error;
-    }
-
-    throw new Error("会費レコードの保存に失敗しました。");
-  };
-
-  const feePayloadForMember = (member: any, amount: number) => {
-    const existing = getFeeForMember(member);
-    const paidCash = existing ? getFeeCashPaid(existing) : 0;
-    const paidStripe = existing ? getFeeStripePaid(existing) : 0;
-    const paidAmount = paidCash + paidStripe;
-    return {
-      neighborhood_id: townId,
-      roster_id: member.id,
-      resident_name: getMemberFullName(member),
-      year: feeFiscalYear,
-      fiscal_year: feeFiscalYear,
-      expected_amount: amount,
-      billing_amount: amount,
-      amount,
-      paid_amount_cash: paidCash,
-      paid_amount_stripe: paidStripe,
-      paid_amount: paidAmount,
-      billing_channel: "manual",
-      billing_status: "billed",
-      status: paidAmount >= amount ? "paid" : "unpaid",
-      is_billed: true,
-      billed_at: new Date().toISOString(),
-    };
-  };
-
   const selectedFeeTargetMembers = () => {
     if (feeDraft.targetMode === "all") return activeFeeMembers;
     if (feeDraft.targetMode === "unbilled") return unbilledFeeMembers;
@@ -3571,7 +3482,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       setFeeMessage("会計年度を正しく入力してください。");
       return;
     }
-    if (!Number.isFinite(amount) || amount < 0) {
+    if (!Number.isInteger(amount) || amount < 0 || amount > 2147483647) {
       setFeeMessage("会費請求額を0円以上で入力してください。");
       return;
     }
@@ -3586,12 +3497,10 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setFeeMessage("");
 
     try {
-      const savedRecords: any[] = [];
-      for (const member of targets) {
-        const existing = getFeeForMember(member);
-        const payload = feePayloadForMember(member, amount);
-        savedRecords.push(await saveFeeRecord(payload, existing?.id));
-      }
+      const savedRecords = await requestFeeRecords({ mode: 'billing', townId,
+        fiscalYear: feeFiscalYear,
+        rows: targets.map((member) => ({ rosterId: member.id, billingAmount: amount })),
+      });
 
       setBasicData((current) => {
         const savedById = new Map(savedRecords.map((record) => [String(record.id), record]));
@@ -3631,11 +3540,11 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       setFeeMessage("保存対象の会員情報を確認できません。");
       return;
     }
-    if (amountText === "" || !Number.isFinite(amount) || amount < 0) {
+    if (amountText === "" || !Number.isInteger(amount) || amount < 0 || amount > 2147483647) {
       setFeeMessage("集金額を0円以上で入力してください。");
       return;
     }
-    if (billingText === "" || !Number.isFinite(correctedBillingAmount) || correctedBillingAmount < 0) {
+    if (billingText === "" || !Number.isInteger(correctedBillingAmount) || correctedBillingAmount < 0 || correctedBillingAmount > 2147483647) {
       setFeeMessage("請求額を0円以上で入力してください。");
       return;
     }
@@ -3644,24 +3553,11 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setFeeMessage("");
 
     try {
-      const cash = amount;
-      const stripe = getFeeStripePaid(fee);
-      const paidAmount = cash + stripe;
-      const paymentMethod = cash > 0 && stripe > 0 ? "mixed" : stripe > 0 ? "stripe" : cash > 0 ? "cash" : null;
-      const payload = {
-        ...(member ? feePayloadForMember(member, correctedBillingAmount) : {}),
-        expected_amount: correctedBillingAmount,
-        billing_amount: correctedBillingAmount,
-        amount: correctedBillingAmount,
-        paid_amount_cash: cash,
-        paid_amount_stripe: stripe,
-        paid_amount: paidAmount,
-        payment_method: paymentMethod,
-        last_payment_method: cash > 0 ? "cash" : stripe > 0 ? "stripe" : null,
-        status: paidAmount <= 0 ? "unpaid" : paidAmount >= correctedBillingAmount ? "paid" : "partial",
-        paid_at: paidAmount > 0 ? new Date().toISOString() : null,
-      };
-      const saved = await saveFeeRecord(payload, fee?.id);
+      const [saved] = await requestFeeRecords({ mode: 'cash', townId,
+        fiscalYear: feeFiscalYear,
+        rows: [{ rosterId: member?.id ?? getFeeRosterId(fee),
+          billingAmount: correctedBillingAmount, cashAmount: amount }],
+      });
       setBasicData((current) => ({
         ...current,
         fees: fee?.id
