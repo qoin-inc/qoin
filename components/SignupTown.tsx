@@ -71,16 +71,30 @@ export default function SignupTown({ onComplete, onCancel, initialEmail = "" }: 
         throw new Error("ログイン中のメールアドレスが登録内容と異なります。ログアウトしてからお試しください。");
       }
       if (!session) {
-        const { data, error: authError } = await supabase.auth.signUp({
+        // The confirmation link may open in another browser, so try the
+        // confirmed account before creating a new Auth user.
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
-          options: {
-            data: { name: adminName.trim(), role: adminRole.trim() },
-            emailRedirectTo: `${window.location.origin}/admin?mode=signup`,
-          },
         });
-        if (authError) throw authError;
-        session = data.session;
+        if (signInData.session) {
+          session = signInData.session;
+        } else if (signInError?.code === 'email_not_confirmed') {
+          throw new Error("確認メールのリンクからメール認証を完了し、同じメールアドレスとパスワードで再入力してください。");
+        } else if (!signInError || signInError.code === 'invalid_credentials') {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { name: adminName.trim(), role: adminRole.trim() },
+              emailRedirectTo: `${window.location.origin}/admin?mode=signup`,
+            },
+          });
+          if (signUpError) throw signUpError;
+          session = signUpData.session;
+        } else {
+          throw signInError;
+        }
       }
       if (!session?.access_token) {
         throw new Error("確認メールのリンクからメール認証を完了し、この画面で登録内容を再入力してください。");
