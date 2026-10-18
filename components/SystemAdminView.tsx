@@ -228,9 +228,11 @@ export default function SystemAdminView() {
     setBusy(true);
     setMessage("");
     try {
+      const { data: sessionResult, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionResult.session?.access_token) throw new Error('システム管理者のDBセッションを確認できませんでした。');
       const response = await fetch('/api/system/fee-standard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionResult.session.access_token}` },
         body: JSON.stringify({
           feeName: feeStandardDraft.feeName.trim(), amount,
           cashEnabled: feeStandardDraft.cashEnabled,

@@ -25,20 +25,27 @@ export async function POST(request: NextRequest) {
   }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const secret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   const systemAdminId = process.env.STAGING_SYSTEM_ADMIN_AUTH_ID || '';
-  if (!secret || !isStagingInviteTarget(url, process.env.STAGING_SUPABASE_PROJECT_REF || '')
+  if (!secret || !anonKey || !isStagingInviteTarget(url, process.env.STAGING_SUPABASE_PROJECT_REF || '')
     || !isStagingSystemAdmin(systemAdminId, systemAdminId)) {
     return json({ error: '検証環境の接続先を確認できません。' }, 503);
   }
+  const token = request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1] || '';
+  if (!token) return json({ error: 'システム管理者のDBセッションが必要です。' }, 401);
   const admin = createClient(url, secret, {
     auth: { autoRefreshToken: false, persistSession: false },
     global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) },
   });
   try {
-    const { data: systemAdmin, error: systemAdminError } = await admin.auth.admin.getUserById(systemAdminId);
+    const { data: systemAdmin, error: systemAdminError } = await admin.auth.getUser(token);
     if (systemAdminError || !isStagingSystemAdmin(systemAdmin.user?.id || '', systemAdminId)) {
-      return json({ error: '検証用システム管理者を確認できません。' }, 503);
+      return json({ error: '検証用システム管理者を確認できません。' }, 403);
     }
+    const actor = createClient(url, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: { headers: { Authorization: `Bearer ${token}` }, fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) },
+    });
     const { data: latest, error: latestError } = await admin.from('membership_fee_standard_versions')
       .select('version_number').order('version_number', { ascending: false }).limit(1);
     if (latestError) throw latestError;
@@ -53,7 +60,7 @@ export async function POST(request: NextRequest) {
       if (insertError?.code === '23505') return json({ error: '別の更新が先に保存されました。再読み込みしてください。' }, 409);
       throw insertError || new Error('Draft insert returned no row');
     }
-    const { error: publishError } = await admin.rpc('publish_membership_fee_standard', { p_version_id: draft.id });
+    const { error: publishError } = await actor.rpc('publish_membership_fee_standard', { p_version_id: draft.id });
     if (publishError) {
       const { error: cleanupError } = await admin.from('membership_fee_standard_versions').delete().eq('id', draft.id).eq('status', 'draft');
       if (cleanupError) console.error('[system-fee-standard] cleanup failed', { id: draft.id, message: cleanupError.message });
