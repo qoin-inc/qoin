@@ -63,6 +63,7 @@ CREATE POLICY circular_attachment_insert_staging ON storage.objects
 CREATE POLICY circular_read_staging ON public.circulars
   FOR SELECT TO authenticated
   USING (public.can_access_circular_attachment(neighborhood_id, false));
+GRANT SELECT ON public.circulars TO authenticated;
 
 COMMIT;
 

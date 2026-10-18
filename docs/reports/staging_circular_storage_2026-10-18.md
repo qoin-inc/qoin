@@ -18,6 +18,10 @@
 3. 実行結果で `public=false`、`file_size_limit=10485760`、Storage ポリシー数 `2` を確認する。
 4. 検証用役員で画像/PDFを添付して回覧を保存し、同じ町内会の会員で閲覧できることを確認する。匿名ユーザーと別町内会の会員では参照できないことを確認する。
 
+2026-10-18 の初回適用では、回覧テーブルの `SELECT` 権限がベースラインで取り消されていたため、RLSポリシーだけでは役員の読み取りが失敗した。[補正SQL](../../supabase/staging-baseline/20261018_circular_select_grant_STAGING.sql) を同じ検証プロジェクトに適用した。結果は `authenticated_select=true`、`anon_select=false`。
+
+ローカルの `node scripts/verify-staging-circular-storage.mjs` で一時的な検証用町内会・会員を作成して確認し、終了時に削除した。役員の添付保存と回覧閲覧、会員の回覧・添付閲覧が成功し、匿名閲覧・保存、会員の添付保存、別町内会への役員の保存、認証なしの回覧保存が拒否された。`npx.cmd tsc --noEmit` と `npm.cmd run build` も成功。
+
 ## 現時点の制約
 
 - Netlify の検証サイトに未デプロイなら UI からの動作検証はまだできない。SQL適用とコードの静的確認は別々に記録する。
