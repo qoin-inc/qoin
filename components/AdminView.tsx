@@ -1103,6 +1103,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [assemblyClosureAvailable, setAssemblyClosureAvailable] = useState<boolean | null>(null);
   const [assemblySnapshotFeeRows, setAssemblySnapshotFeeRows] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
 
   const month = useMemo(() => thisMonthRange(), []);
   const assemblyFeeRevenue = useMemo(
@@ -1240,36 +1241,21 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   useEffect(() => {
     const fetchDashboard = async () => {
       setLoading(true);
+      setDashboardError("");
       try {
-        const [townInfo, billingRows, memberRows, adminRows, pushes, feeRecords, feeSetting, systemUsageBillings, systemPaymentProfile, settings, circulars, facilities, reservations, liveSessions, liveApplications, rateVersions] = await Promise.all([
-          supabase.from("neighborhoods").select("*").eq("id", townId).maybeSingle(),
-          supabase
-            .from("resident_rosters")
-            .select("*")
-            .eq("neighborhood_id", townId)
-            .limit(10000),
-          supabase.from("resident_rosters").select("*").eq("neighborhood_id", townId).order("id", { ascending: false }).limit(1000),
-          requestAdminManagement("GET", townId).then((result) => ({ data: result.admins || [], error: "" }))
-            .catch((error) => ({ data: [], error: error?.message || "役員一覧を取得できませんでした。" })),
-          supabase
-            .from("circulars")
-            .select("id", { count: "exact", head: true })
-            .eq("neighborhood_id", townId)
-            .eq("is_pushed", true)
-            .gte("created_at", month.start)
-            .lt("created_at", month.end),
-          supabase.from("fee_records").select("*").eq("neighborhood_id", townId),
-          supabase.from("neighborhood_fee_settings").select("*").eq("neighborhood_id", townId).maybeSingle(),
-          supabase.from("system_usage_billings").select("*").eq("neighborhood_id", townId).order("billing_month", { ascending: false }).limit(36),
-          supabase.from("system_usage_payment_profiles").select("*").eq("neighborhood_id", townId).maybeSingle(),
-          supabase.from("system_settings").select("*").eq("neighborhood_id", townId).maybeSingle(),
-          supabase.from("circulars").select("*").eq("neighborhood_id", townId).order("created_at", { ascending: false }).limit(30),
-          supabase.from("facilities").select("*").eq("neighborhood_id", townId).order("name", { ascending: true }).limit(100),
-          supabase.from("facility_reservations").select("*").eq("neighborhood_id", townId).order("reservation_date", { ascending: false }).limit(500),
-          supabase.from("live_sessions").select("*").eq("neighborhood_id", townId).order("starts_at", { ascending: false }).limit(6),
-          supabase.from("live_session_applications").select("*").eq("neighborhood_id", townId).order("applied_at", { ascending: false }).limit(200),
-          supabase.from("system_usage_rate_versions").select("*").order("effective_month", { ascending: false }).limit(1000),
+        const accessToken = await getAdminBearerToken();
+        const query = new URLSearchParams({ townId: String(townId), monthStart: month.start, monthEnd: month.end });
+        const [dashboardResponse, adminResult] = await Promise.all([
+          fetch(`/api/admin/dashboard?${query}`, { headers: { Authorization: `Bearer ${accessToken}` } }),
+          requestAdminManagement("GET", townId),
         ]);
+        const dashboard = await dashboardResponse.json().catch(() => ({}));
+        if (!dashboardResponse.ok) throw new Error(dashboard.error || "管理画面データを取得できませんでした。");
+        const { townInfo, billingRows, memberRows, pushes, feeRecords, feeSetting,
+          systemUsageBillings, systemPaymentProfile, settings, circulars, facilities,
+          reservations, liveSessions, liveApplications, rateVersions } = dashboard;
+        const replyRows: any[] = dashboard.replyRows || [];
+        const adminRows = { data: adminResult.admins || [], error: "" };
 
         const memberListRows = memberRows.data || [];
         const billingMemberRows = billingRows.data || memberListRows;
@@ -1321,15 +1307,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         });
 
         const circularRows = circulars.data || [];
-        const circularIds = circularRows.map((row: any) => row.id).filter(Boolean);
-        let replyRows: any[] = [];
-        if (circularIds.length > 0) {
-          const replyResult = await supabase
-            .from("event_applications")
-            .select("*")
-            .in("circular_id", circularIds);
-          if (!replyResult.error) replyRows = replyResult.data || [];
-        }
         const repliesByCircularId = replyRows.reduce<Map<string, any[]>>((map, reply) => {
           const key = String(reply.circular_id ?? reply.event_id ?? reply.assembly_notice_id ?? "");
           if (!key) return map;
@@ -1381,7 +1358,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
           replies: [row],
         }));
 
-        const liveReplyRows = liveApplications.data || [];
+        const liveReplyRows: any[] = liveApplications.data || [];
         const liveRepliesBySessionId = liveReplyRows.reduce<Map<string, any[]>>((map, reply) => {
           const key = String(reply.live_session_id || "");
           if (!key) return map;
@@ -1461,6 +1438,9 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         setWorkItems(merged.length > 0 ? merged : fallbackItems);
       } catch (e) {
         console.error("Admin dashboard failed:", e);
+        setDashboardError(e instanceof Error ? e.message : "管理画面データを取得できませんでした。");
+        setBasicData({ town: null, members: [], fees: [], feeSetting: null, systemBillings: [], systemPaymentProfile: null, admins: [], setting: null });
+        setAdminLoadError("管理画面データを取得できませんでした。");
         setWorkItems([
           {
             id: "fallback-assembly",
@@ -6127,6 +6107,13 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   };
 
   const activeFeatureMeta = basicFeatures.find((feature) => feature.key === activeBasicFeature) || basicFeatures[0];
+
+  if (dashboardError) {
+    return <main className="admin-dashboard admin-dashboard-v2" role="alert">
+      <h1>管理画面を読み込めませんでした</h1>
+      <p>{dashboardError}</p>
+    </main>;
+  }
 
   if (activeAdminScreen === "basicFeature") {
     return (
