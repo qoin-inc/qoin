@@ -1119,18 +1119,20 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
   const refreshFeeYearClosures = useCallback(async () => {
     if (!townId) return;
-    const result = await supabase
-      .from("fee_year_closures")
-      .select("id,neighborhood_id,fiscal_year,status,revision,locked_at,unlocked_at,unlock_reason")
-      .eq("neighborhood_id", townId)
-      .order("fiscal_year", { ascending: false });
-    if (result.error) {
+    try {
+      const token = await getAdminBearerToken();
+      const query = new URLSearchParams({ kind: 'feeClosures', townId: String(townId) });
+      const response = await fetch(`/api/admin/accounting-read?${query}`, {
+        headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !Array.isArray(result.closures)) throw new Error(result.error || '会費年度の確定情報を取得できませんでした。');
+      setFeeYearClosures(result.closures as FeeYearClosure[]);
+      setFeeClosureAvailable(true);
+    } catch {
       setFeeYearClosures([]);
       setFeeClosureAvailable(false);
-      return;
     }
-    setFeeYearClosures((result.data || []) as FeeYearClosure[]);
-    setFeeClosureAvailable(true);
   }, [townId]);
 
   const fetchAssemblyAccounting = async (successMessage = "") => {
@@ -1141,36 +1143,17 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAssemblySnapshotFeeRows(null);
     if (!successMessage) setAssemblyMessage("");
     try {
-      let closure: AssemblyYearClosure | null = null;
-      let snapshot: AssemblyYearSnapshot | null = null;
-      const closureResult = await supabase
-        .from("assembly_year_closures")
-        .select("id,neighborhood_id,fiscal_year,status,revision,locked_at,unlocked_at,unlock_reason")
-        .eq("neighborhood_id", townId)
-        .eq("fiscal_year", assemblyFiscalYear)
-        .maybeSingle();
-
-      if (closureResult.error) {
-        const closureError = String(closureResult.error.message || "").toLowerCase();
-        const missingClosureSchema = closureResult.error.code === "PGRST205" || closureError.includes("schema cache") || closureError.includes("does not exist");
-        if (!missingClosureSchema) throw closureResult.error;
-        setAssemblyClosureAvailable(false);
-      } else {
-        closure = (closureResult.data || null) as AssemblyYearClosure | null;
-        setAssemblyClosureAvailable(true);
-        setAssemblyYearClosure(closure);
-        if (closure?.status === "locked") {
-          const snapshotResult = await supabase
-            .from("assembly_year_snapshots")
-            .select("categories,budgets,settlements,fee_rows,fee_revenue")
-            .eq("closure_id", closure.id)
-            .eq("revision", closure.revision)
-            .maybeSingle();
-          if (snapshotResult.error) throw snapshotResult.error;
-          snapshot = (snapshotResult.data || null) as AssemblyYearSnapshot | null;
-          if (!snapshot) throw new Error("確定済み総会会計の固定データを取得できませんでした。");
-        }
-      }
+      const token = await getAdminBearerToken();
+      const query = new URLSearchParams({ kind: 'assembly', townId: String(townId), fiscalYear: String(assemblyFiscalYear) });
+      const response = await fetch(`/api/admin/accounting-read?${query}`, {
+        headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || '総会会計データを取得できませんでした。');
+      const closure = (result.closure || null) as AssemblyYearClosure | null;
+      const snapshot = (result.snapshot || null) as AssemblyYearSnapshot | null;
+      setAssemblyClosureAvailable(result.closureAvailable !== false);
+      setAssemblyYearClosure(closure);
 
       if (snapshot) {
         const categories = Array.isArray(snapshot.categories) ? snapshot.categories : [];
@@ -1185,34 +1168,9 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       }
 
       setAssemblySnapshotFeeRows(null);
-      const [categoriesResult, budgetsResult, settlementsResult] = await Promise.all([
-        supabase
-          .from("assembly_categories")
-          .select("*")
-          .eq("neighborhood_id", townId)
-          .order("sort_order", { ascending: true })
-          .order("id", { ascending: true }),
-        supabase
-          .from("assembly_budgets")
-          .select("*")
-          .eq("neighborhood_id", townId)
-          .eq("fiscal_year", assemblyFiscalYear),
-        supabase
-          .from("assembly_settlements")
-          .select("*")
-          .eq("neighborhood_id", townId)
-          .eq("fiscal_year", assemblyFiscalYear)
-          .order("paid_date", { ascending: false })
-          .order("id", { ascending: false }),
-      ]);
-
-      if (categoriesResult.error) throw categoriesResult.error;
-      if (budgetsResult.error) throw budgetsResult.error;
-      if (settlementsResult.error) throw settlementsResult.error;
-
-      const categories = sortAssemblyCategories(categoriesResult.data || []);
-      const budgets = budgetsResult.data || [];
-      const settlements = settlementsResult.data || [];
+      const categories = sortAssemblyCategories(Array.isArray(result.categories) ? result.categories : []);
+      const budgets = Array.isArray(result.budgets) ? result.budgets : [];
+      const settlements = Array.isArray(result.settlements) ? result.settlements : [];
       setAssemblyData({ categories, budgets, settlements });
       setAssemblyBudgetDrafts(buildAssemblyBudgetDrafts(categories, budgets));
       setAssemblySettlementDraft((current) => {
