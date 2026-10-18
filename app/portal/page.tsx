@@ -85,7 +85,9 @@ export default function PortalPage() {
     if (!session) {
       try {
           if (typeof window !== 'undefined' && (window as any).liff) {
-            await (window as any).liff.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID || '2009817872-zldmH8LW' });
+            const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
+            if (!liffId) throw new Error('検証用LIFF IDが未設定です。');
+            await (window as any).liff.init({ liffId });
             if ((window as any).liff.isLoggedIn()) {
             const profile = await (window as any).liff.getProfile();
             const email = `${profile.userId}@line.eltown.local`;

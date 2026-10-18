@@ -25,7 +25,9 @@ const fetchAdminMemberships = async (accessToken: string): Promise<AdminMembersh
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(body?.error || '所属する町内会・自治会を確認できません。');
+    const error = new Error(body?.error || '所属する町内会・自治会を確認できません。') as Error & { status?: number };
+    error.status = response.status;
+    throw error;
   }
   return Array.isArray(body?.memberships) ? body.memberships : [];
 };
@@ -130,7 +132,6 @@ export default function AdminPage() {
 
       // URLに ?mode=signup があれば新規町内会・自治会登録画面
       if (typeof window !== 'undefined' && window.location.search.includes('mode=signup')) {
-        await supabase.auth.signOut();
         setView('signup');
         return;
       }
@@ -239,6 +240,10 @@ export default function AdminPage() {
       applyAdminMemberships(memberships, false);
     } catch (err: any) {
       console.error(err);
+      if (err?.status === 404) {
+        setView('signup');
+        return;
+      }
       await supabase.auth.signOut();
       setAdminMemberships([]);
       setTown(null);
@@ -388,7 +393,7 @@ export default function AdminPage() {
   }
 
   if (view === 'signup') {
-    return <SignupTown onComplete={handleSignupComplete} onCancel={() => setView('login')} />;
+    return <SignupTown onComplete={handleSignupComplete} onCancel={() => setView('login')} initialEmail={loginEmail} />;
   }
 
   if (view === 'invite') {

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 type SignupTownProps = {
   onComplete: (town: { id: number; name: string }) => void;
   onCancel: () => void;
+  initialEmail?: string;
 };
 
 const memberScaleOptions = [
@@ -15,19 +16,6 @@ const memberScaleOptions = [
   "5000世帯以上",
 ];
 
-const memberScaleToHouseholds = (scale: string) => {
-  if (scale === "500世帯未満") return 499;
-  if (scale === "500世帯～1000世帯") return 1000;
-  if (scale === "1000世帯～5000世帯") return 5000;
-  if (scale === "5000世帯以上") return 5001;
-  return null;
-};
-
-const isMissingColumnError = (error: any, columnName: string) => {
-  const message = String(error?.message || "");
-  return message.includes(columnName) && (message.includes("schema cache") || message.includes("column"));
-};
-
 const countPasswordCategories = (value: string) => [
   /[A-Z]/.test(value),
   /[a-z]/.test(value),
@@ -35,13 +23,13 @@ const countPasswordCategories = (value: string) => [
   /[^A-Za-z0-9]/.test(value),
 ].filter(Boolean).length;
 
-export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
+export default function SignupTown({ onComplete, onCancel, initialEmail = "" }: SignupTownProps) {
   const [townName, setTownName] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [memberScale, setMemberScale] = useState("");
   const [adminRole, setAdminRole] = useState("");
   const [adminName, setAdminName] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
+  const [adminEmail, setAdminEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -77,66 +65,34 @@ export default function SignupTown({ onComplete, onCancel }: SignupTownProps) {
 
     setSubmitting(true);
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: adminEmail.trim(),
-        password,
-        options: { data: { name: adminName.trim(), role: adminRole.trim() } },
-      });
-      if (authError) throw authError;
-
-      const userId = authData.user?.id;
-      const inviteToken = crypto.randomUUID();
-      const baseTownPayload = {
-        name: townName.trim(),
-        postal_code: postalCode.trim(),
-        households: memberScaleToHouseholds(memberScale),
-        admin_email: adminEmail.trim(),
-        admin_name: adminName.trim(),
-        admin_auth_id: userId || null,
-        invite_token: inviteToken,
-      };
-      let townInsertResult = await supabase
-        .from("neighborhoods")
-        .insert({
-          ...baseTownPayload,
-          member_scale: memberScale,
-        })
-        .select("id, name")
-        .single();
-
-      if (isMissingColumnError(townInsertResult.error, "member_scale")) {
-        townInsertResult = await supabase
-          .from("neighborhoods")
-          .insert(baseTownPayload)
-          .select("id, name")
-          .single();
+      const email = adminEmail.trim().toLowerCase();
+      let { data: { session } } = await supabase.auth.getSession();
+      if (session?.user && String(session.user.email || '').toLowerCase() !== email) {
+        throw new Error("ログイン中のメールアドレスが登録内容と異なります。ログアウトしてからお試しください。");
       }
-
-      const { data: town, error: townError } = townInsertResult;
-      if (townError) throw townError;
-
-      if (userId && town) {
-        const adminPayload = {
-          neighborhood_id: town.id,
-          admin_auth_id: userId,
-          admin_email: adminEmail.trim(),
-          admin_name: adminName.trim(),
-          status: "active",
-        };
-        let adminInsertResult = await supabase.from("neighborhood_admins").insert({
-          ...adminPayload,
-          admin_role: adminRole.trim(),
+      if (!session) {
+        const { data, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name: adminName.trim(), role: adminRole.trim() },
+            emailRedirectTo: `${window.location.origin}/admin?mode=signup`,
+          },
         });
-
-        if (isMissingColumnError(adminInsertResult.error, "admin_role")) {
-          adminInsertResult = await supabase.from("neighborhood_admins").insert(adminPayload);
-        }
-
-        const { error: adminError } = adminInsertResult;
-        if (adminError && !adminError.message.includes("duplicate key")) throw adminError;
+        if (authError) throw authError;
+        session = data.session;
       }
-
-      onComplete(town);
+      if (!session?.access_token) {
+        throw new Error("確認メールのリンクからメール認証を完了し、この画面で登録内容を再入力してください。");
+      }
+      const response = await fetch('/api/admin/signup-town', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ townName, postalCode, memberScale, adminRole, adminName, adminEmail: email }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || '町内会の登録に失敗しました。');
+      onComplete(result.town);
     } catch (err: any) {
       setError(err.message || "町内会の登録に失敗しました。");
     } finally {

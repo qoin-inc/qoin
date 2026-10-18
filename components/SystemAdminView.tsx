@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabaseClient";
 import SystemUsageRateHistory from "@/components/SystemUsageRateHistory";
 import SystemUsageMonthlyReport from "@/components/SystemUsageMonthlyReport";
 import { rateForMonth, usageAmounts, billingIsIssued } from "@/lib/systemUsageRates";
-import AdminView from "@/components/AdminView";
 import SystemUsageIssuerPanel from "@/components/SystemUsageIssuerPanel";
 
 type Tab = "towns" | "feeStandards" | "billing";
@@ -36,11 +35,6 @@ const linkedCount = (row: any) => row.withdrawal_status === "withdrawn" ? 0 : [
   row.family_withdrawal_status_1 === "withdrawn" ? null : row.family_user_auth_id_1,
   row.family_withdrawal_status_2 === "withdrawn" ? null : row.family_user_auth_id_2,
 ].filter(Boolean).length;
-const isMissingRelationError = (error: any) => {
-  const message = String(error?.message || "").toLowerCase();
-  return error?.code === "PGRST205" || message.includes("schema cache") || message.includes("does not exist");
-};
-
 export default function SystemAdminView() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [loginId, setLoginId] = useState("");
@@ -74,7 +68,6 @@ export default function SystemAdminView() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [selectedTown, setSelectedTown] = useState<Town | null>(null);
-  const [managingTown, setManagingTown] = useState<Town | null>(null);
 
   const month = useMemo(() => monthInfo(billingMonth), [billingMonth]);
 
@@ -128,18 +121,19 @@ export default function SystemAdminView() {
     const sequence = ++loadSequence.current;
     setLoading(true);
     setMessage("");
-    const results = await Promise.all([
-      supabase.from("neighborhoods").select("id,name,created_at").order("id", { ascending: false }).limit(1000),
-      supabase.from("resident_rosters").select("id,neighborhood_id,withdrawal_status,user_auth_id,family_user_auth_id_1,family_user_auth_id_2,family_withdrawal_status_1,family_withdrawal_status_2").limit(20000),
-      supabase.from("neighborhood_admins").select("id,neighborhood_id,status,admin_email").limit(5000),
-      supabase.from("circulars").select("id,neighborhood_id,created_at,is_pushed").eq("is_pushed", true).gte("created_at", month.start).lt("created_at", month.end).limit(20000),
-      supabase.from("system_settings").select("*").limit(1000),
-      supabase.from("system_usage_billings").select("*").eq("billing_month", billingMonth).limit(1000),
-      supabase.from("system_usage_payment_profiles").select("*").limit(1000),
-      supabase.from("membership_fee_standard_versions").select("*").order("version_number", { ascending: false }).limit(100),
-      supabase.from("neighborhood_fee_settings").select("*").limit(1000),
-      supabase.from("system_usage_rate_versions").select("*").order("effective_month", { ascending: false }).limit(1000),
-    ]);
+    let results: Array<{ data: any[]; error?: any }>;
+    try {
+      const response = await fetch(`/api/system/overview?billingMonth=${encodeURIComponent(billingMonth)}`, { cache: 'no-store' });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || !Array.isArray(body.results)) throw new Error(body.error || 'システム管理情報を取得できませんでした。');
+      results = body.results;
+    } catch (error: any) {
+      if (sequence === loadSequence.current) {
+        setMessage(error?.message || 'システム管理情報を取得できませんでした。');
+        setLoading(false);
+      }
+      return;
+    }
     if (sequence !== loadSequence.current) return;
     setRates(results[9].data || []);
     setRateError(results[9].error ? "料金履歴を取得できませんでした。DB追加SQLの適用と接続を確認してください。" : results[5].error || results[3].error ? "対象月の実績を取得できませんでした。再読み込みしてください。" : "");
@@ -234,29 +228,20 @@ export default function SystemAdminView() {
     setBusy(true);
     setMessage("");
     try {
-      const nextVersion = Math.max(0, ...feeStandards.map((item) => Number(item.version_number) || 0)) + 1;
-      const insertResult = await supabase
-        .from("membership_fee_standard_versions")
-        .insert({
-          version_number: nextVersion,
-          status: "draft",
-          fee_name: feeStandardDraft.feeName.trim(),
-          default_amount: amount,
-          billing_frequency: "annual",
-          billing_target: "active_households",
-          cash_enabled: feeStandardDraft.cashEnabled,
-          stripe_card_enabled: feeStandardDraft.stripeCardEnabled,
-          revenue_category: feeStandardDraft.revenueCategory.trim(),
-          change_reason: feeStandardDraft.changeReason.trim(),
-        })
-        .select("id")
-        .single();
-      if (insertResult.error) throw insertResult.error;
-
-      const publishResult = await supabase.rpc("publish_membership_fee_standard", { p_version_id: insertResult.data.id });
-      if (publishResult.error) throw publishResult.error;
-
-      setMessage(`会費標準設定 v${nextVersion} を公開しました。新規の町内会・自治会には登録時に自動適用されます。`);
+      const response = await fetch('/api/system/fee-standard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          feeName: feeStandardDraft.feeName.trim(), amount,
+          cashEnabled: feeStandardDraft.cashEnabled,
+          stripeCardEnabled: feeStandardDraft.stripeCardEnabled,
+          revenueCategory: feeStandardDraft.revenueCategory.trim(),
+          changeReason: feeStandardDraft.changeReason.trim(),
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || '標準会費を公開できませんでした。');
+      setMessage(`会費標準設定 v${result.version} を公開しました。新規の町内会・自治会には登録時に自動適用されます。`);
       setFeeStandardDraft((current) => ({ ...current, changeReason: "" }));
       await load();
     } catch (error: any) {
@@ -294,32 +279,6 @@ export default function SystemAdminView() {
     }
   };
 
-  const deleteTown = async (town: Town) => {
-    const typed = window.prompt(`「${town.name}」を完全削除します。取り消せません。確認のため町内会・自治会名を入力してください。`);
-    if (typed !== town.name) return typed === null ? undefined : setMessage("名称が一致しないため削除しませんでした。");
-    if (!window.confirm(`${town.name} と関連データを完全に削除します。よろしいですか？`)) return;
-    setBusy(true); setMessage("");
-    try {
-      const circularIds = (await supabase.from("circulars").select("id").eq("neighborhood_id", town.id)).data?.map((row) => row.id) || [];
-      if (circularIds.length) {
-        for (const table of ["event_applications", "read_receipts"]) {
-          const result = await supabase.from(table).delete().in("circular_id", circularIds);
-          if (result.error && !isMissingRelationError(result.error)) throw result.error;
-        }
-      }
-      for (const table of ["system_usage_billings", "system_settings", "fee_records", "resident_rosters", "neighborhood_admins", "circulars"]) {
-        const result = await supabase.from(table).delete().eq("neighborhood_id", town.id);
-        if (result.error && !isMissingRelationError(result.error)) throw result.error;
-      }
-      const result = await supabase.from("neighborhoods").delete().eq("id", town.id);
-      if (result.error) throw result.error;
-      setSelectedTown(null);
-      setMessage(`${town.name}を完全削除しました。`);
-      await load();
-    } catch (error: any) { setMessage(error.message || "削除できませんでした。"); }
-    finally { setBusy(false); }
-  };
-
   if (authenticated === null) return <main className="system-admin-screen"><section className="system-admin-card">認証状態を確認しています…</section></main>;
   if (!authenticated) return (
     <main className="system-admin-login">
@@ -333,24 +292,17 @@ export default function SystemAdminView() {
     </main>
   );
 
-  if (managingTown) return (
-    <main className="system-admin-screen">
-      <button className="system-admin-back" type="button" onClick={() => setManagingTown(null)}>← 町内会・自治会管理へ戻る</button>
-      <AdminView townId={Number(managingTown.id)} townName={managingTown.name} />
-    </main>
-  );
-
   return (
     <main className="system-admin-screen">
-      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : tab === "feeStandards" ? "会費標準設定" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録済み町内会・自治会の状況確認、管理画面の照査、完全削除を行います。" : tab === "feeStandards" ? "町内会・自治会が会員世帯へ請求する会費の初期値を版管理します。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
+      <section className="system-admin-hero"><div><p className="el-kicker">el-town システム管理</p><h1>{tab === "towns" ? "町内会・自治会管理" : tab === "feeStandards" ? "会費標準設定" : "システム利用料設定"}</h1><p>{tab === "towns" ? "登録済み町内会・自治会の状況を確認します。" : tab === "feeStandards" ? "町内会・自治会が会員世帯へ請求する会費の初期値を版管理します。" : "接続数単価、プッシュ超過単価、消費税率と月次請求を管理します。"}</p></div><div className="system-admin-hero-actions"><button onClick={load} disabled={loading || busy}>再読込</button><button onClick={logout}>ログアウト</button></div></section>
       <nav className="system-admin-tabs"><button className={tab === "towns" ? "active" : ""} onClick={() => setTab("towns")}>町内会・自治会管理</button><button className={tab === "feeStandards" ? "active" : ""} onClick={() => setTab("feeStandards")}>会費標準設定</button><button className={tab === "billing" ? "active" : ""} onClick={() => setTab("billing")}>システム利用料設定</button></nav>
       {message && <div className="system-admin-message">{message}</div>}
 
       {tab === "towns" && <>
-        <section className="system-admin-card"><div className="system-admin-heading"><div><h2>登録済み町内会・自治会一覧</h2><p>「照査」で登録状況を確認し、「管理画面」で各町内会・自治会の管理画面を開けます。</p></div><span>{townRows.length}件</span></div>
-          <div className="system-town-table"><div className="system-town-row head"><span>町内会・自治会</span><span>名簿</span><span>LINE連携</span><span>役員</span><span>操作</span></div>{townRows.map((row) => <div className="system-town-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.rosterCount}名</span><span>{row.linked}件</span><span>{row.adminCount}名</span><span className="system-town-actions"><button onClick={() => setSelectedTown(row.town)}>照査</button><button onClick={() => setManagingTown(row.town)}>管理画面</button><button className="danger" onClick={() => deleteTown(row.town)} disabled={busy}>完全削除</button></span></div>)}</div>
+        <section className="system-admin-card"><div className="system-admin-heading"><div><h2>登録済み町内会・自治会一覧</h2><p>「照査」で登録状況を確認できます。</p></div><span>{townRows.length}件</span></div>
+          <div className="system-town-table"><div className="system-town-row head"><span>町内会・自治会</span><span>名簿</span><span>LINE連携</span><span>役員</span><span>操作</span></div>{townRows.map((row) => <div className="system-town-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.rosterCount}名</span><span>{row.linked}件</span><span>{row.adminCount}名</span><span className="system-town-actions"><button onClick={() => setSelectedTown(row.town)}>照査</button><button disabled title="町内会の管理画面は役員権限の整備後に利用できます">管理画面（準備中）</button><button className="danger" disabled title="安全な一括削除処理の整備後に利用できます">完全削除（準備中）</button></span></div>)}</div>
         </section>
-        {selectedTown && <div className="system-town-modal" role="dialog" aria-modal="true"><section><button className="close" onClick={() => setSelectedTown(null)}>×</button><p className="el-kicker">登録内容の照査</p><h2>{selectedTown.name}</h2><dl><div><dt>町内会・自治会ID</dt><dd>{selectedTown.id}</dd></div><div><dt>名簿登録</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.rosterCount || 0}名</dd></div><div><dt>LINE連携</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.linked || 0}件</dd></div><div><dt>役員</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.adminCount || 0}名</dd></div></dl><button className="system-admin-primary" onClick={() => { setManagingTown(selectedTown); setSelectedTown(null); }}>管理画面を開く</button></section></div>}
+        {selectedTown && <div className="system-town-modal" role="dialog" aria-modal="true"><section><button className="close" onClick={() => setSelectedTown(null)}>×</button><p className="el-kicker">登録内容の照査</p><h2>{selectedTown.name}</h2><dl><div><dt>町内会・自治会ID</dt><dd>{selectedTown.id}</dd></div><div><dt>名簿登録</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.rosterCount || 0}名</dd></div><div><dt>LINE連携</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.linked || 0}件</dd></div><div><dt>役員</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.adminCount || 0}名</dd></div></dl><button className="system-admin-primary" onClick={() => setSelectedTown(null)}>閉じる</button></section></div>}
       </>}
 
       {tab === "feeStandards" && <>

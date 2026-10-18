@@ -11,4 +11,4 @@
 | LINE | 検証用Provider・公式アカウント・LINE Login・Messaging API・LIFF | 未作成 | 本番とは別に作成予定。LIFF Endpoint URLには検証用Netlify URLを使用 |
 | Stripe | 検証用Sandbox・Webhook | 未作成 | 本番決済・Connectアカウントとは分離予定 |
 
-NetlifyサイトはCLIの `sites:create` で `--disable-linking` を指定して作成した。アプリの環境別LIFF ID、Stripe環境判定、デプロイ先の設定修正と、Supabaseの権限整備が終わるまでアプリをデプロイしない。
+NetlifyサイトはCLIの `sites:create` で `--disable-linking` を指定して作成した。2026-10-18に検証ブランチから固定LIFF IDとポータルの同IDへのフォールバックを削除。ローカルのSupabase接続先検査は合格し、StripeキーとLIFF IDは未設定。Netlify側の環境変数は未照合。検証用LIFF・Stripeの分離、残るSupabase権限整備、デプロイ先の照合が終わるまでアプリをデプロイしない。
