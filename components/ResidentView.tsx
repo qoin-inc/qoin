@@ -207,6 +207,22 @@ const parseAttachmentList = (item: Circular) => {
   });
 };
 
+const resolvePrivateCircularAttachments = async (item: Circular): Promise<Circular> => {
+  let attachments: any[] = [];
+  try {
+    attachments = Array.isArray(item.attachments) ? item.attachments
+      : typeof item.attachments === "string" ? JSON.parse(item.attachments) : [];
+  } catch { attachments = []; }
+  if (!Array.isArray(attachments) || !attachments.some((attachment) => attachment?.path)) return item;
+  const resolved = await Promise.all(attachments.map(async (attachment) => {
+    const path = typeof attachment?.path === "string" ? attachment.path : "";
+    if (!path) return attachment;
+    const { data, error } = await supabase.storage.from("circular-attachments").createSignedUrl(path, 3600);
+    return { ...attachment, url: error ? null : data?.signedUrl || null };
+  }));
+  return { ...item, attachments: resolved };
+};
+
 const isImageAttachment = (attachment: any) => {
   const type = String(attachment?.type || "");
   const url = String(attachment?.url || "");
@@ -497,9 +513,11 @@ export default function ResidentView({ townId, townName, residentName, userId, r
       const [circularResult, targetResult] = await Promise.all([circularRequest, targetRequest]);
 
       if (!circularResult.error && circularResult.data) {
-        const items = [...(circularResult.data as Circular[])].reverse();
+        const items = await Promise.all([...(circularResult.data as Circular[])].reverse()
+          .map(resolvePrivateCircularAttachments));
         setCirculars(items);
-        const target = targetResult.data as Circular | null;
+        const target = targetResult.data
+          ? await resolvePrivateCircularAttachments(targetResult.data as Circular) : null;
         if (target) {
           setSelectedCircular(target);
           setReplyDraft(createReplyDraft(displayName, target));

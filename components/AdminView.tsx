@@ -596,6 +596,24 @@ const publishFailureMessage = (error: any, phase: "attachment" | "save") => {
 };
 
 const safeFileName = (name: string) => name.replace(/[^\w.\-]+/g, "_").replace(/^_+/, "") || "attachment";
+const useStagingPrivateCirculars = process.env.NEXT_PUBLIC_SUPABASE_URL === "https://zghcorbdtslrjtkkspfe.supabase.co";
+const circularAttachmentTypes = new Set([
+  "image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf",
+  "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+]);
+
+const requestStagingCircularSave = async (payload: Record<string, unknown>) => {
+  const token = await getAdminBearerToken();
+  const response = await fetch("/api/admin/circulars", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "発信内容を保存できませんでした。");
+  return result.data;
+};
 
 const defaultProxyTemplateText = (title?: string | null) => `私は、${title || "総会"}に出席できませんので、同総会における議決権を代理人に委任します。`;
 
@@ -1551,13 +1569,18 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   };
 
   const uploadPublishAttachment = async (file: File) => {
-    const fileName = `${townId}/circulars/${Date.now()}-${safeFileName(file.name)}`;
-    const { error } = await supabase.storage.from("attachments").upload(fileName, file);
+    if (useStagingPrivateCirculars && (file.size > 10 * 1024 * 1024 || !circularAttachmentTypes.has(file.type))) {
+      throw new Error("添付は10MB以下の画像・PDF・Word・Excelファイルを選択してください。");
+    }
+    const fileName = `${townId}/circulars/${crypto.randomUUID()}-${safeFileName(file.name).slice(0, 100)}`;
+    const bucket = useStagingPrivateCirculars ? "circular-attachments" : "attachments";
+    const { error } = await supabase.storage.from(bucket).upload(fileName, file, { contentType: file.type });
     if (error) throw error;
-    const { data } = supabase.storage.from("attachments").getPublicUrl(fileName);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
     return {
       name: file.name,
-      url: data.publicUrl,
+      url: useStagingPrivateCirculars ? undefined : data.publicUrl,
+      path: useStagingPrivateCirculars ? fileName : undefined,
       type: file.type || "application/octet-stream",
       role: publishDraft.type === "assembly" ? "assembly_notice" : "attachment",
     };
@@ -2068,9 +2091,14 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
         proxy_template_text: category === "assembly" ? publishDraft.proxyTemplateText.trim() || defaultProxyTemplateText(title) : null,
         updated_at: nowIso,
       };
-      const saved = editingPublishId
-        ? await updateRowWithFallback("circulars", editingPublishId, payload, "発信内容を更新できませんでした。")
-        : await insertCircularWithFallback(payload);
+      const saved = useStagingPrivateCirculars
+        ? await requestStagingCircularSave({ townId, circularId: editingPublishId || null,
+          category, title, content, sender, pushEnabled, eventDate,
+          eventTime: payload.event_time, proxyTemplateText: payload.proxy_template_text,
+          attachment })
+        : editingPublishId
+          ? await updateRowWithFallback("circulars", editingPublishId, payload, "発信内容を更新できませんでした。")
+          : await insertCircularWithFallback(payload);
       const lineImageUrl = firstImageAttachmentUrl(attachments, saved.image_url || payload.image_url);
       let lineNotice = editingPublishId ? "LINEプッシュ通知は送信していません。" : "電子掲示板へ保存しました。LINEプッシュ通知は送信していません。";
       if (pushEnabled) {
