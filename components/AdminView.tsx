@@ -511,6 +511,19 @@ const requestYearClosure = async (
   if (!response.ok) throw new Error(result.error || '年度確定の操作を完了できませんでした。');
   return result.data;
 };
+const requestAssemblySettlement = async (
+  method: 'POST' | 'DELETE', payload: Record<string, unknown>,
+) => {
+  const token = await getAdminBearerToken();
+  const response = await fetch('/api/admin/assembly-settlement', {
+    method,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || '決算明細の操作を完了できませんでした。');
+  return result.data;
+};
 const feeDetailColumns = [
   "neighborhood_id",
   "roster_id",
@@ -1112,7 +1125,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   const [assemblyBudgetDrafts, setAssemblyBudgetDrafts] = useState<Record<string, AssemblyBudgetDraft>>({});
   const [assemblySettlementDraft, setAssemblySettlementDraft] = useState<AssemblySettlementDraft>(defaultAssemblySettlementDraft);
   const [assemblySettlementMonth, setAssemblySettlementMonth] = useState("all");
-  const [assemblyReceiptFile, setAssemblyReceiptFile] = useState<File | null>(null);
   const [assemblyBusy, setAssemblyBusy] = useState(false);
   const [assemblyMessage, setAssemblyMessage] = useState("");
   const [assemblyYearClosure, setAssemblyYearClosure] = useState<AssemblyYearClosure | null>(null);
@@ -2331,14 +2343,6 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     }
   };
 
-  const uploadAssemblyReceipt = async (file: File) => {
-    const fileName = `${townId}/assembly-receipts/${assemblyFiscalYear}/${Date.now()}-${safeFileName(file.name)}`;
-    const { error } = await supabase.storage.from("attachments").upload(fileName, file);
-    if (error) throw error;
-    const { data } = supabase.storage.from("attachments").getPublicUrl(fileName);
-    return { url: data.publicUrl, name: file.name };
-  };
-
   const handleAssemblySettlementSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!ensureAssemblyYearEditable()) return;
@@ -2352,7 +2356,7 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
       setAssemblyMessage("会費科目の実績は会費管理から自動集計します。手動明細は別の収入科目へ入力してください。");
       return;
     }
-    if (!assemblySettlementDraft.paidDate || amount <= 0) {
+    if (!assemblySettlementDraft.paidDate || amount <= 0 || !Number.isSafeInteger(amount)) {
       setAssemblyMessage("日付と金額を入力してください。");
       return;
     }
@@ -2360,21 +2364,14 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
     setAssemblyBusy(true);
     setAssemblyMessage("");
     try {
-      const receipt = assemblyReceiptFile ? await uploadAssemblyReceipt(assemblyReceiptFile) : null;
-      await insertRowWithFallback("assembly_settlements", {
-        neighborhood_id: townId,
-        fiscal_year: assemblyFiscalYear,
-        category_id: Number(category.id),
-        type: category.type === "expense" ? "expense" : "income",
+      await requestAssemblySettlement('POST', {
+        townId,
+        fiscalYear: assemblyFiscalYear,
+        categoryId: Number(category.id),
         amount,
-        paid_date: assemblySettlementDraft.paidDate,
-        description: assemblySettlementDraft.description.trim() || null,
-        receipt_url: receipt?.url || null,
-        receipt_name: receipt?.name || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, "決算明細を保存できませんでした。");
-      setAssemblyReceiptFile(null);
+        paidDate: assemblySettlementDraft.paidDate,
+        description: assemblySettlementDraft.description.trim(),
+      });
       setAssemblySettlementDraft((current) => ({ ...current, amount: "", description: "" }));
       await fetchAssemblyAccounting("決算明細を追加しました。");
     } catch (error: any) {
@@ -2390,17 +2387,15 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
 
     setAssemblyBusy(true);
     setAssemblyMessage("");
-    const { error } = await supabase
-      .from("assembly_settlements")
-      .delete()
-      .eq("id", settlement.id)
-      .eq("neighborhood_id", townId);
-    if (error) {
-      setAssemblyMessage(error.message || "決算明細を削除できませんでした。");
+    try {
+      await requestAssemblySettlement('DELETE', {
+        townId, fiscalYear: assemblyFiscalYear, settlementId: Number(settlement.id),
+      });
+      await fetchAssemblyAccounting("決算明細を削除しました。");
+    } catch (error: any) {
+      setAssemblyMessage(error?.message || "決算明細を削除できませんでした。");
       setAssemblyBusy(false);
-      return;
     }
-    await fetchAssemblyAccounting("決算明細を削除しました。");
   };
 
   const exportAssemblyBudgetCsv = () => {
@@ -5791,7 +5786,8 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
                 </label>
                 <label className="admin-basic-wide">
                   <span>領収書画像/PDF</span>
-                  <input type="file" accept="image/*,application/pdf" onChange={(event) => setAssemblyReceiptFile(event.target.files?.[0] || null)} disabled={!canEditAssemblyYear} />
+                  <input type="file" accept="image/*,application/pdf" disabled />
+                  <small>検証環境では領収書の添付を準備中です。明細は添付なしで保存できます。</small>
                 </label>
               </div>
             </form>
