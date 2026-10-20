@@ -106,7 +106,8 @@ export async function POST(request: Request) {
     if (email === systemAdminEmail) throw new InviteRequestError('このメールアドレスは役員招待に使用できません。', 403);
     const rows = await loadRows(admin, townId);
     const now = Date.now();
-    const live = rows.filter((row) => countsTowardAdminLimit(row, now));
+    const live = rows.filter((row) => !isStagingSystemAdmin(row.admin_auth_id || '', systemAdminId)
+      && countsTowardAdminLimit(row, now));
     if (live.length >= 20) throw new InviteRequestError('役員は最大20名までです。', 409);
     const sameEmail = rows.filter((row) => String(row.admin_email || '').trim().toLowerCase() === email);
     if (sameEmail.some((row) => live.some((item) => item.id === row.id))) {
@@ -149,7 +150,8 @@ export async function PATCH(request: Request) {
       || String(target.admin_email || '').trim().toLowerCase() === systemAdminEmail) {
       throw new InviteRequestError('この役員は変更できません。', 403);
     }
-    if (!canChangeAdminStatus(rows, target, nextStatus)) {
+    if (!canChangeAdminStatus(rows.filter((row) =>
+      !isStagingSystemAdmin(row.admin_auth_id || '', systemAdminId)), target, nextStatus)) {
       throw new InviteRequestError(nextStatus === 'active'
         ? '登録済みの退任役員だけ復活できます。'
         : '在任中の役員を退任できません。最後の管理者は残してください。', 409);

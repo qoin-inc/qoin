@@ -86,7 +86,7 @@ export async function GET(request: Request) {
       return {
         adminId: String(record.id),
         role: String(record.admin_role || '役員'),
-        isRepresentative: Boolean(
+        isRepresentative: isStagingSystemAdmin(user.id, process.env.STAGING_SYSTEM_ADMIN_AUTH_ID || '') || Boolean(
           neighborhood.admin_auth_id === user.id
           || String(neighborhood.admin_email || '').trim().toLowerCase() === userEmail
         ),

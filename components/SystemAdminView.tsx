@@ -6,6 +6,7 @@ import SystemUsageRateHistory from "@/components/SystemUsageRateHistory";
 import SystemUsageMonthlyReport from "@/components/SystemUsageMonthlyReport";
 import { rateForMonth, usageAmounts, billingIsIssued } from "@/lib/systemUsageRates";
 import SystemUsageIssuerPanel from "@/components/SystemUsageIssuerPanel";
+import { EL_TOWN_STAGING_PROJECT_REF } from "@/lib/stagingInviteTarget";
 
 type Tab = "towns" | "feeStandards" | "billing";
 type Town = { id: string | number; name: string; created_at?: string | null };
@@ -19,6 +20,8 @@ type FeeStandardDraft = {
 };
 
 const yen = (value: number) => `¥${Math.round(value || 0).toLocaleString()}`;
+const stagingTownAccessEnabled = process.env.NEXT_PUBLIC_SUPABASE_URL ===
+  `https://${EL_TOWN_STAGING_PROJECT_REF}.supabase.co`;
 const previousMonth = () => {
   const date = new Date();
   date.setMonth(date.getMonth() - 1, 1);
@@ -68,6 +71,7 @@ export default function SystemAdminView() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [selectedTown, setSelectedTown] = useState<Town | null>(null);
+  const [openingTownId, setOpeningTownId] = useState<string | null>(null);
 
   const month = useMemo(() => monthInfo(billingMonth), [billingMonth]);
 
@@ -115,6 +119,27 @@ export default function SystemAdminView() {
     await supabase.auth.signOut();
     await fetch("/api/system/session", { method: "DELETE" });
     setAuthenticated(false);
+  };
+
+  const openTownManagement = async (town: Town) => {
+    setOpeningTownId(String(town.id));
+    setMessage("");
+    try {
+      const { data: sessionResult, error: sessionError } = await supabase.auth.getSession();
+      const token = sessionResult.session?.access_token;
+      if (sessionError || !token) throw new Error("システム管理者の認証情報を確認できません。再ログインしてください。");
+      const response = await fetch('/api/system/town-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ townId: town.id }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || '町内会の管理画面を開けませんでした。');
+      window.location.assign(`/admin?systemTownId=${encodeURIComponent(String(result.town.id))}`);
+    } catch (error: any) {
+      setMessage(error?.message || '町内会の管理画面を開けませんでした。');
+      setOpeningTownId(null);
+    }
   };
 
   const load = async () => {
@@ -302,7 +327,7 @@ export default function SystemAdminView() {
 
       {tab === "towns" && <>
         <section className="system-admin-card"><div className="system-admin-heading"><div><h2>登録済み町内会・自治会一覧</h2><p>「照査」で登録状況を確認できます。</p></div><span>{townRows.length}件</span></div>
-          <div className="system-town-table"><div className="system-town-row head"><span>町内会・自治会</span><span>名簿</span><span>LINE連携</span><span>役員</span><span>操作</span></div>{townRows.map((row) => <div className="system-town-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.rosterCount}名</span><span>{row.linked}件</span><span>{row.adminCount}名</span><span className="system-town-actions"><button onClick={() => setSelectedTown(row.town)}>照査</button><button disabled title="町内会の管理画面は役員権限の整備後に利用できます">管理画面（準備中）</button><button className="danger" disabled title="安全な一括削除処理の整備後に利用できます">完全削除（準備中）</button></span></div>)}</div>
+          <div className="system-town-table"><div className="system-town-row head"><span>町内会・自治会</span><span>名簿</span><span>LINE連携</span><span>役員</span><span>操作</span></div>{townRows.map((row) => <div className="system-town-row" key={row.town.id}><span><strong>{row.town.name}</strong><small>ID: {row.town.id}</small></span><span>{row.rosterCount}名</span><span>{row.linked}件</span><span>{row.adminCount}名</span><span className="system-town-actions"><button onClick={() => setSelectedTown(row.town)}>照査</button><button onClick={() => void openTownManagement(row.town)} disabled={!stagingTownAccessEnabled || openingTownId !== null} title={stagingTownAccessEnabled ? '検証環境でシステム管理者として開きます' : '検証環境のみ利用できます'}>{openingTownId === String(row.town.id) ? '移動中…' : '管理画面'}</button><button className="danger" disabled title="安全な一括削除処理の整備後に利用できます">完全削除（準備中）</button></span></div>)}</div>
         </section>
         {selectedTown && <div className="system-town-modal" role="dialog" aria-modal="true"><section><button className="close" onClick={() => setSelectedTown(null)}>×</button><p className="el-kicker">登録内容の照査</p><h2>{selectedTown.name}</h2><dl><div><dt>町内会・自治会ID</dt><dd>{selectedTown.id}</dd></div><div><dt>名簿登録</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.rosterCount || 0}名</dd></div><div><dt>LINE連携</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.linked || 0}件</dd></div><div><dt>役員</dt><dd>{townRows.find((row) => row.town.id === selectedTown.id)?.adminCount || 0}名</dd></div></dl><button className="system-admin-primary" onClick={() => setSelectedTown(null)}>閉じる</button></section></div>}
       </>}

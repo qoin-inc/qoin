@@ -64,6 +64,17 @@ export default function AdminPage() {
     }
 
     setAdminMemberships(memberships);
+    const systemTownId = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('systemTownId')
+      : null;
+    if (systemTownId) {
+      const systemMembership = memberships.find((membership) =>
+        membership.isSystemAdmin && String(membership.town.id) === systemTownId
+      );
+      if (!systemMembership) throw new Error('この町内会のシステム管理者権限を確認できません。');
+      selectAdminMembership(systemMembership);
+      return;
+    }
     const lastTownId = preferLastTown && typeof window !== 'undefined'
       ? window.sessionStorage.getItem(LAST_ADMIN_TOWN_KEY)
       : null;
@@ -344,6 +355,19 @@ export default function AdminPage() {
   const handleSignupComplete = (newTown: {id: number, name: string}) => {
     setTown(newTown);
     setView('dashboard');
+  };
+
+  const logoutAdmin = async () => {
+    try {
+      if (adminMemberships.some((membership) => membership.isSystemAdmin)) {
+        await fetch('/api/system/session', { method: 'DELETE' });
+      }
+    } finally {
+      await supabase.auth.signOut();
+      setAdminMemberships([]);
+      setTown(null);
+      setView('login');
+    }
   };
 
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
@@ -654,12 +678,7 @@ export default function AdminPage() {
           <div className="mt-8 pt-6 border-t border-gray-100 text-center">
             <button
               type="button"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                setAdminMemberships([]);
-                setTown(null);
-                setView('login');
-              }}
+              onClick={() => void logoutAdmin()}
               className="text-sm font-bold text-gray-500 hover:text-gray-700"
             >
               ログアウトして戻る
@@ -684,6 +703,11 @@ export default function AdminPage() {
              >
                <i className="fas fa-home"></i><span>トップ</span>
              </a>
+             {selectedMembership?.isSystemAdmin && (
+               <a href="/system" className="admin-session-button bg-gray-700 hover:bg-gray-600">
+                 <i className="fas fa-arrow-left"></i><span>システム管理へ戻る</span>
+               </a>
+             )}
              {adminMemberships.length > 1 && (
                <button
                  type="button"
@@ -696,12 +720,7 @@ export default function AdminPage() {
              <HelpCenter audience="admin" className="admin-session-button admin-session-help" />
              <button 
                className="admin-session-button bg-gray-700 hover:bg-gray-600"
-               onClick={async () => {
-                 await supabase.auth.signOut();
-                 setView('login');
-                 setTown(null);
-                 setAdminMemberships([]);
-               }}
+               onClick={() => void logoutAdmin()}
              >
                <i className="fas fa-right-from-bracket"></i><span>ログアウト</span>
              </button>

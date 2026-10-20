@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const results = await Promise.all([
       admin.from('neighborhoods').select('id,name,created_at').order('id', { ascending: false }).limit(1000),
       admin.from('resident_rosters').select('id,neighborhood_id,withdrawal_status,user_auth_id,family_user_auth_id_1,family_user_auth_id_2,family_withdrawal_status_1,family_withdrawal_status_2').limit(20000),
-      admin.from('neighborhood_admins').select('id,neighborhood_id,status,admin_email').limit(5000),
+      admin.from('neighborhood_admins').select('id,neighborhood_id,status,admin_email,admin_auth_id').limit(5000),
       admin.from('circulars').select('id,neighborhood_id,created_at,is_pushed').eq('is_pushed', true).gte('created_at', start).lt('created_at', end).limit(20000),
       admin.from('system_settings').select('*').limit(1000),
       admin.from('system_usage_billings').select('*').eq('billing_month', billingMonth).limit(1000),
@@ -47,7 +47,16 @@ export async function GET(request: NextRequest) {
     ]);
     const failed = results.find((result) => result.error);
     if (failed?.error) throw failed.error;
-    return json({ results: results.map((result) => ({ data: result.data || [] })) });
+    return json({ results: results.map((result, index) => ({
+      data: index === 2
+        ? (result.data || [])
+          .filter((row: any) => !isStagingSystemAdmin(row.admin_auth_id || '', systemAdminId))
+          .map((row: any) => ({
+            id: row.id, neighborhood_id: row.neighborhood_id,
+            status: row.status, admin_email: row.admin_email,
+          }))
+        : result.data || [],
+    })) });
   } catch (error) {
     console.error('[system-overview] read failed', { message: String((error as Error)?.message || 'unknown') });
     return json({ error: 'システム管理情報を取得できませんでした。' }, 503);
