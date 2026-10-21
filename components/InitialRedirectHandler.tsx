@@ -4,12 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLiff } from "@/components/LiffProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { exchangeLineSession, isVerifiedStagingLineUser } from "@/lib/lineResidentAuth";
 
 type InitialRedirectHandlerProps = {
   initialRedirectTarget: string | null;
 };
 
-const LINE_EMAIL_SUFFIX = "@line.eltown.local";
 const LIFF_LOGIN_ATTEMPT_KEY = "eltown.liff.loginAttemptAt";
 const LIFF_LOGIN_RETRY_MS = 2 * 60 * 1000;
 const INITIAL_REDIRECT_WATCHDOG_MS = 12000;
@@ -60,31 +60,14 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
 
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const email = String(session.user?.email || "");
-        const sessionLineUserId = email.endsWith(LINE_EMAIL_SUFFIX)
-          ? email.slice(0, -LINE_EMAIL_SUFFIX.length)
-          : "";
-        if (sessionLineUserId === lineProfile.userId) return session;
+        if (isVerifiedStagingLineUser(session.user, lineProfile.userId)) return session;
 
         // A mobile browser can retain a previous resident/admin session. Never
         // use it for a different LINE identity.
         await supabase.auth.signOut();
       }
 
-      const email = `${lineProfile.userId}@line.eltown.local`;
-      const password = `lineAuth_${lineProfile.userId}_eltown`;
-      const login = await supabase.auth.signInWithPassword({ email, password });
-
-      if (!login.error) return login.data.session;
-      if (!login.error.message.includes("Invalid login credentials")) throw login.error;
-
-      const signup = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { name: lineProfile.displayName, avatar_url: lineProfile.pictureUrl } },
-      });
-      if (signup.error) throw signup.error;
-      return signup.data.session;
+      return exchangeLineSession(liff);
     };
 
     const syncRosterLineUserId = async (roster: any, userId: string) => {
@@ -174,7 +157,10 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
 
       try {
         const { data: { session: existingSession } } = await supabase.auth.getSession();
-        if (existingSession?.user?.id && await hasLinkedResidentRoster(existingSession.user.id)) {
+        if (existingSession?.user?.email?.endsWith('@line.eltown.local')
+          && !isVerifiedStagingLineUser(existingSession.user, lineProfile?.userId)) {
+          await supabase.auth.signOut();
+        } else if (existingSession?.user?.id && await hasLinkedResidentRoster(existingSession.user.id)) {
           router.replace("/resident/");
           return;
         }
@@ -185,9 +171,7 @@ export default function InitialRedirectHandler({ initialRedirectTarget }: Initia
       if (lineProfile?.userId) {
         try {
           const session = await ensureSupabaseSessionFromLineProfile();
-          const userId = session?.user?.id || lineProfile.userId;
-
-          if (await hasLinkedResidentRoster(userId)) {
+          if (session?.user?.id && await hasLinkedResidentRoster(session.user.id)) {
             router.replace("/resident/");
             return;
           }

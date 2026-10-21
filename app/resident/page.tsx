@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 // Direct LIFF import removed; use useLiff hook
 import { useLiff } from '@/components/LiffProvider';
+import { exchangeLineSession, isVerifiedStagingLineUser } from '@/lib/lineResidentAuth';
 
 const RESIDENT_AUTO_LOGIN_KEY = 'eltown.resident.autoLoginAt';
 const RESIDENT_AUTO_LOGIN_RETRY_MS = 2 * 60 * 1000;
@@ -17,9 +18,7 @@ const LIFF_IN_CLIENT_REENTRY_RETRY_MS = 60 * 1000;
 const LINE_EMAIL_SUFFIX = '@line.eltown.local';
 
 const lineUserIdFromAuthUser = (user: any) => {
-  const email = String(user?.email || '');
-  if (!email.endsWith(LINE_EMAIL_SUFFIX)) return '';
-  return email.slice(0, -LINE_EMAIL_SUFFIX.length);
+  return isVerifiedStagingLineUser(user) ? user.app_metadata.eltown_line_user_id : '';
 };
 
 const withoutLineUserIdColumns = (payload: Record<string, any>) => {
@@ -163,10 +162,9 @@ function ResidentPageContent() {
 
     if (liffInitializedProvider && safeIsLiffLoggedIn()) {
       supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-         const sessionLineUserId = existingSession ? lineUserIdFromAuthUser(existingSession.user) : '';
-         const hasDifferentLineIdentity = Boolean(
-           existingSession && lineProfile?.userId && sessionLineUserId !== lineProfile.userId,
-         );
+         const hasDifferentLineIdentity = Boolean(existingSession && (
+           !isVerifiedStagingLineUser(existingSession.user, lineProfile?.userId)
+         ));
 
          if (hasDifferentLineIdentity && !isSubmitting) {
             supabase.auth.signOut().then(() => performSupabaseLoginWithLiff());
@@ -209,7 +207,11 @@ function ResidentPageContent() {
       setLoginError('このアカウントはすでに退会済みのため、ご利用いただけません。');
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: storedSession } }) => {
+      const session = storedSession?.user?.email?.endsWith(LINE_EMAIL_SUFFIX)
+        && !isVerifiedStagingLineUser(storedSession.user, safeIsLiffLoggedIn() ? lineProfile?.userId : undefined)
+        ? null : storedSession;
+      if (storedSession && !session) await supabase.auth.signOut();
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
@@ -233,6 +235,11 @@ function ResidentPageContent() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.email?.endsWith(LINE_EMAIL_SUFFIX)
+        && !isVerifiedStagingLineUser(session.user)) {
+        window.setTimeout(() => void supabase.auth.signOut(), 0);
+        return;
+      }
       setSession(session);
       if (session) {
         window.sessionStorage.removeItem(RESIDENT_AUTO_LOGIN_KEY);
@@ -345,29 +352,7 @@ function ResidentPageContent() {
   const performSupabaseLoginWithLiff = async () => {
     setIsSubmitting(true);
     try {
-      const directProfile = await liff?.getProfile().catch(() => null);
-      const decodedIdToken = liff?.getDecodedIDToken?.();
-      const profile = directProfile || lineProfile || (decodedIdToken?.sub ? {
-        userId: decodedIdToken.sub,
-        displayName: decodedIdToken.name || '',
-        pictureUrl: decodedIdToken.picture || '',
-      } : null);
-      if (!profile?.userId) throw new Error('LINE profile is unavailable.');
-      const email = `${profile.userId}@line.eltown.local`;
-      const password = `lineAuth_${profile.userId}_eltown`;
-
-      let { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error && error.message.includes('Invalid login credentials')) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
-          email, password,
-          options: { data: { name: profile.displayName, avatar_url: profile.pictureUrl } }
-        });
-        if (signUpError) throw signUpError;
-        data = signUpData as any;
-      } else if (error) {
-        throw error;
-      }
+      await exchangeLineSession(liff);
       
       // LIFFの特殊なブラウザ環境でreloadするとURLのパスが消えてトップメニューに戻る不具合があるため、
       // reloadはせずにSupabaseのonAuthStateChangeイベントに状態更新を任せる

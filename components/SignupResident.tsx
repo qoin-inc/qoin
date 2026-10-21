@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { isVerifiedStagingLineUser } from "@/lib/lineResidentAuth";
 
 type SignupResidentProps = {
   sessionUser?: any;
@@ -12,7 +13,6 @@ type SignupResidentProps = {
 const normalizeText = (value?: string | null) => String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim();
 const normalizeName = normalizeText;
 const normalizePostalCode = (value?: string | null) => normalizeText(value).replace(/[^\d]/g, "");
-const LINE_EMAIL_SUFFIX = "@line.eltown.local";
 
 const rosterPrimaryName = (roster: any) => roster.full_name || `${roster.last_name || ""}${roster.first_name || ""}`;
 const rosterPrimaryKana = (roster: any) => roster.kana_name || roster.full_name_kana || roster.kana || "";
@@ -20,9 +20,7 @@ const rosterPostalCode = (roster: any) => roster.postal_code || "";
 const rosterAddressLine2 = (roster: any) => roster.address_line2 || roster.address2 || roster.address || "";
 const rosterAddressLine3 = (roster: any) => roster.address_line3 || roster.address3 || "";
 const lineUserIdFromAuthUser = (user: any) => {
-  const email = String(user?.email || "");
-  if (!email.endsWith(LINE_EMAIL_SUFFIX)) return "";
-  return email.slice(0, -LINE_EMAIL_SUFFIX.length);
+  return isVerifiedStagingLineUser(user) ? user.app_metadata.eltown_line_user_id : "";
 };
 const withoutLineColumns = (payload: Record<string, any>) => {
   const { line_user_id, family_line_user_id_1, family_line_user_id_2, line_display_name, ...fallback } = payload;

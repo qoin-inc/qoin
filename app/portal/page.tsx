@@ -7,6 +7,7 @@ import LiffProvider from '@/components/LiffProvider';
 import HelpCenter from '@/components/HelpCenter';
 import '@/styles/homepage.css';
 import { useRouter } from 'next/navigation';
+import { exchangeLineSession, isVerifiedStagingLineUser } from '@/lib/lineResidentAuth';
 // Direct LIFF import removed; will use window.liff within DynamicLiffProvider
 
 // Leafletを使用するコンポーネントはSSRを無効化する
@@ -80,6 +81,11 @@ export default function PortalPage() {
 
   const checkSessionAndFetchData = async () => {
     let { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.email?.endsWith('@line.eltown.local')
+      && !isVerifiedStagingLineUser(session.user)) {
+      await supabase.auth.signOut();
+      session = null;
+    }
     
     // セッションがない場合は、LIFFから直接復元を試みる（バックアップ機構）
     if (!session) {
@@ -89,13 +95,7 @@ export default function PortalPage() {
             if (!liffId) throw new Error('検証用LIFF IDが未設定です。');
             await (window as any).liff.init({ liffId });
             if ((window as any).liff.isLoggedIn()) {
-            const profile = await (window as any).liff.getProfile();
-            const email = `${profile.userId}@line.eltown.local`;
-          const password = `lineAuth_${profile.userId}_eltown`;
-          const { data } = await supabase.auth.signInWithPassword({ email, password });
-          if (data.session) {
-            session = data.session;
-          }
+            session = await exchangeLineSession((window as any).liff);
         }
       }
       } catch (e) {
