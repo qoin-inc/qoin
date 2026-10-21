@@ -19,4 +19,6 @@
 
 2026-10-22の読み取り確認では、検証用Authユーザー2件、旧方式LINE利用者0件だった。TypeScript検査、Next.jsビルド、Netlifyビルドは通過した。LINEの生ID tokenを使った実ログインは、検証用LIFFをまだ接続していないため未実施。
 
+同日のLINE Developers画面では、Qoin Providerの `el-town` チャネル基本設定にある「リンクされたLINE公式アカウント」は「－」だった。この表示だけでLINEログイン自体の可否は判断できない。次に、Qoin Provider内のMessaging APIチャネルと、その公式アカウントのBasic IDを読み取りで確認する。検証候補 `@116cskbo` と本番アカウント `@107rhwia` を取り違えない。公式アカウントのリンク、LIFF Endpoint、Netlify環境変数はまだ変更しない。
+
 参照: [LINE ID token検証API](https://developers.line.biz/en/reference/line-login/)、[LINEのサーバー認証手順](https://developers.line.biz/en/tips/2026/08/13/send-token-to-server/)。
