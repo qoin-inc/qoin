@@ -89,6 +89,34 @@ const verifyStagingEnvironment = (config) => {
   let remote;
   try { remote = JSON.parse(result.stdout); }
   catch { throw new Error("Deployment blocked: cannot parse staging site variables."); }
+  // Netlify masks selected production values in env:list, including values
+  // heuristically treated as sensitive. Fetch the site-owned raw envelope only
+  // for comparison; never include its contents in errors or logs.
+  const cliRoot = join(process.env.APPDATA || "", "npm", "node_modules", "netlify-cli");
+  const cliEntry = join(cliRoot, "bin", "run.js");
+  if (!existsSync(cliEntry)
+    || JSON.parse(readFileSync(join(cliRoot, "package.json"), "utf8")).version !== "26.1.0") {
+    throw new Error("Deployment blocked: Netlify CLI 26.1.0 is required for secret verification.");
+  }
+  const rawResult = run(process.execPath, [cliEntry, "api", "getEnvVars", "--data",
+    JSON.stringify({ account_id: "info-2vicjai", site_id: config.siteId })]);
+  if (rawResult.status !== 0) {
+    throw new Error("Deployment blocked: cannot verify staging site secret values.");
+  }
+  let envelopes;
+  try { envelopes = JSON.parse(rawResult.stdout); }
+  catch { throw new Error("Deployment blocked: cannot parse staging site secret values."); }
+  if (!Array.isArray(envelopes)) {
+    throw new Error("Deployment blocked: staging site secret response is invalid.");
+  }
+  const siteValues = new Map();
+  for (const item of envelopes) {
+    if (!item || typeof item.key !== "string" || !Array.isArray(item.values)
+      || item.values.length !== 1 || item.values[0]?.context !== "all") {
+      throw new Error("Deployment blocked: staging site has unreviewed variable contexts.");
+    }
+    siteValues.set(item.key, item.values[0].value);
+  }
   const local = Object.fromEntries(readFileSync(join(root, ".env.local"), "utf8")
     .split(/\r?\n/).map((line) => line.match(/^([A-Z][A-Z0-9_]*)=(.*)$/)).filter(Boolean)
     .map((match) => [match[1], match[2]]));
@@ -114,12 +142,14 @@ const verifyStagingEnvironment = (config) => {
     SUPABASE_SEVRET_KEY: "disabled-for-staging",
   };
   for (const [key, value] of Object.entries(expected)) {
-    if (!value || remote[key] !== value) {
+    if (!value || siteValues.get(key) !== value
+      || (remote[key] !== value && !["OPENAI_API_KEY", "RESEND_API_KEY", "STRIPE_SECRET_KEY",
+        "SUPABASE_SECRET_KEY", "SUPABASE_SEVRET_KEY", "SYSTEM_BILLING_CRON_SECRET"].includes(key))) {
       throw new Error(`Deployment blocked: staging site variable ${key} is missing or differs from the reviewed value.`);
     }
   }
   for (const key of ["SYSTEM_LOGIN_ID", "SYSTEM_LOGIN_PASSWORD", "SYSTEM_SESSION_SECRET"]) {
-    if (!remote[key] || remote[key] !== local[key]) {
+    if (!remote[key] || remote[key] !== local[key] || siteValues.get(key) !== local[key]) {
       throw new Error(`Deployment blocked: staging site variable ${key} is not configured for this checkout.`);
     }
   }

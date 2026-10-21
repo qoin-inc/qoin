@@ -1,6 +1,6 @@
 # 検証用LINE認証の接続準備
 
-現時点で検証用LIFF `2009700969-9dn0R2dB` のEndpoint URLは `https://example.com`。検証用Netlifyサイトの `NEXT_PUBLIC_LIFF_ID`、LINE認証値は無効化されたままで、LINE設定やサイトの公開は変更していない。デプロイ照合スクリプトだけ、検証用LIFF IDとの完全一致を要求するよう準備した。
+現時点で検証用LIFF `2009700969-9dn0R2dB` のEndpoint URLは `https://example.com`。検証用Netlifyサイトの環境変数にはこのLIFF IDを設定済みだが、サイトの再公開とLINE側のEndpoint変更は未実施。Messaging API送信値は `disabled-for-staging` のまま。
 
 ## 実装済みの認証経路
 
@@ -19,10 +19,12 @@
 
 2026-10-22の読み取り確認では、検証用Authユーザー2件、旧方式LINE利用者0件だった。TypeScript検査、Next.jsビルド、Netlifyビルドは通過した。LINEの生ID tokenを使った実ログインは、検証用LIFFをまだ接続していないため未実施。
 
-同日のLINE Developers画面では、Qoin Providerの `el-town` チャネル基本設定にある「リンクされたLINE公式アカウント」は「－」だった。この表示だけでLINEログイン自体の可否は判断できない。検証候補 `@116cskbo` と本番アカウント `@107rhwia` を取り違えない。公式アカウントのリンク、LIFF Endpoint、Netlify環境変数はまだ変更しない。
+同日のLINE Developers画面では、Qoin Providerの `el-town` チャネル基本設定にある「リンクされたLINE公式アカウント」は「－」だった。この表示だけでLINEログイン自体の可否は判断できない。検証候補 `@116cskbo` と本番アカウント `@107rhwia` を取り違えない。公式アカウントのリンクは行っていない。
 
 続く同チャネルの「Messaging API設定」画面では、ボットのベーシックIDが `@116cskbo` と確認できた。既存の2026-10-06の記録上、本番公式アカウント `@107rhwia` とは別である。ただし、この画面だけでは `@116cskbo` に実利用者がいないことや通知が本番へ届かないことまでは証明できない。接続前にLINE Official Account Managerでアカウント名・友だち数・送信履歴を確認する。
 
 LINE Official Account Managerの `el-town`（`@116cskbo`）では、友だち数0、直近7日間の送信数0と確認した。「メッセージ配信」画面は初期案内で、配信済み一覧は表示されていなかった。これは過去すべての履歴を証明するものではないが、現時点の通知対象者が0人であることを示す。LIFFログインの接続準備を進め、Messaging API送信は引き続き無効とする。
+
+検証用Netlify Site ID `4e00785b-ffe1-4e3b-bc45-c1ab26d7a3ba` の環境変数が本番由来のURL・LIFF ID・LINE送信値へ変わっていることを公開前照合で発見した。Site IDとサイト名 `el-town-staging` を確認し、検証用Supabase・LIFF・システム管理値へ戻し、LINE・Stripe等は無効化した。Netlify CLIの一覧では一部の秘密値がマスクされるため、公開前スクリプトはSite IDを固定したAPIの実値を出力せず比較する。公開済みデプロイにはまだ反映していない。
 
 参照: [LINE ID token検証API](https://developers.line.biz/en/reference/line-login/)、[LINEのサーバー認証手順](https://developers.line.biz/en/tips/2026/08/13/send-token-to-server/)。
