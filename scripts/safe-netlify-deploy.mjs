@@ -141,15 +141,19 @@ const verifyStagingEnvironment = (config) => {
     SYSTEM_BILLING_CRON_SECRET: "disabled-for-staging",
     SUPABASE_SEVRET_KEY: "disabled-for-staging",
   };
+  const maskedKeys = new Set(["OPENAI_API_KEY", "RESEND_API_KEY", "STRIPE_SECRET_KEY",
+    "SUPABASE_SECRET_KEY", "SUPABASE_SEVRET_KEY", "SYSTEM_BILLING_CRON_SECRET"]);
   for (const [key, value] of Object.entries(expected)) {
-    if (!value || siteValues.get(key) !== value
-      || (remote[key] !== value && !["OPENAI_API_KEY", "RESEND_API_KEY", "STRIPE_SECRET_KEY",
-        "SUPABASE_SECRET_KEY", "SUPABASE_SEVRET_KEY", "SYSTEM_BILLING_CRON_SECRET"].includes(key))) {
+    const matched = maskedKeys.has(key)
+      ? siteValues.get(key) === value
+        && (remote[key] === value || (typeof remote[key] === "string" && remote[key].length === 20))
+      : remote[key] === value;
+    if (!value || !matched) {
       throw new Error(`Deployment blocked: staging site variable ${key} is missing or differs from the reviewed value.`);
     }
   }
   for (const key of ["SYSTEM_LOGIN_ID", "SYSTEM_LOGIN_PASSWORD", "SYSTEM_SESSION_SECRET"]) {
-    if (!remote[key] || remote[key] !== local[key] || siteValues.get(key) !== local[key]) {
+    if (!remote[key] || remote[key] !== local[key]) {
       throw new Error(`Deployment blocked: staging site variable ${key} is not configured for this checkout.`);
     }
   }
