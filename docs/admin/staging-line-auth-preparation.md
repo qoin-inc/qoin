@@ -1,6 +1,6 @@
 # 検証用LINE認証の接続準備
 
-現時点で検証用LIFF `2009700969-9dn0R2dB` のEndpoint URLは `https://example.com`。検証用Netlifyサイトの `NEXT_PUBLIC_LIFF_ID`、LINE認証値は無効化されたままで、LINE設定やサイトの公開は変更していない。
+現時点で検証用LIFF `2009700969-9dn0R2dB` のEndpoint URLは `https://example.com`。検証用Netlifyサイトの `NEXT_PUBLIC_LIFF_ID`、LINE認証値は無効化されたままで、LINE設定やサイトの公開は変更していない。デプロイ照合スクリプトだけ、検証用LIFF IDとの完全一致を要求するよう準備した。
 
 ## 実装済みの認証経路
 
@@ -13,7 +13,7 @@
 
 1. LINE Developersで、このLIFFと通知用の公式アカウントが本番利用者を巻き込まない検証専用のチャネル・Providerであることを確認する。共有チャネルであれば別の検証用チャネルを作り、コードの許可IDも見直す。
 2. `node scripts/check-staging-line-auth.mjs` で検証用Supabase Authの旧方式LINE利用者が0件と確認する。旧利用者がいる場合はユーザーID・名簿との紐付けを保持したままパスワードと既存セッションを移行し、再確認する。
-3. 正規の検証用LIFF IDと必要なMessaging API設定だけを検証サイトに登録する。`scripts/safe-netlify-deploy.mjs` の検証用環境変数照合を変更し、本番用チャネルID・tokenを拒否する。LINE Endpointを検証サイトへ変更する。
+3. 検証サイトの `NEXT_PUBLIC_LIFF_ID` を `2009700969-9dn0R2dB` に設定し、検証用LIFFのEndpoint URLを `https://el-town-staging.netlify.app/` へ変更する。LINE通知の実接続は別段階とし、`LINE_CHANNEL_ACCESS_TOKEN` と `LINE_CHANNEL_SECRET` は引き続き `disabled-for-staging` に固定する。
 4. 検証サイトのビルド・デプロイ計画を作り、`docs/admin/safe-deployment.md` に従って計画固有の承認を得てから公開する。
 5. 架空の検証用アカウントでLIFFログイン、町内会との連携、通知を順に確認する。本番利用者への通知は行わない。
 
@@ -22,5 +22,7 @@
 同日のLINE Developers画面では、Qoin Providerの `el-town` チャネル基本設定にある「リンクされたLINE公式アカウント」は「－」だった。この表示だけでLINEログイン自体の可否は判断できない。検証候補 `@116cskbo` と本番アカウント `@107rhwia` を取り違えない。公式アカウントのリンク、LIFF Endpoint、Netlify環境変数はまだ変更しない。
 
 続く同チャネルの「Messaging API設定」画面では、ボットのベーシックIDが `@116cskbo` と確認できた。既存の2026-10-06の記録上、本番公式アカウント `@107rhwia` とは別である。ただし、この画面だけでは `@116cskbo` に実利用者がいないことや通知が本番へ届かないことまでは証明できない。接続前にLINE Official Account Managerでアカウント名・友だち数・送信履歴を確認する。
+
+LINE Official Account Managerの `el-town`（`@116cskbo`）では、友だち数0、直近7日間の送信数0と確認した。「メッセージ配信」画面は初期案内で、配信済み一覧は表示されていなかった。これは過去すべての履歴を証明するものではないが、現時点の通知対象者が0人であることを示す。LIFFログインの接続準備を進め、Messaging API送信は引き続き無効とする。
 
 参照: [LINE ID token検証API](https://developers.line.biz/en/reference/line-login/)、[LINEのサーバー認証手順](https://developers.line.biz/en/tips/2026/08/13/send-token-to-server/)。

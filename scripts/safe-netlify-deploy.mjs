@@ -99,7 +99,7 @@ const verifyStagingEnvironment = (config) => {
     NEXT_PUBLIC_BASE_URL: "https://el-town-staging.netlify.app",
     NEXT_PUBLIC_SUPABASE_ANON_KEY: local.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SECRET_KEY: local.SUPABASE_SECRET_KEY,
-    NEXT_PUBLIC_LIFF_ID: "disabled-for-staging",
+    NEXT_PUBLIC_LIFF_ID: "2009700969-9dn0R2dB",
     LINE_CHANNEL_ACCESS_TOKEN: "disabled-for-staging",
     LINE_CHANNEL_SECRET: "disabled-for-staging",
     RESEND_API_KEY: "disabled-for-staging",
