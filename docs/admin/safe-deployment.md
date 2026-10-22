@@ -26,7 +26,7 @@ npm run deploy:plan
 npm run deploy:plan -- --prod
 ```
 
-計画はサーバー関数 ZIP に Next.js が含まれることを確認します。画面にはサービス、サイト、環境、ブランチ、コミットID、ビルドID、送信対象、実行コマンド、期限が表示されます。秘密情報は表示しません。
+計画はサーバー関数 ZIP に Next.js が含まれること、および公開用 `.netlify/static` に同じビルドIDの JavaScript があることを確認します。画面にはサービス、サイト、環境、ブランチ、コミットID、ビルドID、送信対象、実行コマンド、期限が表示されます。秘密情報は表示しません。
 
 ## 3. Codexとの会話で承認
 
@@ -45,6 +45,7 @@ Codexがデプロイを担当する場合は、計画に表示された `APPROVE
 - 公開URLへ接続できること
 - 実行前後でコミットIDが変わっていないこと
 - 本番HTMLとローカルビルドIDが一致すること
+- 本番HTMLが参照する JavaScript と CSS が HTTP 200 で取得できること
 - NetlifyのデプロイIDが取得できること
 
 履歴は `.deploy/deployments.jsonl` に追記されます。このフォルダはGit管理外です。

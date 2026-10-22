@@ -4,5 +4,6 @@
   "siteId": "4f043254-68c7-48e8-9eec-55037e8079c5",
   "publicUrl": "https://el-town.jp",
   "artifactDirectory": ".next",
+  "publishDirectory": ".netlify/static",
   "approvalTtlMinutes": 15
 }

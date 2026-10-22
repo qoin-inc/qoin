@@ -55,6 +55,10 @@ const currentState = () => {
   }
   const buildIdPath = join(root, config.artifactDirectory, "BUILD_ID");
   const buildId = existsSync(buildIdPath) ? readFileSync(buildIdPath, "utf8").trim() : "unavailable";
+  const publicAssets = join(root, config.publishDirectory, "_next", "static", "chunks");
+  if (!existsSync(publicAssets) || !existsSync(join(root, config.publishDirectory, "_next", "static", buildId))) {
+    throw new Error("Deployment blocked: Netlify's public assets are missing or do not match the build ID.");
+  }
   const handlerZip = join(root, ".netlify", "functions", "___netlify-server-handler.zip");
   if (!existsSync(handlerZip) || !existsSync(buildIdPath) || statSync(handlerZip).mtimeMs < statSync(buildIdPath).mtimeMs) {
     throw new Error("Deployment blocked: run npx netlify build before planning; the server function bundle is missing or stale.");
@@ -71,11 +75,11 @@ const deployArgs = (environment) => [
   ...(environment === "production" ? ["--prod"] : []),
   "--no-build",
   `--site=${config.siteId}`,
-  `--dir=${config.artifactDirectory}`,
+  `--dir=${config.publishDirectory}`,
   "--json",
 ];
 
-const displayCommand = (environment) => `npx netlify deploy${environment === "production" ? " --prod" : ""} --no-build --site=${config.siteId} --dir=${config.artifactDirectory} --json`;
+const displayCommand = (environment) => `npx netlify deploy${environment === "production" ? " --prod" : ""} --no-build --site=${config.siteId} --dir=${config.publishDirectory} --json`;
 
 const createPlan = () => {
   const environment = args.includes("--prod") ? "production" : "preview";
@@ -93,7 +97,7 @@ const createPlan = () => {
     branch: state.branch,
     commitId: state.commitId,
     buildId: state.buildId,
-    artifacts: [`${config.artifactDirectory}/**`],
+    artifacts: [`${config.publishDirectory}/**`, ".netlify/functions/**"],
     command: displayCommand(environment),
     createdAt: createdAt.toISOString(),
     expiresAt: expiresAt.toISOString(),
@@ -169,13 +173,23 @@ const executePlan = async () => {
     headers: { "Cache-Control": "no-cache" },
   });
   const html = await response.text();
+  const assetPaths = [...new Set(html.match(/\/_next\/static\/[^"'\s]+\.(?:js|css)/g) || [])];
+  const sampledAssets = [...assetPaths.filter((path) => path.endsWith(".js")).slice(0, 3), ...assetPaths.filter((path) => path.endsWith(".css")).slice(0, 1)];
+  const staticAssetsReachable = sampledAssets.length > 0 && (await Promise.all(sampledAssets.map(async (path) => {
+    try {
+      return (await fetch(new URL(path, publicUrl))).ok;
+    } catch {
+      return false;
+    }
+  }))).every(Boolean);
   const checks = {
     publicUrlReachable: response.ok,
+    staticAssetsReachable,
     commitUnchanged: git("rev-parse", "HEAD") === plan.commitId,
     buildIdMatches: finalBuildId === "unavailable" ? "unavailable" : html.includes(finalBuildId),
     deploymentIdAvailable: deploymentId !== "unavailable",
   };
-  const requiredPassed = checks.publicUrlReachable && checks.commitUnchanged && checks.buildIdMatches !== false && finalBuildId === plan.buildId && checks.deploymentIdAvailable;
+  const requiredPassed = checks.publicUrlReachable && checks.staticAssetsReachable && checks.commitUnchanged && checks.buildIdMatches !== false && finalBuildId === plan.buildId && checks.deploymentIdAvailable;
   const record = {
     ...plan,
     approvalHash: undefined,
