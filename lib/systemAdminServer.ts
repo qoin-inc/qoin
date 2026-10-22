@@ -2,11 +2,15 @@ import { createHash, timingSafeEqual } from "crypto";
 
 export const SYSTEM_SESSION_COOKIE_NAME = "el_town_system_session";
 
-const loginId = () => process.env.SYSTEM_LOGIN_ID || "admin";
-const loginPassword = () => process.env.SYSTEM_LOGIN_PASSWORD || "eltown-admin";
-const sessionSecret = () => process.env.SYSTEM_SESSION_SECRET || `${loginId()}:${loginPassword()}:el-town-system`;
+const loginId = () => process.env.SYSTEM_LOGIN_ID || "";
+const loginPassword = () => process.env.SYSTEM_LOGIN_PASSWORD || "";
+const sessionSecret = () => process.env.SYSTEM_SESSION_SECRET || "";
 
-export const systemSessionToken = () => createHash("sha256").update(sessionSecret()).digest("hex");
+export const isSystemAuthConfigured = () => Boolean(loginId() && loginPassword() && sessionSecret());
+
+export const systemSessionToken = () => (
+  isSystemAuthConfigured() ? createHash("sha256").update(sessionSecret()).digest("hex") : ""
+);
 
 export const sameSystemSecret = (left: string, right: string) => {
   const leftBuffer = Buffer.from(left);
@@ -20,9 +24,11 @@ const cookieValue = (request: Request, name: string) => {
   return entry ? decodeURIComponent(entry.slice(name.length + 1)) : "";
 };
 
-export const isSystemAdminRequest = (request: Request) => (
-  sameSystemSecret(cookieValue(request, SYSTEM_SESSION_COOKIE_NAME), systemSessionToken())
-);
+export const isSystemAdminRequest = (request: Request) => {
+  const token = systemSessionToken();
+  const cookie = cookieValue(request, SYSTEM_SESSION_COOKIE_NAME);
+  return Boolean(token && cookie && sameSystemSecret(cookie, token));
+};
 
 export const isSystemBillingCronRequest = (request: Request) => {
   const configured = process.env.SYSTEM_BILLING_CRON_SECRET || "";
@@ -36,5 +42,7 @@ export const isSystemBillingEnabled = () => (
 );
 
 export const systemLoginCredentialsMatch = (inputLoginId: string, inputPassword: string) => (
-  sameSystemSecret(inputLoginId, loginId()) && sameSystemSecret(inputPassword, loginPassword())
+  isSystemAuthConfigured()
+  && sameSystemSecret(inputLoginId, loginId())
+  && sameSystemSecret(inputPassword, loginPassword())
 );

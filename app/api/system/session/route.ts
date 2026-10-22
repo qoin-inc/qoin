@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import {
   SYSTEM_SESSION_COOKIE_NAME,
   isSystemAdminRequest,
+  isSystemAuthConfigured,
   systemLoginCredentialsMatch,
   systemSessionToken,
 } from "@/lib/systemAdminServer";
@@ -56,6 +57,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isSystemAuthConfigured()) {
+    return NextResponse.json({ error: "system管理者の認証設定が不足しています。" }, { status: 503 });
+  }
   const body = await request.json().catch(() => ({}));
   if (!systemLoginCredentialsMatch(String(body.loginId || ""), String(body.password || ""))) {
     return NextResponse.json({ error: "ログインIDまたはパスワードが正しくありません。" }, { status: 401 });
