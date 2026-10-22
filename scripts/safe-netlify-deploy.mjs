@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, lstatSync, mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import process from "node:process";
 
@@ -46,11 +46,22 @@ const currentState = () => {
   const commitId = git("rev-parse", "HEAD");
   const dirty = git("status", "--porcelain");
   if (dirty) throw new Error("Deployment blocked: commit or stash all working-tree changes first.");
+  const modulesPath = join(root, "node_modules");
+  if (!existsSync(modulesPath) || lstatSync(modulesPath).isSymbolicLink()) {
+    throw new Error("Deployment blocked: install dependencies in this checkout with npm ci; node_modules must not be a link.");
+  }
   if (!existsSync(resolve(root, config.artifactDirectory))) {
-    throw new Error(`Deployment blocked: ${config.artifactDirectory} does not exist. Run npm run build first.`);
+    throw new Error(`Deployment blocked: ${config.artifactDirectory} does not exist. Run npx netlify build first.`);
   }
   const buildIdPath = join(root, config.artifactDirectory, "BUILD_ID");
   const buildId = existsSync(buildIdPath) ? readFileSync(buildIdPath, "utf8").trim() : "unavailable";
+  const handlerZip = join(root, ".netlify", "functions", "___netlify-server-handler.zip");
+  if (!existsSync(handlerZip) || !existsSync(buildIdPath) || statSync(handlerZip).mtimeMs < statSync(buildIdPath).mtimeMs) {
+    throw new Error("Deployment blocked: run npx netlify build before planning; the server function bundle is missing or stale.");
+  }
+  if (!readFileSync(handlerZip).includes(Buffer.from("node_modules/next/dist/server/lib/start-server.js"))) {
+    throw new Error("Deployment blocked: the server function bundle is missing Next.js. Run npm ci and npx netlify build again.");
+  }
   return { branch, commitId, buildId };
 };
 
@@ -58,11 +69,13 @@ const deployArgs = (environment) => [
   "netlify",
   "deploy",
   ...(environment === "production" ? ["--prod"] : []),
+  "--no-build",
+  `--site=${config.siteId}`,
   `--dir=${config.artifactDirectory}`,
   "--json",
 ];
 
-const displayCommand = (environment) => `npx netlify deploy${environment === "production" ? " --prod" : ""} --dir=${config.artifactDirectory} --json`;
+const displayCommand = (environment) => `npx netlify deploy${environment === "production" ? " --prod" : ""} --no-build --site=${config.siteId} --dir=${config.artifactDirectory} --json`;
 
 const createPlan = () => {
   const environment = args.includes("--prod") ? "production" : "preview";
@@ -134,9 +147,10 @@ const executePlan = async () => {
   // Consume approval before starting the external side effect. Failed attempts require a new plan.
   unlinkSync(pendingPath);
   const startedAt = new Date().toISOString();
+  const deployOptions = { env: { ...process.env, NETLIFY_SITE_ID: config.siteId } };
   const result = process.platform === "win32"
-    ? run(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npx.cmd", ...deployArgs(plan.environment)])
-    : run("npx", deployArgs(plan.environment));
+    ? run(process.env.ComSpec || "cmd.exe", ["/d", "/s", "/c", "npx.cmd", ...deployArgs(plan.environment)], deployOptions)
+    : run("npx", deployArgs(plan.environment), deployOptions);
   if (result.status !== 0) {
     appendRecord({ ...plan, status: "failed", startedAt, finishedAt: new Date().toISOString(), error: result.stderr.trim().slice(0, 500) });
     throw new Error(result.stderr.trim() || "Netlify deployment failed.");
@@ -161,7 +175,7 @@ const executePlan = async () => {
     buildIdMatches: finalBuildId === "unavailable" ? "unavailable" : html.includes(finalBuildId),
     deploymentIdAvailable: deploymentId !== "unavailable",
   };
-  const requiredPassed = checks.publicUrlReachable && checks.commitUnchanged && checks.buildIdMatches !== false;
+  const requiredPassed = checks.publicUrlReachable && checks.commitUnchanged && checks.buildIdMatches !== false && finalBuildId === plan.buildId && checks.deploymentIdAvailable;
   const record = {
     ...plan,
     approvalHash: undefined,
