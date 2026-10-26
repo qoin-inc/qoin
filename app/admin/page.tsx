@@ -146,6 +146,10 @@ export default function AdminPage() {
         setView('signup');
         return;
       }
+      if (typeof window !== 'undefined' && window.location.search.includes('mode=forgot_password')) {
+        setView('forgot_password');
+        return;
+      }
       // URLに ?mode=update_password があればパスワード再設定画面
       if (typeof window !== 'undefined' && window.location.search.includes('mode=update_password')) {
         setView('update_password');

@@ -25,6 +25,7 @@ const countPasswordCategories = (value: string) => [
 
 export default function SignupTown({ onComplete, onCancel, initialEmail = "" }: SignupTownProps) {
   const [authReady, setAuthReady] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [verifiedEmail, setVerifiedEmail] = useState("");
   const [notice, setNotice] = useState("");
   const [townName, setTownName] = useState("");
@@ -69,22 +70,23 @@ export default function SignupTown({ onComplete, onCancel, initialEmail = "" }: 
     }
     setSubmitting(true);
     try {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInData.session) {
-        if (signInData.session.user.email_confirmed_at) {
+      if (authMode === 'login') {
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (data.session?.user.email_confirmed_at) {
           setVerifiedEmail(email);
           setPassword("");
           setConfirmPassword("");
+        } else if (signInError?.code === 'email_not_confirmed') {
+          setError("確認メールのリンクでメール認証を完了してください。");
+        } else if (signInError?.code === 'invalid_credentials') {
+          setError("メールアドレスまたはパスワードが一致しません。登録済みの方はパスワードを再設定してください。");
+        } else if (signInError) {
+          throw signInError;
         } else {
-          setNotice("確認メールのリンクで認証を完了してください。");
+          setError("ログインを確認できませんでした。もう一度お試しください。");
         }
         return;
       }
-      if (signInError?.code === 'email_not_confirmed') {
-        setNotice("確認メールのリンクで認証を完了してください。認証後、この画面で町内会情報を入力できます。");
-        return;
-      }
-      if (signInError && signInError.code !== 'invalid_credentials') throw signInError;
       if (password.length < 8 || countPasswordCategories(password) < 3) {
         setError("新規登録のパスワードは、英大文字・英小文字・数字・記号のうち3種類以上を組み合わせ、8文字以上で設定してください。");
         return;
@@ -104,7 +106,7 @@ export default function SignupTown({ onComplete, onCancel, initialEmail = "" }: 
         setPassword("");
         setConfirmPassword("");
       } else {
-        setNotice("新規登録の場合は確認メールのリンクで認証してください。登録済みの場合は以前のパスワードでログインしてください。");
+        setNotice("新規登録の場合は確認メールのリンクで認証してください。メールが届かない場合は、登録済みアカウントのログインや迷惑メールフォルダーも確認してください。");
       }
     } catch (err: any) {
       setError(err.message || "メール認証を開始できませんでした。");
@@ -215,6 +217,10 @@ export default function SignupTown({ onComplete, onCancel, initialEmail = "" }: 
             ) : (
               <>
                 <p>先にメールアドレスを認証します。町内会情報は認証後に一度だけ入力してください。</p>
+                <div role="group" aria-label="メールアカウントの登録状況" style={{ display: "flex", gap: 8 }}>
+                  <button type="button" className="el-secondary-action" aria-pressed={authMode === 'login'} onClick={() => { setAuthMode('login'); setError(""); setNotice(""); }}>登録済みの方</button>
+                  <button type="button" className="el-secondary-action" aria-pressed={authMode === 'signup'} onClick={() => { setAuthMode('signup'); setError(""); setNotice(""); }}>初めての方</button>
+                </div>
                 <label>
                   <span>メールID</span>
                   <input type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="admin@example.com" required />
@@ -222,16 +228,17 @@ export default function SignupTown({ onComplete, onCancel, initialEmail = "" }: 
                 <label>
                   <span>ログインパスワード</span>
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8文字以上" required />
-                  <small className="signup-password-hint">新規登録は英大文字・英小文字・数字・記号のうち3種類以上、8文字以上で設定してください。</small>
+                  {authMode === 'signup' && <small className="signup-password-hint">新規登録は英大文字・英小文字・数字・記号のうち3種類以上、8文字以上で設定してください。</small>}
                 </label>
-                <label>
-                  <span>ログインパスワード（新規登録時の確認用）</span>
-                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="新規登録時は同じパスワードを入力" />
-                </label>
+                {authMode === 'signup' && <label>
+                  <span>ログインパスワード（確認用）</span>
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="同じパスワードを入力" required />
+                </label>}
+                {authMode === 'login' && <a href="/admin?mode=forgot_password">パスワードを忘れた方はこちら</a>}
               </>
             )}
             <button type="submit" className="el-primary-action" disabled={submitting}>
-              {submitting ? <i className="fas fa-spinner fa-spin" /> : <><i className="fas fa-check" /> {verifiedEmail ? "登録して開始" : "メール認証して次へ"}</>}
+              {submitting ? <i className="fas fa-spinner fa-spin" /> : <><i className="fas fa-check" /> {verifiedEmail ? "登録して開始" : authMode === 'login' ? "ログインして次へ" : "確認メールを送信"}</>}
             </button>
             <button type="button" className="el-secondary-action" onClick={onCancel}>キャンセル</button>
           </form>
