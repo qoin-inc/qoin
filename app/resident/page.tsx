@@ -17,15 +17,6 @@ const LIFF_IN_CLIENT_REENTRY_KEY = 'eltown.liff.inClientReentryAt';
 const LIFF_IN_CLIENT_REENTRY_RETRY_MS = 60 * 1000;
 const LINE_EMAIL_SUFFIX = '@line.eltown.local';
 
-const lineUserIdFromAuthUser = (user: any) => {
-  return isVerifiedStagingLineUser(user) ? user.app_metadata.eltown_line_user_id : '';
-};
-
-const withoutLineUserIdColumns = (payload: Record<string, any>) => {
-  const { line_user_id, family_line_user_id_1, family_line_user_id_2, ...fallback } = payload;
-  return fallback;
-};
-
 const hasLiffResponseParams = () => {
   if (typeof window === 'undefined') return false;
 
@@ -276,36 +267,8 @@ function ResidentPageContent() {
     }
   }, [session, roster, town, searchParams]);
 
-  const syncRosterLineUserId = async (rosterData: any, userId: string, lineUserId: string) => {
-    if (!rosterData?.id || !userId || !lineUserId) return;
-
-    const payload: Record<string, any> = {};
-    if (rosterData.user_auth_id === userId) payload.line_user_id = lineUserId;
-    if (rosterData.family_user_auth_id_1 === userId) payload.family_line_user_id_1 = lineUserId;
-    if (rosterData.family_user_auth_id_2 === userId) payload.family_line_user_id_2 = lineUserId;
-    if (Object.keys(payload).length === 0) return;
-
-    const { error } = await supabase
-      .from('resident_rosters')
-      .update(payload)
-      .eq('id', rosterData.id);
-
-    if (error && /line_user_id|family_line_user_id/i.test(String(error.message || ''))) {
-      const fallbackPayload = withoutLineUserIdColumns(payload);
-      if (Object.keys(fallbackPayload).length === 0) return;
-      await supabase
-        .from('resident_rosters')
-        .update(fallbackPayload)
-        .eq('id', rosterData.id);
-      return;
-    }
-
-    if (error) console.warn('LINE user ID sync failed:', error.message);
-  };
-
   const fetchRosterAndTown = async (authUser: any) => {
     const userId = typeof authUser === 'string' ? authUser : authUser?.id;
-    const lineUserId = typeof authUser === 'string' ? '' : (lineProfile?.userId || lineUserIdFromAuthUser(authUser));
     if (!userId) {
       setLoading(false);
       return;
@@ -313,18 +276,16 @@ function ResidentPageContent() {
 
     setLoading(true);
     try {
-      const { data: rosters, error: rosterError } = await supabase
-        .from('resident_rosters')
-        .select('*')
-        .or(`user_auth_id.eq.${userId},family_user_auth_id_1.eq.${userId},family_user_auth_id_2.eq.${userId}`)
-        .not('neighborhood_id', 'is', null) // テスト用などの空データを掴まないための安全策
-        .order('id', { ascending: false })
-        .limit(20);
-      if (rosterError) throw rosterError;
-      
-      if (rosters && rosters.length > 0) {
-        const rosterData = rosters.find((item: any) => item.withdrawal_status !== 'withdrawn' && item.status !== 'withdrawn') || rosters[0];
-        await syncRosterLineUserId(rosterData, userId, lineUserId);
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!currentSession?.access_token) throw new Error('LINEログインを確認できません。');
+      const response = await fetch('/api/resident/roster', {
+        headers: { Authorization: `Bearer ${currentSession.access_token}` }, cache: 'no-store',
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || '会員情報を確認できませんでした。');
+
+      if (result.roster) {
+        const rosterData = result.roster;
         const family1Withdrawn = rosterData.family_user_auth_id_1 === userId && rosterData.family_withdrawal_status_1 === 'withdrawn';
         const family2Withdrawn = rosterData.family_user_auth_id_2 === userId && rosterData.family_withdrawal_status_2 === 'withdrawn';
         if (rosterData.withdrawal_status === 'withdrawn' || family1Withdrawn || family2Withdrawn) {
@@ -335,12 +296,7 @@ function ResidentPageContent() {
           return;
         }
         setRoster(rosterData);
-        const { data: townData } = await supabase
-          .from('neighborhoods')
-          .select('id, name')
-          .eq('id', rosterData.neighborhood_id)
-          .single();
-        if (townData) setTown(townData);
+        if (result.town) setTown(result.town);
       }
     } catch (e) {
       console.error(e);
@@ -368,11 +324,6 @@ function ResidentPageContent() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!session?.user?.id || !roster?.id || !lineProfile?.userId) return;
-    syncRosterLineUserId(roster, session.user.id, lineProfile.userId);
-  }, [session?.user?.id, roster?.id, lineProfile?.userId]);
 
   const handleLineLogin = async () => {
     setLoginError('');

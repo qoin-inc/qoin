@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -8,23 +8,6 @@ type SignupResidentProps = {
   sessionUser?: any;
   onComplete?: () => void;
   onCancel?: () => void;
-};
-
-const normalizeText = (value?: string | null) => String(value || "").normalize("NFKC").replace(/[\s　]+/g, "").trim();
-const normalizeName = normalizeText;
-const normalizePostalCode = (value?: string | null) => normalizeText(value).replace(/[^\d]/g, "");
-
-const rosterPrimaryName = (roster: any) => roster.full_name || `${roster.last_name || ""}${roster.first_name || ""}`;
-const rosterPrimaryKana = (roster: any) => roster.kana_name || roster.full_name_kana || roster.kana || "";
-const rosterPostalCode = (roster: any) => roster.postal_code || "";
-const rosterAddressLine2 = (roster: any) => roster.address_line2 || roster.address2 || roster.address || "";
-const rosterAddressLine3 = (roster: any) => roster.address_line3 || roster.address3 || "";
-const lineUserIdFromAuthUser = (user: any) => {
-  return isVerifiedStagingLineUser(user) ? user.app_metadata.eltown_line_user_id : "";
-};
-const withoutLineColumns = (payload: Record<string, any>) => {
-  const { line_user_id, family_line_user_id_1, family_line_user_id_2, line_display_name, ...fallback } = payload;
-  return fallback;
 };
 
 export default function SignupResident({ sessionUser, onComplete, onCancel }: SignupResidentProps) {
@@ -54,120 +37,19 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
 
     setSubmitting(true);
     try {
-      const normalizedTownName = normalizeText(townName);
-      const normalizedPostalCode = normalizePostalCode(postalCode);
-      const normalizedAddressLine2 = normalizeText(addressLine2);
-      const normalizedAddressLine3 = normalizeText(addressLine3);
-
-      const { data: towns, error: townError } = await supabase
-        .from("neighborhoods")
-        .select("id, name")
-        .limit(1000);
-      if (townError) throw townError;
-
-      const town = towns?.find((item: any) => normalizeText(item.name) === normalizedTownName);
-      if (!town) throw new Error("町内会名に一致する町内会が見つかりません。名称を確認してください。");
-
-      const normalizedInputName = normalizeName(fullName);
-      const normalizedInputKana = normalizeName(kanaName);
-      const lineUserId = lineUserIdFromAuthUser(sessionUser);
-      const rpcResult = await supabase.rpc("link_resident_roster_by_identity", {
-        p_neighborhood_id: town.id,
-        p_full_name: fullName,
-        p_kana_name: kanaName,
-        p_postal_code: postalCode,
-        p_address2: addressLine2,
-        p_address3: addressLine3,
-        p_line_user_id: lineUserId || null,
-        p_line_display_name: sessionUser?.user_metadata?.name || null,
-        p_member_name: memberName,
-        p_member_kana_name: memberKanaName,
-      });
-      if (!rpcResult.error) {
-        onComplete?.();
-        return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token || !isVerifiedStagingLineUser(session.user)) {
+        throw new Error("検証用LINEログインを確認できません。もう一度ログインしてください。");
       }
-      const rpcUnavailable = rpcResult.error.code === "PGRST202" || /link_resident_roster_by_identity|schema cache|function/i.test(String(rpcResult.error.message || ""));
-      if (!rpcUnavailable) throw rpcResult.error;
-
-      const { data: existingRosters, error: rosterLookupError } = await supabase
-        .from("resident_rosters")
-        .select("*")
-        .eq("neighborhood_id", town.id)
-        .limit(1000);
-      if (rosterLookupError) throw rosterLookupError;
-
-      const matchedRoster = existingRosters?.find((roster: any) => {
-        // 世帯主情報で世帯を特定する。登録する本人の氏名・カナは別項目として保存する。
-        const nameAndKanaMatched = normalizeName(rosterPrimaryName(roster)) === normalizedInputName
-          && normalizeName(rosterPrimaryKana(roster)) === normalizedInputKana;
-
-        if (!nameAndKanaMatched) return false;
-        if (normalizePostalCode(rosterPostalCode(roster)) !== normalizedPostalCode) return false;
-        if (normalizeText(rosterAddressLine2(roster)) !== normalizedAddressLine2) return false;
-        const normalizedRosterAddressLine3 = normalizeText(rosterAddressLine3(roster));
-        if ((normalizedAddressLine3 || normalizedRosterAddressLine3) && normalizedRosterAddressLine3 !== normalizedAddressLine3) return false;
-
-        return true;
+      const response = await fetch("/api/resident/roster", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ townName, fullName, kanaName, postalCode, addressLine2, addressLine3, memberName, memberKanaName }),
+        cache: "no-store",
       });
-
-      if (matchedRoster) {
-        if (matchedRoster.withdrawal_status === "withdrawn") {
-          throw new Error("この会員名簿は退会済みのため連携できません。役員へ確認してください。");
-        }
-
-        const primaryNameMatched = normalizeName(rosterPrimaryName(matchedRoster)) === normalizedInputName && normalizeName(rosterPrimaryKana(matchedRoster)) === normalizedInputKana;
-        let updatePayload: Record<string, any> | null = null;
-
-        if (primaryNameMatched) {
-          if (matchedRoster.user_auth_id && matchedRoster.user_auth_id !== sessionUser.id) {
-            const existingFamilySlot = ([1, 2] as const).find((slot) => String(matchedRoster[`family_user_auth_id_${slot}`] || "") === String(sessionUser.id));
-            const availableFamilySlot = ([1, 2] as const).find((slot) => !matchedRoster[`family_user_auth_id_${slot}`]);
-            const familySlot = existingFamilySlot || availableFamilySlot;
-            if (!familySlot) {
-              throw new Error("この世帯は家族2名まで連携済みです。世帯主へ確認してください。");
-            }
-            updatePayload = {
-              [`family_name_${familySlot}`]: memberName.trim(),
-              [`family_kana_name_${familySlot}`]: memberKanaName.trim(),
-              [`family_user_auth_id_${familySlot}`]: sessionUser.id,
-              [`family_line_user_id_${familySlot}`]: lineUserId || null,
-              [`family_invite_token_${familySlot}`]: null,
-              [`family_invited_at_${familySlot}`]: null,
-              [`family_withdrawal_status_${familySlot}`]: "active",
-            };
-          } else {
-            updatePayload = {
-              user_auth_id: sessionUser.id,
-              line_user_id: lineUserId || null,
-              line_display_name: sessionUser?.user_metadata?.name || null,
-              status: "active",
-            };
-          }
-        }
-
-        if (!updatePayload) throw new Error("一致する会員名簿を確認できませんでした。");
-
-        let { error: updateError } = await supabase
-          .from("resident_rosters")
-          .update(updatePayload)
-          .eq("id", matchedRoster.id);
-
-        if (updateError && /line_display_name|line_user_id|family_line_user_id/i.test(String(updateError.message || ""))) {
-          const fallbackPayload = withoutLineColumns(updatePayload);
-          const fallback = await supabase
-            .from("resident_rosters")
-            .update(fallbackPayload)
-            .eq("id", matchedRoster.id);
-          updateError = fallback.error;
-        }
-
-        if (updateError) throw updateError;
-        onComplete?.();
-        return;
-      }
-
-      throw new Error("入力内容に一致する世帯主の会員名簿が見つかりません。町内会名、住所、世帯主氏名・カナを確認してください。");
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || "会員情報を連携できませんでした。");
+      onComplete?.();
     } catch (err: any) {
       setError(err.message || "会員登録に失敗しました。");
     } finally {
