@@ -65,8 +65,11 @@ export async function POST(request: Request) {
   const names = ['townName', 'fullName', 'kanaName', 'postalCode', 'addressLine2',
     'addressLine3', 'memberName', 'memberKanaName'] as const;
   if (!body || typeof body !== 'object' || Array.isArray(body)
+    || !['primary', 'family'].includes(body.registrantType)
     || names.some((key) => !stringField(body[key]))
-    || names.filter((key) => key !== 'addressLine3').some((key) => !String(body[key]).trim())) {
+    || names.filter((key) => key !== 'addressLine3' && key !== 'memberName' && key !== 'memberKanaName')
+      .some((key) => !String(body[key]).trim())
+    || (body.registrantType === 'family' && (!body.memberName.trim() || !body.memberKanaName.trim()))) {
     return json({ error: '会員情報の入力を確認してください。' }, 400);
   }
   try {
@@ -89,12 +92,21 @@ export async function POST(request: Request) {
     if (!roster) return json({ error: '入力内容に一致する会員名簿が見つかりません。' }, 404);
 
     let result;
-    if (!roster.user_auth_id || roster.user_auth_id === user.id) {
+    if (body.registrantType === 'primary') {
+      if (roster.user_auth_id && roster.user_auth_id !== user.id) {
+        return json({ error: '世帯主はすでにLINE連携済みです。家族の方は「家族」を選んでください。' }, 409);
+      }
+      if (roster.family_user_auth_id_1 === user.id || roster.family_user_auth_id_2 === user.id) {
+        return json({ error: 'このLINEアカウントは家族として連携済みです。' }, 409);
+      }
       const query = admin.from('resident_rosters').update({ user_auth_id: user.id, line_user_id: lineUserId })
         .eq('id', roster.id).eq('neighborhood_id', town.id);
       result = roster.user_auth_id ? await query.eq('user_auth_id', user.id).select('id').maybeSingle()
         : await query.is('user_auth_id', null).select('id').maybeSingle();
     } else {
+      if (roster.user_auth_id === user.id) {
+        return json({ error: 'このLINEアカウントは世帯主として連携済みです。' }, 409);
+      }
       const slot = [1, 2].find((n) => roster[`family_user_auth_id_${n}`] === user.id)
         || [1, 2].find((n) => !roster[`family_user_auth_id_${n}`] && !roster[`family_invite_token_${n}`]);
       if (!slot) return json({ error: 'この世帯は家族2名まで連携済みです。' }, 409);

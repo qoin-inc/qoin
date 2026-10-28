@@ -13,7 +13,8 @@ type SignupResidentProps = {
 export default function SignupResident({ sessionUser, onComplete, onCancel }: SignupResidentProps) {
   const [fullName, setFullName] = useState("");
   const [kanaName, setKanaName] = useState("");
-  const [memberName, setMemberName] = useState(sessionUser?.user_metadata?.name || "");
+  const [registrantType, setRegistrantType] = useState<"primary" | "family">("primary");
+  const [memberName, setMemberName] = useState("");
   const [memberKanaName, setMemberKanaName] = useState("");
   const [townName, setTownName] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -30,8 +31,9 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       setError("ログイン情報を確認できません。LINEログイン後にもう一度お試しください。");
       return;
     }
-    if (!fullName.trim() || !kanaName.trim() || !memberName.trim() || !memberKanaName.trim() || !townName.trim() || !postalCode.trim() || !addressLine2.trim()) {
-      setError("町内会名、住所、世帯主の氏名・カナ、登録する方の氏名・カナを入力してください。");
+    if (!fullName.trim() || !kanaName.trim() || !townName.trim() || !postalCode.trim() || !addressLine2.trim()
+      || (registrantType === "family" && (!memberName.trim() || !memberKanaName.trim()))) {
+      setError("町内会名、住所、世帯主の氏名・カナを入力してください。家族が利用する場合は家族本人の氏名・カナも必要です。");
       return;
     }
 
@@ -44,7 +46,9 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
       const response = await fetch("/api/resident/roster", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ townName, fullName, kanaName, postalCode, addressLine2, addressLine3, memberName, memberKanaName }),
+        body: JSON.stringify({ townName, fullName, kanaName, postalCode, addressLine2, addressLine3,
+          registrantType, memberName: registrantType === "family" ? memberName : "",
+          memberKanaName: registrantType === "family" ? memberKanaName : "" }),
         cache: "no-store",
       });
       const result = await response.json().catch(() => ({}));
@@ -98,20 +102,28 @@ export default function SignupResident({ sessionUser, onComplete, onCancel }: Si
             <input value={kanaName} onChange={(e) => setKanaName(e.target.value)} placeholder="例：エルタウン タロウ" required />
           </label>
 
-          <div className="signup-form-section-note">
-            <strong>登録する方の本人情報</strong>
-            <small>LINEの表示名ではなく、会員名簿に登録する正式な氏名を入力してください。</small>
-          </div>
-
           <label>
-            <span>登録する方のお名前</span>
-            <input value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="例：エルタウン太郎" required />
+            <span>LINEを利用する方</span>
+            <select value={registrantType} onChange={(e) => setRegistrantType(e.target.value as "primary" | "family")}>
+              <option value="primary">世帯主本人</option>
+              <option value="family">家族</option>
+            </select>
           </label>
 
-          <label>
-            <span>登録する方のカナ氏名</span>
-            <input value={memberKanaName} onChange={(e) => setMemberKanaName(e.target.value)} placeholder="例：エルタウン タロウ" required />
-          </label>
+          {registrantType === "family" && <>
+            <div className="signup-form-section-note">
+              <strong>家族の方が利用する場合</strong>
+              <small>LINEの表示名ではなく、利用する家族本人の正式な氏名を入力してください。</small>
+            </div>
+            <label>
+              <span>家族の方のお名前</span>
+              <input value={memberName} onChange={(e) => setMemberName(e.target.value)} placeholder="例：エルタウン花子" required />
+            </label>
+            <label>
+              <span>家族の方のカナ氏名</span>
+              <input value={memberKanaName} onChange={(e) => setMemberKanaName(e.target.value)} placeholder="例：エルタウン ハナコ" required />
+            </label>
+          </>}
 
           <button type="submit" className="el-primary-action" disabled={submitting}>
             {submitting ? <i className="fas fa-spinner fa-spin" /> : <><i className="fas fa-link" /> 連携する</>}
