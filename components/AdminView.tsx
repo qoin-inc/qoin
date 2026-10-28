@@ -2649,63 +2649,49 @@ export default function AdminView({ townId, townName, isRepresentative = false, 
   };
 
   const insertRosterMember = async (draft: MemberDraft) => {
-    const { detailPayload, basePayload } = buildRosterPayloads(draft);
-
-    let insertResult = await supabase.from("resident_rosters").insert(detailPayload).select("*").single();
-    let usedFallback = false;
-
-    if (isMissingAnyColumnError(insertResult.error, rosterDetailColumns)) {
-      usedFallback = true;
-      insertResult = await supabase.from("resident_rosters").insert(basePayload).select("*").single();
-    }
-
-    if (insertResult.error) throw insertResult.error;
-
-    return {
-      ...(insertResult.data || {}),
-      ...detailPayload,
-      id: insertResult.data?.id || `local-${Date.now()}`,
-      _usedFallback: usedFallback,
-    };
+    const { detailPayload } = buildRosterPayloads(draft);
+    const token = await getAdminBearerToken();
+    const response = await fetch("/api/admin/resident-rosters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ townId, payload: {
+        full_name: detailPayload.full_name,
+        kana_name: detailPayload.kana_name,
+        postal_code: detailPayload.postal_code,
+        address2: detailPayload.address2,
+        address3: detailPayload.address3,
+        family_name_1: detailPayload.family_name_1,
+        family_kana_name_1: detailPayload.family_kana_name_1,
+        family_name_2: detailPayload.family_name_2,
+        family_kana_name_2: detailPayload.family_kana_name_2,
+      } }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "会員情報の保存に失敗しました。");
+    return result.data;
   };
 
   const updateRosterMember = async (memberId: number | string, draft: MemberDraft) => {
-    const { detailPayload, basePayload } = buildRosterPayloads(draft);
-    const updateDetailPayload = { ...detailPayload };
-    const updateBasePayload = { ...basePayload };
-    delete (updateDetailPayload as any).neighborhood_id;
-    delete (updateBasePayload as any).neighborhood_id;
-    delete (updateDetailPayload as any).withdrawal_status;
-
-    let updateResult = await supabase
-      .from("resident_rosters")
-      .update(updateDetailPayload)
-      .eq("id", memberId)
-      .select("*")
-      .maybeSingle();
-    let usedFallback = false;
-
-    if (isMissingAnyColumnError(updateResult.error, rosterDetailColumns)) {
-      usedFallback = true;
-      updateResult = await supabase
-        .from("resident_rosters")
-        .update(updateBasePayload)
-        .eq("id", memberId)
-        .select("*")
-        .maybeSingle();
-    }
-
-    if (updateResult.error) throw updateResult.error;
-    if (!updateResult.data) {
-      throw new Error("会員情報を更新できませんでした。管理者の名簿更新権限（RLS）を確認してください。");
-    }
-
-    return {
-      ...(updateResult.data || {}),
-      ...updateDetailPayload,
-      id: memberId,
-      _usedFallback: usedFallback,
-    };
+    const { detailPayload } = buildRosterPayloads(draft);
+    const token = await getAdminBearerToken();
+    const response = await fetch("/api/admin/resident-rosters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ townId, memberId, payload: {
+        full_name: detailPayload.full_name,
+        kana_name: detailPayload.kana_name,
+        postal_code: detailPayload.postal_code,
+        address2: detailPayload.address2,
+        address3: detailPayload.address3,
+        family_name_1: detailPayload.family_name_1,
+        family_kana_name_1: detailPayload.family_kana_name_1,
+        family_name_2: detailPayload.family_name_2,
+        family_kana_name_2: detailPayload.family_kana_name_2,
+      } }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "会員情報の更新に失敗しました。");
+    return result.data;
   };
 
   const handleMemberEditStart = (member: any) => {
